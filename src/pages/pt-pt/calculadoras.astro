@@ -1,12 +1,16 @@
 ---
 export const prerender = true;
 import LocaleCatalog from '../../components/LocaleCatalog.astro';
+import currentTools from '../../lib/current-tools-index.json';
 const localeModules = import.meta.glob<any>('../../content/calcs-pt-pt/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
 const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex);
 const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
 const audienceCalcs = Object.values(mainModules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && c.h1 && !c.noindex && c.audience === 'PT');
 const all = [...localeCalcs, ...audienceCalcs];
-const calcs = all.map((c: any) => ({ h1: c.h1, slug: c.slug, icon: c.icon, category: c.category, url: localeSlugs.has(c.slug) ? `/pt-pt/${c.slug}` : `/${c.slug}` }));
+const calcs = all.length
+  ? all.map((c: any) => ({ h1: c.h1, slug: c.slug, icon: c.icon, category: c.category, url: localeSlugs.has(c.slug) ? `/pt-pt/${c.slug}` : `/${c.slug}` }))
+  : currentTools.filter((tool) => tool.slug.startsWith('pt-pt/') && tool.slug !== 'pt-pt/calculadoras')
+      .map((tool) => ({ h1: tool.h1, slug: tool.slug, category: tool.category, url: `/${tool.slug}` }));
 ---
 <LocaleCatalog calcs={calcs} prefix="pt-pt" audience="PT" country="Portugal" lang="pt-PT" topics="IRS, Segurança Social, salário líquido, subsídios, IVA, despedimento" dataLink="/pt-pt" dataLabel="📊 Calculadoras de Portugal 2026" />

@@ -95,8 +95,17 @@ for (const [file,component,slug] of pages) {
     .replaceAll('document.querySelector(','root.querySelector(')
     .replaceAll('document.getElementById(','root.querySelector("#"+')
   );
+  const referencedIds = new Set([
+    ...[...html.matchAll(/\$\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => m[1]),
+    ...[...html.matchAll(/getElementById\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => m[1]),
+    ...[...html.matchAll(/querySelector\(\s*['"]#([^'"]+)['"]\s*\)/g)].map((m) => m[1]),
+  ].map((id) => id.replace(/^#/, '')));
+  const compatibilityMarkup = [...referencedIds]
+    .filter((id) => html.includes(`id="${id}"`) && !markup.includes(`id="${id}"`))
+    .map((id) => `<button type="button" id="${id}" hidden aria-hidden="true"></button>`)
+    .join('');
   const scope=`.mockup-${slug}`;
-  const output=`---\n---\n<div class="mockup-${slug}" set:html={\`${escapeTemplate(markup)}\`} />\n<script is:inline>\n(()=>{const root=document.currentScript.previousElementSibling?.matches('${scope}')?document.currentScript.previousElementSibling:document.querySelector('${scope}');if(!root)return;\n${scripts.join('\n')}\n})();\n</script>\n<style is:global>\n${prefixCss(css,scope)}\n${scope}{width:100%;overflow:hidden}\n</style>\n`;
+  const output=`---\n---\n<div class="mockup-${slug}" set:html={\`${escapeTemplate(markup + compatibilityMarkup)}\`} />\n<script is:inline>\n(()=>{const root=document.currentScript.previousElementSibling?.matches('${scope}')?document.currentScript.previousElementSibling:document.querySelector('${scope}');if(!root)return;\n${scripts.join('\n')}\n})();\n</script>\n<style is:global>\n${prefixCss(css,scope)}\n${scope}{width:100%;overflow:hidden}\n/* Keep the legacy site's global typography palette from overriding text that\n   intentionally inherits a light color inside dark mockup surfaces. */\n${scope} :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td){color:inherit}\n${scope} input[type="number"]{-moz-appearance:textfield;appearance:textfield}\n${scope} input[type="number"]::-webkit-inner-spin-button,${scope} input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}\n</style>\n`;
   fs.writeFileSync(path.join(targetDir,`${component}.astro`),output);
 }
 

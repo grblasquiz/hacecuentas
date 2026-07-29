@@ -100,14 +100,29 @@ const socialTitle = ogTitle || title;
 // El title editorial puede ser más expresivo, pero Bing marca como warning los
 // <title> de más de 70 caracteres. Compactamos sólo la etiqueta de SERP: H1,
 // schema y títulos sociales conservan el texto completo.
-const seoTitle = compactSeoTitle(title);
+const titleWithoutBrand = String(title || '').replace(/\s*\|\s*Hacé Cuentas\s*$/i, '').trim();
+const titleForSearch = String(title || '').trim().length < 25
+  ? lang === 'en'
+    ? `${titleWithoutBrand} — calculators and guides | Hacé Cuentas`
+    : lang === 'pt'
+      ? `${titleWithoutBrand} — calculadoras e guias | Hacé Cuentas`
+      : `${titleWithoutBrand} — calculadoras y guías | Hacé Cuentas`
+  : title;
+const seoTitle = compactSeoTitle(titleForSearch);
 const siteUrl = 'https://hacecuentas.com';
 // Cloudflare Pages sirve /foo.html en /foo — canonical sin .html para matchear sitemap
 const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
 // La meta description se compacta al ancho que Google muestra (~160). Las URLs
 // que el crawl 2026-07-28 detectó cortas tienen una mejora explícita por path.
 const effectiveDescription = seoDescriptionFor(cleanPath, description);
-const seoDescription = compactSeoDescription(effectiveDescription);
+const descriptionForSearch = effectiveDescription.trim().length < 70
+  ? lang === 'en'
+    ? `${effectiveDescription.trim()} Use free tools, clear examples and documented sources to understand the result and decide what to do next.`
+    : lang === 'pt'
+      ? `${effectiveDescription.trim()} Use ferramentas gratuitas, exemplos claros e fontes documentadas para entender o resultado e decidir melhor.`
+      : `${effectiveDescription.trim()} Usá herramientas gratuitas, ejemplos claros y fuentes documentadas para entender el resultado y decidir mejor.`
+  : effectiveDescription;
+const seoDescription = compactSeoDescription(descriptionForSearch);
 // Defensa central para Auto Ads: estas pantallas no tienen contenido editorial
 // monetizable aunque una página olvide pasar noAds={true}.
 const effectiveNoAds = noAds || noindex || isAdsenseExcludedPath(cleanPath);
@@ -163,11 +178,32 @@ const ogLocale = lang === 'en'
   ? (['US','GB','CA','AU'].includes(audience) ? _audByLocale[1] : 'en_US')
   : lang === 'pt' ? (audience === 'PT' ? 'pt_PT' : 'pt_BR') : _audByLocale[1];
 const schemaLang = htmlLang;
+const schemaContainsType = (value: unknown, type: string): boolean => {
+  if (!value || typeof value !== 'object') return false;
+  if (Array.isArray(value)) return value.some((item) => schemaContainsType(item, type));
+  const record = value as Record<string, unknown>;
+  if (record['@type'] === type || (Array.isArray(record['@type']) && record['@type'].includes(type))) return true;
+  return Object.values(record).some((item) => schemaContainsType(item, type));
+};
+const needsBreadcrumbSchema =
+  cleanPath !== '/' &&
+  cleanPath.split('/').filter(Boolean).length > 1 &&
+  !schemaContainsType(schema, 'BreadcrumbList');
+const automaticBreadcrumbSchema = needsBreadcrumbSchema
+  ? {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: lang === 'en' ? 'Home' : lang === 'pt' ? 'Início' : 'Inicio', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: socialTitle, item: fullCanonical },
+      ],
+    }
+  : null;
 
 // Schema.org WebSite + Organization global (siempre presente)
 const globalSchema = {
   '@context': 'https://schema.org',
   '@graph': [
+    ...(automaticBreadcrumbSchema ? [automaticBreadcrumbSchema] : []),
     {
       '@type': 'Organization',
       '@id': `${siteUrl}/#organization`,

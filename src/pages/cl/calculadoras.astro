@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { createLocaleCalcUrl } from '../../lib/locale-calc-url';
+import currentTools from '../../lib/current-tools-index.json';
 
 // Catálogo completo de Chile (paridad con /calculadoras de AR y /es/calculadoras).
 // Lista TODAS las calcs que se sirven en /cl/* — las localizadas (calcs-cl/) + las
@@ -19,6 +20,13 @@ const audienceCalcs = Object.values(mainModules)
   .map((m: any) => m.default || m)
   .filter((c: any) => c && c.slug && c.h1 && !c.noindex && c.audience === 'CL');
 const allCalcs = [...localeCalcs, ...audienceCalcs];
+if (allCalcs.length === 0) {
+  for (const tool of currentTools.filter((item) => item.slug.startsWith('cl/') && item.slug !== 'cl/calculadoras')) {
+    const slug = tool.slug.replace(/^cl\//, '');
+    localeCalcs.push({ ...tool, slug, icon: '🧮' });
+    allCalcs.push({ ...tool, slug, icon: '🧮' });
+  }
+}
 
 const calcUrl = createLocaleCalcUrl('cl', localeCalcs);
 

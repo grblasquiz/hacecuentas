@@ -147,11 +147,20 @@ for (const [file, component, slug] of entries) {
       .replaceAll('document.querySelector(', 'root.querySelector(')
       .replaceAll('document.getElementById(', 'root.querySelector("#"+')
     );
+  const referencedIds = new Set([
+    ...[...html.matchAll(/\$\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => m[1]),
+    ...[...html.matchAll(/getElementById\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => m[1]),
+    ...[...html.matchAll(/querySelector\(\s*['"]#([^'"]+)['"]\s*\)/g)].map((m) => m[1]),
+  ].map((id) => id.replace(/^#/, '')));
+  const compatibilityMarkup = [...referencedIds]
+    .filter((id) => html.includes(`id="${id}"`) && !markup.includes(`id="${id}"`))
+    .map((id) => `<button type="button" id="${id}" hidden aria-hidden="true"></button>`)
+    .join('');
 
   const scope = `.mockup-${slug}`;
   const scopedCss = prefixCss(styles, scope);
   const runtime = `<script is:inline>\n(()=>{const root=document.currentScript.previousElementSibling?.matches('${scope}')?document.currentScript.previousElementSibling:document.querySelector('${scope}');\n${scripts.join('\n')}\n})();\n</script>`;
-  const output = `---\ninterface Props { data?: any }\nconst { data } = Astro.props;\n---\n<div class="mockup-${slug}" set:html={\`${escapeTemplate(markup)}\`} />\n${runtime}\n<style is:global>\n${scopedCss}\n${scope} { width:100%; overflow:hidden; }\n${scope} .top, ${scope} header.top { display:none !important; }\n${scope} .foot { display:none !important; }\n${scope} .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }\n${scope} .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }\n${scope} .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }\n${scope} .support-real summary { cursor:pointer; font-weight:750; }\n${scope} .support-real p { color:#687a8f; line-height:1.65; }\n@media(max-width:800px){${scope} .support-real-grid{grid-template-columns:1fr}}\n</style>\n{data && <section class="mockup-${slug} support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}\n`;
+  const output = `---\ninterface Props { data?: any }\nconst { data } = Astro.props;\n---\n<div class="mockup-${slug}" set:html={\`${escapeTemplate(markup + compatibilityMarkup)}\`} />\n${runtime}\n<style is:global>\n${scopedCss}\n${scope} { width:100%; overflow:hidden; }\n${scope} .top, ${scope} header.top { display:none !important; }\n${scope} .foot { display:none !important; }\n${scope} .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }\n${scope} .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }\n${scope} .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }\n${scope} .support-real summary { cursor:pointer; font-weight:750; }\n${scope} .support-real p { color:#52657b; line-height:1.65; }\n/* Prevent the legacy site's global typography palette from overriding text\n   designed to inherit a light color inside dark mockup surfaces. */\n${scope} :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }\n${scope} input[type="number"] { -moz-appearance:textfield; appearance:textfield; }\n${scope} input[type="number"]::-webkit-inner-spin-button, ${scope} input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }\n@media(max-width:800px){${scope} .support-real-grid{grid-template-columns:1fr}}\n</style>\n{data && <section class="mockup-${slug} support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}\n`;
   fs.writeFileSync(path.join(targetDir, `${component}.astro`), output);
 }
 

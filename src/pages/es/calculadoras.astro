@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { createLocaleCalcUrl } from '../../lib/locale-calc-url';
+import currentTools from '../../lib/current-tools-index.json';
 
 // Catálogo completo de España (paridad con /calculadoras de AR). Lista TODAS las
 // calcs que se sirven en /es/* — las localizadas (calcs-es/) + las de calcs/ con
@@ -20,6 +21,13 @@ const audienceCalcs = Object.values(mainModules)
   .map((m: any) => m.default || m)
   .filter((c: any) => c && c.slug && c.h1 && !c.noindex && c.audience === 'ES');
 const allCalcs = [...localeCalcs, ...audienceCalcs];
+if (allCalcs.length === 0) {
+  for (const tool of currentTools.filter((item) => item.slug.startsWith('es/') && item.slug !== 'es/calculadoras')) {
+    const slug = tool.slug.replace(/^es\//, '');
+    localeCalcs.push({ ...tool, slug, icon: '🧮' });
+    allCalcs.push({ ...tool, slug, icon: '🧮' });
+  }
+}
 
 const calcUrl = createLocaleCalcUrl('es', localeCalcs);
 

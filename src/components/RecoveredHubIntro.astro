@@ -1,0 +1,64 @@
+---
+interface LinkItem {
+  href: string;
+  title: string;
+  description: string;
+}
+interface Props {
+  eyebrow: string;
+  h1: string;
+  lede: string;
+  links: LinkItem[];
+  note: string;
+}
+const { eyebrow, h1, lede, links, note } = Astro.props;
+---
+<div class="recovered-hub">
+  <section class="recovered-hero">
+    <div class="recovered-wrap">
+      <span>{eyebrow}</span>
+      <h1>{h1}</h1>
+      <p>{lede}</p>
+    </div>
+  </section>
+  <section class="recovered-wrap recovered-body">
+    <div>
+      <h2>Elegí qué necesitás resolver</h2>
+      <p>{note}</p>
+    </div>
+    <div class="recovered-grid">
+      {links.map((link) => (
+        <a href={link.href}>
+          <h2>{link.title}</h2>
+          <p>{link.description}</p>
+          <strong>Ver herramientas →</strong>
+        </a>
+      ))}
+    </div>
+    <aside>
+      <h2>Cómo usamos los datos</h2>
+      <p>Las herramientas explican qué dato usa cada cuenta, qué supuestos aplica y cuándo fue revisada. Los resultados son orientativos: para decisiones fiscales, laborales, financieras o de salud, contrastalos con la fuente oficial indicada en cada página.</p>
+    </aside>
+  </section>
+</div>
+
+<style>
+  .recovered-hub{background:#f7f8f5;color:#172033}
+  .recovered-wrap{width:min(1120px,calc(100% - 32px));margin:auto}
+  .recovered-hero{padding:72px 0 64px;background:linear-gradient(135deg,#fff8d7,#edf4ff)}
+  .recovered-hero span{font-size:.75rem;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:#3155b7}
+  .recovered-hero h1{max-width:850px;margin:12px 0 18px;font-size:clamp(2.5rem,6vw,4.7rem);line-height:.98;letter-spacing:-.055em}
+  .recovered-hero p{max-width:760px;margin:0;color:#596579;font-size:1.1rem;line-height:1.65}
+  .recovered-body{padding:64px 0 80px}
+  .recovered-body>div:first-child{max-width:720px;margin-bottom:28px}
+  .recovered-body h2{margin:0 0 8px;letter-spacing:-.025em}
+  .recovered-body p{color:#637083;line-height:1.65}
+  .recovered-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .recovered-grid a{display:block;padding:24px;border:1px solid #dfe4e6;border-radius:18px;background:#fff;color:inherit;text-decoration:none}
+  .recovered-grid a:hover{border-color:#3155b7;transform:translateY(-2px)}
+  .recovered-grid h2{font-size:1.15rem}
+  .recovered-grid strong{color:#3155b7;font-size:.9rem}
+  aside{margin-top:30px;padding:24px;border-radius:18px;background:#152d43;color:#fff}
+  aside p{color:#c5d2dc!important;margin-bottom:0}
+  @media(max-width:760px){.recovered-grid{grid-template-columns:1fr}.recovered-hero{padding:48px 0}}
+</style>
