@@ -175,6 +175,15 @@ if [ -f src/pages/middleware.ts ]; then
   err "src/middleware.ts. Borralo: rm src/pages/middleware.ts"
   exit 1
 fi
+# Los mockups importados alguna vez reemplazaron links reales por un toast:
+# `preventDefault()` hacía que hrefs válidos parecieran rotos. Es una regresión
+# silenciosa (el auditor HTTP ve 200), así que la frenamos antes del build.
+BLOCKED_LINK_COMPONENTS=$(rg -l '\$\$\("\\.card a"\).*preventDefault' src/components/generated --glob '*.astro' || true)
+if [ -n "$BLOCKED_LINK_COMPONENTS" ]; then
+  err "hay componentes generados que bloquean navegación de links con preventDefault():"
+  printf '%s\n' "$BLOCKED_LINK_COMPONENTS" | head -10
+  exit 1
+fi
 ok "guards pre-build OK | _redirects=$REDIR_RULES reglas (<2000), middleware sano"
 
 # ─── 1b. Auto-commit PRE-build ─────────────────────────────────────────────
