@@ -1,46 +1,14 @@
 ---
-/**
- * Silo Negocios — índice de hubs de decisión.
- * Existe para que el breadcrumb de los hubs no apunte a un 404 y para repartir
- * link equity entre hermanos. El listado sale del registry, no a mano.
- */
 export const prerender = true;
-
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import SiloIndex from '../../components/hub/SiloIndex.astro';
-import { hubsOfSilo } from '../../lib/hubs/registry';
-
-const HREF = '/negocios';
-const SILO = 'Negocios';
-const LEDE =
-  'Lo que te cobran las plataformas, a cuánto tenés que vender y cuántas unidades necesitás para no perder plata.';
-const hubs = hubsOfSilo(HREF);
-const CANONICAL = `https://hacecuentas.com${HREF}`;
-
-const schema = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: SILO,
-  description: LEDE,
-  url: CANONICAL,
-  hasPart: hubs.map((h) => ({
-    '@type': 'WebPage',
-    name: h.h1,
-    url: `https://hacecuentas.com/${h.slug}`,
-  })),
-};
+import NegociosHomeExperience from '../../components/generated/NegociosHomeExperience.astro';
+const canonical='https://hacecuentas.com/negocios';
+const schema={'@context':'https://schema.org','@type':'WebApplication',name:"Negocios",url:canonical,operatingSystem:'Web'};
 ---
-
-<Layout
-  title={`${SILO} — calculadoras y guías | Hacé Cuentas`}
-  description={LEDE}
-  canonical={CANONICAL}
-  schema={schema}
-  lang="es"
->
+<Layout title="Negocios | Hacé Cuentas" description="Negocios. Herramienta clara, gratuita y actualizada." canonical={canonical} schema={schema} lang="es">
   <Header />
-  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <NegociosHomeExperience />
   <Footer />
 </Layout>
