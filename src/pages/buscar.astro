@@ -4,11 +4,56 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import BuscarExperience from '../components/generated/BuscarExperience.astro';
+import currentTools from '../lib/current-tools-index.json';
 const canonical = 'https://hacecuentas.com/buscar';
 const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'Buscar calculadoras',url:canonical,applicationCategory:'FinanceApplication',operatingSystem:'Web'};
+const directoryTools = currentTools.map((tool) => ({
+  href: new URL(tool.url).pathname,
+  label: tool.h1 || tool.title,
+}));
 ---
 <Layout title="Buscar calculadoras" description="Buscá calculadoras, guías y herramientas de Hacé Cuentas." canonical={canonical} schema={schema} audience="AR" lang="es" ogType="article" articleSection="Búsqueda">
   <Header />
   <BuscarExperience />
+  <section class="search-directory" aria-labelledby="search-directory-title">
+    <details>
+      <summary id="search-directory-title">Ver directorio completo de herramientas</summary>
+      <nav aria-label="Directorio completo de herramientas">
+        {directoryTools.map((tool) => <a href={tool.href}>{tool.label}</a>)}
+      </nav>
+    </details>
+  </section>
   <Footer />
 </Layout>
+
+<style>
+  .search-directory {
+    width: min(1160px, calc(100% - 40px));
+    margin: 0 auto 64px;
+  }
+  .search-directory details {
+    border: 1px solid #dfe4e6;
+    border-radius: 16px;
+    background: #fff;
+    padding: 16px 20px;
+  }
+  .search-directory summary {
+    cursor: pointer;
+    color: #102d4d;
+    font-weight: 800;
+  }
+  .search-directory nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px 20px;
+    margin-top: 18px;
+  }
+  .search-directory a {
+    color: #2462df;
+    font-size: .9rem;
+    line-height: 1.35;
+  }
+  @media (max-width: 800px) {
+    .search-directory nav { grid-template-columns: 1fr; }
+  }
+</style>
