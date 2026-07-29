@@ -169,7 +169,7 @@ cd dist/server
 # Capturamos output + RC reales (antes el pipe a grep enmascaraba el exit code
 # de wrangler → false-OK). Fallamos fuerte si el worker fue rechazado.
 set -o pipefail
-DEPLOY_OUT=$(npx wrangler@latest deploy 2>&1); DEPLOY_RC=$?
+DEPLOY_OUT=$(npx wrangler deploy 2>&1); DEPLOY_RC=$?
 set +o pipefail
 echo "$DEPLOY_OUT" | grep -E "(Uploaded.*assets|Success|Total Upload|Worker Startup|Current Version|error|Error)" | head -10
 if [ "$DEPLOY_RC" -ne 0 ] || echo "$DEPLOY_OUT" | grep -qE "uncompressed size limit|code: 10027"; then
@@ -201,7 +201,7 @@ if [ "$SMOKE" = true ]; then
   done
   if [ "$FAIL" -gt 0 ]; then
     err "$FAIL URLs fallaron — la versión deployada está ROTA. Auto-rollback a la previa..."
-    ( cd dist/server && printf 'y\ny\n' | npx wrangler@latest rollback --message "auto-rollback: smoke falló ($FAIL URLs)" 2>&1 | tail -6 )
+    ( cd dist/server && printf 'y\ny\n' | npx wrangler rollback --message "auto-rollback: smoke falló ($FAIL URLs)" 2>&1 | tail -6 )
     err "rollback ejecutado · cache NO purgado · el sitio quedó en la versión previa. Revisá el build antes de reintentar."
     exit 1
   fi
