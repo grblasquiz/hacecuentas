@@ -910,6 +910,12 @@ sitemaps.push({
     core('/do/calculadoras',                     '0.85', 'weekly',  true),
     core('/pt-pt/calculadoras',                  '0.85', 'weekly',  true),
     core('/pt-pt/calculadora-salario-minimo-portugal-hora', '0.9', 'monthly', true),
+    core('/calculadora-honorarios-abogado',       '0.85', 'monthly', true),
+    core('/calculadora-impuesto-renta-colombia-persona-natural-2026', '0.85', 'monthly', true),
+    core('/co/calculadora-tabla-impuesto-renta-personas-naturales-colombia-2026', '0.85', 'monthly', true),
+    core('/dias-entre-dos-fechas',                '0.85', 'monthly', true),
+    core('/en/pregnancy-week-calculator',         '0.85', 'monthly', true),
+    core('/mx/calculadora-costo-licencia-conducir-mexico-por-estado', '0.85', 'monthly', true),
     // Los homes de locale (/mx /co /cl /es /pt /en /ve, etc.) NO se listan
     // acá: cada sitemap-<locale>.xml ya
     // publica su home (sitemapForLocale con withIndex), heredando el lastmod

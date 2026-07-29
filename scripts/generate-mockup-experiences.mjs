@@ -64,6 +64,47 @@ const entries = [
   ['venezuela-home-mockup.html', 'VenezuelaHomeExperience', 'venezuela-home'],
   ['salario-diario-integrado-mexico-mockup.html', 'SalarioDiarioIntegradoMexicoExperience', 'salario-diario-integrado-mexico'],
   ['salario-minimo-portugal-hora-mockup.html', 'SalarioMinimoPortugalHoraExperience', 'salario-minimo-portugal-hora'],
+  ['salir-de-deudas-mockup.html', 'SalirDeDeudasExperience', 'salir-de-deudas'],
+  ['sueldo-neto-mexico-mockup.html', 'SueldoNetoMexicoExperience', 'sueldo-neto-mexico'],
+  ['liquidacion-dominicana-mockup.html', 'LiquidacionDominicanaExperience', 'liquidacion-dominicana'],
+  ['porcentajes-mockup.html', 'PorcentajesExperience', 'porcentajes'],
+  ['talles-mockup.html', 'TallesExperience', 'talles'],
+  ['sueldo-neto-dominicana-mockup.html', 'SueldoNetoDominicanaExperience', 'sueldo-neto-dominicana'],
+  ['costo-empleado-mexico-mockup.html', 'CostoEmpleadoMexicoExperience', 'costo-empleado-mexico'],
+  ['temperatura-horno-mockup.html', 'TemperaturaHornoExperience', 'temperatura-horno'],
+  ['renta-personas-colombia-mockup.html', 'RentaPersonasColombiaExperience', 'renta-personas-colombia'],
+  ['interes-compuesto-mockup.html', 'InteresCompuestoExperience', 'interes-compuesto'],
+  ['habitos-salud-mockup.html', 'HabitosSaludExperience', 'habitos-salud'],
+  ['seguro-desempleo-mockup.html', 'SeguroDesempleoExperience', 'seguro-desempleo'],
+  ['liquidacion-laboral-colombia-mockup.html', 'LiquidacionLaboralColombiaExperience', 'liquidacion-laboral-colombia'],
+  ['bebidas-evento-mockup.html', 'BebidasEventoExperience', 'bebidas-evento'],
+  ['factura-luz-mockup.html', 'FacturaLuzExperience', 'factura-luz'],
+  ['salud-home-mockup.html', 'SaludHomeExperience', 'salud-home'],
+  ['numeros-a-letras-mockup.html', 'NumerosLetrasExperience', 'numeros-a-letras'],
+  ['ingresos-plataforma-mockup.html', 'IngresosPlataformaExperience', 'ingresos-plataforma'],
+  ['prestamo-mockup.html', 'PrestamoExperience', 'prestamo'],
+  ['brasil-home-mockup.html', 'BrasilHomeExperience', 'brasil-home'],
+  ['empleada-domestica-mockup.html', 'EmpleadaDomesticaExperience', 'empleada-domestica'],
+  ['auto-o-uber-mockup.html', 'AutoUberExperience', 'auto-o-uber'],
+  ['retencion-fuente-colombia-mockup.html', 'RetencionFuenteColombiaExperience', 'retencion-fuente-colombia'],
+  ['costo-contratar-colombia-mockup.html', 'CostoContratarColombiaExperience', 'costo-contratar-colombia'],
+  ['recibos-servicios-colombia-mockup.html', 'RecibosServiciosColombiaExperience', 'recibos-servicios-colombia'],
+  ['comprar-vivienda-dominicana-mockup.html', 'ComprarViviendaDominicanaExperience', 'comprar-vivienda-dominicana'],
+  ['impuestos-inmueble-ecuador-mockup.html', 'ImpuestosInmuebleEcuadorExperience', 'impuestos-inmueble-ecuador'],
+  ['empanadas-guarniciones-mockup.html', 'EmpanadasGuarnicionesExperience', 'empanadas-guarniciones'],
+  ['cedears-mockup.html', 'CedearsExperience', 'cedears'],
+  ['edad-gato-mockup.html', 'EdadGatoExperience', 'edad-gato'],
+  ['probabilidad-mockup.html', 'ProbabilidadExperience', 'probabilidad'],
+  ['metricas-marketing-mockup.html', 'MetricasMarketingExperience', 'metricas-marketing'],
+  ['sueldo-recargos-venezuela-mockup.html', 'SueldoRecargosVenezuelaExperience', 'sueldo-recargos-venezuela'],
+  ['calendario-anses-agosto-2026-mockup.html', 'CalendarioAnsesAgostoExperience', 'calendario-anses-agosto'],
+  ['dias-entre-dos-fechas-mockup.html', 'DiasEntreFechasExperience', 'dias-entre-fechas'],
+  ['tabla-renta-colombia-2026-mockup.html', 'TablaRentaColombiaExperience', 'tabla-renta-colombia'],
+  ['pregnancy-week-calculator-mockup.html', 'PregnancyWeekExperience', 'pregnancy-week'],
+  ['honorarios-abogado-mockup.html', 'HonorariosAbogadoExperience', 'honorarios-abogado'],
+  ['impuesto-renta-colombia-persona-natural-2026-mockup.html', 'ImpuestoRentaColombiaExperience', 'impuesto-renta-colombia'],
+  ['validar-nit-colombia-mockup.html', 'ValidarNitColombiaExperience', 'validar-nit-colombia'],
+  ['licencia-conducir-mexico-estado-mockup.html', 'LicenciaConducirMexicoExperience', 'licencia-conducir-mexico'],
 ];
 
 const prefixCss = (css, scope) => {
@@ -168,6 +209,37 @@ const pages = [
   ['src/pages/trabajo/sueldo-bruto-y-neto.astro', 'SueldoBrutoNetoExperience', '../../components/generated/SueldoBrutoNetoExperience.astro'],
   ['src/pages/trabajo/sueldo-vs-inflacion.astro', 'SueldoVsInflacionExperience', '../../components/generated/SueldoVsInflacionExperience.astro'],
   ['src/pages/viajes/millas.astro', 'MillasExperience', '../../components/generated/MillasExperience.astro'],
+  ['src/pages/finanzas-personales/salir-de-deudas.astro', 'SalirDeDeudasExperience', '../../components/generated/SalirDeDeudasExperience.astro'],
+  ['src/pages/mx/trabajo/sueldo-neto.astro', 'SueldoNetoMexicoExperience', '../../../components/generated/SueldoNetoMexicoExperience.astro'],
+  ['src/pages/do/trabajo/liquidacion.astro', 'LiquidacionDominicanaExperience', '../../../components/generated/LiquidacionDominicanaExperience.astro'],
+  ['src/pages/matematica/porcentajes.astro', 'PorcentajesExperience', '../../components/generated/PorcentajesExperience.astro'],
+  ['src/pages/conversores/talles.astro', 'TallesExperience', '../../components/generated/TallesExperience.astro'],
+  ['src/pages/do/trabajo/sueldo-neto.astro', 'SueldoNetoDominicanaExperience', '../../../components/generated/SueldoNetoDominicanaExperience.astro'],
+  ['src/pages/mx/trabajo/costo-de-un-empleado.astro', 'CostoEmpleadoMexicoExperience', '../../../components/generated/CostoEmpleadoMexicoExperience.astro'],
+  ['src/pages/cocina/temperatura-del-horno.astro', 'TemperaturaHornoExperience', '../../components/generated/TemperaturaHornoExperience.astro'],
+  ['src/pages/co/impuestos/renta-personas.astro', 'RentaPersonasColombiaExperience', '../../../components/generated/RentaPersonasColombiaExperience.astro'],
+  ['src/pages/inversiones/interes-compuesto.astro', 'InteresCompuestoExperience', '../../components/generated/InteresCompuestoExperience.astro'],
+  ['src/pages/salud/habitos.astro', 'HabitosSaludExperience', '../../components/generated/HabitosSaludExperience.astro'],
+  ['src/pages/trabajo/seguro-de-desempleo.astro', 'SeguroDesempleoExperience', '../../components/generated/SeguroDesempleoExperience.astro'],
+  ['src/pages/co/trabajo/liquidacion-laboral.astro', 'LiquidacionLaboralColombiaExperience', '../../../components/generated/LiquidacionLaboralColombiaExperience.astro'],
+  ['src/pages/eventos/bebidas.astro', 'BebidasEventoExperience', '../../components/generated/BebidasEventoExperience.astro'],
+  ['src/pages/hogar/factura-de-luz.astro', 'FacturaLuzExperience', '../../components/generated/FacturaLuzExperience.astro'],
+  ['src/pages/conversores/numeros-a-letras.astro', 'NumerosLetrasExperience', '../../components/generated/NumerosLetrasExperience.astro'],
+  ['src/pages/negocios/ingresos-por-plataforma.astro', 'IngresosPlataformaExperience', '../../components/generated/IngresosPlataformaExperience.astro'],
+  ['src/pages/finanzas-personales/prestamo.astro', 'PrestamoExperience', '../../components/generated/PrestamoExperience.astro'],
+  ['src/pages/trabajo/empleada-domestica.astro', 'EmpleadaDomesticaExperience', '../../components/generated/EmpleadaDomesticaExperience.astro'],
+  ['src/pages/auto/auto-o-uber.astro', 'AutoUberExperience', '../../components/generated/AutoUberExperience.astro'],
+  ['src/pages/co/impuestos/retencion-en-la-fuente.astro', 'RetencionFuenteColombiaExperience', '../../../components/generated/RetencionFuenteColombiaExperience.astro'],
+  ['src/pages/co/trabajo/costo-de-contratar.astro', 'CostoContratarColombiaExperience', '../../../components/generated/CostoContratarColombiaExperience.astro'],
+  ['src/pages/co/vida/recibos-de-servicios.astro', 'RecibosServiciosColombiaExperience', '../../../components/generated/RecibosServiciosColombiaExperience.astro'],
+  ['src/pages/do/impuestos/comprar-vivienda.astro', 'ComprarViviendaDominicanaExperience', '../../../components/generated/ComprarViviendaDominicanaExperience.astro'],
+  ['src/pages/ec/impuestos/impuestos-del-inmueble.astro', 'ImpuestosInmuebleEcuadorExperience', '../../../components/generated/ImpuestosInmuebleEcuadorExperience.astro'],
+  ['src/pages/eventos/empanadas-y-guarniciones.astro', 'EmpanadasGuarnicionesExperience', '../../components/generated/EmpanadasGuarnicionesExperience.astro'],
+  ['src/pages/inversiones/cedears.astro', 'CedearsExperience', '../../components/generated/CedearsExperience.astro'],
+  ['src/pages/mascotas/edad-del-gato.astro', 'EdadGatoExperience', '../../components/generated/EdadGatoExperience.astro'],
+  ['src/pages/matematica/probabilidad.astro', 'ProbabilidadExperience', '../../components/generated/ProbabilidadExperience.astro'],
+  ['src/pages/negocios/metricas-de-marketing.astro', 'MetricasMarketingExperience', '../../components/generated/MetricasMarketingExperience.astro'],
+  ['src/pages/ve/trabajo/sueldo-y-recargos.astro', 'SueldoRecargosVenezuelaExperience', '../../../components/generated/SueldoRecargosVenezuelaExperience.astro'],
 ];
 
 for (const [page, component, importPath] of pages) {
@@ -181,6 +253,8 @@ for (const [page, component, importPath] of pages) {
 const countryHomes = [
   ['src/pages/py/index.astro', 'PillarHub', 'ParaguayHomeExperience', '../../components/generated/ParaguayHomeExperience.astro'],
   ['src/pages/ve/index.astro', 'PillarHub', 'VenezuelaHomeExperience', '../../components/generated/VenezuelaHomeExperience.astro'],
+  ['src/pages/pt/index.astro', 'PillarHub', 'BrasilHomeExperience', '../../components/generated/BrasilHomeExperience.astro'],
+  ['src/pages/salud/index.astro', 'SiloIndex', 'SaludHomeExperience', '../../components/generated/SaludHomeExperience.astro'],
 ];
 
 for (const [page, previous, component, importPath] of countryHomes) {
@@ -192,4 +266,29 @@ for (const [page, previous, component, importPath] of countryHomes) {
   );
   source = source.replace(new RegExp(`<${previous}[^>]*/>`), `<${component} />`);
   fs.writeFileSync(fullPath, source);
+}
+
+const standalonePages = [
+  ['src/pages/calendario-pagos-anses-agosto-2026.astro', 'CalendarioAnsesAgostoExperience', 'Calendario de pagos ANSES agosto 2026', 'Consultá todas las fechas de cobro de ANSES de agosto de 2026.', 'AR', 'es', 'Calendario'],
+  ['src/pages/co/validar-nit.astro', 'ValidarNitColombiaExperience', 'Validador de NIT Colombia', 'Validá un NIT colombiano y su dígito de verificación.', 'CO', 'es', 'Trámites'],
+  ['src/pages/dias-entre-dos-fechas.astro', 'DiasEntreFechasExperience', 'Calculadora de días entre dos fechas', 'Calculá días corridos, semanas y días hábiles entre dos fechas.', 'AR', 'es', 'Fechas'],
+  ['src/pages/co/calculadora-tabla-impuesto-renta-personas-naturales-colombia-2026.astro', 'TablaRentaColombiaExperience', 'Tabla de impuesto de renta Colombia 2026', 'Calculá el impuesto de renta de personas naturales en Colombia para 2026.', 'CO', 'es', 'Impuestos'],
+  ['src/pages/en/pregnancy-week-calculator.astro', 'PregnancyWeekExperience', 'Pregnancy week calculator', 'Calculate your current pregnancy week, trimester and estimated due date.', 'EN', 'en', 'Health'],
+  ['src/pages/calculadora-honorarios-abogado.astro', 'HonorariosAbogadoExperience', 'Calculadora de honorarios de abogado', 'Estimá honorarios legales según el tipo y monto del asunto.', 'AR', 'es', 'Servicios'],
+  ['src/pages/calculadora-impuesto-renta-colombia-persona-natural-2026.astro', 'ImpuestoRentaColombiaExperience', 'Impuesto de renta Colombia persona natural 2026', 'Estimá el impuesto de renta para una persona natural en Colombia.', 'CO', 'es', 'Impuestos'],
+  ['src/pages/mx/calculadora-costo-licencia-conducir-mexico-por-estado.astro', 'LicenciaConducirMexicoExperience', 'Costo de licencia de conducir en México por estado', 'Compará el costo y vigencia de la licencia de conducir por estado.', 'MX', 'es', 'Trámites'],
+];
+
+for (const [page, component, title, description, audience, lang, section] of standalonePages) {
+  const fullPath = path.join('/Users/marrod/hacecuentas', page);
+  const pageDir = path.dirname(fullPath);
+  const rel = (target) => {
+    let value = path.relative(pageDir, path.join('/Users/marrod/hacecuentas', target)).replaceAll(path.sep, '/');
+    return value.startsWith('.') ? value : `./${value}`;
+  };
+  const route = '/' + page.replace(/^src\/pages\//, '').replace(/\/index\.astro$/, '').replace(/\.astro$/, '');
+  const canonical = `https://hacecuentas.com${route}`;
+  const output = `---\nexport const prerender = true;\nimport Layout from '${rel('src/layouts/Layout.astro')}';\nimport Header from '${rel('src/components/Header.astro')}';\nimport Footer from '${rel('src/components/Footer.astro')}';\nimport ${component} from '${rel(`src/components/generated/${component}.astro`)}';\nconst canonical = '${canonical}';\nconst schema = {'@context':'https://schema.org','@type':'WebApplication',name:'${title.replaceAll("'", "\\'")}',url:canonical,applicationCategory:'FinanceApplication',operatingSystem:'Web'};\n---\n<Layout title="${title}" description="${description}" canonical={canonical} schema={schema} audience="${audience}" lang="${lang}" ogType="article" articleSection="${section}">\n  <Header />\n  <${component} />\n  <Footer />\n</Layout>\n`;
+  fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+  fs.writeFileSync(fullPath, output);
 }
