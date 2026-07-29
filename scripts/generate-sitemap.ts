@@ -883,6 +883,7 @@ sitemaps.push({
     core('/mx/calculadoras',                     '0.85', 'weekly',  true),
     core('/mx/datos-salario-minimo-mexico-2026', '0.8',  'monthly', true),
     core('/mx/datos-uma-imss-2026',              '0.8',  'monthly', true),
+    core('/mx/calculadora-salario-diario-integrado-sdi-mexico', '0.9', 'monthly', true),
     core('/pe/calculadoras',                     '0.85', 'weekly',  true),
     core('/pe/datos-sueldo-minimo-peru-2026',    '0.8',  'monthly', true),
     core('/pe/datos-soat-uit-peru-2026',         '0.8',  'monthly', true),
@@ -908,6 +909,7 @@ sitemaps.push({
     core('/uy/calculadoras',                     '0.85', 'weekly',  true),
     core('/do/calculadoras',                     '0.85', 'weekly',  true),
     core('/pt-pt/calculadoras',                  '0.85', 'weekly',  true),
+    core('/pt-pt/calculadora-salario-minimo-portugal-hora', '0.9', 'monthly', true),
     // Los homes de locale (/mx /co /cl /es /pt /en /ve, etc.) NO se listan
     // acá: cada sitemap-<locale>.xml ya
     // publica su home (sitemapForLocale con withIndex), heredando el lastmod

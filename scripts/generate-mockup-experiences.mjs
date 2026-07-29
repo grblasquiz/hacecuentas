@@ -62,6 +62,8 @@ const entries = [
   ['sueldo-vs-inflacion-mockup.html', 'SueldoVsInflacionExperience', 'sueldo-vs-inflacion'],
   ['millas-mockup.html', 'MillasExperience', 'millas'],
   ['venezuela-home-mockup.html', 'VenezuelaHomeExperience', 'venezuela-home'],
+  ['salario-diario-integrado-mexico-mockup.html', 'SalarioDiarioIntegradoMexicoExperience', 'salario-diario-integrado-mexico'],
+  ['salario-minimo-portugal-hora-mockup.html', 'SalarioMinimoPortugalHoraExperience', 'salario-minimo-portugal-hora'],
 ];
 
 const prefixCss = (css, scope) => {
