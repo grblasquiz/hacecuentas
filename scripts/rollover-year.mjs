@@ -228,7 +228,6 @@ function recommendB(relPath) {
   const base = path.basename(relPath);
   const inFormulas = relPath.startsWith('src/lib/formulas/');
   const inBlog = /^src\/content\/blog(-pt)?\//.test(relPath);
-  const inHistorias = relPath.startsWith('src/content/historias/');
 
   if (EVENT_RE.test(base)) {
     return { tipo: 'evento', rec: `NO rollover: es contenido del evento (Mundial ${Y}, etc.). Post-evento evaluar 301 al hub temático o dejar como histórico.` };
@@ -239,7 +238,7 @@ function recommendB(relPath) {
   if (/feriados|vacaciones-invierno|calendario/.test(base)) {
     return { tipo: 'calendario-anual', rec: `Crear versión ${TY} cuando el país publique el calendario oficial (2° semestre ${Y}). Mantener la ${Y} hasta fin de año, después 301 → ${TY}.` };
   }
-  if (inBlog || inHistorias) {
+  if (inBlog) {
     return { tipo: 'contenido-fechado', rec: `Editorial fechado: NO rollover automático. Opcional escribir pieza ${TY} nueva y cross-linkear.` };
   }
   if (/navidad|ano-nuevo|año-nuevo|reyes|cuanto-falta|quanto-falta/i.test(base)) {

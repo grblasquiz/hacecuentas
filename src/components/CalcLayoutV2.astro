@@ -18,7 +18,6 @@ import FinancialClusterCalculator from './FinancialClusterCalculator.astro';
 import { getDatosSource } from '../lib/datos-source-map';
 import { getTablaForCalc } from '../lib/tablas-map';
 import blogBacklinks from '../lib/blog-backlinks.json';
-import { getHistoriaForArticle } from '../lib/historias-map';
 import { shouldShowReviewDate } from '../lib/review-dates';
 import { sourceRel } from '../lib/source-rel';
 import RelatedCalcs from './RelatedCalcs.astro';
@@ -419,9 +418,6 @@ const blogPosts: Array<{ slug: string; title: string }> =
     ? ((blogBacklinks as Record<string, Array<{ slug: string; title: string }>>)[lang ? `${lang}/${calc.slug}` : calc.slug] || []).slice(0, 2)
     : [];
 const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-// Web Story de este calc, si existe. Las /historias declaraban su artículo de
-// origen pero el artículo no linkeaba de vuelta (1 solo inlink cada una).
-const historia = lang ? null : getHistoriaForArticle(`/${calc.slug}`);
 const useCases: Array<string | {title?:string;description?:string}> = calc.useCases || [];
 const example = calc.example || null;
 const solvedExamples = Array.isArray(calc.solvedExamples) ? calc.solvedExamples : [];
@@ -1075,17 +1071,6 @@ const editorialHtml = _isReviewed
         )}
       </div>
       <a class="gb" href={`/blog/${blogPosts[0].slug}`}>Leer la nota →</a>
-    </aside>
-  )}
-
-  {historia && (
-    <aside class="v2-guide">
-      <div class="gc-text">
-        <span class="eb">📱 Versión rápida, en 6 pantallas</span>
-        <strong>{historia.title}</strong>
-        <span class="gd">La historia visual del tema: los números clave, sin scrollear.</span>
-      </div>
-      <a class="gb" href={`/historias/${historia.slug}`}>Ver la historia →</a>
     </aside>
   )}
 

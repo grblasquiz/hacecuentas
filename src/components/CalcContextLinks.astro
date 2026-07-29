@@ -17,7 +17,6 @@
  */
 import blogBacklinks from '../lib/blog-backlinks.json';
 import { getTablaForCalc } from '../lib/tablas-map';
-import { getHistoriaForArticle } from '../lib/historias-map';
 
 interface Props {
   calc: any;
@@ -32,10 +31,9 @@ const blogPosts: Array<{ slug: string; title: string }> =
     ? ((blogBacklinks as Record<string, Array<{ slug: string; title: string }>>)[key] || []).slice(0, 2)
     : [];
 const tablaRef = getTablaForCalc(calc.slug, lang);
-const historia = lang ? null : getHistoriaForArticle(`/${calc.slug}`);
 
 const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-const hasAny = blogPosts.length > 0 || !!tablaRef || !!historia;
+const hasAny = blogPosts.length > 0 || !!tablaRef;
 ---
 
 {hasAny && (
@@ -53,12 +51,6 @@ const hasAny = blogPosts.length > 0 || !!tablaRef || !!historia;
       <div class="cxl-item">
         <span class="cxl-eb">📋 Tabla de referencia</span>
         <a class="cxl-link" href={`/tabla/${tablaRef.slug}`}>{tablaRef.label}</a>
-      </div>
-    )}
-    {historia && (
-      <div class="cxl-item">
-        <span class="cxl-eb">📱 Versión rápida</span>
-        <a class="cxl-link" href={`/historias/${historia.slug}`}>{historia.title}</a>
       </div>
     )}
   </section>

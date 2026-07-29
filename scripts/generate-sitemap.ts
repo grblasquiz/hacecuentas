@@ -560,15 +560,6 @@ const priorityUrls: Url[] = [
   prio('/feriados-chile-2026',               '0.85', 'weekly'),
   prio('/feriados-peru-2026',                '0.85', 'weekly'),
   prio('/feriados-ecuador-2026',             '0.85', 'weekly'),
-  // Web Stories (AMP) — Google les da carrusel propio en Discover/Imágenes
-  prio('/historias/vacaciones-invierno-2026',            '0.7', 'weekly'),
-  prio('/historias/aguinaldo-2026-plazo-fijo-dolar-uva', '0.7', 'weekly'),
-  prio('/historias/calefaccion-invierno-2026',           '0.7', 'weekly'),
-  prio('/historias/mundial-2026-lo-que-tenes-que-saber-hoy',     '0.7', 'daily'),
-  prio('/historias/recategorizacion-monotributo-julio-2026',    '0.7', 'weekly'),
-  prio('/historias/aguinaldo-2026-como-se-calcula',             '0.7', 'weekly'),
-  prio('/historias/cuanto-perdio-tu-sueldo-inflacion',          '0.7', 'daily'),
-  prio('/historias',                                            '0.75', 'weekly'),
   // guías pilares (estables)
   prio('/guia/finanzas-personales',          '0.9',  'weekly'),
   prio('/guia/marketing-roi-metricas',       '0.9',  'weekly'),
@@ -1615,12 +1606,12 @@ if (gone410Stripped > 0) {
 
 // Segmentos utilitarios: páginas de navegación/producto que no compiten por
 // ninguna query. Medición Bing 90d (CSV PageTraffic, 946 URLs con impresiones):
-// /decidir/, /comparar/, /partners/, /historias/, /mi/, /informes/,
+// /decidir/, /comparar/, /partners/, /mi/, /informes/,
 // /fin-de-semana/ y /top/ dieron 0 impresiones en TODOS sus URLs. Siguen vivas y
 // linkeadas desde el sitio; sólo salen del sitemap para que el crawl y la señal
 // se concentren en lo que puede rankear.
 const UTILITY_PREFIXES = [
-  '/decidir/', '/comparar/', '/partners/', '/historias/',
+  '/decidir/', '/comparar/', '/partners/',
   '/mi/', '/informes/', '/fin-de-semana/', '/top/',
 ];
 let utilityStripped = 0;

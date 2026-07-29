@@ -45,7 +45,7 @@ const ALLOWLIST = new Set([
 // navegación/producto que en 90 días de Bing dio 0 impresiones en TODAS sus URLs.
 // Siguen vivas, linkeadas e indexables; sólo no las proponemos para crawl.
 const ALLOWED_PREFIXES = [
-  '/decidir', '/comparar', '/partners', '/historias',
+  '/decidir', '/comparar', '/partners',
   '/mi', '/informes', '/fin-de-semana', '/top',
 ];
 const isAllowedPrefix = (u) =>

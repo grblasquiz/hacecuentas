@@ -137,7 +137,7 @@ const goneUrls = new Set<string>();
 // ---- Resolución de una ruta interna -----------------------------------------
 
 // Prefijos dinámicos que no enumeramos (data anidada / superficies chicas)
-const SKIP_PREFIXES = ['/api/', '/og/', '/img/', '/informes/', '/iibb/', '/argentina/', '/mi/', '/historias/', '/datasets/', '/.well-known/', '/mcp'];
+const SKIP_PREFIXES = ['/api/', '/og/', '/img/', '/informes/', '/iibb/', '/argentina/', '/mi/', '/datasets/', '/.well-known/', '/mcp'];
 
 function resolves(path: string): boolean {
   if (staticRoutes.has(path)) return true;
