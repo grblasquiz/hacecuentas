@@ -14,7 +14,10 @@ export interface Outputs { [key: string]: any; _insight?: any; _chart?: any; }
 function parseList(value: unknown, label: string): number[] {
   const raw = String(value ?? '').trim();
   if (!raw) throw new Error(`Ingresá al menos una ${label}.`);
-  const values = raw.split(/[;,]/).map((item) => Number(item.trim().replace(',', '.')));
+  // El punto y coma separa notas y la coma puede ser decimal: "3; 4; 2,5".
+  // Si no hay punto y coma, aceptamos la coma como separador de notas enteras.
+  const items = raw.includes(';') ? raw.split(';') : raw.split(',');
+  const values = items.map((item) => Number(item.trim().replace(',', '.')));
   if (values.some((item) => !Number.isFinite(item))) throw new Error(`Separá las ${label}s con punto y coma (ejemplo: 3; 4; 2,5).`);
   return values;
 }

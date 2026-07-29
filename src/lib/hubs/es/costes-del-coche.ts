@@ -177,9 +177,9 @@ export const hub: HubData = {
       ],
     },
     { id: 'seguro', label: 'Prima anual del seguro', prefix: '€', value: '400', thousands: true },
-    { id: 'kmAnuales', label: 'Kilómetros al año', type: 'number', value: '12.000', min: 0, max: 100000, step: 500, thousands: true },
-    { id: 'consumo', label: 'Consumo medio', type: 'number', value: '6,5', min: 0, max: 25, step: 0.1, suffix: ' l/100 km' },
-    { id: 'precioCarburante', label: 'Precio del carburante', prefix: '€', suffix: '/l', value: '1,55' },
+    { id: 'kmAnuales', label: 'Kilómetros al año', type: 'number', value: 12000, min: 0, max: 100000, step: 500 },
+    { id: 'consumo', label: 'Consumo medio', type: 'number', value: 6.5, min: 0, max: 25, step: 0.1, suffix: ' l/100 km' },
+    { id: 'precioCarburante', label: 'Precio del carburante', type: 'number', prefix: '€', suffix: '/l', value: 1.55, min: 0, step: 0.01 },
     { id: 'peajes', label: 'Peajes al año', prefix: '€', value: '0', thousands: true },
     { id: 'valorFiscal', label: 'Valor fiscal del coche usado (si lo compras)', prefix: '€', value: '8.000', thousands: true },
     {

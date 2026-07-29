@@ -13,22 +13,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
 </Layout>
 <script>
   import { formulaMap } from '../../../lib/hub-formulas-generated/ve-salud-estudio-y-tramites';
+  import { adaptGeneratedHubResult } from '../../../lib/generated-hub-adapter';
   const configs = {"c1":{"formulaId":"calorias-tdee","fields":["sexo","edad","peso","altura","actividad"],"outputs":[{"id":"tdee","label":"Calorías para mantener","format":"number","primary":true,"suffix":"kcal/día"},{"id":"bmr","label":"Metabolismo basal (reposo)","format":"number","suffix":"kcal"},{"id":"paraBajarPeso","label":"Para bajar peso (~0,5 kg/semana)","format":"number","suffix":"kcal/día"},{"id":"paraSubirPeso","label":"Para subir peso (~0,5 kg/semana)","format":"number","suffix":"kcal/día"},{"id":"nivelActividad","label":"Actividad aplicada","format":"text"}],"title":"Calculadora de calorías diarias (gasto energético)"},"c2":{"formulaId":"costo-pasaporte-saime-venezuela","fields":["tramite","tarifaUsdManual","tasaBcv"],"outputs":[{"id":"costoBs","label":"Costo en bolívares","format":"currency","prefix":"Bs.","primary":true,"description":"Tarifa en dólares convertida a bolívares a la tasa BCV."},{"id":"costoUsd","label":"Tarifa en dólares","format":"currency","prefix":"$","description":"Tarifa del trámite en dólares (referencial o la que ingreses)."},{"id":"tasaUsada","label":"Tasa BCV aplicada","description":"Bolívares por dólar usados en el cálculo."},{"id":"detalle","label":"Detalle"}],"title":"Costo del pasaporte y la prórroga (SAIME) en bolívares"},"c3":{"formulaId":"calculadora-promedio-notas-20-puntos-venezuela","fields":["notas","creditos","notaAprobatoria"],"outputs":[{"id":"promedio","label":"Promedio / índice (sobre 20)","format":"text","primary":true,"description":"Promedio simple o índice ponderado si cargaste créditos."},{"id":"categoria","label":"Nivel","format":"text","description":"Excelente, distinguido, bueno, aprobado o reprobado."},{"id":"materiasAprobadas","label":"Materias aprobadas","format":"number","description":"Cantidad de notas iguales o mayores a la mínima."},{"id":"materiasReprobadas","label":"Materias reprobadas","format":"number","description":"Cantidad de notas por debajo de la mínima."}],"title":"Calculadora de promedio de notas e índice académico (escala 0-20)"}};
-  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
-  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
   function register() {
     const H = (window as any).HC_HUB;
     if (!H) return;
-    H.onCompute((all:any, selected:any) => {
-    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
-    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
-    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
-    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
-    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
-    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
-    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
-    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
-    });
+    H.onCompute((all:any, selected:any) => adaptGeneratedHubResult(all, selected, configs as any, formulaMap, { locale: 'es', format: 'unit' }));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
   else register();

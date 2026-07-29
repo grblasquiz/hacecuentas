@@ -102,7 +102,7 @@ export const hub: HubData = {
     "id": "c2__notas",
     "label": "Calculadora de Promedio Ponderado Universitario — Perú (escala 0-20): Tus notas (0-20, separadas por coma)",
     "type": "text",
-    "value": 15121714,
+    "value": "15,12,17,14",
     "thousands": false,
     "help": "Escala vigesimal 0-20, en el mismo orden que los créditos."
   },
@@ -110,7 +110,7 @@ export const hub: HubData = {
     "id": "c2__creditos",
     "label": "Calculadora de Promedio Ponderado Universitario — Perú (escala 0-20): Créditos de cada curso (mismo orden)",
     "type": "text",
-    "value": 4354,
+    "value": "4,3,5,4",
     "thousands": false,
     "help": "Los créditos figuran en tu plan de estudios o intranet."
   },

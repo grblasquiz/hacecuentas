@@ -135,7 +135,7 @@ export const hub: HubData = {
       id: 'rentabilidad',
       label: 'Rentabilidad anual esperada del producto',
       type: 'number',
-      value: '2,5',
+      value: 2.5,
       min: 0,
       max: 15,
       step: 0.05,

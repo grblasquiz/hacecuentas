@@ -13,22 +13,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
 </Layout>
 <script>
   import { formulaMap } from '../../../lib/hub-formulas-generated/pt-obra-e-manutencao';
+  import { adaptGeneratedHubResult } from '../../../lib/generated-hub-adapter';
   const configs = {"c1":{"formulaId":"acero-kg-m2-losa","fields":["tipo"],"outputs":[{"id":"kgPorM2","label":"Kg/m²","primary":true},{"id":"resumen","label":"Interpretação"}],"title":"Aço por m² de Laje — Calculadora + Tabela de Referência"},"c2":{"formulaId":"caldera-kw-m2-calefaccion","fields":["m2","aislamiento"],"outputs":[{"id":"kw","label":"Potência da caldeira necessária","primary":true},{"id":"resumen","label":"Interpretação"}],"title":"kW por m² para aquecimento: tabela por isolamento e tamanho"},"c3":{"formulaId":"custo-obra-por-m2-quanto-custa-construir-casa-cub","fields":["areaConstruida","cubM2","padrao"],"outputs":[{"id":"custoEstimado","label":"Custo total estimado","primary":true},{"id":"custoPorM2Final","label":"Custo final por m²"},{"id":"custoMin","label":"Faixa mínima"},{"id":"custoMax","label":"Faixa máxima"},{"id":"custoCUB","label":"Custo pelo CUB puro"},{"id":"detalhe","label":"Detalhe"}],"title":"Calculadora de Custo de Obra por m² (CUB)"},"c4":{"formulaId":"drenaje-grava-maceta","fields":["volumenMaceta"],"outputs":[{"id":"litrosGrava","label":"L de brita","primary":true},{"id":"resumen","label":"Interpretação"}],"title":"Quanto de Brita para Drenagem em Vasos"},"c5":{"formulaId":"mudanza-costo-flete-camioneta-km-caja","fields":["km","m3","pisoSalida","conEmbalaje"],"outputs":[{"id":"flete","label":"Frete base","primary":true},{"id":"km","label":"Por quilômetros"},{"id":"piso","label":"Sobretaxa de andar"},{"id":"total","label":"Total estimado"},{"id":"resumen","label":"Interpretação"}],"title":"Mudança: custo frete + embalagem"},"c6":{"formulaId":"mulching-espesor-cantidad","fields":["m2","espesor"],"outputs":[{"id":"m3","label":"Volume (m³)","primary":true},{"id":"kg","label":"Peso (kg, palha)"},{"id":"resumen","label":"Interpretação"}],"title":"Quanto Mulch Preciso? Volume e Peso por Área e Espessura"},"c7":{"formulaId":"pared-ladrillos-metros-m2","fields":["tipo","m2"],"outputs":[{"id":"cantidad","label":"Tijolos necessários (com +10% de folga)","primary":true},{"id":"resumen","label":"Interpretação"}],"title":"Calculadora de tijolos por m² de parede"}};
-  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
-  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
   function register() {
     const H = (window as any).HC_HUB;
     if (!H) return;
-    H.onCompute((all:any, selected:any) => {
-    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
-    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
-    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
-    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
-    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
-    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
-    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
-    return {total:main.toLocaleString('pt-BR',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
-    });
+    H.onCompute((all:any, selected:any) => adaptGeneratedHubResult(all, selected, configs as any, formulaMap, { locale: 'pt-BR', format: 'unit' }));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
   else register();

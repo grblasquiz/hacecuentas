@@ -146,7 +146,7 @@ export const hub: HubData = {
       id: 'potenciaAire',
       label: 'Potencia del aire acondicionado',
       type: 'number',
-      value: '2,5',
+      value: 2.5,
       min: 0,
       max: 15,
       step: 0.1,

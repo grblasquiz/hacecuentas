@@ -13,22 +13,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
 </Layout>
 <script>
   import { formulaMap } from '../../../lib/hub-formulas-generated/ec-comida-salud-y-construccion';
+  import { adaptGeneratedHubResult } from '../../../lib/generated-hub-adapter';
   const configs = {"c1":{"formulaId":"inta-calorias-diarias-chile","fields":["pesoKg","alturaCm","edad","sexo","actividad"],"outputs":[{"id":"caloriasMantenimiento","label":"Calorías de mantenimiento","primary":true},{"id":"metabolismoBasal","label":"Metabolismo basal"},{"id":"rangoOrientativo","label":"Rango orientativo"},{"id":"detalle","label":"Detalle"}],"title":"Calculadora de calorías diarias — Ecuador"},"c2":{"formulaId":"costo-construccion-m2-ecuador","fields":["metros","calidad"],"outputs":[{"id":"costoTotal","label":"Costo total estimado de la obra","primary":true},{"id":"costoPorM2","label":"Costo por m²"},{"id":"desglose","label":"Materiales vs mano de obra"},{"id":"detalle","label":"Detalle del cálculo"}],"title":"Calculadora de Costo de Construcción por m² 2026"},"c3":{"formulaId":"conversion-medidas-cocina-tazas-gramos","fields":["ingredient","quantity","from_unit","to_unit"],"outputs":[{"id":"result","label":"Equivalencia","primary":true,"format":"decimal","suffix":""},{"id":"result_label","label":"Resultado completo","format":"text"},{"id":"grams_per_cup","label":"Gramos por taza (referencia)","format":"text"},{"id":"reference_table","label":"Tabla de referencia del ingrediente","format":"text"}],"title":"Convertir tazas a gramos (y viceversa) por ingrediente — Ecuador"}};
-  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
-  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
   function register() {
     const H = (window as any).HC_HUB;
     if (!H) return;
-    H.onCompute((all:any, selected:any) => {
-    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
-    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
-    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
-    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
-    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
-    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
-    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
-    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
-    });
+    H.onCompute((all:any, selected:any) => adaptGeneratedHubResult(all, selected, configs as any, formulaMap, { locale: 'es', format: 'unit' }));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
   else register();

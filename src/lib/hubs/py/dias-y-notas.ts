@@ -78,14 +78,14 @@ export const hub: HubData = {
     "id": "c2__notas",
     "label": "Calculadora de promedio de notas — Paraguay (MEC, 1 a 5): Notas (separadas por punto y coma)",
     "type": "text",
-    "value": 3425,
+    "value": "3;4;2,5",
     "thousands": false
   },
   {
     "id": "c2__pesos",
     "label": "Calculadora de promedio de notas — Paraguay (MEC, 1 a 5): Pesos de cada nota (opcional, mismo orden)",
     "type": "text",
-    "value": 112,
+    "value": "1;1;2",
     "thousands": false
   },
   {

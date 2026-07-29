@@ -152,7 +152,7 @@ export const hub: HubData = {
       id: 'ipc',
       label: 'IPC de referencia para la revalorización',
       type: 'number',
-      value: String(PENSIONES_2026.revalorizacionPct).replace('.', ','),
+      value: PENSIONES_2026.revalorizacionPct,
       min: 0,
       max: 15,
       step: 0.1,

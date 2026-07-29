@@ -185,8 +185,11 @@ export const hub: HubData = {
     {
       id: 'tasaDolar',
       label: 'Cotización del dólar (RD$ por USD)',
+      type: 'number',
       prefix: 'RD$',
-      value: String(FX.usdMid).replace('.', ','),
+      value: FX.usdMid,
+      min: 0.01,
+      step: 0.01,
       help: `Referencia del BCRD al ${FX.fecha}. Cambia a diario: poné la del día.`,
     },
     {

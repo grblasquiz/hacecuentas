@@ -13,22 +13,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
 </Layout>
 <script>
   import { formulaMap } from '../../../lib/hub-formulas-generated/en-identity-permits-and-applications';
+  import { adaptGeneratedHubResult } from '../../../lib/generated-hub-adapter';
   const configs = {"c1":{"formulaId":"certificado-libre-deuda-auto-costo","fields":["provincia"],"outputs":[{"id":"costo","label":"Cost","primary":true},{"id":"tiempo","label":"Processing Time"},{"id":"resumen","label":"Summary"}],"title":"Auto Debt-Free Certificate Cost"},"c2":{"formulaId":"licencia-conducir-costo-categoria-b1-a","fields":["tipo","categoria"],"outputs":[{"id":"costo","label":"Total Cost","primary":true},{"id":"validez","label":"Validity Period"},{"id":"resumen","label":"Summary"}],"title":"Driver License Cost by Category"},"c3":{"formulaId":"libreta-sanitaria-costo-hueria-food","fields":["municipio"],"outputs":[{"id":"costo","label":"Cost","primary":true},{"id":"validez","label":"Validity"},{"id":"resumen","label":"Interpretation"}],"title":"Food Handler Permit Cost in Argentina"},"c4":{"formulaId":"dni-extranjero-residencia-costo-migraciones","fields":["tipo"],"outputs":[{"id":"migraciones","label":"Immigration Fee","primary":true},{"id":"dni","label":"Foreign ID Cost"},{"id":"total","label":"Total"},{"id":"resumen","label":"Summary"}],"title":"Foreign Residency & ID Cost Calculator"},"c5":{"formulaId":"cbc-uba-materias-regularidad-requisitos","fields":["asistenciaPorcentaje","parcial1","parcial2"],"outputs":[{"id":"regularidad","label":"Academic Standing","primary":true},{"id":"promedio","label":"Midterm Average"},{"id":"observacion","label":"Next Step"}],"title":"UBA CBC Regular vs Libre Status Calculator"},"c6":{"formulaId":"visa-turismo-usa-ee-uu-costo-b1-b2","fields":["dolarOficial"],"outputs":[{"id":"mrvFee","label":"MRV Fee (USD)","primary":true},{"id":"mrvArs","label":"MRV Fee in ARS"},{"id":"gestion","label":"Processing Fees (Estimated)"},{"id":"total","label":"Total Estimated Cost"},{"id":"resumen","label":"Cost Summary"}],"title":"Total Cost of a US B1/B2 Tourist Visa — Full Breakdown"}};
-  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
-  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
   function register() {
     const H = (window as any).HC_HUB;
     if (!H) return;
-    H.onCompute((all:any, selected:any) => {
-    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
-    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
-    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
-    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
-    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
-    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
-    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
-    return {total:main.toLocaleString('en',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
-    });
+    H.onCompute((all:any, selected:any) => adaptGeneratedHubResult(all, selected, configs as any, formulaMap, { locale: 'en', format: 'ars' }));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
   else register();

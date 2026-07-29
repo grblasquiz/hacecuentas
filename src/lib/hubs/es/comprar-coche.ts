@@ -122,11 +122,11 @@ export const hub: HubData = {
   fields: [
     { id: 'precioA', label: 'Precio del coche que valoras', prefix: '€', value: '30.000', thousands: true },
     { id: 'precioB', label: 'Precio de la alternativa', prefix: '€', value: '24.000', thousands: true },
-    { id: 'kmAnuales', label: 'Kilómetros al año', type: 'number', value: '15.000', min: 0, max: 100000, step: 500, thousands: true },
+    { id: 'kmAnuales', label: 'Kilómetros al año', type: 'number', value: 15000, min: 0, max: 100000, step: 500 },
     { id: 'consumoA', label: 'Consumo del primero', type: 'number', value: '16', min: 0, max: 30, step: 0.1, suffix: ' l o kWh/100 km' },
-    { id: 'consumoB', label: 'Consumo de la alternativa', type: 'number', value: '6,5', min: 0, max: 30, step: 0.1, suffix: ' l/100 km' },
-    { id: 'precioEnergiaA', label: 'Precio de la energía del primero', prefix: '€', value: '0,15', suffix: '/kWh o /l' },
-    { id: 'precioEnergiaB', label: 'Precio del combustible de la alternativa', prefix: '€', value: '1,55', suffix: '/l' },
+    { id: 'consumoB', label: 'Consumo de la alternativa', type: 'number', value: 6.5, min: 0, max: 30, step: 0.1, suffix: ' l/100 km' },
+    { id: 'precioEnergiaA', label: 'Precio de la energía del primero', type: 'number', prefix: '€', value: 0.15, min: 0, step: 0.01, suffix: '/kWh o /l' },
+    { id: 'precioEnergiaB', label: 'Precio del combustible de la alternativa', type: 'number', prefix: '€', value: 1.55, min: 0, step: 0.01, suffix: '/l' },
     { id: 'anios', label: 'Años que piensas tenerlo', type: 'number', value: '8', min: 1, max: 20, step: 1 },
     { id: 'co2', label: 'Emisiones homologadas de CO₂', type: 'number', value: '140', min: 0, max: 400, step: 1, suffix: ' g/km' },
     {

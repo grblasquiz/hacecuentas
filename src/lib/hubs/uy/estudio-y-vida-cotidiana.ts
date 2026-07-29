@@ -83,7 +83,7 @@ export const hub: HubData = {
     "id": "c2__notas",
     "label": "Calculadora de promedio de escolaridad — UdelaR (Uruguay): Notas (separadas por coma)",
     "type": "text",
-    "value": 108126,
+    "value": "10,8,12,6",
     "thousands": false,
     "help": "Notas en la escala UdelaR 0 a 12, en el mismo orden que los créditos. Solo cuentan las aprobadas (≥ 3)."
   },
@@ -91,7 +91,7 @@ export const hub: HubData = {
     "id": "c2__creditos",
     "label": "Calculadora de promedio de escolaridad — UdelaR (Uruguay): Créditos por actividad (separados por coma)",
     "type": "text",
-    "value": 128106,
+    "value": "12,8,10,6",
     "thousands": false,
     "help": "Los créditos de cada actividad, en el mismo orden que las notas."
   },

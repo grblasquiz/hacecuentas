@@ -80,8 +80,8 @@ export const hub: HubData = {
   inputsIntro:
     'Para la admisión, usa la nota media de bachillerato y la de la fase obligatoria. Para el expediente, la suma de nota por créditos.',
   fields: [
-    { id: 'bachillerato', label: 'Nota media de bachillerato', type: 'number', value: '7,5', min: 0, max: 10, step: 0.01 },
-    { id: 'faseObligatoria', label: 'Nota de la fase obligatoria de la EvAU', type: 'number', value: '6,5', min: 0, max: 10, step: 0.01 },
+    { id: 'bachillerato', label: 'Nota media de bachillerato', type: 'number', value: 7.5, min: 0, max: 10, step: 0.01 },
+    { id: 'faseObligatoria', label: 'Nota de la fase obligatoria de la EvAU', type: 'number', value: 6.5, min: 0, max: 10, step: 0.01 },
     { id: 'materia1', label: 'Nota de la mejor materia ponderada', type: 'number', value: '8', min: 0, max: 10, step: 0.01 },
     {
       id: 'peso1',

@@ -13,22 +13,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
 </Layout>
 <script>
   import { formulaMap } from '../../../lib/hub-formulas-generated/pt-plantar-e-reduzir-impacto';
+  import { adaptGeneratedHubResult } from '../../../lib/generated-hub-adapter';
   const configs = {"c1":{"formulaId":"calendario-siembra-hemisferio-sur","fields":["mes"],"outputs":[{"id":"recomendadas","label":"O que plantar","primary":true},{"id":"resumen","label":"Interpretação"}],"title":"Calendário de Plantio do Hemisfério Sul: O que Semear Mês a Mês"},"c2":{"formulaId":"cosecha-esperada-huerta-kg","fields":["especie","m2"],"outputs":[{"id":"kgTotal","label":"Colheita estimada","primary":true},{"id":"resumen","label":"Interpretação"}],"title":"Calculadora de colheita esperada da horta (kg/m²)"},"c3":{"formulaId":"huella-carbono-boda-evento","fields":["invitados"],"outputs":[{"id":"kgCo2","label":"CO₂ total","primary":true},{"id":"arbolesCompensar","label":"Árvores a plantar"},{"id":"resumen","label":"Interpretação"}],"title":"Pegada de carbono do casamento ou evento: calcule e compense"},"c4":{"formulaId":"podar-rosal-cuando-fecha","fields":["zona"],"outputs":[{"id":"mejorEpoca","label":"Melhor época para podar","primary":true},{"id":"resumen","label":"Interpretação"}],"title":"Quando Podar Roseiras — por Zona Climática"},"c5":{"formulaId":"biodegradacion-residuo-tiempo","fields":["material"],"outputs":[{"id":"tiempoEstimado","label":"Tempo de biodegradação","primary":true},{"id":"resumen","label":"Interpretação"}],"title":"Tempo de Biodegradação de Materiais: calculadora + tabela completa"}};
-  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
-  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
   function register() {
     const H = (window as any).HC_HUB;
     if (!H) return;
-    H.onCompute((all:any, selected:any) => {
-    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
-    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
-    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
-    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
-    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
-    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
-    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
-    return {total:main.toLocaleString('pt-BR',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
-    });
+    H.onCompute((all:any, selected:any) => adaptGeneratedHubResult(all, selected, configs as any, formulaMap, { locale: 'pt-BR', format: 'unit' }));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
   else register();

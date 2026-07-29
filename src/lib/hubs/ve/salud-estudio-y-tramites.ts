@@ -187,7 +187,7 @@ export const hub: HubData = {
     "id": "c3__notas",
     "label": "Calculadora de promedio de notas e índice académico (escala 0-20): Notas obtenidas (0 a 20)",
     "type": "text",
-    "value": 18152012,
+    "value": "18,15,20,12",
     "thousands": false,
     "help": "Escribí cada nota entre 0 y 20, separadas por coma o punto y coma."
   },
@@ -195,7 +195,7 @@ export const hub: HubData = {
     "id": "c3__creditos",
     "label": "Calculadora de promedio de notas e índice académico (escala 0-20): Unidades crédito de cada materia (opcional)",
     "type": "text",
-    "value": 4352,
+    "value": "4,3,5,2",
     "thousands": false,
     "help": "Una por materia, en el mismo orden que las notas. Dejalo vacío para promedio simple."
   },

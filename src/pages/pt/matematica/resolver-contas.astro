@@ -13,22 +13,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
 </Layout>
 <script>
   import { formulaMap } from '../../../lib/hub-formulas-generated/pt-resolver-contas';
+  import { adaptGeneratedHubResult } from '../../../lib/generated-hub-adapter';
   const configs = {"c1":{"formulaId":"energia-cinetica-ec","fields":["masa","velocidad"],"outputs":[{"id":"energia","label":"Energia cinética","primary":true,"suffix":"J"},{"id":"resumen","label":"Interpretação"}],"title":"Energía Cinética: Calculadora Ec = ½mv²"},"c2":{"formulaId":"dilucion-concentracion-c1v1-c2v2","fields":["modo","c1","v1","c2","v2"],"outputs":[{"id":"resultado","label":"Resultado","primary":true},{"id":"resumen","label":"Interpretação"}],"title":"Calculadora de Diluição — Fórmula C1V1 = C2V2"},"c3":{"formulaId":"distancia-caida-libre-altura","fields":["t","g"],"outputs":[{"id":"altura","label":"Altura de Queda","primary":true,"suffix":"m"},{"id":"resumen","label":"Interpretação"}],"title":"Queda Livre — Distância e Altura por Tempo"},"c4":{"formulaId":"empuje-arquimedes-volumen","fields":["rho","vol","g"],"outputs":[{"id":"empuje","label":"Empuxo","primary":true,"suffix":"N"},{"id":"resumen","label":"Interpretação"}],"title":"Empuxo de Arquimedes — Calcule a Força de Empuxo (E = ρ × V × g)"},"c5":{"formulaId":"integral-indefinida-polinomio-coefs","fields":["coefs"],"outputs":[{"id":"integral","label":"Integral Indefinida","primary":true},{"id":"resumen","label":"Interpretação passo a passo"}],"title":"Calculadora de Integral Indefinida de Polinômio"},"c6":{"formulaId":"mcd-mcm-dos-numeros-enteros","fields":["a","b"],"outputs":[{"id":"mcd","label":"MDC","primary":true},{"id":"mcm","label":"MMC"},{"id":"resumen","label":"Interpretação"}],"title":"MDC e MMC de dois números — Máximo Divisor Comum e Mínimo Múltiplo Comum"},"c7":{"formulaId":"moles-masa-formula-molecular","fields":["m","mw"],"outputs":[{"id":"moles","label":"Moles","primary":true},{"id":"moleculas","label":"Moléculas"},{"id":"resumen","label":"Interpretação"}],"title":"Converter Gramas em Moles (n = m ÷ M)"},"c8":{"formulaId":"paralaje-distancia-estrella-parsec","fields":["paralaje"],"outputs":[{"id":"distanciaPc","label":"Distância (pc)","primary":true},{"id":"distanciaAL","label":"Em anos-luz"},{"id":"resumen","label":"Interpretação"}],"title":"Paralaxe para Parsecs: Calculadora de Distância Estelar"},"c9":{"formulaId":"regra-de-tres-simples-composta-direta-inversa","fields":["tipo","valorA","valorB","valorC","valorD","valorE","relacaoSegunda"],"outputs":[{"id":"x","label":"Valor de X","primary":true},{"id":"formula","label":"Fórmula aplicada"},{"id":"proporcao","label":"Proporção"},{"id":"detalhe","label":"Detalhe"}],"title":"Calculadora de Regra de Três"}};
-  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
-  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
   function register() {
     const H = (window as any).HC_HUB;
     if (!H) return;
-    H.onCompute((all:any, selected:any) => {
-    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
-    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
-    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
-    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
-    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
-    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
-    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
-    return {total:main.toLocaleString('pt-BR',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
-    });
+    H.onCompute((all:any, selected:any) => adaptGeneratedHubResult(all, selected, configs as any, formulaMap, { locale: 'pt-BR', format: 'unit' }));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
   else register();

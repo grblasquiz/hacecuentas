@@ -205,7 +205,7 @@ export const hub: HubData = {
     "id": "c4__notasTexto",
     "label": "Média escolar do ensino médio: aprovação, recuperação ou reprovação: Notas (separadas por vírgula)",
     "type": "text",
-    "value": 1,
+    "value": "7,5,6,8",
     "thousands": false
   },
   {

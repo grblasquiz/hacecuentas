@@ -13,22 +13,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
 </Layout>
 <script>
   import { formulaMap } from '../../../lib/hub-formulas-generated/en-titles-registration-and-transfer';
+  import { adaptGeneratedHubResult } from '../../../lib/generated-hub-adapter';
   const configs = {"c1":{"formulaId":"registro-dnrpa-auto-0km-arancel","fields":["valor","provincia"],"outputs":[{"id":"dnrpa","label":"Registration fee","primary":true},{"id":"sellos","label":"Provincial surcharges"},{"id":"total","label":"Total"},{"id":"resumen","label":"Summary"}],"title":"New Car Registration Fee (DNRPA) in Argentina 2026"},"c2":{"formulaId":"titularidad-caratular-auto-trasladar-provincia","fields":["provOrigen","provDestino","valor"],"outputs":[{"id":"costo","label":"Transfer Cost","primary":true},{"id":"tiempo","label":"Processing Time"},{"id":"resumen","label":"Summary"}],"title":"Transfer Your Car Registration to Another Province"},"c3":{"formulaId":"costo-transferencia-auto-0km-usado","fields":["valor","provincia"],"outputs":[{"id":"aranceles","label":"DNRPA Registration Fees","primary":true},{"id":"impuestos","label":"Provincial Taxes"},{"id":"total","label":"Total Transfer Cost"},{"id":"resumen","label":"Summary"}],"title":"Used Car Transfer Cost"}};
-  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
-  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
   function register() {
     const H = (window as any).HC_HUB;
     if (!H) return;
-    H.onCompute((all:any, selected:any) => {
-    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
-    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
-    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
-    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
-    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
-    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
-    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
-    return {total:main.toLocaleString('en',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
-    });
+    H.onCompute((all:any, selected:any) => adaptGeneratedHubResult(all, selected, configs as any, formulaMap, { locale: 'en', format: 'ars' }));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
   else register();

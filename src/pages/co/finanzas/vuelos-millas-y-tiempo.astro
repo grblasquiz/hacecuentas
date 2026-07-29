@@ -13,22 +13,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
 </Layout>
 <script>
   import { formulaMap } from '../../../lib/hub-formulas-generated/co-vuelos-millas-y-tiempo';
+  import { adaptGeneratedHubResult } from '../../../lib/generated-hub-adapter';
   const configs = {"c1":{"formulaId":"hora-fin-programa-rcn","fields":["hora_inicio","duracion_minutos","comerciales_minutos","episodios"],"outputs":[{"id":"hora_final","label":"Hora estimada de finalización"},{"id":"minutos_totales","label":"Minutos totales"},{"id":"horas_totales","label":"Horas totales"},{"id":"resumen","label":"Resumen"}],"title":"Calculá a qué hora termina un programa de RCN"},"c2":{"formulaId":"impuestos-aerolineas-tasa-aeropuerto-colombia-internacional","fields":["tipo_vuelo","tarifa_base_cop","aeropuerto_salida","numero_pasajeros"],"outputs":[{"id":"tarifa_base_total","label":"Tarifa base total","format":"currency","currency":"COP"},{"id":"iva_domestico","label":"IVA vuelo doméstico (5%)","format":"currency","currency":"COP"},{"id":"tasa_seguridad","label":"Tasa de seguridad y empadronamiento","format":"currency","currency":"COP"},{"id":"contribucion_turismo","label":"Contribución al desarrollo turístico (FONTUR)","format":"currency","currency":"COP"},{"id":"tasa_salida_internacional","label":"Tasa de salida internacional (USD → COP)","format":"currency","currency":"COP"},{"id":"derechos_administrativos","label":"Derechos administrativos/gestión","format":"currency","currency":"COP"},{"id":"impuestos_totales","label":"Total impuestos y tasas","format":"currency","currency":"COP"},{"id":"precio_final_cop","label":"Precio final del tiquete (COP)","format":"currency","currency":"COP"},{"id":"precio_final_usd","label":"Precio final estimado (USD)","format":"currency","currency":"USD"},{"id":"porcentaje_impuestos","label":"Impuestos como % de tarifa base","format":"percent"},{"id":"costo_por_pasajero","label":"Costo total por pasajero","format":"currency","currency":"COP"},{"id":"desglose_conceptos","label":"Desglose detallado de conceptos","format":"json"}],"title":"Calculadora de tasas aeropuerto y impuestos en vuelos desde Colombia"},"c3":{"formulaId":"millas-lifemiles-avianca-colombia-2026","fields":["precioCashCop","millasRequeridas","tasasCop","saldoMillas","valorReferenciaMilCop"],"outputs":[{"id":"decision","label":"Decisión sugerida","primary":true},{"id":"valorPorMilMillas","label":"Valor por 1.000 millas"},{"id":"ahorroNetoCanje","label":"Ahorro neto del canje"},{"id":"millasFaltantes","label":"Millas faltantes"}],"title":"Calculadora para decidir si conviene usar LifeMiles o pagar en efectivo"}};
-  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
-  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
   function register() {
     const H = (window as any).HC_HUB;
     if (!H) return;
-    H.onCompute((all:any, selected:any) => {
-    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
-    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
-    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
-    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
-    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
-    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
-    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
-    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
-    });
+    H.onCompute((all:any, selected:any) => adaptGeneratedHubResult(all, selected, configs as any, formulaMap, { locale: 'es', format: 'ars' }));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
   else register();

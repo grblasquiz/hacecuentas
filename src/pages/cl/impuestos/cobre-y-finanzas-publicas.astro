@@ -13,22 +13,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
 </Layout>
 <script>
   import { formulaMap } from '../../../lib/hub-formulas-generated/cl-cobre-y-finanzas-publicas';
+  import { adaptGeneratedHubResult } from '../../../lib/generated-hub-adapter';
   const configs = {"c1":{"formulaId":"cobre-precio-bolsa-chile-impacto-fiscal-codelco","fields":["precio_cobre_usd_libra","tipo_cambio_usd_clp","produccion_cobre_ton","tasa_royalty_promedio","margen_operacional_codelco","tasa_impuesto_corporativo","otras_mineras_aporte"],"outputs":[{"id":"ingreso_royalty_usd","label":"Ingreso royalty Codelco (USD millones/año)","format":"number","decimals":2},{"id":"ingreso_irpf_codelco_usd","label":"Ingreso IRPF Codelco (USD millones/año)","format":"number","decimals":2},{"id":"total_ingresos_codelco_usd","label":"Total ingresos fiscales Codelco (USD millones/año)","format":"number","decimals":2},{"id":"total_ingresos_mineria_clp","label":"Total ingresos minería (incluyendo privada) - CLP miles de millones/año","format":"number","decimals":2},{"id":"sensibilidad_precio_usd","label":"Sensibilidad: USD +1/lb genera (USD millones adicionales)","format":"number","decimals":2},{"id":"sensibilidad_precio_clp","label":"Sensibilidad: USD +1/lb genera (CLP mil millones adicionales)","format":"number","decimals":2},{"id":"porcentaje_presupuesto_fiscal","label":"% estimado de ingresos fiscales totales (aprox.)","format":"number","decimals":1},{"id":"fondo_estabilizacion_aporte","label":"Aporte potencial Fondo Estabilización Económica (CLP mil millones)","format":"number","decimals":2}],"title":"Calculadora de impacto fiscal del precio del cobre en Chile"}};
-  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
-  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
   function register() {
     const H = (window as any).HC_HUB;
     if (!H) return;
-    H.onCompute((all:any, selected:any) => {
-    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
-    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
-    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
-    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
-    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
-    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
-    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
-    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
-    });
+    H.onCompute((all:any, selected:any) => adaptGeneratedHubResult(all, selected, configs as any, formulaMap, { locale: 'es', format: 'ars' }));
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
   else register();
