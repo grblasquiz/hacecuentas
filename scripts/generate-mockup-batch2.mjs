@@ -67,7 +67,29 @@ const pages = [
   ['huerta-mockup.html','HuertaExperience','huerta','jardin/huerta','Planificador de huerta'],
   ['dados-inss-irrf-2026-mockup.html','DadosInssIrrfExperience','dados-inss-irrf','pt/dados-inss-irrf-2026','Dados INSS e IRRF 2026'],
   ['liquidacion-lottt-venezuela-mockup.html','LiquidacionLotttExperience','liquidacion-lottt','ve/trabajo/liquidacion-lottt','Liquidación LOTTT Venezuela'],
+  ['credito-vivienda-mexico-mockup.html','CreditoViviendaMexicoExperience','credito-vivienda-mexico','mx/finanzas/credito-de-vivienda','Crédito de vivienda en México'],
+  ['finiquito-liquidacion-mexico-mockup.html','FiniquitoLiquidacionMexicoExperience','finiquito-liquidacion-mexico','mx/trabajo/finiquito-y-liquidacion','Finiquito y liquidación en México'],
+  ['unidades-valores-uruguay-mockup.html','UnidadesValoresUruguayExperience','unidades-valores-uruguay','uy/finanzas/unidades-y-valores','Unidades y valores en Uruguay'],
+  ['ingresos-brutos-cordoba-mockup.html','IngresosBrutosCordobaExperience','ingresos-brutos-cordoba','argentina/cordoba/calculadora-ingresos-brutos-provincial','Ingresos Brutos en Córdoba'],
+  ['fonasa-isapre-chile-mockup.html','FonasaIsapreChileExperience','fonasa-isapre-chile','cl/vida/fonasa-o-isapre','Fonasa o Isapre en Chile'],
+  ['conversor-temperatura-mockup.html','ConversorTemperaturaExperience','conversor-temperatura','conversores/temperatura','Conversor de temperatura'],
+  ['feriados-colombia-2026-mockup.html','FeriadosColombiaExperience','feriados-colombia','feriados-colombia-2026','Feriados de Colombia 2026'],
+  ['limpieza-hogar-mockup.html','LimpiezaHogarExperience','limpieza-hogar','hogar/limpieza','Planificador de limpieza'],
+  ['eventos-home-mockup.html','EventosHomeExperience','eventos-home','eventos','Eventos'],
+  ['comprar-exterior-impuestos-mockup.html','ComprarExteriorImpuestosExperience','comprar-exterior-impuestos','impuestos/comprar-en-el-exterior','Comprar en el exterior'],
+  ['mascotas-home-mockup.html','MascotasHomeExperience','mascotas-home','mascotas','Mascotas'],
+  ['potencias-y-raices-mockup.html','PotenciasRaicesExperience','potencias-raices','matematica/potencias-y-raices','Potencias y raíces'],
+  ['comprar-o-vender-auto-mx-mockup.html','ComprarVenderAutoMexicoExperience','comprar-vender-auto-mexico','mx/auto/comprar-o-vender-auto','Comprar o vender un auto en México'],
+  ['servicios-y-obra-mx-mockup.html','ServiciosObraMexicoExperience','servicios-obra-mexico','mx/hogar/servicios-y-obra','Servicios y obra en México'],
+  ['isr-por-mi-cuenta-mx-mockup.html','IsrCuentaPropiaMexicoExperience','isr-cuenta-propia-mexico','mx/impuestos/isr-por-mi-cuenta','ISR por mi cuenta en México'],
+  ['negocios-home-mockup.html','NegociosHomeExperience','negocios-home','negocios','Negocios'],
+  ['grasa-corporal-mockup.html','GrasaCorporalExperience','grasa-corporal','salud/grasa-corporal','Grasa corporal'],
+  ['resistencias-mockup.html','ResistenciasExperience','resistencias','tecnologia/resistencias','Calculadora de resistencias'],
+  ['trabajo-independiente-uy-mockup.html','TrabajoIndependienteUruguayExperience','trabajo-independiente-uruguay','uy/impuestos/trabajo-independiente','Trabajo independiente en Uruguay'],
+  ['impuesto-renta-ecuador-mockup.html','ImpuestoRentaEcuadorExperience','impuesto-renta-ecuador','ec/impuestos/impuesto-a-la-renta','Impuesto a la renta en Ecuador'],
 ];
+
+const selectedPages = process.argv.includes('--current-batch') ? pages.slice(-20) : pages;
 
 const prefixCss = (css, scope) => {
   const ast = postcss.parse(css);
@@ -86,7 +108,7 @@ const prefixCss = (css, scope) => {
 const escapeTemplate = (s) => s.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$\{/g,'\\${');
 
 fs.mkdirSync(targetDir,{recursive:true});
-for (const [file,component,slug] of pages) {
+for (const [file,component,slug] of selectedPages) {
   const html=fs.readFileSync(path.join(sourceDir,file),'utf8');
   const css=[...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map(m=>m[1]).join('\n');
   const markup=html.match(/<main[^>]*>([\s\S]*?)<\/main>/i)?.[1]??'';
@@ -114,7 +136,7 @@ for (const [file,component,slug] of pages) {
 // canonical Astro pages (H1, hreflang and internal-link copy live there).
 const protectedSeoRoutes = new Set(['es', 'mx', 'pe', 'uy', 'trabajo', 'fechas/dias-entre-fechas']);
 
-for (const [,component,,route,title] of pages) {
+for (const [,component,,route,title] of selectedPages) {
   if (protectedSeoRoutes.has(route)) continue;
   const flatPath=path.join(root,'src/pages',`${route}.astro`);
   const pagePath=route==='calculadora-cientifica'
@@ -130,4 +152,4 @@ for (const [,component,,route,title] of pages) {
   fs.writeFileSync(pagePath,output);
 }
 
-console.log(`Generated ${pages.length} experiences and pages.`);
+console.log(`Generated ${selectedPages.length} experiences and pages.`);
