@@ -56,6 +56,38 @@ for (const f of files) {
   } catch {}
 }
 
+// Desde la consolidación de julio de 2026 `src/content/calcs` quedó vacío:
+// las herramientas canónicas viven en hubs y su snapshot está en
+// current-tools-index.json. Si sólo leyéramos el directorio legacy, el índice
+// interno quedaría reducido a las salas /decidir y todos los buscadores
+// parecerían no encontrar nada.
+try {
+  const currentTools = JSON.parse(
+    readFileSync(join(ROOT, 'src', 'lib', 'current-tools-index.json'), 'utf8'),
+  );
+  if (Array.isArray(currentTools)) {
+    for (const tool of currentTools) {
+      if (!tool?.slug || !(tool.h1 || tool.title)) continue;
+      const locale = String(tool.locale || '').toLowerCase();
+      const audience = tool.audience
+        || ({ es: 'ES', mx: 'MX', co: 'CO', cl: 'CL', pe: 'PE', ec: 'EC',
+              ve: 'VE', py: 'PY', uy: 'UY', do: 'DO', pt: 'BR', 'pt-pt': 'PT',
+              en: 'EN' } as Record<string, string>)[locale]
+        || 'AR';
+      entries.push({
+        s: String(tool.slug).replace(/^\/+/, ''),
+        h: String(tool.h1 || tool.title),
+        d: String(tool.description || ''),
+        c: String(tool.category || 'otros'),
+        i: String(tool.icon || '🧮'),
+        a: audience,
+      });
+    }
+  }
+} catch {
+  // El gate de tamaño de abajo hace visible cualquier snapshot faltante.
+}
+
 // Salas de decisión (/decidir/*): descubribles desde el buscador interno y
 // desde los consumidores del índice (bot X, backlink bot). El slug lleva el
 // path completo porque los consumidores arman la URL como `/${s}`.
@@ -69,7 +101,12 @@ for (const r of DECISION_MANIFEST_LOCALES) {
   });
 }
 
-entries.sort((a, b) => a.h.localeCompare(b.h, 'es'));
+const uniqueEntries = [...new Map(entries.map((entry) => [entry.s, entry])).values()];
+uniqueEntries.sort((a, b) => a.h.localeCompare(b.h, 'es'));
 
-writeFileSync(join(PUBLIC_DIR, 'search-index.json'), JSON.stringify(entries), 'utf8');
-console.log(`✓ search-index.json → ${entries.length} entries`);
+if (uniqueEntries.length < 500) {
+  throw new Error(`search-index.json incompleto: ${uniqueEntries.length} entries (mínimo esperado: 500)`);
+}
+
+writeFileSync(join(PUBLIC_DIR, 'search-index.json'), JSON.stringify(uniqueEntries), 'utf8');
+console.log(`✓ search-index.json → ${uniqueEntries.length} entries`);
