@@ -933,7 +933,6 @@ sitemaps.push({
     core('/cooperativa-de-datos',                '0.7',  'weekly'),
     core('/contacto',                            '0.4',  'yearly'),
     core('/sugerir',                             '0.6',  'weekly'),
-    core('/sugerencias',                         '0.7',  'daily',   true),
     core('/blog',                                '0.7',  'weekly'),
     core('/datasets',                            '0.6',  'monthly'),
     // Los hubs de vertical (/mx /co /cl /es /pt /en) NO van acá: cada
