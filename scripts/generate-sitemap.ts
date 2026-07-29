@@ -823,7 +823,7 @@ sitemaps.push({
     core('/finanzas-personales',                 '0.95', 'weekly'),
     core('/negocios-e-independientes',           '0.95', 'weekly'),
     core('/deportes',                            '0.95', 'weekly'),
-    core('/calculadoras',                        '0.9',  'weekly'),
+    core('/buscar',                        '0.9',  'weekly'),
     core('/glosario',                            '0.8',  'monthly'),
     core('/populares',                           '0.85', 'weekly'),
     core('/comparador-plazo-fijo',               '0.85', 'daily',   true),

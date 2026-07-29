@@ -293,7 +293,7 @@ export function buildCategoryConfig(input: CategoryHubInput): HubConfig {
       desc: 'Explorá una temática relacionada.',
       href: `/categoria/${s}`,
     }));
-  facts.push({ icon: '🔎', title: 'Todas las calculadoras', desc: 'El catálogo completo, con buscador.', href: '/calculadoras' });
+  facts.push({ icon: '🔎', title: 'Todas las calculadoras', desc: 'El catálogo completo, con buscador.', href: '/buscar' });
 
   const quick: HubQuickView | undefined = primary
     ? {

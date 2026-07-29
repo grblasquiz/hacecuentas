@@ -67,7 +67,7 @@ for (const [source, links] of pages) {
   }
 }
 
-const seeds = ['/', '/calculadoras', '/populares', '/global', '/es', '/mx', '/co', '/cl', '/pe', '/ec', '/ve', '/py', '/uy', '/do', '/pt', '/pt-pt', '/en'].filter((path) => pages.has(path));
+const seeds = ['/', '/buscar', '/populares', '/global', '/es', '/mx', '/co', '/cl', '/pe', '/ec', '/ve', '/py', '/uy', '/do', '/pt', '/pt-pt', '/en'].filter((path) => pages.has(path));
 const depth = new Map(seeds.map((seed) => [seed, 0]));
 const queue = [...seeds];
 for (let i = 0; i < queue.length; i++) {

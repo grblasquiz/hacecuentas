@@ -7,7 +7,7 @@
  * calculadora principal, sus salas de decisión y sus destacadas
  * (Guía → calculadora → sala de decisión → contenido relacionado).
  *
- * El resto de las categorías sigue existiendo (/categoria/*, /calculadoras)
+ * El resto de las categorías sigue existiendo (/categoria/*, /buscar)
  * pero con prominencia menor.
  *
  * Los slugs de `calcs` se validan contra el catálogo en PillarHub.astro

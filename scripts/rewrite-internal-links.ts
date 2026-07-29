@@ -32,12 +32,12 @@ function canonicalTarget(path: string): string {
   let current = path;
   while (!seen.has(current)) {
     seen.add(current);
-    if (GONE_410_URLS.has(current)) return '/calculadoras';
+    if (GONE_410_URLS.has(current)) return '/buscar';
     const next = redirects.get(current);
     if (!next || !next.startsWith('/')) return next || current;
     current = next;
   }
-  return '/calculadoras';
+  return '/buscar';
 }
 
 let changedFiles = 0;
