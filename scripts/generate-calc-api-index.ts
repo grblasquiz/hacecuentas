@@ -279,23 +279,23 @@ for (const r of DECISION_MANIFEST_LOCALES) {
   included++;
 }
 
-// Compatibilidad de la migración 2026-07-28:
-// las calculadoras HTML se consolidaron en hubs Astro y los directorios
-// `src/content/calcs*` quedaron vacíos, pero la API/MCP conserva miles de
-// fórmulas consumidas por agentes. Nunca sobrescribir el catálogo sano con
-// cero entradas. Cuando no hay fuentes JSON nuevas, reutilizamos el último
-// catálogo no vacío y derivamos de él los índices livianos.
-if (out.length === 0 && existsSync(OUT_FILE)) {
+// Catálogo canónico posterior a la migración 2026-07-28:
+// las calculadoras individuales se consolidaron en 611 hubs. El snapshot se
+// genera desde sitemap-hubs.xml + HTML productivo y evita volver a anunciar
+// como herramientas vigentes los miles de slugs históricos que ahora son 301.
+if (out.length === 0) {
   try {
-    const previous = JSON.parse(readFileSync(OUT_FILE, 'utf8'));
-    const previousCalcs = Array.isArray(previous?.calculators) ? previous.calculators : [];
-    if (previousCalcs.length > 0) {
-      for (const c of previousCalcs) {
+    const currentTools = JSON.parse(
+      readFileSync(join(ROOT, 'src', 'lib', 'current-tools-index.json'), 'utf8'),
+    );
+    if (Array.isArray(currentTools) && currentTools.length > 0) {
+      for (const c of currentTools) {
         if (!c?.slug || !c?.url) continue;
         out.push(c as CalcEntry);
         const pathname = new URL(c.url).pathname.replace(/^\/+/, '');
         const segments = pathname.split('/');
-        const prefix = segments.length > 1 ? segments.slice(0, -1).join('/') : '';
+        const localePrefixes = new Set(['en', 'es', 'co', 'mx', 'cl', 'ec', 'pe', 've', 'py', 'uy', 'do', 'pt', 'pt-pt']);
+        const prefix = localePrefixes.has(segments[0]) ? segments[0] : '';
         slim.push({
           s: c.slug,
           t: shortTitle(String(c.h1 || c.title || c.slug)),
@@ -303,7 +303,7 @@ if (out.length === 0 && existsSync(OUT_FILE)) {
         });
       }
       included = out.length;
-      console.log(`calcs-index.json: migración hub detectada — preservo ${out.length} herramientas existentes`);
+      console.log(`calcs-index.json: catálogo canónico de hubs — ${out.length} herramientas vigentes`);
     }
   } catch {
     // El gate posterior evita publicar un catálogo vacío.
