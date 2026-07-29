@@ -24,7 +24,14 @@ const calcs = suppliedCalcs.filter((calc) => isDistributablePublicPath(calc.url)
 
 const CAT: Record<string, { label: string; color: string; icon: string }> = {
   finanzas:         { label: 'Finanzas',       color: '#2563eb', icon: '💰' },
+  'finanzas-personales': { label: 'Finanzas personales', color: '#2563eb', icon: '💰' },
   impuestos:        { label: 'Impuestos',      color: '#7c3aed', icon: '🧾' },
+  trabajo:          { label: 'Trabajo',        color: '#0f766e', icon: '💼' },
+  hogar:            { label: 'Hogar',          color: '#d97706', icon: '🏠' },
+  vivienda:         { label: 'Vivienda',       color: '#b45309', icon: '🏡' },
+  auto:             { label: 'Auto',           color: '#6366f1', icon: '🚗' },
+  estudio:          { label: 'Estudio',        color: '#8b5cf6', icon: '🎓' },
+  tramites:         { label: 'Trámites',       color: '#475569', icon: '📄' },
   vida:             { label: 'Vida cotidiana', color: '#d97706', icon: '🏠' },
   familia:          { label: 'Familia',        color: '#db2777', icon: '👨‍👩‍👧' },
   salud:            { label: 'Salud',          color: '#16a34a', icon: '❤️' },
@@ -44,11 +51,12 @@ const CAT: Record<string, { label: string; color: string; icon: string }> = {
   jardineria:       { label: 'Jardinería',     color: '#15803d', icon: '🌿' },
   construccion:     { label: 'Construcción',   color: '#b45309', icon: '🧱' },
 };
-const ORDER = ['finanzas','impuestos','vida','familia','salud','automotor','educacion','negocios','marketing','deportes','viajes','cocina','mascotas','matematica','tecnologia','medio-ambiente','electronica','ciencia','jardineria','construccion'];
+const ORDER = ['trabajo','finanzas','finanzas-personales','impuestos','hogar','vivienda','auto','automotor','vida','familia','salud','estudio','educacion','tramites','negocios','marketing','deportes','viajes','cocina','mascotas','matematica','tecnologia','medio-ambiente','electronica','ciencia','jardineria','construccion'];
 
 const byCat: Record<string, CalcItem[]> = {};
 calcs.forEach((c) => { if (c && c.slug && c.h1) (byCat[c.category] ||= []).push(c); });
-const groups = ORDER
+const categories = [...ORDER, ...Object.keys(byCat).filter((cat) => !ORDER.includes(cat))];
+const groups = categories
   .filter((cat) => byCat[cat]?.length)
   .map((cat) => ({
     cat,
