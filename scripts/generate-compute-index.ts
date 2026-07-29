@@ -146,9 +146,29 @@ for (const { dir, pathPrefix, locale } of LOCALES) {
 const sorted: Record<string, SlimEntry> = {};
 for (const k of Object.keys(index).sort()) sorted[k] = index[k];
 
-writeFileSync(OUT, JSON.stringify(sorted), 'utf8');
-const n = Object.keys(sorted).length;
-const kb = (JSON.stringify(sorted).length / 1024).toFixed(0);
+// La migración 2026-07-28 consolidó las páginas HTML en hubs Astro y dejó
+// vacíos los directorios content/calcs*. Las fórmulas y el contrato REST/MCP
+// siguen vigentes: no debemos convertir un índice programático sano en `{}`.
+// Si no hay fuentes editoriales nuevas, preservamos el último índice no vacío.
+let finalIndex = sorted;
+if (Object.keys(finalIndex).length === 0 && existsSync(OUT)) {
+  try {
+    const previous = JSON.parse(readFileSync(OUT, 'utf8')) as Record<string, SlimEntry>;
+    if (previous && Object.keys(previous).length > 0) {
+      finalIndex = previous;
+      console.log(`calc-compute-index.json: migración hub detectada — preservo ${Object.keys(previous).length} herramientas existentes`);
+    }
+  } catch {
+    // El gate de cantidad de abajo deja visible el fallo.
+  }
+}
+if (Object.keys(finalIndex).length === 0) {
+  throw new Error('calc-compute-index.json quedaría vacío; aborto para no romper REST/MCP');
+}
+
+writeFileSync(OUT, JSON.stringify(finalIndex), 'utf8');
+const n = Object.keys(finalIndex).length;
+const kb = (JSON.stringify(finalIndex).length / 1024).toFixed(0);
 console.log(
   `calc-compute-index.json: ${n} calcs (${kb} KB) — skip noindex=${skippedNoindex}, sin-formulaId=${skippedNoFormula}, sin-.ts=${skippedNoFile}, colisiones=${collisions}`,
 );

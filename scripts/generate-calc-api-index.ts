@@ -279,6 +279,40 @@ for (const r of DECISION_MANIFEST_LOCALES) {
   included++;
 }
 
+// Compatibilidad de la migración 2026-07-28:
+// las calculadoras HTML se consolidaron en hubs Astro y los directorios
+// `src/content/calcs*` quedaron vacíos, pero la API/MCP conserva miles de
+// fórmulas consumidas por agentes. Nunca sobrescribir el catálogo sano con
+// cero entradas. Cuando no hay fuentes JSON nuevas, reutilizamos el último
+// catálogo no vacío y derivamos de él los índices livianos.
+if (out.length === 0 && existsSync(OUT_FILE)) {
+  try {
+    const previous = JSON.parse(readFileSync(OUT_FILE, 'utf8'));
+    const previousCalcs = Array.isArray(previous?.calculators) ? previous.calculators : [];
+    if (previousCalcs.length > 0) {
+      for (const c of previousCalcs) {
+        if (!c?.slug || !c?.url) continue;
+        out.push(c as CalcEntry);
+        const pathname = new URL(c.url).pathname.replace(/^\/+/, '');
+        const segments = pathname.split('/');
+        const prefix = segments.length > 1 ? segments.slice(0, -1).join('/') : '';
+        slim.push({
+          s: c.slug,
+          t: shortTitle(String(c.h1 || c.title || c.slug)),
+          l: prefix,
+        });
+      }
+      included = out.length;
+      console.log(`calcs-index.json: migración hub detectada — preservo ${out.length} herramientas existentes`);
+    }
+  } catch {
+    // El gate posterior evita publicar un catálogo vacío.
+  }
+}
+if (out.length === 0) {
+  throw new Error('calcs-index.json quedaría vacío; aborto para no romper agentes/LLMs');
+}
+
 // Ordenar por categoria → slug para consistencia
 out.sort((a, b) => {
   if (a.category !== b.category) return a.category.localeCompare(b.category);
