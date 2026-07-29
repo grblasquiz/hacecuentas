@@ -32,13 +32,17 @@ import { DECISION_MANIFEST_LOCALES } from '../src/lib/decisions/manifest-locales
 import { DECISION_HUBS } from '../src/lib/decisions/hubs.ts';
 import { PRIORITY_DECISIONS } from '../src/lib/decisions/priority.ts';
 import { PRODUCTS } from '../src/lib/products/manifest.ts';
-import { INFORMES } from '../src/lib/informes/registry.ts';
 import { VERTICALES } from '../src/lib/partners/verticales.ts';
 
 const PRUNED_SLUGS = new Set(Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')));
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
+const INFORMES_REGISTRY_PATH = join(ROOT, 'src', 'lib', 'informes', 'registry.ts');
+// Extract slugs without executing the registry and its build-only formula/data imports.
+const INFORME_SLUGS = [
+  ...readFileSync(INFORMES_REGISTRY_PATH, 'utf8').matchAll(/\bslug:\s*'([^']+)'/g),
+].map((match) => match[1]);
 const CALCS_DIR = join(ROOT, 'src', 'content', 'calcs');
 const CALCS_EN_DIR = join(ROOT, 'src', 'content', 'calcs-en');
 const CALCS_PT_DIR = join(ROOT, 'src', 'content', 'calcs-pt');
@@ -849,7 +853,6 @@ sitemaps.push({
     core('/cuando-juega-argentina-mundial-2026', '0.9',  'daily',   true),
     core('/cuando-juega-mexico-mundial-2026',    '0.88', 'daily',   true),
     core('/cuando-juega-colombia-mundial-2026',  '0.88', 'daily',   true),
-    core('/cuando-juega-ecuador-mundial-2026',   '0.86', 'daily',   true),
     core('/cuando-juega-uruguay-mundial-2026',   '0.86', 'daily',   true),
     core('/cuando-juega-paraguay-mundial-2026',  '0.86', 'daily',   true),
     core('/cuando-juega-espana-mundial-2026',    '0.86', 'daily',   true),
@@ -1372,12 +1375,11 @@ if (PRODUCTS.length > 0) {
 // 2026-07-24). Se derivan del MISMO registry que usa getStaticPaths para que no se
 // desincronicen cuando alguien agrega un informe o una vertical.
 const registryUrls: Url[] = [
-  ...INFORMES.map((i: any) => ({
-    loc: `${site}/informes/${i.slug}`,
+  ...INFORME_SLUGS.map((slug) => ({
+    loc: `${site}/informes/${slug}`,
     priority: '0.6',
     changefreq: 'monthly',
-    // El informe declara su propia fecha: usarla evita mover el lastmod en cada build.
-    lastmod: clampToToday(i.fechaActualizacion || i.fechaPublicacion || buildDate),
+    lastmod: getLastMod(INFORMES_REGISTRY_PATH, buildDate),
   })),
   ...VERTICALES.map((v: any) => ({
     loc: `${site}/partners/${v.slug}`,
