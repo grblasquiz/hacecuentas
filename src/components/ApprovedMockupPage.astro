@@ -1,0 +1,26 @@
+---
+interface Props {
+  source: string;
+}
+
+const { source } = Astro.props;
+const styles = [...source.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
+  .map((match) => match[1])
+  .join('\n');
+const scripts = [...source.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)]
+  .map((match) => match[1])
+  .join('\n');
+const body = source.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] ?? source;
+const headerControls = body.match(/<header\b[^>]*>([\s\S]*?)<\/header>/i)?.[1] ?? '';
+const content = body
+  .replace(/<header\b[\s\S]*?<\/header>/i, '')
+  .replace(/<footer\b[\s\S]*?<\/footer>/i, '')
+  .replace(/<script\b[\s\S]*?<\/script>/gi, '');
+---
+
+<div class="approved-mockup-page">
+  <div hidden set:html={headerControls}></div>
+  <Fragment set:html={content} />
+</div>
+<style is:global set:html={styles}></style>
+<script is:inline set:html={`(()=>{\n${scripts}\n})();`}></script>
