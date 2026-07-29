@@ -919,7 +919,6 @@ sitemaps.push({
     // filtro de _redirects los borraba de los dos lados (bug del trailing slash).
     core('/calculadora',                         '0.75', 'monthly'),
     core('/embeber',                             '0.6',  'monthly'),
-    core('/embeds',                              '0.6',  'monthly'),
     core('/enlazanos',                           '0.5',  'monthly'),
     core('/partners',                            '0.7',  'monthly'),
     core('/wordpress',                           '0.75', 'weekly'),
