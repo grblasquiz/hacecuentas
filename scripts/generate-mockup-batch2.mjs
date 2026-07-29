@@ -109,7 +109,13 @@ for (const [file,component,slug] of pages) {
   fs.writeFileSync(path.join(targetDir,`${component}.astro`),output);
 }
 
+// These hubs need hand-authored SEO fallbacks because their imported mockups can
+// be empty. Keep regenerating the visual components, but never overwrite the
+// canonical Astro pages (H1, hreflang and internal-link copy live there).
+const protectedSeoRoutes = new Set(['es', 'mx', 'pe', 'uy', 'trabajo', 'fechas/dias-entre-fechas']);
+
 for (const [,component,,route,title] of pages) {
+  if (protectedSeoRoutes.has(route)) continue;
   const flatPath=path.join(root,'src/pages',`${route}.astro`);
   const pagePath=route==='calculadora-cientifica'
     ? path.join(root,'src/pages/calculadora-cientifica.astro')
