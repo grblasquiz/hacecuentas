@@ -47,5 +47,6 @@ function formatES(n: number): string {
 }
 
 export const TOTAL_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.total))}+`;
+export const TOTAL_PLAIN = formatES(floorTo100(CALC_COUNTS.total));
 export const AR_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.ar))}+`;
 export const PT_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.pt))}+`;
