@@ -23,6 +23,18 @@ import { GONE_410_URLS } from './lib/gone-410';
  *    `wrangler.jsonc` para capturar `www.hacecuentas.com/sitemap*` (sino el
  *    Edge de CF redirige antes que llegue al Worker).
  */
+/** Sitemaps que el índice (`/sitemap.xml`) referencia hoy. El resto = 410. */
+const LIVE_SITEMAPS: ReadonlySet<string> = new Set([
+  '/sitemap-priority.xml',
+  '/sitemap-core.xml',
+  '/sitemap-blog.xml',
+  '/sitemap-news.xml',
+  '/sitemap-tablas.xml',
+  '/sitemap-hubs.xml',
+  '/sitemap-iibb.xml',
+  '/sitemap-fresh.xml',
+]);
+
 export const onRequest = defineMiddleware(async (context, next) => {
   const url = new URL(context.request.url);
 
@@ -30,6 +42,30 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (url.hostname === 'www.hacecuentas.com' && url.pathname.startsWith('/sitemap')) {
     return new Response(
       `<?xml version="1.0" encoding="UTF-8"?>\n<!--\nThis sitemap has been permanently removed (410 Gone).\nThe canonical sitemap is at https://hacecuentas.com/sitemap.xml\n-->\n`,
+      {
+        status: 410,
+        statusText: 'Gone',
+        headers: {
+          'Content-Type': 'application/xml; charset=utf-8',
+          'Cache-Control': 'public, max-age=86400',
+          'X-Robots-Tag': 'noindex',
+        },
+      }
+    );
+  }
+
+  // ────── Sitemaps retirados → 410 Gone ──────
+  // Tras la consolidación en hubs el índice quedó con 7 sitemaps
+  // (priority/core/blog/news/tablas/hubs/iibb). Los viejos por país y por
+  // categoría siguen registrados en GSC/Bing desde antes, así que los bots los
+  // piden igual y comen 404. 410 le dice "removido" y los saca de la cola.
+  if (
+    (url.hostname === 'hacecuentas.com' || url.hostname === 'www.hacecuentas.com') &&
+    /^\/sitemap-[a-z0-9-]+\.xml$/.test(url.pathname) &&
+    !LIVE_SITEMAPS.has(url.pathname)
+  ) {
+    return new Response(
+      `<?xml version="1.0" encoding="UTF-8"?>\n<!-- Sitemap retirado (410 Gone). Índice vigente: https://hacecuentas.com/sitemap.xml -->\n`,
       {
         status: 410,
         statusText: 'Gone',
@@ -55,6 +91,28 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const targetPath = url.pathname.replace(/\/+$/, '');
     return Response.redirect(`https://hacecuentas.com${targetPath}${url.search}`, 308);
   }
+
+  // ────── Paths malformados → 301 al path saneado ──────
+  // Dos formas que aparecen en los edge logs y hoy mueren en 404:
+  //   /%20/viajes/equipaje  → un href con espacio de más en la fuente
+  //   /eventos/null, /null  → un slug que se interpoló como el string "null"
+  // Ambas llegan de enlaces externos/scrapers que ya no podemos editar, así que
+  // las saneamos acá en vez de dejarlas caer.
+  if (url.hostname === 'hacecuentas.com' || url.hostname === 'www.hacecuentas.com') {
+    let clean = url.pathname
+      .replace(/%20/gi, ' ')
+      .split('/')
+      .map((seg) => seg.trim())
+      .filter((seg, i, arr) => seg !== 'null' && seg !== 'undefined' && (seg !== '' || i === 0 || i === arr.length - 1))
+      .join('/')
+      .replace(/\/{2,}/g, '/')
+      .replace(/\/+$/, '');
+    if (clean === '') clean = '/';
+    if (clean !== url.pathname) {
+      return Response.redirect(`https://hacecuentas.com${clean}${url.search}`, 301);
+    }
+  }
+
 
   // ────── 410 Gone para zombies con verdadero 0-trafico ──────
   // Acelera la desindexacion vs 301: Google saca la URL del index mas rapido
