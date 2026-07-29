@@ -40,6 +40,28 @@ const entries = [
   ['baterias-mockup.html', 'BateriasExperience', 'baterias'],
   ['equipaje-mockup.html', 'EquipajeExperience', 'equipaje'],
   ['hora-mundial-mockup.html', 'HoraMundialExperience', 'hora-mundial'],
+  ['negocio-dgii-dominicana-mockup.html', 'NegocioDgiiDominicanaExperience', 'negocio-dgii-dominicana'],
+  ['promedio-estudio-mockup.html', 'PromedioEstudioExperience', 'promedio-estudio'],
+  ['asignaciones-anses-mockup.html', 'AsignacionesAnsesExperience', 'asignaciones-anses'],
+  ['estadisticas-futbol-mockup.html', 'EstadisticasFutbolExperience', 'estadisticas-futbol'],
+  ['mundial-2026-mockup.html', 'Mundial2026Experience', 'mundial-2026'],
+  ['climatizacion-mockup.html', 'ClimatizacionExperience', 'climatizacion'],
+  ['gas-agua-mockup.html', 'GasAguaExperience', 'gas-agua'],
+  ['bienes-personales-mockup.html', 'BienesPersonalesExperience', 'bienes-personales'],
+  ['acuario-mockup.html', 'AcuarioExperience', 'acuario'],
+  ['gestacion-mascotas-mockup.html', 'GestacionMascotasExperience', 'gestacion-mascotas'],
+  ['comisiones-plataforma-mockup.html', 'ComisionesPlataformaExperience', 'comisiones-plataforma'],
+  ['paraguay-home-mockup.html', 'ParaguayHomeExperience', 'paraguay-home'],
+  ['sueldo-neto-paraguay-mockup.html', 'SueldoNetoParaguayExperience', 'sueldo-neto-paraguay'],
+  ['calorias-quemadas-mockup.html', 'CaloriasQuemadasExperience', 'calorias-quemadas'],
+  ['ajustes-camara-mockup.html', 'AjustesCamaraExperience', 'ajustes-camara'],
+  ['fotografia-mockup.html', 'FotografiaExperience', 'fotografia'],
+  ['gaming-mockup.html', 'GamingExperience', 'gaming'],
+  ['aguinaldo-mockup.html', 'AguinaldoExperience', 'aguinaldo'],
+  ['sueldo-bruto-neto-mockup.html', 'SueldoBrutoNetoExperience', 'sueldo-bruto-neto'],
+  ['sueldo-vs-inflacion-mockup.html', 'SueldoVsInflacionExperience', 'sueldo-vs-inflacion'],
+  ['millas-mockup.html', 'MillasExperience', 'millas'],
+  ['venezuela-home-mockup.html', 'VenezuelaHomeExperience', 'venezuela-home'],
 ];
 
 const prefixCss = (css, scope) => {
@@ -124,6 +146,26 @@ const pages = [
   ['src/pages/tecnologia/baterias.astro', 'BateriasExperience', '../../components/generated/BateriasExperience.astro'],
   ['src/pages/viajes/equipaje.astro', 'EquipajeExperience', '../../components/generated/EquipajeExperience.astro'],
   ['src/pages/viajes/hora-mundial.astro', 'HoraMundialExperience', '../../components/generated/HoraMundialExperience.astro'],
+  ['src/pages/do/impuestos/negocio-dgii.astro', 'NegocioDgiiDominicanaExperience', '../../../components/generated/NegocioDgiiDominicanaExperience.astro'],
+  ['src/pages/estudio/promedio.astro', 'PromedioEstudioExperience', '../../components/generated/PromedioEstudioExperience.astro'],
+  ['src/pages/familia/asignaciones-anses.astro', 'AsignacionesAnsesExperience', '../../components/generated/AsignacionesAnsesExperience.astro'],
+  ['src/pages/futbol/estadisticas.astro', 'EstadisticasFutbolExperience', '../../components/generated/EstadisticasFutbolExperience.astro'],
+  ['src/pages/futbol/mundial-2026.astro', 'Mundial2026Experience', '../../components/generated/Mundial2026Experience.astro'],
+  ['src/pages/hogar/climatizacion.astro', 'ClimatizacionExperience', '../../components/generated/ClimatizacionExperience.astro'],
+  ['src/pages/hogar/gas-y-agua.astro', 'GasAguaExperience', '../../components/generated/GasAguaExperience.astro'],
+  ['src/pages/impuestos/bienes-personales.astro', 'BienesPersonalesExperience', '../../components/generated/BienesPersonalesExperience.astro'],
+  ['src/pages/mascotas/acuario.astro', 'AcuarioExperience', '../../components/generated/AcuarioExperience.astro'],
+  ['src/pages/mascotas/gestacion.astro', 'GestacionMascotasExperience', '../../components/generated/GestacionMascotasExperience.astro'],
+  ['src/pages/negocios/comisiones-de-plataforma.astro', 'ComisionesPlataformaExperience', '../../components/generated/ComisionesPlataformaExperience.astro'],
+  ['src/pages/py/trabajo/sueldo-neto.astro', 'SueldoNetoParaguayExperience', '../../../components/generated/SueldoNetoParaguayExperience.astro'],
+  ['src/pages/salud/calorias-quemadas.astro', 'CaloriasQuemadasExperience', '../../components/generated/CaloriasQuemadasExperience.astro'],
+  ['src/pages/tecnologia/ajustes-de-camara.astro', 'AjustesCamaraExperience', '../../components/generated/AjustesCamaraExperience.astro'],
+  ['src/pages/tecnologia/fotografia.astro', 'FotografiaExperience', '../../components/generated/FotografiaExperience.astro'],
+  ['src/pages/tecnologia/gaming.astro', 'GamingExperience', '../../components/generated/GamingExperience.astro'],
+  ['src/pages/trabajo/aguinaldo.astro', 'AguinaldoExperience', '../../components/generated/AguinaldoExperience.astro'],
+  ['src/pages/trabajo/sueldo-bruto-y-neto.astro', 'SueldoBrutoNetoExperience', '../../components/generated/SueldoBrutoNetoExperience.astro'],
+  ['src/pages/trabajo/sueldo-vs-inflacion.astro', 'SueldoVsInflacionExperience', '../../components/generated/SueldoVsInflacionExperience.astro'],
+  ['src/pages/viajes/millas.astro', 'MillasExperience', '../../components/generated/MillasExperience.astro'],
 ];
 
 for (const [page, component, importPath] of pages) {
@@ -131,5 +173,21 @@ for (const [page, component, importPath] of pages) {
   let source = fs.readFileSync(fullPath, 'utf8');
   source = source.replace(/import DecisionHub from ['"][^'"]+['"];/, `import ${component} from '${importPath}';`);
   source = source.replace(/<DecisionHub\s+data=\{([^}]+)\}\s*\/>/, `<${component} data={$1} />`);
+  fs.writeFileSync(fullPath, source);
+}
+
+const countryHomes = [
+  ['src/pages/py/index.astro', 'PillarHub', 'ParaguayHomeExperience', '../../components/generated/ParaguayHomeExperience.astro'],
+  ['src/pages/ve/index.astro', 'PillarHub', 'VenezuelaHomeExperience', '../../components/generated/VenezuelaHomeExperience.astro'],
+];
+
+for (const [page, previous, component, importPath] of countryHomes) {
+  const fullPath = path.join('/Users/marrod/hacecuentas', page);
+  let source = fs.readFileSync(fullPath, 'utf8');
+  source = source.replace(
+    new RegExp(`import ${previous} from ['"][^'"]+['"];`),
+    `import ${component} from '${importPath}';`,
+  );
+  source = source.replace(new RegExp(`<${previous}[^>]*/>`), `<${component} />`);
   fs.writeFileSync(fullPath, source);
 }
