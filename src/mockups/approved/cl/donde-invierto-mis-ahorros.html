@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dónde invertir</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #edf6f1;
+      }
+      .invest {
+        padding: 45px 0;
+      }
+      .reserve {
+        padding: 22px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        gap: 12px;
+        align-items: end;
+      }
+      .shelves {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+      }
+      .jar {
+        padding: 19px;
+        border: 1px solid var(--line);
+        border-radius: 18px 18px 8px 8px;
+        background: #fff;
+        min-height: 240px;
+        display: flex;
+        flex-direction: column;
+      }
+      .jar.best {
+        border: 3px solid #3e8b68;
+      }
+      .risk {
+        display: flex;
+        gap: 4px;
+      }
+      .risk i {
+        width: 18px;
+        height: 7px;
+        background: #dce6e2;
+      }
+      .risk i.on {
+        background: #d87945;
+      }
+      .jar strong {
+        font-size: 27px;
+        margin-top: auto;
+      }
+      .buffer {
+        margin-top: 18px;
+        padding: 18px;
+        background: #254e54;
+        color: #fff;
+      }
+      .buffer b {
+        font-size: 25px;
+      }
+      @media (max-width: 800px) {
+        .reserve {
+          grid-template-columns: 1fr 1fr;
+        }
+        .shelves {
+          overflow: auto;
+        }
+        .jar {
+          min-width: 210px;
+        }
+      }
+  </style>
+  <style>
+    .hero{padding:58px 0;background:linear-gradient(135deg,#eaf6ef,#f8fcfa)}.invest{padding:60px 0;background:#fbfcfb}.reserve{padding:25px;border-radius:22px;position:relative}.reserve:before{content:"01 · RESERVA / 02 · INVERSIÓN";position:absolute;top:-28px;font-size:10px;font-weight:950;letter-spacing:.14em;color:#658078}.shelves{gap:16px}.jar{border-radius:24px 24px 10px 10px;padding:23px;box-shadow:0 10px 30px #173b470e;position:relative;overflow:hidden;transition:.2s}.jar:before{content:"";position:absolute;left:0;right:0;bottom:0;height:38%;background:#e4f1eb;z-index:0}.jar>*{position:relative}.jar:hover{transform:translateY(-4px)}.jar.best{box-shadow:0 18px 40px #367f6225}.jar.best:after{content:"✓";position:absolute;right:15px;top:14px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#3e8b68;color:#fff}.buffer{border-radius:15px;box-shadow:0 13px 30px #173b4720}
+  </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b><span class="nav">Chile · Ahorros</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Dinero / Invertir ahorros</div>
+        <h1 class="display">Primero separá la plata que no puede esperar.</h1>
+        <p class="lead">
+          Armá tu colchón y recién después compará liquidez, riesgo, comisión e
+          impuesto.
+        </p>
+      </div>
+    </section>
+    <main class="invest">
+      <div class="wrap">
+        <section class="card reserve">
+          <div>
+            <label>Ahorros disponibles</label
+            ><input id="amount" type="number" value="8000000" />
+          </div>
+          <div>
+            <label>Gastos esenciales/mes</label
+            ><input id="spend" type="number" value="850000" />
+          </div>
+          <div>
+            <label>Cuándo la necesitás</label
+            ><select id="term">
+              <option value="90">3 meses</option>
+              <option value="365" selected>1 año</option>
+              <option value="1095">3 años</option>
+            </select>
+          </div>
+          <button class="btn" id="go">Ordenar mi plata</button>
+        </section>
+        <div class="shelves" id="shelves"></div>
+        <div class="buffer" id="buffer"></div>
+      </div>
+    </main>
+    <footer class="foot">
+      Rentabilidades son escenarios, no promesas. Considerá riesgo y costos
+      antes de invertir.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function go() {
+          let a = +$("#amount").value,
+            sp = +$("#spend").value,
+            days = +$("#term").value,
+            res = Math.min(a, sp * 4),
+            invest = Math.max(0, a - res),
+            products = [
+              ["Depósito a plazo", 5.2, 1, 0],
+              ["Fondo mutuo deuda", 6.1, 2, 0.8],
+              ["Bonos UF", 4.5, 2, 0.35],
+              ["Acciones chilenas", 9, 4, 1.1],
+            ];
+          $("#shelves").innerHTML = products
+            .map((p, i) => {
+              let gain = (((invest * (p[1] - p[3])) / 100) * days) / 365,
+                best = days < 180 ? i === 0 : days < 700 ? i === 1 : i === 3;
+              return `<article class="jar ${best ? "best" : ""}"><small>${best ? "MEJOR AJUSTE AL PLAZO" : "ALTERNATIVA"}</small><h3>${p[0]}</h3><div class=risk>${[1, 2, 3, 4].map((x) => `<i class="${x <= p[2] ? "on" : ""}"></i>`).join("")}</div><p>${p[1]}% escenario anual<br>${p[3]}% costo</p><strong>+$${Math.round(gain).toLocaleString("es-CL")}</strong></article>`;
+            })
+            .join("");
+          $("#buffer").innerHTML =
+            `Colchón líquido sugerido: <b>$${res.toLocaleString("es-CL")}</b> · Capital para invertir: <b>$${invest.toLocaleString("es-CL")}</b>`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Bonos y beneficios</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #fff6df;
+      }
+      .benefits {
+        padding: 45px 0;
+      }
+      .profile {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr) auto;
+        gap: 12px;
+        align-items: end;
+      }
+      .mailbox {
+        margin-top: 25px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 13px;
+      }
+      .letter {
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+      .letter:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: repeating-linear-gradient(
+          90deg,
+          #3b8090 0 20px,
+          #fff 20px 30px,
+          #d67845 30px 50px,
+          #fff 50px 60px
+        );
+      }
+      .letter.yes {
+        border: 2px solid #3d8969;
+      }
+      .status {
+        display: inline-block;
+        margin-top: 7px;
+        padding: 5px 9px;
+        border-radius: 99px;
+        background: #e4f2ea;
+        color: #28684f;
+        font-weight: 900;
+        font-size: 12px;
+      }
+      .letter.no {
+        opacity: 0.58;
+      }
+      .next {
+        margin-top: 18px;
+        padding: 15px;
+        background: #244e55;
+        color: #fff;
+      }
+      @media (max-width: 800px) {
+        .profile {
+          grid-template-columns: 1fr 1fr;
+        }
+        .mailbox {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#fff5d9,#fffaf0)}.benefits{padding:60px 0;background:#fbfcfb}.profile{padding:23px;background:#fff;border:1px solid #e4e2d9;border-radius:19px;box-shadow:var(--soft-shadow)}.mailbox{gap:17px}.letter{padding:25px 22px 21px;border-radius:5px 5px 18px 18px;box-shadow:0 12px 28px #173b470d;transition:.2s}.letter:hover{transform:translateY(-3px)}.letter:after{content:"";position:absolute;right:-28px;bottom:-28px;width:80px;height:80px;border:2px dashed #d1ddd9;border-radius:50%}.letter h3{margin-top:12px}.status{letter-spacing:.02em}.letter.yes{box-shadow:0 16px 35px #2f785d1a}.next{border-radius:13px;box-shadow:0 12px 27px #173b4720}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b
+      ><span class="nav">Chile · Beneficios</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Vida / Bonos y beneficios</div>
+        <h1 class="display">
+          Una bandeja con los apoyos que vale la pena revisar.
+        </h1>
+        <p class="lead">
+          Ingresos, hogar y RSH activan pistas concretas sin prometer
+          adjudicación.
+        </p>
+      </div>
+    </section>
+    <main class="benefits">
+      <div class="wrap">
+        <div class="profile">
+          <div>
+            <label>Ingreso total del hogar</label
+            ><input id="income" type="number" value="850000" />
+          </div>
+          <div>
+            <label>Personas en el hogar</label
+            ><input id="people" type="number" value="4" />
+          </div>
+          <div>
+            <label>Tramo RSH (%)</label
+            ><input id="rsh" type="number" value="40" />
+          </div>
+          <div>
+            <label>Cargas acreditadas</label
+            ><input id="loads" type="number" value="2" />
+          </div>
+          <button class="btn" id="go">Revisar bandeja</button>
+        </div>
+        <div class="mailbox" id="box"></div>
+        <div class="next" id="next"></div>
+      </div>
+    </main>
+    <footer class="foot">
+      La elegibilidad oficial depende de registros y requisitos vigentes en
+      ChileAtiende y cada organismo.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function go() {
+          let inc = +$("#income").value,
+            p = +$("#people").value,
+            r = +$("#rsh").value,
+            l = +$("#loads").value,
+            pc = inc / p,
+            items = [
+              [
+                "Asignación Familiar",
+                inc < 1478539 && l > 0,
+                l * 13870,
+                "Acreditá cargas y revisá tu tramo de renta.",
+              ],
+              [
+                "Aporte Familiar Permanente",
+                r <= 60 && l > 0,
+                l * 65000,
+                "Consultá por RUN en la fecha anual.",
+              ],
+              [
+                "Becas JUNAEB",
+                r <= 60 && p > 1,
+                0,
+                "Revisá nivel educativo y matrícula.",
+              ],
+              [
+                "Subsidio Único Familiar",
+                pc < 250000 && l > 0,
+                l * 22000,
+                "Se solicita en la municipalidad.",
+              ],
+              [
+                "Bono Logro Escolar",
+                r <= 30 && l > 0,
+                l * 45000,
+                "Requiere rendimiento y edad escolar.",
+              ],
+              [
+                "Subsidio de arriendo",
+                r <= 70,
+                0,
+                "Verificá ahorro, ingreso y llamado MINVU.",
+              ],
+            ];
+          $("#box").innerHTML = items
+            .map(
+              (x) =>
+                `<article class="card letter ${x[1] ? "yes" : "no"}"><h3>${x[0]}</h3><span class=status>${x[1] ? "Vale revisar" : "Baja coincidencia"}</span><p>${x[3]}</p>${x[2] ? `<b>Referencia $${x[2].toLocaleString("es-CL")}</b>` : ""}</article>`,
+            )
+            .join("");
+          $("#next").textContent =
+            `Ingreso por persona: $${Math.round(pc).toLocaleString("es-CL")}. Próximo paso: actualizá tu RSH antes de postular.`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

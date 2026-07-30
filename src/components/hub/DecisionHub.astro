@@ -12,6 +12,7 @@ import DecisionHubClassic from './DecisionHubClassic.astro';
 import enCoreStyles from '../../mockups/approved/en-mockup-core.css?raw';
 import ptCoreStyles from '../../mockups/approved/pt-mockup-core.css?raw';
 import ptPtCoreStyles from '../../mockups/approved/pt-pt-mockup-core.css?raw';
+import clCoreStyles from '../../mockups/approved/cl-mockup-core.css?raw';
 
 export interface Props {
   data: HubData;
@@ -33,6 +34,11 @@ const approvedPtPt = import.meta.glob('../../mockups/approved/pt-pt/*.html', {
   import: 'default',
   eager: true,
 }) as Record<string, string>;
+const approvedCl = import.meta.glob('../../mockups/approved/cl/*.html', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 const leaf = data.slug.split('/').filter(Boolean).at(-1);
 const source = !leaf
   ? undefined
@@ -42,12 +48,16 @@ const source = !leaf
       ? approvedPt[`../../mockups/approved/pt/${leaf}.html`]
       : data.locale === 'pt-pt'
         ? approvedPtPt[`../../mockups/approved/pt-pt/${leaf}.html`]
-        : undefined;
+        : data.locale === 'cl'
+          ? approvedCl[`../../mockups/approved/cl/${leaf}.html`]
+          : undefined;
 const baseStyles = data.locale === 'pt'
   ? ptCoreStyles
   : data.locale === 'pt-pt'
     ? ptPtCoreStyles
-    : enCoreStyles;
+    : data.locale === 'cl'
+      ? clCoreStyles
+      : enCoreStyles;
 ---
 
 {source

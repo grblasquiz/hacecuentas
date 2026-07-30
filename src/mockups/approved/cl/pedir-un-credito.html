@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pedir un crédito</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #fff3eb;
+      }
+      .credit {
+        padding: 45px 0;
+      }
+      .offers {
+        display: grid;
+        grid-template-columns: 1fr 70px 1fr;
+        gap: 16px;
+        align-items: center;
+      }
+      .offer {
+        padding: 23px;
+      }
+      .vs {
+        text-align: center;
+        font-weight: 950;
+      }
+      .ticket {
+        margin-top: 22px;
+        background: #fffef8;
+        border: 2px dashed #d5bda9;
+        padding: 22px;
+      }
+      .line {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px dotted #b7c2bd;
+      }
+      .winner {
+        padding: 16px;
+        background: #e3f2e9;
+        color: #24674d;
+        font-weight: 900;
+      }
+      .alert {
+        padding: 14px;
+        background: #fff0dd;
+        color: #8d4c24;
+        margin-top: 10px;
+      }
+      .offer h2 span {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      @media (max-width: 800px) {
+        .offers {
+          grid-template-columns: 1fr;
+        }
+        .vs {
+          display: none;
+        }
+      }
+  </style>
+  <style>
+    .hero{padding:58px 0;background:linear-gradient(135deg,#fff1e8,#fffaf6)}.credit{padding:60px 0;background:#fcfdfc}.offer{padding:27px;position:relative;overflow:hidden}.offer:before{content:"OFERTA";position:absolute;right:-12px;top:22px;transform:rotate(90deg);font-size:10px;letter-spacing:.18em;font-weight:950;color:#c3cfcb}.offer h2{display:flex;justify-content:space-between;border-bottom:1px solid #e1e8e5;padding-bottom:13px}.vs{width:58px;height:58px;border-radius:50%;background:#213f47;color:#fff;display:grid;place-items:center;box-shadow:0 10px 25px #173b4724}.ticket{border-radius:18px;background:#fffefa;box-shadow:var(--soft-shadow);position:relative}.ticket:before{content:"COMPARACIÓN CAE";display:block;font-size:10px;letter-spacing:.15em;font-weight:950;color:#71837f;margin-bottom:12px}.winner{border-radius:11px;font-size:17px}.alert{border-radius:10px}.line b{color:#284e56}
+  </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b><span class="nav">Chile · Crédito</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Dinero / Pedir un crédito</div>
+        <h1 class="display">La cuota seduce. La CAE cuenta la verdad.</h1>
+        <p class="lead">
+          Enfrentá dos ofertas por costo total y esfuerzo mensual, no por
+          publicidad.
+        </p>
+      </div>
+    </section>
+    <main class="credit">
+      <div class="wrap">
+        <div class="offers">
+          <section class="card offer">
+            <h2>Oferta A <span>BANCO O RETAIL</span></h2>
+            <label>Monto</label
+            ><input id="amount" type="number" value="3000000" /><label
+              >Plazo (meses)</label
+            ><input id="months" type="number" value="24" /><label>CAE</label
+            ><input id="a" type="number" value="22" step=".1" />
+          </section>
+          <div class="vs">VS</div>
+          <section class="card offer">
+            <h2>Oferta B <span>OTRA ENTIDAD</span></h2>
+            <label>CAE</label
+            ><input id="b" type="number" value="28" step=".1" /><label
+              >Gastos fijos</label
+            ><input id="fees" type="number" value="65000" /><label
+              >Ingreso líquido mensual</label
+            ><input id="income" type="number" value="1100000" />
+          </section>
+        </div>
+        <button class="btn" id="go" style="margin: 16px 0">
+          Abrir ambas ofertas
+        </button>
+        <section class="ticket" id="ticket"></section>
+      </div>
+    </main>
+    <footer class="foot">
+      La CAE permite comparar créditos equivalentes; revisá seguros y gastos
+      incluidos en el contrato.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function pmt(p, annual, n) {
+          let r = (1 + annual / 100) ** (1 / 12) - 1;
+          return (p * r) / (1 - (1 + r) ** -n);
+        }
+        function go() {
+          let p = +$("#amount").value,
+            n = +$("#months").value,
+            qa = pmt(p, +$("#a").value, n),
+            qb = pmt(p, +$("#b").value, n),
+            ta = qa * n,
+            tb = qb * n + +$("#fees").value,
+            w = ta < tb ? "A" : "B",
+            best = Math.min(qa, qb),
+            eff = (best / +$("#income").value) * 100;
+          $("#ticket").innerHTML =
+            `<div class=winner>La oferta ${w} cuesta $${Math.round(Math.abs(ta - tb)).toLocaleString("es-CL")} menos en total.</div><div class=line><span>Cuota A / total</span><b>$${Math.round(qa).toLocaleString("es-CL")} / $${Math.round(ta).toLocaleString("es-CL")}</b></div><div class=line><span>Cuota B / total</span><b>$${Math.round(qb).toLocaleString("es-CL")} / $${Math.round(tb).toLocaleString("es-CL")}</b></div><div class=alert>La mejor cuota ocupa ${eff.toFixed(0)}% de tu ingreso. ${eff > 25 ? "Es un esfuerzo alto: bajá monto o alargá con cuidado." : "Queda bajo el 25% de referencia."}</div>`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

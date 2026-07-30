@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Trabajo a honorarios</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #f3f0f7;
+      }
+      .invoice {
+        padding: 45px 0;
+      }
+      .boleta {
+        max-width: 850px;
+        margin: auto;
+        padding: 28px;
+        background: #fffdf7;
+        border: 1px solid #d8d0bd;
+        font-family: ui-monospace, monospace;
+      }
+      .boleta header {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 3px double #3d4e52;
+        padding-bottom: 14px;
+      }
+      .boleta header b {
+        font-size: 22px;
+      }
+      .entry {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        font-family: system-ui;
+      }
+      .line {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px dotted #929f9a;
+      }
+      .line.ret {
+        color: #a0523b;
+      }
+      .receive {
+        margin-top: 18px;
+        padding: 18px;
+        border: 3px solid #755f92;
+      }
+      .receive strong {
+        font: 950 40px system-ui;
+        color: #755f92;
+      }
+      .annual {
+        margin-top: 13px;
+        padding: 12px;
+        background: #f0edf4;
+        font-family: system-ui;
+      }
+      @media (max-width: 800px) {
+        .entry {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#f1edf7,#fbfafd)}.invoice{padding:60px 0;background:#fbfcfb}.boleta{padding:34px;border-radius:4px 4px 18px 18px;box-shadow:0 25px 60px #493d5a18;position:relative}.boleta:before,.boleta:after{content:"";position:absolute;top:-1px;width:12px;height:12px;background:#fbfcfb;transform:rotate(45deg)}.boleta:before{left:18px}.boleta:after{right:18px}.boleta header{padding-bottom:20px}.entry{margin-top:16px}.line{padding:15px 4px}.receive{border-radius:10px;background:#f8f5fb;box-shadow:inset 0 0 0 5px #fff}.receive strong{letter-spacing:-.045em}.annual{border-radius:10px;border-left:5px solid #755f92}.boleta header span{font-size:11px;color:#687873}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b
+      ><span class="nav">Chile · Honorarios</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Trabajo / A honorarios</div>
+        <h1 class="display">Emití la boleta sabiendo cuánto llega.</h1>
+        <p class="lead">
+          Calculá bruto, retención y líquido; después mirá el efecto anual en
+          cotizaciones.
+        </p>
+      </div>
+    </section>
+    <main class="invoice">
+      <div class="card boleta">
+        <header>
+          <b>BOLETA DE HONORARIOS</b><span>SII · SIMULACIÓN</span>
+        </header>
+        <div class="entry">
+          <div>
+            <label>Monto bruto</label
+            ><input id="gross" type="number" value="650000" />
+          </div>
+          <div>
+            <label>Tasa de retención</label
+            ><select id="rate">
+              <option value=".145">14,5%</option>
+              <option value=".1525">15,25%</option>
+              <option value=".16">16%</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" id="go" style="margin: 15px 0">
+          Emitir simulación
+        </button>
+        <div id="lines"></div>
+        <div class="receive" id="receive"></div>
+        <div class="annual" id="annual"></div>
+      </div>
+    </main>
+    <footer class="foot">
+      La retención es un anticipo; en la Operación Renta se determina su destino
+      final.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function go() {
+          let g = +$("#gross").value,
+            r = +$("#rate").value,
+            h = g * r,
+            net = g - h;
+          $("#lines").innerHTML =
+            `<div class=line><span>Honorarios brutos</span><b>$${g.toLocaleString("es-CL")}</b></div><div class="line ret"><span>Retención ${(r * 100).toLocaleString("es-CL")}%</span><b>− $${Math.round(h).toLocaleString("es-CL")}</b></div>`;
+          $("#receive").innerHTML =
+            `Recibís ahora<br><strong>$${Math.round(net).toLocaleString("es-CL")}</strong>`;
+          $("#annual").innerHTML =
+            `Si repetís esta boleta 12 meses: <b>$${Math.round(g * 12).toLocaleString("es-CL")}</b> brutos y <b>$${Math.round(h * 12).toLocaleString("es-CL")}</b> retenidos.`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

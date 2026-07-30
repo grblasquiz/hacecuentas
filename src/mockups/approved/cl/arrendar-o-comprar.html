@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Arrendar o comprar</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #f4f1eb;
+      }
+      .decision {
+        padding: 45px 0;
+      }
+      .horizon {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+      }
+      .form {
+        padding: 23px;
+      }
+      .race {
+        padding: 25px;
+      }
+      .year {
+        height: 190px;
+        position: relative;
+        border-left: 2px solid #b9c9c4;
+        border-bottom: 2px solid #b9c9c4;
+      }
+      .line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 7px;
+        border-radius: 99px;
+        transform-origin: left;
+      }
+      .rent {
+        top: 110px;
+        background: #d27a4a;
+        transform: rotate(-7deg);
+      }
+      .buy {
+        top: 145px;
+        background: #3e8170;
+        transform: rotate(-18deg);
+      }
+      .flags {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        color: var(--muted);
+      }
+      .verdict {
+        margin-top: 20px;
+        padding: 19px;
+        background: #e7f2ed;
+        border-left: 7px solid #3e8170;
+      }
+      .verdict strong {
+        font-size: 30px;
+      }
+      .nonmoney {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+        margin-top: 14px;
+      }
+      .nonmoney div {
+        padding: 11px;
+        background: #f5f7f6;
+      }
+      @media (max-width: 800px) {
+        .horizon {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#f3efe8,#fdfcf9)}.decision{padding:60px 0;background:#fbfcfb}.form{padding:27px}.form:before{content:"TU HORIZONTE";font-size:10px;letter-spacing:.15em;font-weight:950;color:#77847f}.race{padding:30px}.race h2{font-size:19px;margin:0 0 25px}.year{border-color:#cad6d2;background:linear-gradient(#f8faf9 1px,transparent 1px);background-size:100% 38px;border-radius:8px}.line{box-shadow:0 5px 12px #173b4722}.rent:after,.buy:after{position:absolute;right:0;top:-25px;font-style:normal;font-size:11px;font-weight:900}.rent:after{content:"ARRENDAR";color:#a85e37}.buy:after{content:"COMPRAR";color:#286a59}.verdict{border-radius:0 14px 14px 0;box-shadow:var(--soft-shadow)}.nonmoney div{border-radius:11px;border:1px solid #e0e7e4;padding:15px}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b><span class="nav">Chile · Vivienda</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Hogar / Arrendar o comprar</div>
+        <h1 class="display">¿En qué año deja de ganar el arriendo?</h1>
+        <p class="lead">
+          Compará plata que se va con patrimonio que queda, incluyendo pie,
+          dividendo y gastos comunes.
+        </p>
+      </div>
+    </section>
+    <main class="decision">
+      <div class="wrap horizon">
+        <aside class="card form">
+          <label>Arriendo mensual</label
+          ><input id="rent" type="number" value="620000" /><label
+            >Precio de la vivienda</label
+          ><input id="price" type="number" value="145000000" /><label
+            >Pie disponible</label
+          ><input id="down" type="number" value="25000000" /><label
+            >Años que pensás quedarte</label
+          ><input id="years" type="number" value="10" /><button
+            class="btn"
+            id="go"
+            style="width: 100%; margin-top: 17px"
+          >
+            Correr ambos caminos
+          </button>
+        </aside>
+        <section class="card race">
+          <h2>Patrimonio neto acumulado</h2>
+          <div class="year">
+            <i class="line rent"></i><i class="line buy"></i>
+          </div>
+          <div class="flags"><span>Hoy</span><span id="end"></span></div>
+          <div class="verdict" id="verdict"></div>
+          <div class="nonmoney">
+            <div>
+              <b>Arrendar</b><br />Más movilidad y menos gastos sorpresa.
+            </div>
+            <div>
+              <b>Comprar</b><br />Más estabilidad y exposición al valor de la
+              vivienda.
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <footer class="foot">
+      Escenario financiero, no recomendación. Incluí mantención, contribuciones
+      y costo del pie.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function go() {
+          let r = +$("#rent").value,
+            p = +$("#price").value,
+            d = +$("#down").value,
+            y = +$("#years").value,
+            loan = p - d,
+            rate = 0.045 / 12,
+            n = 20 * 12,
+            pmt = (loan * rate) / (1 - (1 + rate) ** -n),
+            paid = pmt * 12 * y,
+            remain =
+              loan * (1 + rate) ** (12 * y) -
+              (pmt * ((1 + rate) ** (12 * y) - 1)) / rate,
+            equity = p * 1.025 ** y - remain,
+            buyCost = d + paid + p * 0.012 * y,
+            rentCost = r * 12 * ((1.035 ** y - 1) / 0.035),
+            delta = equity - buyCost - -rentCost;
+          $("#end").textContent = `Año ${y}`;
+          $("#verdict").innerHTML =
+            `En este horizonte, <strong>${delta > 0 ? "comprar" : "arrendar"}</strong> queda aproximadamente <b>$${Math.abs(Math.round(delta)).toLocaleString("es-CL")}</b> adelante.`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

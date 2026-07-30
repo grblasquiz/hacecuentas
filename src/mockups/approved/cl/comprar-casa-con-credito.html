@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Comprar casa con crédito</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #eef5f2;
+      }
+      .houseplan {
+        padding: 45px 0;
+      }
+      .blueprint {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 24px;
+      }
+      .form {
+        padding: 23px;
+      }
+      .house {
+        border: 3px solid #397c70;
+        padding: 25px;
+        clip-path: polygon(10% 24%, 50% 0, 90% 24%, 90% 100%, 10% 100%);
+        min-height: 390px;
+        background: #f8fbf9;
+      }
+      .funding {
+        display: flex;
+        height: 70px;
+        margin: 45px 0 18px;
+        border-radius: 9px;
+        overflow: hidden;
+      }
+      .funding div {
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 900;
+      }
+      .pie {
+        background: #d37b48;
+      }
+      .sub {
+        background: #7d69a0;
+      }
+      .bank {
+        background: #3d8170;
+      }
+      .gate {
+        padding: 16px;
+        border: 2px dashed #9fb8b0;
+        background: #fff;
+      }
+      .gate strong {
+        font-size: 28px;
+      }
+      .tasks {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .tasks span {
+        flex: 1;
+        padding: 9px;
+        background: #e6efeb;
+        font-size: 12px;
+      }
+      @media (max-width: 800px) {
+        .blueprint {
+          grid-template-columns: 1fr;
+        }
+        .tasks {
+          flex-direction: column;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:radial-gradient(circle at 82% 55%,#d8ebe3 0 100px,transparent 101px),linear-gradient(135deg,#edf7f3,#fbfdfc)}.houseplan{padding:60px 0;background:#fbfcfb}.form{padding:27px}.form:before{content:"DATOS DE LA COMPRA";font-size:10px;letter-spacing:.15em;font-weight:950;color:#6f827c}.house{padding:34px;background:linear-gradient(160deg,#f7fbf9,#edf5f1);border-width:4px;box-shadow:0 25px 55px #2c6b5720}.funding{height:86px;box-shadow:0 7px 18px #173b4718}.funding div{transition:.25s}.gate{border-radius:12px;box-shadow:0 8px 23px #173b470c}.tasks span{border-radius:8px;text-align:center;border-bottom:3px solid #9ebcb1}.gate strong{letter-spacing:-.04em}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b
+      ><span class="nav">Chile · Hipotecario</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Hogar / Comprar con crédito</div>
+        <h1 class="display">Armá la casa con pie, subsidio y banco.</h1>
+        <p class="lead">
+          La pregunta no es solo el dividendo: es cuánto necesitás antes de
+          firmar y qué parte financia cada uno.
+        </p>
+      </div>
+    </section>
+    <main class="houseplan">
+      <div class="wrap blueprint">
+        <aside class="card form">
+          <label>Precio de la vivienda (UF)</label
+          ><input id="price" type="number" value="3200" /><label
+            >Pie propio (UF)</label
+          ><input id="down" type="number" value="500" /><label
+            >Subsidio adjudicado (UF)</label
+          ><input id="sub" type="number" value="250" /><label
+            >Ingreso líquido del hogar</label
+          ><input id="income" type="number" value="2400000" /><button
+            class="btn"
+            id="go"
+            style="width: 100%; margin-top: 17px"
+          >
+            Armar financiamiento
+          </button>
+        </aside>
+        <section class="card house">
+          <div class="funding" id="funding"></div>
+          <div class="gate" id="gate"></div>
+          <div class="tasks">
+            <span>1 · Preaprobación</span><span>2 · Tasación</span
+            ><span>3 · Estudio de títulos</span><span>4 · Escritura</span>
+          </div>
+        </section>
+      </div>
+    </main>
+    <footer class="foot">
+      Estimación con UF demostrativa y tasa referencial. El banco evalúa renta,
+      deuda y propiedad.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s),
+          uf = 39250;
+        function go() {
+          let p = +$("#price").value,
+            d = +$("#down").value,
+            s = +$("#sub").value,
+            loan = Math.max(0, p - d - s),
+            income = +$("#income").value,
+            r = 0.045 / 12,
+            n = 25 * 12,
+            div = (loan * uf * r) / (1 - (1 + r) ** -n),
+            eff = (div / income) * 100,
+            total = d + s + loan;
+          $("#funding").innerHTML =
+            `<div class=pie style="width:${(d / total) * 100}%">Pie<br>${d} UF</div><div class=sub style="width:${(s / total) * 100}%">Subsidio<br>${s} UF</div><div class=bank style="width:${(loan / total) * 100}%">Banco<br>${loan} UF</div>`;
+          $("#gate").innerHTML =
+            `Dividendo referencial <strong>$${Math.round(div).toLocaleString("es-CL")}</strong><br>Carga: ${eff.toFixed(0)}% del ingreso · ${eff <= 30 ? "Pasa el umbral orientativo" : "Supera el 30%; falta pie o ingreso"}`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

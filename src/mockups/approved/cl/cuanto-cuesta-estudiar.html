@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cuánto cuesta estudiar</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #f2eff8;
+      }
+      .campus {
+        padding: 45px 0;
+      }
+      .degree {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+      }
+      .form {
+        padding: 23px;
+      }
+      .years {
+        padding: 25px;
+      }
+      .semester {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        align-items: end;
+        height: 240px;
+      }
+      .book {
+        height: var(--h);
+        background: #745f98;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px 12px 4px 4px;
+        writing-mode: vertical-rl;
+      }
+      .debt {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .debt div {
+        padding: 18px;
+        background: #f1eef5;
+      }
+      .debt strong {
+        font-size: 30px;
+        color: #68528f;
+      }
+      .warning {
+        margin-top: 12px;
+        padding: 13px;
+        background: #fff0dd;
+      }
+      .free {
+        background: #e5f2ea !important;
+      }
+      .free strong {
+        color: #2e7358 !important;
+      }
+      @media (max-width: 800px) {
+        .degree {
+          grid-template-columns: 1fr;
+        }
+        .semester {
+          overflow: auto;
+        }
+        .book {
+          min-width: 70px;
+        }
+        .debt {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:radial-gradient(circle at 83% 45%,#ded6ec 0 90px,transparent 91px),linear-gradient(135deg,#f1edf7,#fbfafd)}.campus{padding:60px 0;background:#fbfcfb}.form{padding:27px}.form:before{content:"TU PLAN DE CARRERA";font-size:10px;letter-spacing:.15em;font-weight:950;color:#786b8d}.years{padding:30px;position:relative}.years:before{content:"BIBLIOTECA DE ARANCELES";font-size:10px;letter-spacing:.15em;font-weight:950;color:#786b8d}.semester{margin-top:15px;padding:0 12px;border-bottom:13px solid #a98863}.book{box-shadow:5px 0 #ffffff30,9px 6px 15px #463a581f}.debt div{border-radius:13px;border:1px solid #e1dce8}.warning{border-radius:10px;border-left:5px solid #d48144}.debt strong{letter-spacing:-.045em}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b><span class="nav">Chile · Estudios</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Vida / Cuánto cuesta estudiar</div>
+        <h1 class="display">
+          Que el título muestre también la deuda de salida.
+        </h1>
+        <p class="lead">
+          Arancel real, gratuidad, CAE, años extra y renta al egresar en un
+          recorrido completo.
+        </p>
+      </div>
+    </section>
+    <main class="campus">
+      <div class="wrap degree">
+        <aside class="card form">
+          <label>Arancel anual real</label
+          ><input id="fee" type="number" value="5200000" /><label
+            >Duración formal (años)</label
+          ><input id="years" type="number" value="5" /><label
+            >Años de atraso probables</label
+          ><input id="delay" type="number" value="1" /><label>Tramo RSH</label
+          ><select id="rsh">
+            <option value="0">Hasta 60% · posible gratuidad</option>
+            <option value=".75">61–80% · financiamiento parcial</option>
+            <option value="1">Sobre 80% · costo completo</option></select
+          ><label>Renta esperada al egresar</label
+          ><input id="income" type="number" value="1300000" /><button
+            class="btn"
+            id="go"
+            style="width: 100%; margin-top: 17px"
+          >
+            Recorrer la carrera
+          </button>
+        </aside>
+        <section class="card years">
+          <div class="semester" id="books"></div>
+          <div class="debt" id="debt"></div>
+          <div class="warning" id="warning"></div>
+        </section>
+      </div>
+    </main>
+    <footer class="foot">
+      Gratuidad y créditos dependen de institución, acreditación y requisitos
+      personales.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function go() {
+          let f = +$("#fee").value,
+            y = +$("#years").value,
+            d = +$("#delay").value,
+            r = +$("#rsh").value,
+            inc = +$("#income").value,
+            total = f * (y + d) * r,
+            monthly = (total * 0.02) / 12 + total / 180;
+          $("#books").innerHTML = Array.from(
+            { length: y + d },
+            (_, i) =>
+              `<div class=book style="--h:${90 + i * 18}px">Año ${i + 1} · $${Math.round(((f * 1.035 ** i) / 1e6) * 10) / 10}M</div>`,
+          ).join("");
+          $("#debt").innerHTML =
+            `<div class="${r === 0 ? "free" : ""}">Costo financiado<strong>$${Math.round(total).toLocaleString("es-CL")}</strong></div><div>Cuota de salida<strong>$${Math.round(monthly).toLocaleString("es-CL")}/mes</strong></div>`;
+          $("#warning").textContent =
+            r === 0
+              ? "Tu perfil abre la puerta a gratuidad: confirmá institución, duración nominal y renovación anual."
+              : `La cuota equivaldría a ${Math.round((monthly / inc) * 100)}% de la renta esperada. Cada año extra suma arancel completo.`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

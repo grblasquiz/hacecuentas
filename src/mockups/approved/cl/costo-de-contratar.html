@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Costo de contratar</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #eef6f2;
+      }
+      .payroll {
+        padding: 45px 0;
+      }
+      .desk {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+      }
+      .form {
+        padding: 23px;
+      }
+      .people {
+        padding: 26px;
+      }
+      .person {
+        display: grid;
+        grid-template-columns: 70px 1fr;
+        gap: 15px;
+        margin-bottom: 18px;
+      }
+      .silhouette {
+        height: 120px;
+        background: #377c70;
+        clip-path: circle(25% at 50% 20%)
+          polygon(15% 100%, 15% 45%, 85% 45%, 85% 100%);
+      }
+      .stack div {
+        height: 34px;
+        padding: 7px 10px;
+        color: #fff;
+        width: var(--w);
+        min-width: 100px;
+      }
+      .base {
+        background: #34798a;
+      }
+      .employer {
+        background: #d47746;
+      }
+      .provision {
+        background: #7d679d;
+      }
+      .total {
+        font-size: 36px;
+        font-weight: 950;
+        margin-top: 16px;
+      }
+      .per {
+        color: var(--muted);
+      }
+      @media (max-width: 800px) {
+        .desk {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#eaf6f0,#f9fcfa)}.payroll{padding:60px 0;background:#fbfcfb}.form{padding:27px}.form:before{content:"CONFIGURÁ EL PUESTO";font-size:10px;letter-spacing:.15em;font-weight:950;color:#6f827b}.people{padding:30px;background:linear-gradient(160deg,#fff,#f4f8f6)}.person{grid-template-columns:95px 1fr;align-items:end}.silhouette{height:155px;filter:drop-shadow(0 12px 15px #285b4b22)}.stack{display:flex;flex-direction:column;gap:7px}.stack div{border-radius:0 8px 8px 0;height:40px;box-shadow:0 5px 14px #173b4718}.total{padding-top:18px;border-top:1px solid #dce6e3;letter-spacing:-.04em}.per{padding:12px;background:#e7f2ed;border-radius:10px;color:#345d52}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b><span class="nav">Chile · Empleador</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Trabajo / Costo de contratar</div>
+        <h1 class="display">¿Cuánta empresa necesita ese sueldo?</h1>
+        <p class="lead">
+          Sumá cotizaciones del empleador, mutual, reforma, gratificación y
+          provisiones por trabajador.
+        </p>
+      </div>
+    </section>
+    <main class="payroll">
+      <div class="wrap desk">
+        <aside class="card form">
+          <label>Sueldo bruto</label
+          ><input id="salary" type="number" value="1000000" /><label
+            >Trabajadores iguales</label
+          ><input id="count" type="number" value="3" /><label
+            >Mutual total (%)</label
+          ><input id="mutual" type="number" value=".95" step=".05" /><label
+            >¿Incluye gratificación?</label
+          ><select id="grat">
+            <option value=".25">Sí, Art. 50</option>
+            <option value="0">No</option></select
+          ><button class="btn" id="go" style="width: 100%; margin-top: 17px">
+            Armar planilla
+          </button>
+        </aside>
+        <section class="card people">
+          <div class="person">
+            <i class="silhouette"></i>
+            <div class="stack" id="stack"></div>
+          </div>
+          <div class="total" id="total"></div>
+          <div class="per" id="per"></div>
+        </section>
+      </div>
+    </main>
+    <footer class="foot">
+      Estimación mensual; topes, actividad, reforma y gratificación efectiva
+      pueden cambiar el costo.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function go() {
+          let s = +$("#salary").value,
+            n = +$("#count").value,
+            g = s * +$("#grat").value,
+            e = s * (0.024 + +$("#mutual").value / 100 + 0.015),
+            p = s * (0.0833 + 0.0694),
+            one = s + g + e + p,
+            total = one * n;
+          $("#stack").innerHTML =
+            `<div class=base style="--w:100%">Sueldo $${s.toLocaleString("es-CL")}</div><div class=employer style="--w:${Math.min(100, ((e + g) / s) * 100 + 35)}%">Empleador $${Math.round(e + g).toLocaleString("es-CL")}</div><div class=provision style="--w:${Math.min(100, (p / s) * 100 + 30)}%">Provisiones $${Math.round(p).toLocaleString("es-CL")}</div>`;
+          $("#total").textContent =
+            "$" + Math.round(total).toLocaleString("es-CL") + " / mes";
+          $("#per").textContent =
+            `$${Math.round(one).toLocaleString("es-CL")} por trabajador · ${(one / s).toFixed(2)} veces el sueldo bruto`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

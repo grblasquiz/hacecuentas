@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>UF, UTM y dólar</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 40px 0 20px;
+        background: #edf5f7;
+      }
+      .market {
+        padding: 35px 0;
+      }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .quote {
+        padding: 19px;
+        border-top: 6px solid var(--c);
+        background: #fff;
+      }
+      .quote strong {
+        font-size: 28px;
+      }
+      .quote small {
+        color: var(--muted);
+      }
+      .converter {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: 1fr 80px 1fr;
+        gap: 20px;
+        align-items: center;
+        padding: 25px;
+      }
+      .side input {
+        font-size: 30px;
+        font-weight: 900;
+      }
+      .swap {
+        border: 0;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #2d788c;
+        color: #fff;
+        font-size: 22px;
+      }
+      .uses {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        overflow: auto;
+      }
+      .use {
+        min-width: 180px;
+        padding: 13px;
+        background: #f2f6f4;
+        border-radius: 10px;
+      }
+      @media (max-width: 800px) {
+        .board {
+          grid-template-columns: 1fr 1fr;
+        }
+        .converter {
+          grid-template-columns: 1fr;
+        }
+        .swap {
+          transform: rotate(90deg);
+        }
+      }
+  </style>
+  <style>
+    .hero{padding:52px 0 36px;background:linear-gradient(140deg,#eaf5f7,#f8fbfc)}.market{padding:45px 0 65px;background:#fbfcfb}.quote{border-radius:15px;border-top-width:5px;box-shadow:var(--soft-shadow);transition:.2s}.quote:hover{transform:translateY(-3px)}.quote strong{letter-spacing:-.035em}.quote:after{content:"↗";float:right;margin-top:-28px;color:var(--c);font-weight:950}.converter{border-radius:24px;padding:31px;background:#fff}.side label{color:#667a7f}.side input{border:0;border-bottom:2px solid #c9d8d5;border-radius:0;padding-left:0;box-shadow:none}.side input:focus{border-color:#2d788c;box-shadow:none}.swap{box-shadow:0 12px 24px #286f812b;transition:.25s}.swap:hover{transform:rotate(180deg)}.uses{gap:13px}.use{border:1px solid #dce6e3;background:#fff;box-shadow:0 5px 18px #173b470a}.use b{color:#2d7180}
+  </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b
+      ><span class="nav">Chile · Indicadores</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Dinero / UF, UTM y dólar</div>
+        <h1 class="display">El valor de hoy, puesto en una cuenta concreta.</h1>
+        <p class="lead">
+          Convertí entre pesos, UF, UTM y dólar y entendé para qué se usa cada
+          unidad.
+        </p>
+      </div>
+    </section>
+    <main class="market">
+      <div class="wrap">
+        <div class="board" id="board"></div>
+        <section class="card converter">
+          <div class="side">
+            <label id="fromLabel">Pesos chilenos</label
+            ><input id="amount" type="number" value="1000000" />
+          </div>
+          <button class="swap" id="swap">⇄</button>
+          <div class="side">
+            <label
+              ><select id="unit">
+                <option value="39250">UF</option>
+                <option value="68600">UTM</option>
+                <option value="965">Dólar observado</option>
+                <option value="1045">Euro</option>
+              </select></label
+            ><input id="result" readonly />
+          </div>
+        </section>
+        <div class="uses" id="uses"></div>
+      </div>
+    </main>
+    <footer class="foot">
+      Valores demostrativos del mockup; la página final usa la fuente y fecha
+      oficial vigente.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s),
+          reverse = false,
+          quotes = [
+            ["UF", 39250, "Vivienda y contratos", "#3b8292"],
+            ["UTM", 68600, "Multas e impuestos", "#d57b46"],
+            ["USD", 965, "Dólar observado", "#438a69"],
+            ["EUR", 1045, "Euro de referencia", "#806a9a"],
+          ];
+        $("#board").innerHTML = quotes
+          .map(
+            (q) =>
+              `<div class=quote style="--c:${q[3]}"><small>${q[0]} · HOY</small><br><strong>$${q[1].toLocaleString("es-CL")}</strong><br><small>${q[2]}</small></div>`,
+          )
+          .join("");
+        function go() {
+          let a = +$("#amount").value,
+            v = +$("#unit").value,
+            u = $("#unit").selectedOptions[0].text;
+          $("#fromLabel").textContent = reverse ? u : "Pesos chilenos";
+          $("#result").value = reverse
+            ? Math.round(a * v).toLocaleString("es-CL")
+            : (a / v).toLocaleString("es-CL", { maximumFractionDigits: 4 });
+          $("#uses").innerHTML = [
+            ["¿Arriendo en UF?", "Convertí la cuota del mes."],
+            ["¿Multa en UTM?", "Llevála a pesos de hoy."],
+            ["¿Compra en USD?", "Usá el observado como referencia."],
+          ]
+            .map((x) => `<div class=use><b>${x[0]}</b><br>${x[1]}</div>`)
+            .join("");
+        }
+        $("#swap").onclick = () => {
+          reverse = !reverse;
+          go();
+        };
+        $("#unit").onchange = $("#amount").oninput = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

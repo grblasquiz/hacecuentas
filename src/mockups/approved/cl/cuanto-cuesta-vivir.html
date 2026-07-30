@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cuánto cuesta vivir</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #edf5f2;
+      }
+      .life {
+        padding: 45px 0;
+      }
+      .city {
+        display: grid;
+        grid-template-columns: 330px 1fr;
+        gap: 24px;
+      }
+      .form {
+        padding: 23px;
+      }
+      .apartment {
+        padding: 25px;
+        background: #f7faf8;
+      }
+      .rooms {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        grid-template-rows: 150px 130px;
+        gap: 9px;
+      }
+      .room {
+        padding: 16px;
+        border: 3px solid #fff;
+        background: var(--c);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .room strong {
+        font-size: 25px;
+      }
+      .room.food {
+        grid-row: span 2;
+      }
+      .income {
+        margin-top: 15px;
+        height: 18px;
+        border-radius: 99px;
+        background: #dce6e2;
+        overflow: hidden;
+      }
+      .income i {
+        display: block;
+        height: 100%;
+        width: var(--w);
+        background: #d67845;
+      }
+      .answer {
+        font-size: 32px;
+        font-weight: 950;
+        margin-top: 14px;
+      }
+      .compare {
+        padding: 12px;
+        background: #fff2e7;
+        margin-top: 10px;
+      }
+      @media (max-width: 800px) {
+        .city {
+          grid-template-columns: 1fr;
+        }
+        .rooms {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto;
+        }
+        .room.food {
+          grid-row: auto;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#eaf6f1,#f9fcfb)}.life{padding:60px 0;background:#fbfcfb}.form{padding:27px}.form:before{content:"QUIÉNES VIVEN ACÁ";font-size:10px;letter-spacing:.15em;font-weight:950;color:#6e817b}.apartment{padding:31px;background:#eef5f2;box-shadow:0 25px 55px #285c4c18}.rooms{gap:12px}.room{border-width:5px;border-radius:4px;box-shadow:0 8px 20px #173b4712;transition:.2s}.room:hover{transform:scale(1.015)}.room span{font-size:12px;font-weight:900;letter-spacing:.08em}.room strong{letter-spacing:-.04em}.income{height:22px;background:#d8e4df;box-shadow:inset 0 2px 5px #173b4710}.income i{border-radius:99px}.answer{letter-spacing:-.045em}.compare{border-radius:10px;border-left:5px solid #d67845}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b
+      ><span class="nav">Chile · Costo de vida</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Vida / Cuánto cuesta vivir</div>
+        <h1 class="display">Construí el mes habitación por habitación.</h1>
+        <p class="lead">
+          Ciudad, hogar y estilo de vida cambian vivienda, comida, transporte,
+          salud y margen.
+        </p>
+      </div>
+    </section>
+    <main class="life">
+      <div class="wrap city">
+        <aside class="card form">
+          <label>Ciudad</label
+          ><select id="city">
+            <option value="1">Santiago</option>
+            <option value=".9">Antofagasta</option>
+            <option value=".85">Valparaíso</option>
+            <option value=".8">Concepción</option>
+            <option value=".75">Puerto Montt</option></select
+          ><label>Tipo de hogar</label
+          ><select id="home">
+            <option value="1">Vivo solo/a</option>
+            <option value="1.6">Pareja</option>
+            <option value="2.4">Pareja con 2 hijos</option></select
+          ><label>Estilo</label
+          ><select id="style">
+            <option value=".78">Austero</option>
+            <option value="1" selected>Medio</option>
+            <option value="1.4">Acomodado</option></select
+          ><label>Ingreso líquido del hogar</label
+          ><input id="income" type="number" value="2200000" /><button
+            class="btn"
+            id="go"
+            style="width: 100%; margin-top: 17px"
+          >
+            Amoblar mi mes
+          </button>
+        </aside>
+        <section class="card apartment">
+          <div class="rooms" id="rooms"></div>
+          <div class="income"><i id="bar"></i></div>
+          <div class="answer" id="answer"></div>
+          <div class="compare" id="compare"></div>
+        </section>
+      </div>
+    </main>
+    <footer class="foot">
+      Presupuesto orientativo: reemplazá cada ambiente con tus gastos reales
+      para decidir.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function go() {
+          let c = +$("#city").value,
+            h = +$("#home").value,
+            s = +$("#style").value,
+            inc = +$("#income").value,
+            items = [
+              ["Vivienda", 620000 * c * h ** 0.45, "#347a87"],
+              ["Comida", 280000 * c * h * s, "#3e8568"],
+              ["Transporte", 110000 * c * h, "#7b6797"],
+              ["Salud y otros", 160000 * h * s, "#d47746"],
+            ],
+            total = items.reduce((a, x) => a + x[1], 0);
+          $("#rooms").innerHTML = items
+            .map(
+              (x, i) =>
+                `<div class="room ${i === 1 ? "food" : ""}" style="--c:${x[2]}"><span>${x[0]}</span><strong>$${Math.round(x[1]).toLocaleString("es-CL")}</strong></div>`,
+            )
+            .join("");
+          $("#bar").style.cssText =
+            `--w:${Math.min(100, (total / inc) * 100)}%`;
+          $("#answer").textContent =
+            "$" + Math.round(total).toLocaleString("es-CL") + " por mes";
+          $("#compare").textContent =
+            total <= inc
+              ? `Queda un margen de $${Math.round(inc - total).toLocaleString("es-CL")} (${Math.round(((inc - total) / inc) * 100)}%).`
+              : `Faltan $${Math.round(total - inc).toLocaleString("es-CL")}: ajustá vivienda o estilo primero.`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

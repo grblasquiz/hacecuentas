@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Gratificación y aguinaldo</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #fff5df;
+      }
+      .bonus {
+        padding: 45px 0;
+      }
+      .envelope {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+      }
+      .method {
+        padding: 24px;
+      }
+      .method h2 {
+        margin-top: 0;
+      }
+      .method.active {
+        border: 3px solid #d18a36;
+      }
+      .seal {
+        display: inline-grid;
+        place-items: center;
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        background: #d18a36;
+        color: #fff;
+        font-weight: 950;
+      }
+      .formula {
+        font-size: 27px;
+        margin: 18px 0;
+      }
+      .pay {
+        padding: 18px;
+        background: #f4f7f5;
+      }
+      .pay strong {
+        font-size: 35px;
+        color: #337461;
+      }
+      .switch {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+      .switch button {
+        flex: 1;
+        padding: 11px;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+      .switch .on {
+        background: #d18a36;
+        color: #fff;
+      }
+      @media (max-width: 800px) {
+        .envelope {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#fff4d9,#fffaf0)}.bonus{padding:60px 0;background:#fbfcfb}.switch{max-width:520px;background:#f2eee5;padding:5px;border-radius:13px}.switch button{border:0;border-radius:9px}.switch .on{box-shadow:0 6px 18px #8b5f2624}.method{padding:29px}.method.active{border-color:#d18a36;box-shadow:0 25px 50px #a36a2420}.seal{box-shadow:0 0 0 7px #f9ebcd,0 10px 22px #9163262a}.formula{font-family:Georgia,serif;color:#7d5b27}.pay{border-radius:14px;border:1px solid #e1e7e4;box-shadow:var(--soft-shadow)}.pay:before{content:"MONTO DEL SOBRE";display:block;font-size:10px;letter-spacing:.15em;font-weight:950;color:#75857f;margin-bottom:8px}.pay strong{letter-spacing:-.04em}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b
+      ><span class="nav">Chile · Gratificación</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Trabajo / Gratificación y aguinaldo</div>
+        <h1 class="display">Dos artículos, dos formas de repartir.</h1>
+        <p class="lead">
+          Compará el 25% con tope del Art. 50 contra el 30% de utilidades del
+          Art. 47.
+        </p>
+      </div>
+    </section>
+    <main class="bonus">
+      <div class="wrap">
+        <div class="switch">
+          <button class="on" data-m="50">Artículo 50</button
+          ><button data-m="47">Artículo 47</button>
+        </div>
+        <div class="envelope">
+          <section class="card method active" id="selected">
+            <i class="seal" id="seal">50</i>
+            <div class="formula" id="formula"></div>
+            <label>Sueldo imponible mensual</label
+            ><input id="salary" type="number" value="850000" /><label
+              >Meses trabajados</label
+            ><input id="months" type="number" value="12" /><label
+              id="extraLabel"
+              >IMM mensual de referencia</label
+            ><input id="extra" type="number" value="510636" /><button
+              class="btn"
+              id="go"
+              style="margin-top: 16px"
+            >
+              Calcular gratificación
+            </button>
+          </section>
+          <aside class="card method">
+            <h2>Sobre de pago</h2>
+            <div class="pay" id="pay"></div>
+            <p>
+              El aguinaldo privado no es obligatorio salvo contrato, convenio o
+              práctica reiterada. En el sector público depende de la ley anual.
+            </p>
+          </aside>
+        </div>
+      </div>
+    </main>
+    <footer class="foot">
+      El método lo define la empresa bajo los requisitos legales; no siempre
+      puede elegirse individualmente.
+    </footer>
+    <script>
+      (() => {
+        let m = 50,
+          $ = (s) => document.querySelector(s);
+        document.querySelectorAll(".switch button").forEach(
+          (b) =>
+            (b.onclick = () => {
+              document.querySelector(".switch .on").classList.remove("on");
+              b.classList.add("on");
+              m = +b.dataset.m;
+              $("#seal").textContent = m;
+              $("#extraLabel").textContent =
+                m === 50
+                  ? "IMM mensual de referencia"
+                  : "Utilidad a repartir por trabajador";
+              $("#extra").value = m === 50 ? 510636 : 1800000;
+              go();
+            }),
+        );
+        function go() {
+          let s = +$("#salary").value,
+            mo = +$("#months").value,
+            x = +$("#extra").value,
+            amount =
+              m === 50
+                ? Math.min(s * 0.25, (x * 4.75) / 12) * mo
+                : (x * mo) / 12;
+          $("#formula").textContent =
+            m === 50
+              ? "25% del sueldo · con tope 4,75 IMM"
+              : "30% de utilidades · prorrateado por remuneración";
+          $("#pay").innerHTML =
+            `Gratificación estimada<br><strong>$${Math.round(amount).toLocaleString("es-CL")}</strong><br>${mo} meses considerados`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

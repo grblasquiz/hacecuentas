@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Mi pensión</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #f2eff8;
+      }
+      .retire {
+        padding: 45px 0;
+      }
+      .timeline {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+      }
+      .profile {
+        padding: 23px;
+      }
+      .future {
+        padding: 27px;
+      }
+      .years {
+        height: 65px;
+        display: flex;
+        align-items: center;
+      }
+      .years:before {
+        content: "";
+        height: 7px;
+        flex: 1;
+        background: linear-gradient(90deg, #8066a2 var(--progress), #e3dfea 0);
+        border-radius: 99px;
+      }
+      .pension {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 12px;
+        margin-top: 18px;
+      }
+      .big {
+        padding: 23px;
+        background: #755e96;
+        color: #fff;
+      }
+      .big strong {
+        font-size: 44px;
+      }
+      .sources div {
+        padding: 13px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+      }
+      .lever {
+        margin-top: 15px;
+        padding: 16px;
+        background: #fff3df;
+        border-left: 7px solid #d69c43;
+      }
+      @media (max-width: 800px) {
+        .timeline,
+        .pension {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style>
+  <style>
+    .hero{padding:58px 0;background:radial-gradient(circle at 85% 30%,#dcd3ec 0 85px,transparent 86px),linear-gradient(135deg,#f4f0f9,#fbfafd)}.retire{padding:60px 0;background:#fbfcfb}.profile{padding:27px}.profile:before{content:"TU FOTO PREVISIONAL";font-size:10px;letter-spacing:.15em;font-weight:950;color:#786a8e}.future{padding:30px;position:relative;overflow:hidden}.future:before{content:"PROYECCIÓN A LOS 65";font-size:10px;letter-spacing:.14em;font-weight:950;color:#786a8e}.years{margin-top:15px;position:relative}.years:after{content:"65";position:absolute;right:0;top:34px;font-weight:900;color:#745e96}.big{border-radius:17px;background:linear-gradient(145deg,#755e96,#574875);box-shadow:0 18px 35px #66528225}.sources{background:#f6f3f9;border-radius:15px;padding:4px 14px}.lever{border-radius:0 12px 12px 0}.pension{margin-top:24px}.big strong{letter-spacing:-.04em}
+  </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b><span class="nav">Chile · Pensión</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Dinero / Mi pensión</div>
+        <h1 class="display">
+          No mires solo el saldo: mirá la vida mensual que compra.
+        </h1>
+        <p class="lead">
+          Proyectá AFP, PGU y APV hasta la edad de retiro y comparalos con tu
+          sueldo actual.
+        </p>
+      </div>
+    </section>
+    <main class="retire">
+      <div class="wrap timeline">
+        <aside class="card profile">
+          <label>Edad actual</label
+          ><input id="age" type="number" value="46" /><label>Saldo AFP</label
+          ><input id="balance" type="number" value="52000000" /><label
+            >Renta imponible</label
+          ><input id="salary" type="number" value="1400000" /><label
+            >APV mensual</label
+          ><input id="apv" type="number" value="80000" /><button
+            class="btn"
+            id="go"
+            style="width: 100%; margin-top: 17px"
+          >
+            Proyectar mi futuro
+          </button>
+        </aside>
+        <section class="card future">
+          <div class="years" id="years"></div>
+          <div class="pension">
+            <div class="big">
+              Ingreso mensual estimado<br /><strong id="monthly"></strong>
+              <p id="ratio"></p>
+            </div>
+            <div class="sources" id="sources"></div>
+          </div>
+          <div class="lever" id="lever"></div>
+        </section>
+      </div>
+    </main>
+    <footer class="foot">
+      Proyección orientativa con rentabilidad real supuesta; no reemplaza la
+      simulación oficial de tu AFP.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function go() {
+          let age = +$("#age").value,
+            n = Math.max(0, 65 - age),
+            bal = +$("#balance").value,
+            s = +$("#salary").value,
+            apv = +$("#apv").value,
+            future =
+              bal * 1.035 ** n +
+              (s * 0.1 + apv) * 12 * ((1.035 ** n - 1) / 0.035),
+            afp = future / 240,
+            pgu = afp < 1200000 ? 224000 : 0,
+            total = afp + pgu;
+          $("#years").style.cssText =
+            `--progress:${Math.min(100, (age / 65) * 100)}%`;
+          $("#monthly").textContent =
+            "$" + Math.round(total).toLocaleString("es-CL");
+          $("#ratio").textContent =
+            `${Math.round((total / s) * 100)}% de tu renta actual`;
+          $("#sources").innerHTML =
+            `<div><span>AFP proyectada</span><b>$${Math.round(afp).toLocaleString("es-CL")}</b></div><div><span>PGU referencial</span><b>$${pgu.toLocaleString("es-CL")}</b></div><div><span>Fondo al jubilar</span><b>$${Math.round(future).toLocaleString("es-CL")}</b></div>`;
+          $("#lever").innerHTML =
+            `Si aumentás el APV en <b>$50.000</b>, la pensión subiría cerca de <b>$${Math.round((50000 * 12 * ((1.035 ** n - 1) / 0.035)) / 240).toLocaleString("es-CL")}/mes</b>.`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

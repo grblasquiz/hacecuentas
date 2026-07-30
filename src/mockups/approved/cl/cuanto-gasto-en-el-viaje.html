@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Costo del viaje</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #fff4e8;
+      }
+      .trip {
+        padding: 45px 0;
+      }
+      .route {
+        display: grid;
+        grid-template-columns: 1fr 1.25fr;
+        gap: 24px;
+      }
+      .inputs {
+        padding: 23px;
+      }
+      .map {
+        padding: 27px;
+        background: #f7faf8;
+      }
+      .path {
+        height: 170px;
+        position: relative;
+      }
+      .path:before {
+        content: "";
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        top: 80px;
+        border-top: 8px dotted #4b8570;
+      }
+      .pin {
+        position: absolute;
+        top: 58px;
+        width: 48px;
+        height: 48px;
+        border-radius: 50% 50% 50% 0;
+        background: #d56f42;
+        transform: rotate(-45deg);
+        display: grid;
+        place-items: center;
+        color: #fff;
+      }
+      .pin b {
+        transform: rotate(45deg);
+      }
+      .pin.end {
+        right: 4%;
+        background: #34788b;
+      }
+      .receipt {
+        border-top: 2px dashed #b6c5c0;
+        padding-top: 16px;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px;
+      }
+      .row.total {
+        font-size: 29px;
+        font-weight: 950;
+        background: #e5f1ec;
+      }
+      .modes {
+        display: flex;
+        gap: 7px;
+      }
+      .modes button {
+        flex: 1;
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 9px;
+      }
+      .modes .on {
+        background: #34788b;
+        color: #fff;
+      }
+      @media (max-width: 800px) {
+        .route {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style>
+  <style>
+    .hero{padding:58px 0;background:linear-gradient(135deg,#fff3e7,#fffaf5);position:relative}.hero:after{content:"";position:absolute;right:6%;top:35px;width:260px;height:120px;border-top:8px dashed #e7c7ac;transform:rotate(-10deg);opacity:.7}.trip{padding:60px 0;background:#fcfdfc}.inputs{padding:27px}.modes{background:#f0f4f2;padding:4px;border-radius:12px}.modes button{border:0;border-radius:9px}.modes .on{box-shadow:0 5px 15px #173b4720}.map{border-radius:24px;background:linear-gradient(160deg,#eef6f1,#fff);position:relative;overflow:hidden}.map:before{content:"PLAN DE VIAJE";font-size:10px;letter-spacing:.14em;font-weight:950;color:#71857e}.path{background:linear-gradient(90deg,transparent 0 12%,#dce9e4 12% 14%,transparent 14% 86%,#dce9e4 86% 88%,transparent 88%);border-radius:18px}.receipt{background:#fff;padding:20px;border:1px solid #e1e8e5;border-radius:14px;box-shadow:var(--soft-shadow)}.row.total{border-radius:9px;color:#235d4d}.pin{box-shadow:0 10px 20px #7e3c222c}
+  </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b><span class="nav">Chile · Viaje</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Auto / Cuánto gasto en el viaje</div>
+        <h1 class="display">Antes de salir, cerrá la cuenta del camino.</h1>
+        <p class="lead">
+          Bencina, peajes y TAG por tramo; también podés repartir el total entre
+          pasajeros.
+        </p>
+      </div>
+    </section>
+    <main class="trip">
+      <div class="wrap route">
+        <aside class="card inputs">
+          <div class="modes">
+            <button class="on" data-round="1">Solo ida</button
+            ><button data-round="2">Ida y vuelta</button>
+          </div>
+          <label>Distancia por tramo (km)</label
+          ><input id="km" type="number" value="480" /><label
+            >Consumo (L/100 km)</label
+          ><input id="eff" type="number" value="7.2" step=".1" /><label
+            >Precio por litro</label
+          ><input id="fuel" type="number" value="1320" /><label
+            >Peajes por tramo</label
+          ><input id="toll" type="number" value="18500" /><label
+            >Personas que pagan</label
+          ><input id="people" type="number" value="3" /><button
+            class="btn"
+            id="go"
+            style="width: 100%; margin-top: 16px"
+          >
+            Calcular ruta
+          </button>
+        </aside>
+        <section class="card map">
+          <div class="path">
+            <i class="pin"><b>A</b></i
+            ><i class="pin end"><b>B</b></i>
+          </div>
+          <div class="receipt" id="receipt"></div>
+        </section>
+      </div>
+    </main>
+    <footer class="foot">
+      No incluye estacionamiento ni desvíos; sumalos antes de repartir.
+    </footer>
+    <script>
+      (() => {
+        let r = 1,
+          $ = (s) => document.querySelector(s);
+        document.querySelectorAll(".modes button").forEach(
+          (b) =>
+            (b.onclick = () => {
+              document.querySelector(".modes .on").classList.remove("on");
+              b.classList.add("on");
+              r = +b.dataset.round;
+              go();
+            }),
+        );
+        function go() {
+          let km = +$("#km").value * r,
+            l = (km * +$("#eff").value) / 100,
+            gas = l * +$("#fuel").value,
+            toll = +$("#toll").value * r,
+            total = gas + toll,
+            p = Math.max(1, +$("#people").value);
+          $("#receipt").innerHTML =
+            `<div class=row><span>${km} km · ${l.toFixed(1)} litros</span><b>$${gas.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</b></div><div class=row><span>Peajes y TAG</span><b>$${toll.toLocaleString("es-CL")}</b></div><div class="row total"><span>Total</span><b>$${total.toLocaleString("es-CL", { maximumFractionDigits: 0 })}</b></div><p><b>$${Math.ceil(total / p).toLocaleString("es-CL")}</b> por persona.</p>`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

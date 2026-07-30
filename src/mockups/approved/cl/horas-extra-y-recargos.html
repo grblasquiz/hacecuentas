@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Horas extra</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #eef4f7;
+      }
+      .clockin {
+        padding: 45px 0;
+      }
+      .punch {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 24px;
+      }
+      .form {
+        padding: 23px;
+      }
+      .timesheet {
+        padding: 24px;
+      }
+      .week {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 7px;
+      }
+      .day {
+        min-height: 150px;
+        background: #f2f6f5;
+        border-radius: 9px;
+        padding: 9px;
+      }
+      .day b {
+        font-size: 11px;
+      }
+      .hours {
+        margin-top: 15px;
+        background: #3c7d70;
+        color: #fff;
+        padding: 9px;
+        border-radius: 6px;
+      }
+      .hours.extra {
+        background: #d57645;
+      }
+      .stamp {
+        margin-top: 18px;
+        padding: 17px;
+        border: 4px double #397888;
+        transform: rotate(-1deg);
+        font-weight: 900;
+      }
+      .stamp strong {
+        font-size: 34px;
+      }
+      @media (max-width: 800px) {
+        .punch {
+          grid-template-columns: 1fr;
+        }
+        .week {
+          overflow: auto;
+        }
+        .day {
+          min-width: 90px;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#ebf4f7,#fafcfd)}.clockin{padding:60px 0;background:#fbfcfb}.form{padding:27px}.form:before{content:"TARJETA DE ASISTENCIA";font-size:10px;letter-spacing:.15em;font-weight:950;color:#6e8185}.timesheet{padding:30px;background:#fff}.day{min-height:175px;border:1px solid #dde7e4;box-shadow:0 5px 18px #173b4709}.day b{letter-spacing:.08em;color:#526b70}.hours{box-shadow:0 6px 15px #2a63531c}.hours.extra{box-shadow:0 7px 16px #a9522d25}.stamp{border-radius:9px;background:#f7fbfc;color:#2d6672;box-shadow:0 9px 24px #173b4710}.stamp strong{letter-spacing:-.04em}.week{gap:10px}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b
+      ><span class="nav">Chile · Horas extra</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Trabajo / Horas extra y recargos</div>
+        <h1 class="display">Marcá la semana y revisá el pago adicional.</h1>
+        <p class="lead">
+          La jornada pactada define la hora ordinaria; el recargo transforma las
+          horas extra.
+        </p>
+      </div>
+    </section>
+    <main class="clockin">
+      <div class="wrap punch">
+        <aside class="card form">
+          <label>Sueldo base</label
+          ><input id="salary" type="number" value="750000" /><label
+            >Jornada semanal</label
+          ><select id="week">
+            <option value="42">42 horas</option>
+            <option value="44">44 horas</option>
+            <option value="40">40 horas</option></select
+          ><label>Horas extra esta semana</label
+          ><input id="extra" type="number" value="5" /><label
+            >Recargo acordado</label
+          ><select id="rate">
+            <option value="1.5">50%</option>
+            <option value="2">100%</option></select
+          ><button class="btn" id="go" style="width: 100%; margin-top: 17px">
+            Cerrar tarjeta
+          </button>
+        </aside>
+        <section class="card timesheet">
+          <div class="week" id="days"></div>
+          <div class="stamp" id="stamp"></div>
+        </section>
+      </div>
+    </main>
+    <footer class="foot">
+      Verificá límites, autorización escrita y registro de asistencia.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s),
+          names = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+        function go() {
+          let s = +$("#salary").value,
+            w = +$("#week").value,
+            e = +$("#extra").value,
+            rate = +$("#rate").value,
+            hour = (s * 7) / (30 * w),
+            pay = hour * e * rate;
+          $("#days").innerHTML = names
+            .map(
+              (n, i) =>
+                `<div class=day><b>${n}</b>${i < 5 ? `<div class=hours>${(w / 5).toFixed(1)}h normal</div>${i === 4 && e ? `<div class="hours extra">+${e}h extra</div>` : ""}` : "<div style='margin-top:15px;color:#71817c'>descanso</div>"}</div>`,
+            )
+            .join("");
+          $("#stamp").innerHTML =
+            `Hora ordinaria: $${Math.round(hour).toLocaleString("es-CL")}<br>Pago extra: <strong>$${Math.round(pay).toLocaleString("es-CL")}</strong>`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

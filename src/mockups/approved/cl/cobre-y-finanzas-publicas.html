@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cobre y finanzas públicas</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #fff1e7;
+      }
+      .copper {
+        padding: 45px 0;
+      }
+      .control {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 15px;
+        align-items: end;
+      }
+      .mine {
+        margin-top: 25px;
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 20px;
+      }
+      .pit {
+        min-height: 340px;
+        background: repeating-radial-gradient(
+          ellipse at center,
+          #c06a3e 0 35px,
+          #a85532 36px 70px
+        );
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        text-align: center;
+      }
+      .pit strong {
+        font-size: 45px;
+      }
+      .budget {
+        padding: 24px;
+      }
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .flow div {
+        padding: 13px;
+        background: #f7eee8;
+      }
+      .flow strong {
+        display: block;
+        font-size: 24px;
+      }
+      .note {
+        margin-top: 16px;
+        border-left: 7px solid #bc673b;
+        padding: 14px;
+        background: #fff5ef;
+      }
+      @media (max-width: 800px) {
+        .control,
+        .mine {
+          grid-template-columns: 1fr;
+        }
+        .pit {
+          min-height: 260px;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#ffefe5,#fffaf7)}.copper{padding:60px 0;background:#fbfcfb}.control{padding:22px 25px;background:#fff;border:1px solid #e5ddd7;border-radius:18px;box-shadow:var(--soft-shadow)}input[type=range]{accent-color:#b85f37}.mine{gap:28px}.pit{box-shadow:inset 0 0 60px #6c2d1d55,0 25px 55px #8e472629;position:relative}.pit:after{content:"Cu";position:absolute;right:30px;bottom:20px;font-size:70px;font-weight:950;color:#ffffff24}.budget{padding:29px}.budget h2{margin-top:0}.flow{gap:11px}.flow div{border-radius:12px;border-top:4px solid #bd673c}.note{border-radius:0 12px 12px 0}.pit strong{letter-spacing:-.05em}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b><span class="nav">Chile · Cobre</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Impuestos / Cobre y finanzas públicas</div>
+        <h1 class="display">
+          Mové el cobre y mirá qué pasa con la caja fiscal.
+        </h1>
+        <p class="lead">
+          Un escenario pedagógico para entender precio, producción, tipo de
+          cambio y aporte al Estado.
+        </p>
+      </div>
+    </section>
+    <main class="copper">
+      <div class="wrap">
+        <div class="control">
+          <div>
+            <label>Precio del cobre (USD/libra)</label
+            ><input
+              id="price"
+              type="range"
+              min="2.5"
+              max="6"
+              step=".1"
+              value="4.4"
+            />
+          </div>
+          <div>
+            <label>Producción anual (millones ton.)</label
+            ><input id="tons" type="number" value="5.3" step=".1" />
+          </div>
+          <button class="btn" id="go">Actualizar escenario</button>
+        </div>
+        <div class="mine">
+          <div class="pit">
+            <div>Precio simulado<br /><strong id="quote"></strong></div>
+          </div>
+          <section class="card budget">
+            <h2>Del yacimiento al presupuesto</h2>
+            <div class="flow" id="flow"></div>
+            <div class="note" id="note"></div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="foot">
+      Modelo simplificado: costos, contratos, propiedad minera y regla fiscal
+      cambian el aporte efectivo.
+    </footer>
+    <script>
+      (() => {
+        let $ = (s) => document.querySelector(s);
+        function go() {
+          let p = +$("#price").value,
+            t = +$("#tons").value,
+            revenue = p * 2204.62 * t * 1e6,
+            margin = Math.max(0, revenue - t * 1e9 * 4.7),
+            fiscal = margin * 0.32,
+            clp = fiscal * 965;
+          $("#quote").textContent = "US$ " + p.toFixed(1) + "/lb";
+          $("#flow").innerHTML =
+            `<div>Ventas brutas<strong>US$ ${(revenue / 1e9).toFixed(1)}B</strong></div><div>Margen modelo<strong>US$ ${(margin / 1e9).toFixed(1)}B</strong></div><div>Aporte fiscal<strong>$${(clp / 1e12).toFixed(1)}B CLP</strong></div>`;
+          $("#note").textContent =
+            p > 4.5
+              ? "Escenario alto: aumenta el espacio fiscal, pero la regla estructural evita gastar todo el ingreso transitorio."
+              : "Escenario prudente: el presupuesto depende más de ingresos tributarios no mineros.";
+        }
+        $("#go").onclick = go;
+        $("#price").oninput = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

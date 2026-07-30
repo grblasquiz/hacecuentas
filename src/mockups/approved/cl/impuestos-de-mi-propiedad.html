@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Impuestos de la propiedad</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #f3f5ef;
+      }
+      .property {
+        padding: 45px 0;
+      }
+      .deed {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 24px;
+      }
+      .selector {
+        padding: 22px;
+      }
+      .modes button {
+        width: 100%;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+        text-align: left;
+        padding: 13px;
+      }
+      .modes .on {
+        background: #2f7668;
+        color: #fff;
+      }
+      .calendar {
+        padding: 24px;
+      }
+      .quarters {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+      .q {
+        padding: 14px;
+        border-top: 7px solid #3d8170;
+        background: #eef4f1;
+      }
+      .bill {
+        margin-top: 18px;
+        padding: 22px;
+        background: #fff5e9;
+      }
+      .bill strong {
+        font-size: 38px;
+        color: #a85a34;
+      }
+      .detail {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px dashed #c7b8ac;
+        padding: 10px 0;
+      }
+      @media (max-width: 800px) {
+        .deed {
+          grid-template-columns: 1fr;
+        }
+        .quarters {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#f1f4ed,#fbfcfa)}.property{padding:60px 0;background:#fbfcfb}.selector{padding:15px;overflow:hidden}.modes{border-radius:13px;overflow:hidden}.modes button{padding:15px;border-bottom-color:#e1e8e5;transition:.15s}.modes button:before{content:"○";margin-right:10px}.modes .on:before{content:"●"}.calendar{padding:29px}.calendar:before{content:"CALENDARIO DEL EVENTO";font-size:10px;letter-spacing:.15em;font-weight:950;color:#748680}.quarters{margin-top:18px}.q{border-radius:11px;box-shadow:0 7px 20px #173b470c;min-height:95px}.bill{border-radius:15px;box-shadow:var(--soft-shadow)}.bill strong{letter-spacing:-.045em}.detail span{color:#667975}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b><span class="nav">Chile · Propiedad</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Impuestos / Mi propiedad</div>
+        <h1 class="display">
+          Cada movimiento de la propiedad tiene su propia cuenta.
+        </h1>
+        <p class="lead">
+          Tenencia, mora, venta, crédito o herencia: elegí el momento y mirá
+          impuesto, plazo y base.
+        </p>
+      </div>
+    </section>
+    <main class="property">
+      <div class="wrap deed">
+        <aside class="card selector">
+          <div class="modes">
+            <button data-m="0" class="on">Tengo y pago contribuciones</button
+            ><button data-m="1">Debo cuotas atrasadas</button
+            ><button data-m="2">Voy a vender</button
+            ><button data-m="3">La heredé</button>
+          </div>
+          <label>Avalúo o valor involucrado</label
+          ><input id="value" type="number" value="95000000" /><button
+            class="btn"
+            id="go"
+            style="margin-top: 15px; width: 100%"
+          >
+            Emitir calendario
+          </button>
+        </aside>
+        <section class="card calendar">
+          <div class="quarters" id="quarters"></div>
+          <div class="bill" id="bill"></div>
+        </section>
+      </div>
+    </main>
+    <footer class="foot">
+      Las tasas, exenciones y recargos dependen del SII y de los antecedentes de
+      cada propiedad.
+    </footer>
+    <script>
+      (() => {
+        let m = 0,
+          $ = (s) => document.querySelector(s),
+          labels = [
+            ["Abr", "Jun", "Sep", "Nov"],
+            ["Cuota", "IPC", "Interés", "Pago"],
+            ["Compra", "Mejoras", "Venta", "Declaración"],
+            ["Posesión", "Avalúo", "Exención", "Impuesto"],
+          ];
+        document.querySelectorAll(".modes button").forEach(
+          (b) =>
+            (b.onclick = () => {
+              document.querySelector(".modes .on").classList.remove("on");
+              b.classList.add("on");
+              m = +b.dataset.m;
+              go();
+            }),
+        );
+        function go() {
+          let v = +$("#value").value,
+            amount = [
+              Math.max(0, v - 55000000) * 0.01,
+              v * 0.012,
+              v * 0.1,
+              v * 0.035,
+            ][m];
+          $("#quarters").innerHTML = labels[m]
+            .map(
+              (x, i) =>
+                `<div class=q><b>${x}</b><br>${m === 0 ? "Cuota " + (i + 1) : "Paso " + (i + 1)}</div>`,
+            )
+            .join("");
+          $("#bill").innerHTML =
+            `<div class=detail><span>Base informada</span><b>$${v.toLocaleString("es-CL")}</b></div><div class=detail><span>Concepto estimado</span><b>${["Contribución anual", "Deuda reajustada", "Mayor valor afecto", "Impuesto sucesorio"][m]}</b></div><strong>$${Math.round(amount).toLocaleString("es-CL")}</strong>`;
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>

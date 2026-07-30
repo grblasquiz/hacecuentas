@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es-CL">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Me quedé sin trabajo</title>
+    <link rel="stylesheet" href="cl-mockup-core.css" />
+    <style>
+      .hero {
+        padding: 42px 0;
+        background: #fff1ea;
+      }
+      .exit {
+        padding: 45px 0;
+      }
+      .causes {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .causes button {
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 11px;
+        border-radius: 9px;
+      }
+      .causes .on {
+        background: #a95d3d;
+        color: #fff;
+      }
+      .settlement {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 24px;
+        margin-top: 20px;
+      }
+      .form,
+      .folder {
+        padding: 23px;
+      }
+      .folder {
+        background: #fff8f3;
+      }
+      .tab {
+        display: inline-block;
+        background: #a95d3d;
+        color: #fff;
+        padding: 8px 18px;
+        border-radius: 9px 9px 0 0;
+      }
+      .rights {
+        border-top: 5px solid #a95d3d;
+      }
+      .right {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px;
+        border-bottom: 1px dashed #c9b7ad;
+      }
+      .right.off {
+        opacity: 0.4;
+        text-decoration: line-through;
+      }
+      .sum {
+        font-size: 38px;
+        font-weight: 950;
+        margin-top: 17px;
+      }
+      .deadline {
+        padding: 13px;
+        background: #ffeadc;
+        margin-top: 12px;
+      }
+      @media (max-width: 800px) {
+        .settlement {
+          grid-template-columns: 1fr;
+        }
+      }
+  </style><style>.hero{padding:58px 0;background:linear-gradient(135deg,#ffefe7,#fffaf7)}.exit{padding:60px 0;background:#fbfcfb}.causes{background:#f3ece8;padding:6px;border-radius:14px}.causes button{border:0;border-radius:10px;font-weight:800}.causes .on{box-shadow:0 7px 18px #82452d28}.form{padding:27px}.folder{padding:30px;box-shadow:0 28px 55px #7d40251c;position:relative}.folder:after{content:"REVISAR ANTES DE FIRMAR";position:absolute;right:25px;top:24px;font-size:9px;letter-spacing:.13em;font-weight:950;color:#a95d3d}.tab{box-shadow:0 -4px 12px #7e422922}.rights{background:#fff;padding:5px 15px}.right b{color:#74432f}.sum{letter-spacing:-.045em}.deadline{border-radius:10px;border-left:5px solid #a95d3d}</style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <b class="brand">Hacé Cuentas</b
+      ><span class="nav">Chile · Término laboral</span
+      ><button class="country">🇨🇱 CL</button>
+    </header>
+    <section class="hero">
+      <div class="wrap">
+        <div class="crumb">Trabajo / Me quedo sin trabajo</div>
+        <h1 class="display">Primero la causal. Después, peso por peso.</h1>
+        <p class="lead">
+          La carpeta cambia si fue necesidades de la empresa, renuncia, despido
+          injustificado o fin de plazo.
+        </p>
+      </div>
+    </section>
+    <main class="exit">
+      <div class="wrap">
+        <div class="causes">
+          <button data-c="0" class="on">Necesidades de la empresa</button
+          ><button data-c="1">Renuncia</button
+          ><button data-c="2">Despido injustificado</button
+          ><button data-c="3">Fin de plazo</button>
+        </div>
+        <div class="settlement">
+          <aside class="card form">
+            <label>Última remuneración</label
+            ><input id="salary" type="number" value="1200000" /><label
+              >Años completos</label
+            ><input id="years" type="number" value="6" /><label
+              >Vacaciones pendientes (días)</label
+            ><input id="vac" type="number" value="9" /><button
+              class="btn"
+              id="go"
+              style="width: 100%; margin-top: 17px"
+            >
+              Abrir finiquito
+            </button>
+          </aside>
+          <section class="card folder">
+            <span class="tab">FINIQUITO</span>
+            <div class="rights" id="rights"></div>
+            <div class="sum" id="sum"></div>
+            <div class="deadline" id="deadline"></div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="foot">
+      Revisá causal, carta, reserva de derechos y plazos antes de firmar.
+    </footer>
+    <script>
+      (() => {
+        let c = 0,
+          $ = (s) => document.querySelector(s);
+        document.querySelectorAll(".causes button").forEach(
+          (b) =>
+            (b.onclick = () => {
+              document.querySelector(".causes .on").classList.remove("on");
+              b.classList.add("on");
+              c = +b.dataset.c;
+              go();
+            }),
+        );
+        function go() {
+          let s = +$("#salary").value,
+            y = Math.min(11, +$("#years").value),
+            v = +$("#vac").value,
+            items = [
+              ["Indemnización por años", s * y, c === 0 || c === 2],
+              ["Aviso previo", s, c === 0 || c === 2],
+              ["Feriado pendiente", (s / 30) * v, true],
+              ["Recargo Art. 168", s * y * 0.3, c === 2],
+            ],
+            total = items.reduce((a, x) => a + (x[2] ? x[1] : 0), 0);
+          $("#rights").innerHTML = items
+            .map(
+              (x) =>
+                `<div class="right ${x[2] ? "" : "off"}"><span>${x[0]}</span><b>$${Math.round(x[1]).toLocaleString("es-CL")}</b></div>`,
+            )
+            .join("");
+          $("#sum").textContent =
+            "Total inicial $" + Math.round(total).toLocaleString("es-CL");
+          $("#deadline").textContent =
+            c === 2
+              ? "Si impugnás la causal, los plazos laborales son breves: guardá la carta y buscá orientación."
+              : "El seguro de cesantía se revisa aparte según causal y cotizaciones.";
+        }
+        $("#go").onclick = go;
+        go();
+      })();
+    </script>
+  </body>
+</html>
