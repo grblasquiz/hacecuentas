@@ -1,0 +1,388 @@
+---
+/**
+ * Herramientas comunes para las calculadoras de los hubs/experiencias nuevas.
+ *
+ * Se monta desde Layout y descubre las calculadoras que no usan Calculator.astro
+ * (las legacy ya traen embed + feedback propios). De esa forma cubre todos los
+ * hubs actuales y también los que se agreguen en el futuro.
+ */
+---
+
+<template id="hc-hub-engagement-template">
+  <section class="hc-hub-engagement" data-hub-engagement data-nosnippet>
+    <details class="hc-hub-embed">
+      <summary>
+        <span class="hc-hub-embed-icon" aria-hidden="true">&lt;/&gt;</span>
+        <span>
+          <strong data-embed-title>Embeber esta calculadora</strong>
+          <small data-embed-subtitle>Gratis, lista para usar en tu web</small>
+        </span>
+        <span class="hc-hub-chevron" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="hc-hub-embed-panel">
+        <pre><code data-embed-code></code></pre>
+        <div class="hc-hub-embed-actions">
+          <button type="button" data-embed-copy>Copiar código</button>
+          <a data-embed-preview target="_blank" rel="noopener nofollow">Ver preview →</a>
+        </div>
+        <p data-embed-note>Pegalo en tu sitio y dejá el crédito para compartir la herramienta.</p>
+      </div>
+    </details>
+
+    <div class="hc-hub-vote" data-hub-vote>
+      <span data-vote-question>¿Te sirvió esta calculadora?</span>
+      <button type="button" data-hub-vote-value="up" aria-label="Sí, me sirvió">👍</button>
+      <button type="button" data-hub-vote-value="down" aria-label="No me sirvió">👎</button>
+      <strong data-vote-thanks hidden>¡Gracias por votar!</strong>
+    </div>
+  </section>
+</template>
+
+<script>
+  declare global {
+    interface Window {
+      hcTrack?: (event: string, params?: Record<string, unknown>) => void;
+      gtag?: (...args: any[]) => void;
+    }
+  }
+
+  type Copy = {
+    embedTitle: string;
+    embedSubtitle: string;
+    copy: string;
+    copied: string;
+    preview: string;
+    note: string;
+    question: string;
+    upAria: string;
+    downAria: string;
+    thanks: string;
+    frameTitle: string;
+  };
+
+  const COPY: Record<string, Copy> = {
+    es: {
+      embedTitle: 'Embeber esta calculadora',
+      embedSubtitle: 'Gratis, lista para usar en tu web',
+      copy: 'Copiar código',
+      copied: '¡Copiado!',
+      preview: 'Ver preview →',
+      note: 'Pegalo en tu sitio y dejá el crédito para compartir la herramienta.',
+      question: '¿Te sirvió esta calculadora?',
+      upAria: 'Sí, me sirvió',
+      downAria: 'No me sirvió',
+      thanks: '¡Gracias por votar!',
+      frameTitle: 'Calculadora de Hacé Cuentas',
+    },
+    pt: {
+      embedTitle: 'Incorporar esta calculadora',
+      embedSubtitle: 'Grátis, pronta para usar no seu site',
+      copy: 'Copiar código',
+      copied: 'Copiado!',
+      preview: 'Pré-visualizar →',
+      note: 'Cole no seu site e mantenha o crédito para compartilhar a ferramenta.',
+      question: 'Esta calculadora foi útil?',
+      upAria: 'Sim, foi útil',
+      downAria: 'Não foi útil',
+      thanks: 'Obrigado pelo seu voto!',
+      frameTitle: 'Calculadora do Hacé Cuentas',
+    },
+    en: {
+      embedTitle: 'Embed this calculator',
+      embedSubtitle: 'Free and ready to use on your website',
+      copy: 'Copy code',
+      copied: 'Copied!',
+      preview: 'Preview →',
+      note: 'Paste it on your site and keep the credit to share the tool.',
+      question: 'Was this calculator helpful?',
+      upAria: 'Yes, it was helpful',
+      downAria: 'No, it was not helpful',
+      thanks: 'Thanks for voting!',
+      frameTitle: 'Hacé Cuentas calculator',
+    },
+  };
+
+  function calculatorCandidates(): HTMLElement[] {
+    const selectors =
+      'form.calc, form.calculator, form.lab, form.calc-shell, form.imc-calculator, [data-calculator], .calc';
+    return Array.from(document.querySelectorAll<HTMLElement>(selectors)).filter((element) => {
+      if (element.closest('.calc-container, [data-hub-engagement]')) return false;
+      if (element.parentElement?.closest(selectors)) return false;
+      return true;
+    });
+  }
+
+  function escapeAttribute(value: string): string {
+    return value
+      .replaceAll('&', '&amp;')
+      .replaceAll('"', '&quot;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;');
+  }
+
+  async function copyRobust(text: string): Promise<boolean> {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch {}
+    try {
+      const area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(area);
+      area.select();
+      const ok = document.execCommand('copy');
+      area.remove();
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+
+  function enableEmbedView(calculator: HTMLElement): void {
+    if (!new URLSearchParams(location.search).has('hc_embed')) return;
+    document.documentElement.classList.add('hc-hub-embed-view');
+    document.body.classList.add('hc-hub-embed-view');
+    document.querySelectorAll<HTMLElement>('body > *').forEach((element) => {
+      if (element.tagName !== 'MAIN' && !element.contains(calculator)) {
+        element.style.setProperty('display', 'none', 'important');
+      }
+    });
+    let child: HTMLElement = calculator;
+    while (child.parentElement && child.parentElement !== document.body) {
+      const parent = child.parentElement;
+      Array.from(parent.children).forEach((sibling) => {
+        if (sibling !== child) (sibling as HTMLElement).style.setProperty('display', 'none', 'important');
+      });
+      child = parent;
+    }
+    calculator.classList.add('hc-hub-embedded-calculator');
+  }
+
+  function mount(): void {
+    const calculators = calculatorCandidates();
+    if (!calculators.length) return;
+
+    enableEmbedView(calculators[0]);
+    if (new URLSearchParams(location.search).has('hc_embed')) return;
+
+    const template = document.querySelector<HTMLTemplateElement>('#hc-hub-engagement-template');
+    if (!template) return;
+    const lang = document.documentElement.lang.toLowerCase().startsWith('en')
+      ? 'en'
+      : document.documentElement.lang.toLowerCase().startsWith('pt') ? 'pt' : 'es';
+    const copy = COPY[lang];
+    const slug = location.pathname;
+    const canonical = `${location.origin}${location.pathname}`;
+    const embedUrl = `${canonical}?hc_embed=1`;
+
+    calculators.forEach((calculator, index) => {
+      if (calculator.querySelector('[data-hub-engagement]')) return;
+      const fragment = template.content.cloneNode(true) as DocumentFragment;
+      const tools = fragment.querySelector<HTMLElement>('[data-hub-engagement]');
+      if (!tools) return;
+
+      const pageName = (document.querySelector('h1')?.textContent || document.title).trim();
+      const snippet = `<iframe src="${escapeAttribute(embedUrl)}" title="${escapeAttribute(pageName || copy.frameTitle)}" width="100%" height="720" style="border:0;border-radius:12px" loading="lazy"></iframe>\n<p><a href="${escapeAttribute(canonical)}">Calculadora de Hacé Cuentas</a></p>`;
+
+      const setText = (selector: string, value: string) => {
+        const element = tools.querySelector<HTMLElement>(selector);
+        if (element) element.textContent = value;
+      };
+      setText('[data-embed-title]', copy.embedTitle);
+      setText('[data-embed-subtitle]', copy.embedSubtitle);
+      setText('[data-embed-code]', snippet);
+      setText('[data-embed-copy]', copy.copy);
+      setText('[data-embed-preview]', copy.preview);
+      setText('[data-embed-note]', copy.note);
+      setText('[data-vote-question]', copy.question);
+      setText('[data-vote-thanks]', copy.thanks);
+
+      const preview = tools.querySelector<HTMLAnchorElement>('[data-embed-preview]');
+      if (preview) preview.href = embedUrl;
+      const up = tools.querySelector<HTMLButtonElement>('[data-hub-vote-value="up"]');
+      const down = tools.querySelector<HTMLButtonElement>('[data-hub-vote-value="down"]');
+      if (up) up.setAttribute('aria-label', copy.upAria);
+      if (down) down.setAttribute('aria-label', copy.downAria);
+
+      tools.querySelector<HTMLButtonElement>('[data-embed-copy]')?.addEventListener('click', async (event) => {
+        const button = event.currentTarget as HTMLButtonElement;
+        const ok = await copyRobust(snippet);
+        if (!ok) {
+          try { window.prompt(copy.copy, snippet); } catch {}
+          return;
+        }
+        button.textContent = copy.copied;
+        button.classList.add('is-copied');
+        window.gtag?.('event', 'embed_copy', { calc_slug: slug, calculator_surface: 'hub' });
+        window.setTimeout(() => {
+          button.textContent = copy.copy;
+          button.classList.remove('is-copied');
+        }, 1800);
+      });
+
+      const voteBlock = tools.querySelector<HTMLElement>('[data-hub-vote]');
+      const voteKey = `hc-hub-vote:${slug}:${index}`;
+      try {
+        if (localStorage.getItem(voteKey)) {
+          voteBlock?.querySelectorAll<HTMLElement>('span, button').forEach((element) => { element.hidden = true; });
+          const thanks = voteBlock?.querySelector<HTMLElement>('[data-vote-thanks]');
+          if (thanks) thanks.hidden = false;
+        }
+      } catch {}
+
+      tools.querySelectorAll<HTMLButtonElement>('[data-hub-vote-value]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const vote = button.dataset.hubVoteValue === 'down' ? 'down' : 'up';
+          tools.querySelectorAll<HTMLButtonElement>('[data-hub-vote-value]').forEach((item) => {
+            item.disabled = true;
+            item.classList.toggle('is-selected', item === button);
+          });
+          fetch('/api/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ slug, vote }),
+            keepalive: true,
+          }).catch(() => {});
+          window.hcTrack?.(vote === 'up' ? 'hc_feedback_positive' : 'hc_feedback_negative', {
+            calculator_slug: slug.replace(/^\/|\/$/g, ''),
+          });
+          try { localStorage.setItem(voteKey, String(Date.now())); } catch {}
+          window.setTimeout(() => {
+            voteBlock?.querySelectorAll<HTMLElement>('span, button').forEach((element) => { element.hidden = true; });
+            const thanks = voteBlock?.querySelector<HTMLElement>('[data-vote-thanks]');
+            if (thanks) thanks.hidden = false;
+          }, 450);
+        });
+      });
+
+      calculator.appendChild(fragment);
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount, { once: true });
+  else mount();
+</script>
+
+<style is:global>
+  .hc-hub-engagement {
+    width: 100%;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(100, 116, 139, 0.22);
+    color: #334155;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    text-align: left;
+  }
+  .hc-hub-embed {
+    width: 100%;
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
+    background: #f8fafc;
+    overflow: hidden;
+  }
+  .hc-hub-embed > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 58px;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    color: #1e293b;
+  }
+  .hc-hub-embed > summary::-webkit-details-marker { display: none; }
+  .hc-hub-embed > summary > span:nth-child(2) { min-width: 0; flex: 1; }
+  .hc-hub-embed strong, .hc-hub-embed small { display: block; color: inherit; }
+  .hc-hub-embed strong { font-size: 0.875rem; line-height: 1.3; }
+  .hc-hub-embed small { margin-top: 0.12rem; color: #64748b; font-size: 0.72rem; }
+  .hc-hub-embed-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 9px;
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 0.7rem;
+    font-weight: 900;
+  }
+  .hc-hub-chevron { color: #64748b; transition: transform 0.18s ease; }
+  .hc-hub-embed[open] .hc-hub-chevron { transform: rotate(180deg); }
+  .hc-hub-embed-panel { padding: 0 1rem 1rem; }
+  .hc-hub-embed-panel pre {
+    max-width: 100%;
+    margin: 0 0 0.7rem;
+    padding: 0.75rem;
+    overflow: auto;
+    border: 1px solid #dbe3ec;
+    border-radius: 9px;
+    background: #fff;
+    color: #334155;
+    font: 0.72rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .hc-hub-embed-actions { display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap; }
+  .hc-hub-embed-actions button {
+    min-height: 42px;
+    padding: 0.62rem 1rem;
+    border: 0;
+    border-radius: 9px;
+    background: #0f766e;
+    color: #fff;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .hc-hub-embed-actions button.is-copied { background: #15803d; }
+  .hc-hub-embed-actions a { color: #0369a1; font-size: 0.8rem; font-weight: 750; }
+  .hc-hub-embed-panel p { margin: 0.65rem 0 0; color: #64748b; font-size: 0.7rem; line-height: 1.45; }
+  .hc-hub-vote {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 52px;
+    padding-top: 0.65rem;
+    color: #64748b;
+    font-size: 0.78rem;
+  }
+  .hc-hub-vote button {
+    display: inline-grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid #dbe3ec;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s, background 0.12s;
+  }
+  .hc-hub-vote button:hover { transform: translateY(-1px); border-color: #94a3b8; }
+  .hc-hub-vote button.is-selected { background: #e0f2fe; border-color: #38bdf8; }
+  .hc-hub-vote strong { color: #15803d; font-size: 0.8rem; }
+  html.hc-hub-embed-view, body.hc-hub-embed-view {
+    min-height: 100%;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+  body.hc-hub-embed-view main { padding: 12px !important; }
+  .hc-hub-embedded-calculator {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+  }
+  @media (max-width: 520px) {
+    .hc-hub-vote { flex-wrap: wrap; }
+    .hc-hub-vote > span { flex-basis: 100%; text-align: center; }
+  }
+</style>
