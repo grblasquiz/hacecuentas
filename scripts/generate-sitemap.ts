@@ -560,6 +560,9 @@ const priorityUrls: Url[] = [
   prio('/feriados-chile-2026',               '0.85', 'weekly'),
   prio('/feriados-peru-2026',                '0.85', 'weekly'),
   prio('/feriados-ecuador-2026',             '0.85', 'weekly'),
+  prio('/argentina/cordoba/calculadora-ingresos-brutos-provincial', '0.85', 'monthly'),
+  prio('/co/calculadora-tarifa-taxi-bogota-2026-unidades-recargos', '0.85', 'monthly'),
+  prio('/tabla/tabla-escalas-ganancias-2026', '0.85', 'monthly'),
   // guías pilares (estables)
   prio('/guia/finanzas-personales',          '0.9',  'weekly'),
   prio('/guia/marketing-roi-metricas',       '0.9',  'weekly'),
@@ -867,6 +870,7 @@ sitemaps.push({
     core('/guia/vida-cotidiana',                 '0.85', 'weekly'),
     core('/guia/mascotas',                       '0.85', 'weekly'),
     core('/guia/viajes',                         '0.85', 'weekly'),
+    core('/argentina/cordoba/calculadora-ingresos-brutos-provincial', '0.85', 'monthly'),
     core('/global',                              '0.9',  'weekly',  true),
     core('/es/calculadoras',                     '0.85', 'weekly',  true),
     core('/es/datos-cuota-autonomos-2026',       '0.8',  'monthly', true),

@@ -12,7 +12,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import CuantoCuestaMascotaExperience from '../../components/generated/CuantoCuestaMascotaExperience.astro';
 import { hub, BASE, CALIDAD, CONSULTA, AJUSTE_ESPECIE_VET, ARENAS, FACTOR_GATO_EXTRA } from '../../lib/hubs/costo-mascota';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
@@ -51,96 +51,7 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={hub} />
+  <CuantoCuestaMascotaExperience data={hub} />
   <Footer />
 </Layout>
 
-<script is:inline define:vars={{ BASE, CALIDAD, CONSULTA, AJUSTE_ESPECIE_VET, ARENAS, FACTOR_GATO_EXTRA }}>
-  (function () {
-    const H = window.HC_HUB;
-
-    // Este hub SÍ es de plata: el default 'ars' vale, pero las filas que no son
-    // dinero declaran su formato o se imprimirían con "$".
-    const KG = { format: 'unit', unit: 'kg/mes', decimals: 0 };
-    const UNID = { format: 'unit', unit: 'bandejas', decimals: 0 };
-    const VISITAS = { format: 'unit', unit: 'por año', decimals: 0 };
-    const PCT = { format: 'unit', unit: '%', decimals: 0 };
-    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
-
-    const pesos = (n) =>
-      '$' + Number(Math.round(n) || 0).toLocaleString('es-AR', { maximumFractionDigits: 0 });
-
-    H.onCompute(function (v, caso) {
-      const especie = String(caso || 'perro');
-      const tamano = String(v.tamano || 'mediano');
-      const calidad = String(v.calidad || 'premium');
-      const zona = String(v.zona || 'caba');
-      const visitas = Math.max(0, Math.min(52, Number(v.visitas) || 0));
-      const gatos = Math.max(1, Math.min(10, Math.round(Number(v.gatos) || 1)));
-      const tipoArena = String(v.arena || 'aglomerante');
-
-      const clave = especie === 'gato' ? 'gato' : 'perro_' + tamano;
-      const B = BASE[clave] || BASE.perro_mediano;
-
-      const alimento = B.alimento * (CALIDAD[calidad] || 1) * (especie === 'gato' ? gatos : 1);
-      const antipulgas = B.antipulgas * (especie === 'gato' ? gatos : 1);
-      const otros = B.otros * (especie === 'gato' ? gatos : 1);
-
-      // Veterinario: consulta promedio de la zona × visitas al año, prorrateado.
-      const consulta = (CONSULTA[zona] || CONSULTA.caba) * (especie === 'gato' ? AJUSTE_ESPECIE_VET.gato : AJUSTE_ESPECIE_VET.perro) * (especie === 'gato' ? gatos : 1);
-      const vetAnual = consulta * visitas;
-      const vetMes = vetAnual / 12;
-
-      // Arena: sólo aplica al gato.
-      const A = ARENAS[tipoArena] || ARENAS.aglomerante;
-      const factorGatos = 1 + (gatos - 1) * FACTOR_GATO_EXTRA;
-      const kgArena = especie === 'gato' ? A.kgMes * factorGatos : 0;
-      const arenaMes = kgArena * A.precioKg;
-      const bandejas = gatos + 1;
-
-      const total = alimento + vetMes + arenaMes + antipulgas + otros;
-      const anual = total * 12;
-      const pctAlimento = total > 0 ? (alimento / total) * 100 : 0;
-
-      const rows = [
-        row('Alimento', alimento, null, true, especie === 'gato' && gatos > 1 ? gatos + ' gatos' : calidad),
-        row('Veterinario prorrateado', vetMes, null, false, visitas + ' visitas × ' + pesos(consulta)),
-        row('Antiparasitario externo', antipulgas, null, false, 'pipeta o comprimido mensual'),
-        row('Higiene, juguetes y accesorios', otros, null, false, 'promedio mensual'),
-      ];
-
-      const chart = [
-        { label: 'Alimento', value: Math.round(alimento), tone: 'main' },
-        { label: 'Veterinario', value: Math.round(vetMes), tone: 'exit' },
-        { label: 'Antipulgas', value: Math.round(antipulgas), tone: 'prop' },
-        { label: 'Higiene y extras', value: Math.round(otros), tone: 'good' },
-      ];
-
-      if (especie === 'gato') {
-        rows.splice(1, 0, row('Arena sanitaria', arenaMes, null, true, A.nombre));
-        rows.push(row('Kilos de arena por mes', kgArena, KG, false, A.nombre));
-        rows.push(row('Bandejas que necesitás (regla N+1)', bandejas, UNID, false, 'AAFP'));
-        chart.splice(1, 0, { label: 'Arena', value: Math.round(arenaMes), tone: 'warn' });
-      }
-
-      rows.push(row('Total por mes', total, null, true, B.nombre));
-      rows.push(row('Total por año', anual, null, true, 'sin urgencias ni cirugías'));
-      rows.push(row('Visitas al veterinario', visitas, VISITAS, false, zona));
-      rows.push(row('Peso del alimento en el total', pctAlimento, PCT, false, 'el rubro que más mueve la aguja'));
-
-      const subPartes = [
-        B.nombre + (especie === 'gato' && gatos > 1 ? ' ×' + gatos : ''),
-        pesos(anual) + ' al año',
-        'el alimento se lleva el ' + Math.round(pctAlimento) + '%',
-      ];
-      if (especie === 'gato') subPartes.push(Math.round(kgArena) + ' kg de arena por mes');
-
-      return {
-        total: pesos(total) + ' por mes',
-        sub: subPartes.join(' · '),
-        rows: rows,
-        chart: chart,
-      };
-    });
-  })();
-</script>

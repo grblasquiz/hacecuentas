@@ -11,7 +11,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import OpcionesCallPutExperience from '../../components/generated/OpcionesCallPutExperience.astro';
 import { hub, CASE_MATH } from '../../lib/hubs/opciones-call-put';
 import tasas from '../../data/live/tasas.json';
 
@@ -64,127 +64,7 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={data} />
+  <OpcionesCallPutExperience data={data} />
   <Footer />
 </Layout>
 
-<script is:inline define:vars={{ MATH: CASE_MATH }}>
-  (function () {
-    const H = window.HC_HUB;
-
-    /**
-     * Normal acumulada — misma aproximación de Abramowitz-Stegun que usaba
-     * src/lib/formulas/black-scholes-opcion-call-put.ts, para que la prima
-     * teórica dé exactamente lo mismo que la calculadora vieja.
-     */
-    function ncdf(x) {
-      const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741,
-            a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
-      const sign = x < 0 ? -1 : 1;
-      x = Math.abs(x) / Math.sqrt(2);
-      const t = 1 / (1 + p * x);
-      const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
-      return 0.5 * (1 + sign * y);
-    }
-
-    H.onCompute(function (v, kase) {
-      const m = MATH[kase?.id] || MATH.call;
-      const S = Number(v.subyacente) || 0;
-      const K = Number(v.strike) || 0;
-      const D = Math.max(1, Number(v.dias) || 0);
-      const r = (Number(v.tasa) || 0) / 100;
-      const sigma = (Number(v.volatilidad) || 0) / 100;
-      const contratos = Math.max(1, Number(v.contratos) || 1);
-      const primaManual = Math.max(0, Number(v.prima) || 0);
-      // Lote estándar del contrato: 100 unidades del subyacente.
-      const MULT = 100;
-
-      if (!S || !K || sigma <= 0) {
-        return {
-          total: '—',
-          sub: 'Completá subyacente, strike y volatilidad para ver el resultado.',
-          rows: [],
-          chart: [],
-          format: 'plain',
-          decimals: 2,
-        };
-      }
-
-      const T = D / 365;
-      const d1 = (Math.log(S / K) + (r + (sigma * sigma) / 2) * T) / (sigma * Math.sqrt(T));
-      const d2 = d1 - sigma * Math.sqrt(T);
-      const call = S * ncdf(d1) - K * Math.exp(-r * T) * ncdf(d2);
-      const put = K * Math.exp(-r * T) * ncdf(-d2) - S * ncdf(-d1);
-
-      const esPut = m.tipo === 'put';
-      const teorica = esPut ? put : call;
-      // La prima que manda para el break-even: la real de mercado si la cargaste.
-      const prima = primaManual > 0 ? primaManual : teorica;
-
-      // Break-even al vencimiento (espejo de punto-equilibrio-opciones.ts).
-      const be = esPut ? K - prima : K + prima;
-      const distancia = S > 0 ? ((be - S) / S) * 100 : 0;
-
-      // Intrínseco y temporal del lado que se está mirando.
-      const intrinseco = Math.max(0, esPut ? K - S : S - K);
-      const temporal = Math.max(0, teorica - intrinseco);
-
-      const costoTotal = prima * MULT * contratos;
-      // P&L si se ejerciera hoy, desde el lado comprador; lanzando se invierte.
-      const pnl = (intrinseco - prima) * MULT * contratos * m.lado;
-
-      const rows = [
-        { k: 'Prima teórica del call', ref: 'Black-Scholes', v: call, format: 'plain', decimals: 2 },
-        { k: 'Prima teórica del put', ref: 'Black-Scholes', v: put, format: 'plain', decimals: 2 },
-        { k: 'Valor intrínseco', ref: esPut ? 'strike − subyacente' : 'subyacente − strike', v: intrinseco, format: 'plain', decimals: 2 },
-        { k: 'Valor temporal', ref: 'se consume al vencimiento', v: temporal, format: 'plain', decimals: 2 },
-        { k: 'Punto de equilibrio', ref: esPut ? 'strike − prima' : 'strike + prima', v: be, format: 'plain', decimals: 2, extra: true },
-        { k: 'Distancia hasta el equilibrio', v: distancia, format: 'unit', unit: '%', decimals: 1 },
-        { k: 'Costo total de la posición (' + contratos + (contratos > 1 ? ' contratos)' : ' contrato)'), ref: 'lote de 100', v: costoTotal, format: 'plain', decimals: 2 },
-        { k: m.lado === 1 ? 'Pérdida máxima' : 'Ganancia máxima (prima cobrada)', ref: 'al vencimiento', v: costoTotal, format: 'plain', decimals: 2 },
-        { k: 'Resultado si cerrases hoy', v: pnl, format: 'plain', decimals: 2 },
-        { k: 'd1', ref: 'término del modelo', v: d1, format: 'plain', decimals: 4 },
-        { k: 'd2', ref: 'prob. aprox. de terminar in the money', v: d2, format: 'plain', decimals: 4 },
-      ];
-
-      // Escala de precios alrededor del subyacente y del break-even.
-      const lo = Math.min(S, be) * 0.85;
-      const hi = Math.max(S, be) * 1.15;
-      const span = hi - lo || 1;
-      const pos = Math.min(100, Math.max(0, ((S - lo) / span) * 100));
-      const chart = esPut
-        ? [
-            { label: 'Zona de ganancia', value: be - lo, tone: 'good', from: Math.round(lo * 100) / 100, to: Math.round(be * 100) / 100 },
-            { label: 'No cubre la prima', value: hi - be, tone: 'bad', from: Math.round(be * 100) / 100, to: Math.round(hi * 100) / 100 },
-          ]
-        : [
-            { label: 'No cubre la prima', value: be - lo, tone: 'bad', from: Math.round(lo * 100) / 100, to: Math.round(be * 100) / 100 },
-            { label: 'Zona de ganancia', value: hi - be, tone: 'good', from: Math.round(be * 100) / 100, to: Math.round(hi * 100) / 100 },
-          ];
-
-      const enGanancia = esPut ? S < be : S > be;
-      const headline = kase?.id === 'break-even' ? be : teorica;
-      const mueve = Math.abs(distancia).toFixed(1);
-
-      return {
-        total: (Math.round(headline * 100) / 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        sub:
-          (kase?.id === 'break-even'
-            ? 'Punto de equilibrio con una prima de ' + prima.toFixed(2)
-            : 'Prima teórica del ' + (esPut ? 'put' : 'call') + ' · equilibrio en ' + be.toFixed(2)) +
-          ' · ' +
-          (enGanancia
-            ? 'el subyacente ya cruzó el equilibrio'
-            : 'falta que se mueva ' + mueve + '% ' + (esPut ? 'para abajo' : 'para arriba')) +
-          (primaManual > 0 ? ' · usando la prima de mercado que cargaste' : ''),
-        rows: rows,
-        chart: chart,
-        format: 'plain',
-        decimals: 2,
-        position: pos,
-        positionLabel:
-          'Precio hoy ' + S.toFixed(2) + ' · equilibrio ' + be.toFixed(2) + ' (' + (distancia >= 0 ? '+' : '') + distancia.toFixed(1) + '%)',
-      };
-    });
-  })();
-</script>

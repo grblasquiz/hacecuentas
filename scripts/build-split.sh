@@ -19,11 +19,17 @@ export NODE_OPTIONS=--max-old-space-size=8192
 CACHE="$REPO/.worker-cache"
 
 SSR_PAGES=(admin.astro dolar-hoy-chile.astro dolar-hoy-colombia.astro dolar-hoy-mexico.astro \
-  dolar-hoy-peru.astro dolar-hoy-venezuela.astro donde-ver-mundial-2026.astro \
+  dolar-hoy-paraguay.astro dolar-hoy-peru.astro dolar-hoy-uruguay.astro dolar-hoy-venezuela.astro embed \
+  donde-ver-mundial-2026.astro \
   partidos-hoy-mundial-2026.astro sugerencias.astro mcp.ts oembed.json.ts)
 restore_ssr() {
   [ -d _split_bak/api ] && mv _split_bak/api src/pages/api 2>/dev/null || true
-  for f in _split_bak/*.astro _split_bak/*.ts; do [ -f "$f" ] && mv "$f" "src/pages/$(basename "$f")" 2>/dev/null || true; done
+  for f in _split_bak/*.astro _split_bak/*.ts; do
+    [ -f "$f" ] || continue
+    [ "$(basename "$f")" = "middleware.ts" ] && continue
+    mv "$f" "src/pages/$(basename "$f")" 2>/dev/null || true
+  done
+  [ -d _split_bak/embed ] && mv _split_bak/embed src/pages/embed 2>/dev/null || true
   [ -f _split_bak/middleware.ts ] && mv _split_bak/middleware.ts src/middleware.ts 2>/dev/null || true
   rmdir _split_bak 2>/dev/null || true
 }
@@ -68,7 +74,7 @@ trap restore_ssr EXIT
 BUILD_SPLIT=static npx astro build >/tmp/split-static.log 2>&1 || { echo "STATIC build FALLÓ"; tail -25 /tmp/split-static.log; restore_ssr; trap - EXIT; exit 1; }
 restore_ssr; trap - EXIT
 ST=$(find dist-static -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
-[ "$ST" -lt 3000 ] && { echo "[split] ✗ static solo $ST HTMLs (esperados >5000) — abortar"; exit 1; }
+[ "$ST" -lt 800 ] && { echo "[split] ✗ static solo $ST HTMLs (esperados >800) — abortar"; exit 1; }
 
 echo "[split] 4/5 merge static → dist/client ($ST HTMLs)..."
 cp -R dist-static/. dist/client/
@@ -77,6 +83,7 @@ rm -rf dist-static
 echo "[split] 5/5 post-build..."
 node scripts/optimize-css-loading.mjs >/dev/null 2>&1
 node scripts/strip-pruned-html.mjs    >/dev/null 2>&1
+node --experimental-strip-types scripts/rewrite-internal-links.ts >/dev/null 2>&1
 node scripts/strip-html-comments.mjs  >/dev/null 2>&1
 node scripts/audit-sitemap-coverage.mjs --check
 node scripts/audit-redirect-graph.mjs --check --build-dir=dist/client

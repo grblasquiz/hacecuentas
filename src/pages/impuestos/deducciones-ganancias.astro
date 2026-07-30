@@ -12,7 +12,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import DeduccionesGananciasExperience from '../../components/generated/DeduccionesGananciasExperience.astro';
 import { hub, CASE_MATH, DEDUC, ESCALA_JSON } from '../../lib/hubs/deducciones-ganancias';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
@@ -51,113 +51,7 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={hub} />
+  <DeduccionesGananciasExperience data={hub} />
   <Footer />
 </Layout>
 
-<script is:inline define:vars={{ MATH: CASE_MATH, K: DEDUC, ESCALA: ESCALA_JSON }}>
-  (function () {
-    const H = window.HC_HUB;
-
-    // Escala progresiva del art. 94 — espejo de aplicarEscalaMensual()
-    // en src/lib/formulas/_ganancias-escala.ts. `hasta: null` = último tramo.
-    function escala(base) {
-      if (base <= 0) return { impuesto: 0, marginal: 0 };
-      let anterior = 0;
-      for (const t of ESCALA) {
-        const hasta = t.hasta === null ? Infinity : t.hasta;
-        if (base <= hasta) return { impuesto: t.acumulado + (base - anterior) * t.tasa, marginal: t.tasa };
-        anterior = hasta;
-      }
-      const u = ESCALA[ESCALA.length - 1];
-      return { impuesto: u.acumulado + (base - anterior) * u.tasa, marginal: u.tasa };
-    }
-
-    H.onCompute(function (v, kase) {
-      const m = MATH[kase?.id] || MATH['empleado-alquiler'];
-
-      const ingreso = Math.max(0, Number(v.ingreso) || 0);
-      const alquiler = Math.max(0, Number(v.alquiler) || 0);
-      const prepaga = Math.max(0, Number(v.prepaga) || 0);
-      const cony = String(v.conyuge || 'no') === 'si' ? 1 : 0;
-      const hijos = Math.max(0, Number(v.hijos) || 0);
-      const inca = Math.max(0, Number(v.hijosInca) || 0);
-
-      // Ganancia neta: bruto menos aportes personales del régimen de la rama.
-      const neto = ingreso * (1 - m.aportes);
-      const netoAnual = neto * 12;
-
-      // --- Deducciones opcionales, anuales ---
-      // Alquiler: 40% con tope de la GNI anual (art. 85 inc. h).
-      const alqBruto = alquiler * 12 * K.pctAlquiler;
-      const alqDed = m.deduce ? Math.min(alqBruto, K.gniAnual) : 0;
-      const alqPerdido = m.deduce ? Math.max(0, alqBruto - alqDed) : 0;
-
-      // Cargas de familia (art. 30 inc. b): importes mensuales × 12.
-      const conyDed = m.deduce ? cony * K.conyugeMensual * 12 : 0;
-      const hijosDed = m.deduce ? hijos * K.hijoMensual * 12 : 0;
-      const incaDed = m.deduce ? inca * K.hijoIncaMensual * 12 : 0;
-      const familiaDed = conyDed + hijosDed + incaDed;
-
-      // Prepaga y gastos médicos: tope 5% de la ganancia neta (art. 85 inc. g).
-      const prepagaAnual = prepaga * 12;
-      const topePrepaga = netoAnual * K.topePrepaga;
-      const prepagaDed = m.deduce ? Math.min(prepagaAnual, topePrepaga) : 0;
-      const prepagaPerdido = m.deduce ? Math.max(0, prepagaAnual - prepagaDed) : 0;
-
-      const totalDed = alqDed + familiaDed + prepagaDed;
-
-      // --- Impacto en el impuesto ---
-      // Base "antes": sólo con las deducciones que el empleador computa de oficio.
-      const baseSin = m.deduce ? Math.max(0, neto - K.gniMensual - m.especial) : 0;
-      const baseCon = Math.max(0, baseSin - totalDed / 12);
-      const impSin = escala(baseSin);
-      const impCon = escala(baseCon);
-      const ahorroMes = Math.max(0, impSin.impuesto - impCon.impuesto);
-      const ahorroAnual = ahorroMes * 12;
-
-      const rows = [];
-      if (!m.deduce) {
-        rows.push({ k: 'Deducciones computables en monotributo', ref: 'Régimen simplificado', v: 0 });
-        rows.push({ k: 'Ahorro de impuesto', ref: 'Cuota fija', v: 0 });
-      } else {
-        if (alqDed > 0) rows.push({ k: 'Alquiler deducible (40% anual)', ref: 'Art. 85 h', v: alqDed });
-        if (alqPerdido > 0) rows.push({ k: 'Alquiler que el tope deja afuera', ref: 'Tope = GNI anual', v: alqPerdido });
-        if (conyDed > 0) rows.push({ k: 'Cónyuge a cargo (anual)', ref: 'Art. 30 b.1', v: conyDed });
-        if (hijosDed > 0) rows.push({ k: hijos === 1 ? 'Hijo menor a cargo (anual)' : hijos + ' hijos menores a cargo (anual)', ref: 'Art. 30 b.2', v: hijosDed });
-        if (incaDed > 0) rows.push({ k: inca === 1 ? 'Hijo incapacitado (anual)' : inca + ' hijos incapacitados (anual)', ref: 'Art. 30 b.2', v: incaDed });
-        if (prepagaDed > 0) rows.push({ k: 'Prepaga y gastos médicos deducibles', ref: 'Art. 85 g', v: prepagaDed });
-        if (prepagaPerdido > 0) rows.push({ k: 'Prepaga que excede el tope del 5%', ref: 'Tope ' + H.ars(Math.round(topePrepaga)), v: prepagaPerdido });
-        rows.push({ k: 'Total deducible por año', ref: 'Suma', v: totalDed, extra: true });
-        rows.push({ k: 'Base imponible mensual sin estas deducciones', ref: 'Antes', v: baseSin });
-        rows.push({ k: 'Base imponible mensual con estas deducciones', ref: 'Después', v: baseCon });
-        rows.push({ k: 'Alícuota marginal que te alcanza', ref: 'Art. 94', v: Math.round(impSin.marginal * 100), format: 'unit', unit: '%' });
-        rows.push({ k: 'Ahorro de impuesto por mes', ref: 'Retención', v: ahorroMes });
-        rows.push({ k: 'Ahorro de impuesto por año', ref: 'Retención', v: ahorroAnual, extra: true });
-      }
-
-      const chart = m.deduce && totalDed > 0
-        ? [
-            { label: 'Alquiler', value: alqDed, tone: 'main' },
-            { label: 'Cargas de familia', value: familiaDed, tone: 'exit' },
-            { label: 'Prepaga y gastos médicos', value: prepagaDed, tone: 'prop' },
-          ].filter((s) => s.value > 0)
-        : [{ label: m.deduce ? 'Sin deducciones cargadas' : 'Monotributo: cuota fija, sin deducciones', value: 0, tone: 'warn' }];
-
-      const sub = !m.deduce
-        ? 'En monotributo no hay base imponible que reducir: la cuota fija reemplaza a Ganancias.'
-        : totalDed <= 0
-          ? 'Todavía no cargaste alquiler, familiares ni prepaga: no hay nada que deducir.'
-          : 'Te ahorra ' + H.ars(Math.round(ahorroAnual)) + ' de impuesto al año (' + H.ars(Math.round(ahorroMes)) +
-            ' por mes) · alícuota marginal ' + Math.round(impSin.marginal * 100) + '%' +
-            (baseSin <= 0 ? ' · hoy no tributás: la deducción no cambia nada' : '');
-
-      return {
-        total: H.ars(Math.round(totalDed)),
-        sub: sub,
-        rows: rows,
-        chart: chart,
-      };
-    });
-  })();
-</script>

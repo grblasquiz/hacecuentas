@@ -155,6 +155,34 @@ const entries = [
   ['presupuesto-de-viaje-mockup.html', 'PresupuestoViajeExperience', 'presupuesto-viaje'],
   ['tarifa-taxi-bogota-2026-mockup.html', 'TarifaTaxiBogotaExperience', 'tarifa-taxi-bogota'],
   ['cuenta-regresiva-mockup.html', 'CuentaRegresivaExperience', 'cuenta-regresiva'],
+  ['vtv-mockup.html', 'VtvExperience', 'vtv'],
+  ['masa-levadura-mockup.html', 'MasaLevaduraExperience', 'masa-levadura'],
+  ['porciones-cocina-mockup.html', 'PorcionesCocinaExperience', 'porciones-cocina'],
+  ['agua-construccion-mockup.html', 'AguaConstruccionExperience', 'agua-construccion'],
+  ['paneles-solares-mockup.html', 'PanelesSolaresExperience', 'paneles-solares'],
+  ['techos-mockup.html', 'TechosExperience', 'techos'],
+  ['cuanto-cuesta-estudiar-mockup.html', 'CuantoCuestaEstudiarExperience', 'cuanto-cuesta-estudiar'],
+  ['plan-estudio-mockup.html', 'PlanEstudioExperience', 'plan-estudio'],
+  ['casamiento-mockup.html', 'CasamientoExperience', 'casamiento'],
+  ['tragos-mockup.html', 'TragosExperience', 'tragos'],
+  ['comida-juntadas-mockup.html', 'ComidaJuntadasExperience', 'comida-juntadas'],
+  ['meta-ahorro-mockup.html', 'MetaAhorroExperience', 'meta-ahorro'],
+  ['premios-futbol-mockup.html', 'PremiosFutbolExperience', 'premios-futbol'],
+  ['amueblar-mockup.html', 'AmueblarExperience', 'amueblar'],
+  ['deducciones-ganancias-mockup.html', 'DeduccionesGananciasExperience', 'deducciones-ganancias'],
+  ['opciones-call-put-mockup.html', 'OpcionesCallPutExperience', 'opciones-call-put'],
+  ['riego-jardin-mockup.html', 'RiegoJardinExperience', 'riego-jardin'],
+  ['pensiones-mockup.html', 'PensionesExperience', 'pensiones'],
+  ['prestamo-anses-mockup.html', 'PrestamoAnsesExperience', 'prestamo-anses'],
+  ['cuanto-cuesta-mascota-mockup.html', 'CuantoCuestaMascotaExperience', 'cuanto-cuesta-mascota'],
+  ['peso-ideal-mascota-mockup.html', 'PesoIdealMascotaExperience', 'peso-ideal-mascota'],
+  ['precio-venta-mockup.html', 'PrecioVentaExperience', 'precio-venta'],
+  ['publicar-redes-mockup.html', 'PublicarRedesExperience', 'publicar-redes'],
+  ['ritmo-pace-mockup.html', 'RitmoPaceExperience', 'ritmo-pace'],
+  ['dni-pasaporte-mockup.html', 'DniPasaporteExperience', 'dni-pasaporte'],
+  ['antes-volar-mockup.html', 'AntesVolarExperience', 'antes-volar'],
+  ['visas-tramites-mockup.html', 'VisasTramitesExperience', 'visas-tramites'],
+  ['rentabilidad-alquiler-mockup.html', 'RentabilidadAlquilerExperience', 'rentabilidad-alquiler'],
 ];
 
 const prefixCss = (css, scope) => {
@@ -341,6 +369,34 @@ const pages = [
   ['src/pages/ve/impuestos/islr-y-tributos-seniat.astro', 'IslrSeniatVenezuelaExperience', '../../../components/generated/IslrSeniatVenezuelaExperience.astro'],
   ['src/pages/viajes/presupuesto-de-viaje.astro', 'PresupuestoViajeExperience', '../../components/generated/PresupuestoViajeExperience.astro'],
   ['src/pages/fechas/cuenta-regresiva.astro', 'CuentaRegresivaExperience', '../../components/generated/CuentaRegresivaExperience.astro'],
+  ['src/pages/auto/vtv.astro', 'VtvExperience', '../../components/generated/VtvExperience.astro'],
+  ['src/pages/cocina/masa-y-levadura.astro', 'MasaLevaduraExperience', '../../components/generated/MasaLevaduraExperience.astro'],
+  ['src/pages/cocina/porciones.astro', 'PorcionesCocinaExperience', '../../components/generated/PorcionesCocinaExperience.astro'],
+  ['src/pages/construccion/agua.astro', 'AguaConstruccionExperience', '../../components/generated/AguaConstruccionExperience.astro'],
+  ['src/pages/construccion/paneles-solares.astro', 'PanelesSolaresExperience', '../../components/generated/PanelesSolaresExperience.astro'],
+  ['src/pages/construccion/techos.astro', 'TechosExperience', '../../components/generated/TechosExperience.astro'],
+  ['src/pages/estudio/cuanto-cuesta-estudiar.astro', 'CuantoCuestaEstudiarExperience', '../../components/generated/CuantoCuestaEstudiarExperience.astro'],
+  ['src/pages/estudio/plan-de-estudio.astro', 'PlanEstudioExperience', '../../components/generated/PlanEstudioExperience.astro'],
+  ['src/pages/eventos/casamiento.astro', 'CasamientoExperience', '../../components/generated/CasamientoExperience.astro'],
+  ['src/pages/eventos/tragos.astro', 'TragosExperience', '../../components/generated/TragosExperience.astro'],
+  ['src/pages/fin-de-semana/comida-y-juntadas.astro', 'ComidaJuntadasExperience', '../../components/generated/ComidaJuntadasExperience.astro'],
+  ['src/pages/finanzas-personales/meta-de-ahorro.astro', 'MetaAhorroExperience', '../../components/generated/MetaAhorroExperience.astro'],
+  ['src/pages/futbol/premios.astro', 'PremiosFutbolExperience', '../../components/generated/PremiosFutbolExperience.astro'],
+  ['src/pages/hogar/amueblar.astro', 'AmueblarExperience', '../../components/generated/AmueblarExperience.astro'],
+  ['src/pages/impuestos/deducciones-ganancias.astro', 'DeduccionesGananciasExperience', '../../components/generated/DeduccionesGananciasExperience.astro'],
+  ['src/pages/inversiones/opciones-call-put.astro', 'OpcionesCallPutExperience', '../../components/generated/OpcionesCallPutExperience.astro'],
+  ['src/pages/jardin/riego.astro', 'RiegoJardinExperience', '../../components/generated/RiegoJardinExperience.astro'],
+  ['src/pages/jubilacion/pensiones.astro', 'PensionesExperience', '../../components/generated/PensionesExperience.astro'],
+  ['src/pages/jubilacion/prestamo-anses.astro', 'PrestamoAnsesExperience', '../../components/generated/PrestamoAnsesExperience.astro'],
+  ['src/pages/mascotas/cuanto-cuesta.astro', 'CuantoCuestaMascotaExperience', '../../components/generated/CuantoCuestaMascotaExperience.astro'],
+  ['src/pages/mascotas/peso-ideal.astro', 'PesoIdealMascotaExperience', '../../components/generated/PesoIdealMascotaExperience.astro'],
+  ['src/pages/negocios/precio-de-venta.astro', 'PrecioVentaExperience', '../../components/generated/PrecioVentaExperience.astro'],
+  ['src/pages/negocios/publicar-en-redes.astro', 'PublicarRedesExperience', '../../components/generated/PublicarRedesExperience.astro'],
+  ['src/pages/salud/ritmo-y-pace.astro', 'RitmoPaceExperience', '../../components/generated/RitmoPaceExperience.astro'],
+  ['src/pages/tramites/dni-y-pasaporte.astro', 'DniPasaporteExperience', '../../components/generated/DniPasaporteExperience.astro'],
+  ['src/pages/viajes/antes-de-volar.astro', 'AntesVolarExperience', '../../components/generated/AntesVolarExperience.astro'],
+  ['src/pages/viajes/visas-y-tramites.astro', 'VisasTramitesExperience', '../../components/generated/VisasTramitesExperience.astro'],
+  ['src/pages/vivienda/rentabilidad-de-un-alquiler.astro', 'RentabilidadAlquilerExperience', '../../components/generated/RentabilidadAlquilerExperience.astro'],
 ];
 
 for (const [page, component, importPath] of pages) {
@@ -348,6 +404,11 @@ for (const [page, component, importPath] of pages) {
   let source = fs.readFileSync(fullPath, 'utf8');
   source = source.replace(/import DecisionHub from ['"][^'"]+['"];/, `import ${component} from '${importPath}';`);
   source = source.replace(/<DecisionHub\s+data=\{([^}]+)\}\s*\/>/, `<${component} data={$1} />`);
+  // Al reemplazar DecisionHub, el script inline de la experiencia anterior ya
+  // no tiene window.HC_HUB. Si queda, lanza una excepción y puede cortar los
+  // controles del mockup nuevo aunque el cálculo inicial se vea correcto.
+  source = source.replace(/\n<script\b[^>]*\bdefine:vars=\{\{[\s\S]*?<\/script>\s*$/g, '\n');
+  source = source.replace(/\n<script\b[^>]*>[\s\S]*?window\.HC_HUB[\s\S]*?<\/script>\s*$/g, '\n');
   fs.writeFileSync(fullPath, source);
 }
 

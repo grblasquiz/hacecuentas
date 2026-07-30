@@ -51,7 +51,6 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/argentina/cordoba/calculadora-costo-m2-construccion-argentina': '/construccion/costo-por-m2',
   '/argentina/cordoba/calculadora-impuesto-inmobiliario-provincial': '/impuestos/bienes-personales',
   '/argentina/cordoba/calculadora-impuesto-sellos-inmueble-contrato': '/vivienda/gastos-de-escritura',
-  '/argentina/cordoba/calculadora-ingresos-brutos-provincial': '/impuestos/ingresos-brutos',
   '/argentina/cordoba/calculadora-patente-auto-provincia': '/auto/patente',
   '/argentina/corrientes': '/impuestos',
   '/argentina/corrientes/calculadora-costo-m2-construccion-argentina': '/construccion/costo-por-m2',

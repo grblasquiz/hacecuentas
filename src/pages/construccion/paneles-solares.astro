@@ -15,7 +15,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import PanelesSolaresExperience from '../../components/generated/PanelesSolaresExperience.astro';
 import {
   hub,
   REGIONES,
@@ -62,148 +62,7 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={hub} />
+  <PanelesSolaresExperience data={hub} />
   <Footer />
 </Layout>
 
-<script
-  is:inline
-  define:vars={{
-    REGIONES,
-    ORIENTACIONES,
-    EFICIENCIA,
-    M2_POR_PANEL,
-    FACTOR_INYECCION,
-    VIDA_UTIL_ANOS,
-    BANDS: hub.chart.bands,
-  }}
->
-  (function () {
-    const H = window.HC_HUB;
-
-    // El desglose mezcla kWh, kWp, m², paneles, porcentaje, USD, pesos y años.
-    // NINGUNA fila puede quedar sin `format`: el runtime hace Object.assign y la
-    // que no lo declara cae a pesos. Las de plata declaran 'ars' explícito.
-    const U = (v, unit, decimals) => ({ v: v, format: 'unit', unit: unit, decimals: decimals || 0 });
-    const A = (v) => ({ v: Math.round(v), format: 'ars' });
-
-    const n = (x, d) =>
-      Number(x || 0).toLocaleString('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
-
-    /** Profundidad de descarga y eficiencia del banco, como en banco-baterias-solar. */
-    const BAT_DOD = 0.8;
-    const BAT_EFF = 0.9;
-
-    H.onCompute(function (v) {
-      const consumo = Math.max(0, v.consumo || 0);
-      const precio = Math.max(0, v.precioKwh || 0);
-      const techoM2 = Math.max(0, v.techoM2 || 0);
-      const wp = Math.max(50, v.potenciaPanel || 550);
-      const usdKwp = Math.max(0, v.usdKwp || 0);
-      const dolar = Math.max(0, v.dolar || 0);
-      const autonomia = Math.max(0, Math.round(v.autonomia || 0));
-      const usdKwhBat = Math.max(0, v.usdKwhBateria || 0);
-      const offgrid = String(v.esquema) === 'offgrid';
-
-      const R = REGIONES[v.region] || REGIONES.gba;
-      const O = ORIENTACIONES[v.orientacion] || ORIENTACIONES.norte_optima;
-      const hsp = R.hsp * O.factor;
-
-      // ── Dimensionamiento (panel-solar-kw-consumo-hogar-autoconsumo) ──────
-      const kwpPanel = wp / 1000;
-      const eta = Math.max(0.5, Math.min(1, EFICIENCIA));
-      const genPorPanel = kwpPanel * hsp * 30 * eta;
-      const panelesIdeales = genPorPanel > 0 && consumo > 0 ? Math.ceil(consumo / genPorPanel) : 0;
-      const panelesTecho = Math.floor(techoM2 / M2_POR_PANEL);
-      const paneles = Math.max(0, Math.min(panelesIdeales, panelesTecho));
-      const recortado = paneles < panelesIdeales;
-
-      const kwp = paneles * kwpPanel;
-      const m2Ocupados = paneles * M2_POR_PANEL;
-
-      // ── Generación (misma cuenta que ahorro-energia-solar-paneles) ───────
-      const genMes = kwp * hsp * 30 * eta;
-      const genAnual = genMes * 12;
-      const consumoAnual = consumo * 12;
-      const autoconsumido = Math.min(genAnual, consumoAnual);
-      const inyectado = Math.max(0, genAnual - consumoAnual);
-      const cobertura = consumoAnual > 0 ? Math.min(100, (genAnual / consumoAnual) * 100) : 0;
-
-      // ── Ahorro: on-grid paga la inyección al 70%; off-grid la pierde ─────
-      const ahorroAnual = offgrid
-        ? autoconsumido * precio
-        : autoconsumido * precio + inyectado * precio * FACTOR_INYECCION;
-      const ahorroMes = ahorroAnual / 12;
-
-      // ── Inversión ────────────────────────────────────────────────────────
-      const bancoKwhUtil = offgrid ? (consumo / 30) * autonomia : 0;
-      const bancoKwhNominal = bancoKwhUtil / (BAT_DOD * BAT_EFF);
-      const costoUsd = kwp * usdKwp + bancoKwhNominal * usdKwhBat;
-      const costoArs = costoUsd * dolar;
-
-      const anos = ahorroAnual > 0 ? costoArs / ahorroAnual : 0;
-      const anosR = Math.round(anos * 10) / 10;
-      const gratis = Math.max(0, VIDA_UTIL_ANOS - anosR);
-
-      const position = anos > 0 ? Math.min(100, (anos / VIDA_UTIL_ANOS) * 100) : 0;
-
-      const rows = [];
-      rows.push({ k: 'Consumo anual que querés cubrir', ref: n(consumo) + ' kWh por mes', ...U(consumoAnual, 'kWh') });
-      rows.push({ k: 'Horas de sol pico efectivas', ref: R.label + ' · ' + O.label.toLowerCase(), ...U(hsp, 'HSP', 2) });
-      rows.push({ k: 'Paneles que pide tu consumo', ref: 'de ' + n(wp) + ' Wp cada uno', ...U(panelesIdeales, 'paneles') });
-      rows.push({ k: 'Paneles que entran en tu techo', ref: n(M2_POR_PANEL, 1) + ' m² por panel', ...U(panelesTecho, 'paneles') });
-      rows.push({ k: 'Paneles a instalar', ref: recortado ? 'lo limita el techo' : 'lo limita tu consumo', ...U(paneles, 'paneles'), extra: true });
-      rows.push({ k: 'Potencia instalada', ref: n(paneles) + ' × ' + n(wp) + ' Wp', ...U(kwp, 'kWp', 2), extra: true });
-      rows.push({ k: 'Techo que ocupan', ref: 'con estructura y pasillos', ...U(m2Ocupados, 'm²', 1) });
-      rows.push({ k: 'Generación mensual', ref: n(kwp, 2) + ' kWp × ' + n(hsp, 2) + ' HSP × 30 × ' + n(eta, 2), ...U(genMes, 'kWh') });
-      rows.push({ k: 'Generación anual', ref: 'promedio del año', ...U(genAnual, 'kWh') });
-      rows.push({ k: 'Cobertura de tu factura', ref: 'generación sobre consumo', ...U(cobertura, '%') });
-      rows.push({ k: 'Energía que autoconsumís', ref: 'vale la tarifa plena', ...U(autoconsumido, 'kWh') });
-      rows.push({
-        k: offgrid ? 'Excedente que se pierde' : 'Energía que inyectás a la red',
-        ref: offgrid ? 'sin red, el excedente no se aprovecha' : 'se paga al ' + Math.round(FACTOR_INYECCION * 100) + '% (Ley 27.424)',
-        ...U(inyectado, 'kWh'),
-      });
-
-      if (offgrid) {
-        rows.push({ k: 'Banco de baterías para ' + n(autonomia) + ' día' + (autonomia === 1 ? '' : 's') + ' sin sol', ref: 'DoD 80% · eficiencia 90%', ...U(bancoKwhNominal, 'kWh', 1) });
-      }
-
-      rows.push({ k: 'Ahorro mensual en la factura', ref: '$' + n(precio) + ' por kWh', ...A(ahorroMes) });
-      rows.push({ k: 'Ahorro anual', ref: 'a tarifa de hoy', ...A(ahorroAnual), extra: true });
-      rows.push({ k: 'Inversión en dólares', ref: n(usdKwp) + ' USD por kWp' + (offgrid ? ' + baterías' : ''), ...U(costoUsd, 'USD') });
-      rows.push({ k: 'Inversión en pesos', ref: 'dólar $' + n(dolar), ...A(costoArs), extra: true });
-      rows.push({ k: 'Años en los que se paga', ref: 'inversión ÷ ahorro anual', ...U(anosR, 'años', 1), extra: true });
-      rows.push({ k: 'Años de energía casi gratis después', ref: 'sobre ' + VIDA_UTIL_ANOS + ' años de vida útil', ...U(gratis, 'años', 1) });
-
-      let sub;
-      if (paneles <= 0) {
-        sub = 'Con ese techo no entra ni un panel: hacen falta al menos ' + n(M2_POR_PANEL, 1) + ' m² libres y sin sombra.';
-      } else if (ahorroAnual <= 0) {
-        sub = 'Cargá el precio del kWh de tu factura para que el ahorro y el repago tengan número.';
-      } else {
-        sub =
-          n(paneles) + ' paneles · ' + n(kwp, 2) + ' kWp · ' + n(genMes) + ' kWh/mes (' + n(cobertura) + '% de tu consumo) · ' +
-          'ahorrás $' + n(ahorroMes) + ' por mes sobre una inversión de USD ' + n(costoUsd) +
-          (recortado ? ' · el sistema quedó recortado por la superficie de techo' : '');
-      }
-
-      return {
-        total: paneles > 0 && ahorroAnual > 0 ? n(anosR, 1) + ' años' : '—',
-        sub: sub,
-        format: 'unit',
-        unit: 'años',
-        decimals: 1,
-        rows: rows,
-        chart: BANDS.map(function (b) {
-          return { label: b.label, value: b.to - b.from, tone: b.tone, from: b.from, to: b.to };
-        }),
-        position: position,
-        positionLabel:
-          paneles > 0 && ahorroAnual > 0
-            ? 'Se paga en ' + n(anosR, 1) + ' años, el ' + n(position) + '% de la vida útil del panel'
-            : 'Sin datos suficientes para estimar el repago',
-      };
-    });
-  })();
-</script>
