@@ -10,6 +10,8 @@ import type { HubData } from '../../lib/hubs/types';
 import ApprovedMockupPage from '../ApprovedMockupPage.astro';
 import DecisionHubClassic from './DecisionHubClassic.astro';
 import enCoreStyles from '../../mockups/approved/en-mockup-core.css?raw';
+import ptCoreStyles from '../../mockups/approved/pt-mockup-core.css?raw';
+import ptPtCoreStyles from '../../mockups/approved/pt-pt-mockup-core.css?raw';
 
 export interface Props {
   data: HubData;
@@ -21,13 +23,34 @@ const approved = import.meta.glob('../../mockups/approved/en/*.html', {
   import: 'default',
   eager: true,
 }) as Record<string, string>;
+const approvedPt = import.meta.glob('../../mockups/approved/pt/*.html', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+const approvedPtPt = import.meta.glob('../../mockups/approved/pt-pt/*.html', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 const leaf = data.slug.split('/').filter(Boolean).at(-1);
-const source = data.locale === 'en' && leaf
-  ? approved[`../../mockups/approved/en/${leaf}.html`]
-  : undefined;
+const source = !leaf
+  ? undefined
+  : data.locale === 'en'
+    ? approved[`../../mockups/approved/en/${leaf}.html`]
+    : data.locale === 'pt'
+      ? approvedPt[`../../mockups/approved/pt/${leaf}.html`]
+      : data.locale === 'pt-pt'
+        ? approvedPtPt[`../../mockups/approved/pt-pt/${leaf}.html`]
+        : undefined;
+const baseStyles = data.locale === 'pt'
+  ? ptCoreStyles
+  : data.locale === 'pt-pt'
+    ? ptPtCoreStyles
+    : enCoreStyles;
 ---
 
 {source
-  ? <ApprovedMockupPage source={source} baseStyles={enCoreStyles} />
+  ? <ApprovedMockupPage source={source} baseStyles={baseStyles} />
   : <DecisionHubClassic data={data} />
 }
