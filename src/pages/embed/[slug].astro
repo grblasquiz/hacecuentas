@@ -1,22 +1,36 @@
 ---
-export const prerender = true;
+export const prerender = false;
 
-import Calculator from '../../components/Calculator.astro';
-import { filterByIncremental } from '../../lib/incremental';
-import { canEmbedCalc } from '../../lib/content-policy';
+import computeIndex from '../../lib/calc-compute-index.json';
 
-export async function getStaticPaths() {
-  const calcs = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
-  const all = Object.values(calcs).map((mod: any) => mod.default || mod);
-  return filterByIncremental(all, 'calcs', 'ar').map((c: any) => ({
-    params: { slug: c.slug },
-    props: { calc: c },
-  }));
-}
+type Field = {
+  id: string;
+  t: string;
+  r?: number;
+  def?: unknown;
+  o?: Array<string | { value?: string; label?: string }>;
+};
+type Entry = {
+  fields?: Field[];
+  h?: string;
+  cat?: string;
+  aud?: string;
+  loc?: string;
+};
 
-const { calc } = Astro.props;
-// Restringidas (YMYL) no se pueden embeber: mostramos un aviso sin calculadora.
-const embeddable = canEmbedCalc(calc);
+const slug = Astro.params.slug || '';
+const calc = (computeIndex as Record<string, Entry>)[slug];
+if (!calc) return new Response('Calculadora no encontrada', { status: 404 });
+
+const title = calc.h || slug.replaceAll('-', ' ');
+const fields = calc.fields || [];
+const sourceUrl = `https://hacecuentas.com/${slug}`;
+const labelFor = (id: string) =>
+  id.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+const optionValue = (option: string | { value?: string; label?: string }) =>
+  typeof option === 'string' ? option : (option.value || option.label || '');
+const optionLabel = (option: string | { value?: string; label?: string }) =>
+  typeof option === 'string' ? labelFor(option) : (option.label || option.value || '');
 ---
 <!doctype html>
 <html lang="es-AR">
@@ -24,206 +38,122 @@ const embeddable = canEmbedCalc(calc);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, follow" />
-    <title>{calc.title}</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <title>{title}</title>
   </head>
   <body>
-    <div class="embed-wrap">
-      <div class="embed-head">
-        <h1 class="embed-title">{calc.icon} {calc.h1}</h1>
-        <a href={`https://hacecuentas.com/${calc.slug}`} target="_blank" rel="noopener sponsored" class="embed-source">
-          por <strong>Hacé Cuentas</strong> ↗
-        </a>
-      </div>
-      {embeddable ? (
-        <Calculator config={calc} />
-      ) : (
-        <div class="embed-unavailable" role="note">
-          <p><strong>Esta herramienta no está disponible para embeber.</strong></p>
-          <p>Por seguridad, esta calculadora no ofrece una versión insertable. Podés
-            consultarla en <a href={`https://hacecuentas.com/${calc.slug}`} target="_blank" rel="noopener">Hacé Cuentas</a>.</p>
-        </div>
-      )}
-    </div>
+    <main class="widget">
+      <header>
+        <h1>{title}</h1>
+        <a href={sourceUrl} target="_blank" rel="noopener sponsored">por <strong>Hacé Cuentas</strong> ↗</a>
+      </header>
 
-    <script is:inline define:vars={{ slug: calc.slug, name: calc.h1 }}>
-      // Auto-resize: posta su height al parent iframe
-      function postHeight() {
-        var h = document.documentElement.scrollHeight;
-        if (window.parent !== window) {
-          window.parent.postMessage({ type: 'hc-embed-height', slug: slug, height: h }, '*');
-        }
-      }
-      // Posta el nombre real de la calc para que el loader arme el anchor del backlink.
-      function postMeta() {
-        if (window.parent !== window) {
-          window.parent.postMessage({ type: 'hc-embed-meta', slug: slug, name: name }, '*');
-        }
-      }
-      var ro = new ResizeObserver(postHeight);
-      ro.observe(document.body);
-      window.addEventListener('load', function () { postHeight(); postMeta(); });
-    </script>
+      <form id="hc-form">
+        {fields.map((field) => (
+          <label>
+            <span>{labelFor(field.id)}{field.r ? ' *' : ''}</span>
+            {field.t === 'select' || field.t === 'radio' ? (
+              <select name={field.id} required={Boolean(field.r)}>
+                {(field.o || []).map((option) => (
+                  <option value={optionValue(option)} selected={String(field.def ?? '') === optionValue(option)}>
+                    {optionLabel(option)}
+                  </option>
+                ))}
+              </select>
+            ) : field.t === 'boolean' ? (
+              <input name={field.id} type="checkbox" checked={Boolean(field.def)} />
+            ) : (
+              <input
+                name={field.id}
+                type={field.t === 'date' || field.t === 'datetime-local' ? field.t : field.t === 'number' ? 'number' : 'text'}
+                value={String(field.def ?? '')}
+                required={Boolean(field.r)}
+                step={field.t === 'number' ? 'any' : undefined}
+              />
+            )}
+          </label>
+        ))}
+        <button type="submit">Calcular</button>
+      </form>
 
-    <!-- Partner Studio: aplica tema/logo/título/CTA desde la querystring y
-         puentea eventos al parent (web component <hace-cuentas>). Los params de
-         prefill (name=value) ya los consume el script propio de Calculator. -->
-    <script is:inline define:vars={{ EMBED_SLUG: calc.slug }}>
+      <section id="hc-result" aria-live="polite" hidden></section>
+    </main>
+
+    <script is:inline define:vars={{ slug }}>
       (function () {
-        var p = new URLSearchParams(location.search);
-        var root = document.documentElement;
-
-        // Tema: accent del partner.
-        var accent = p.get('accent');
-        if (accent && /^#[0-9a-fA-F]{3,8}$/.test(accent)) {
-          root.style.setProperty('--accent', accent);
-          root.style.setProperty('--accent-hover', accent);
-          root.style.setProperty('--accent-strong', accent);
+        var form = document.getElementById('hc-form');
+        var result = document.getElementById('hc-result');
+        function pretty(value) {
+          if (value === null || value === undefined || value === '') return '—';
+          if (typeof value === 'object') return JSON.stringify(value, null, 2);
+          return String(value);
         }
-
-        // Título personalizado.
-        var title = p.get('title');
-        if (title) {
-          var h = document.querySelector('.embed-title');
-          if (h) h.textContent = title;
-          try { document.title = title; } catch (e) {}
-        }
-
-        // Logo del partner en el encabezado.
-        var logo = p.get('logo');
-        if (logo && /^https:\/\//.test(logo)) {
-          var head = document.querySelector('.embed-head');
-          if (head) {
-            var img = document.createElement('img');
-            img.src = logo;
-            img.alt = '';
-            img.setAttribute('aria-hidden', 'true');
-            img.style.cssText = 'max-height:28px;max-width:140px;width:auto;height:auto;object-fit:contain;flex-shrink:0';
-            head.insertBefore(img, head.firstChild);
-          }
-        }
-
-        // Ocultar atribución (sólo llega noattr=1 si el web component lo autorizó).
-        if (p.get('noattr') === '1') {
-          var src = document.querySelector('.embed-source');
-          if (src) src.style.display = 'none';
-        }
-
-        // Puente de eventos hacia el parent.
-        var ctaLabel = p.get('cta');
-        var ctaUrl = p.get('ctaurl');
-        var container = document.querySelector('.calc-container');
-
-        function postEvent(event, detail) {
+        function postHeight() {
           if (window.parent !== window) {
-            window.parent.postMessage({ type: 'hc-embed-event', event: event, slug: EMBED_SLUG, detail: detail || {} }, '*');
+            window.parent.postMessage({ type: 'hc-embed-height', slug: slug, height: document.documentElement.scrollHeight }, '*');
           }
         }
-
-        if (container) {
-          var ctaInjected = false;
-          // Calculó: el contenedor dispara hc-calc-result con el primary ya formateado.
-          container.addEventListener('hc-calc-result', function (e) {
-            var primary = (e.detail && e.detail.primary) || '';
-            postEvent('calculate', { primary: primary, slug: EMBED_SLUG });
-
-            // CTA propio del partner debajo del resultado.
-            if (ctaLabel && ctaUrl && /^https:\/\//.test(ctaUrl) && !ctaInjected) {
-              ctaInjected = true;
-              var results = document.querySelector('.calc-results');
-              if (results) {
-                var wrap = document.createElement('div');
-                wrap.style.cssText = 'margin-top:1rem;text-align:center';
-                var a = document.createElement('a');
-                a.href = ctaUrl;
-                a.target = '_top';
-                a.rel = 'noopener';
-                a.textContent = ctaLabel;
-                a.style.cssText = 'display:inline-block;background:var(--accent);color:#fff;font-weight:600;font-size:.9375rem;padding:.6rem 1.25rem;border-radius:10px;text-decoration:none';
-                a.addEventListener('click', function () { postEvent('complete', { cta: ctaUrl }); });
-                wrap.appendChild(a);
-                results.appendChild(wrap);
-              }
-            }
+        form.addEventListener('submit', async function (event) {
+          event.preventDefault();
+          var button = form.querySelector('button');
+          var inputs = {};
+          Array.from(form.elements).forEach(function (control) {
+            if (!control.name) return;
+            if (control.type === 'checkbox') inputs[control.name] = control.checked;
+            else if (control.value !== '') inputs[control.name] = control.value;
           });
-
-          // Compartir/copiar.
-          container.addEventListener('click', function (e) {
-            var t = e.target;
-            var btn = t && t.closest ? t.closest('[data-action]') : null;
-            if (!btn) return;
-            var action = btn.getAttribute('data-action');
-            if (action === 'share' || action === 'whatsapp' || action === 'copy' || action === 'embed' || action === 'copyLink') {
-              postEvent('share', { action: action });
-            }
-          });
-        }
+          button.disabled = true;
+          button.textContent = 'Calculando…';
+          result.hidden = false;
+          result.innerHTML = '<p>Calculando…</p>';
+          try {
+            var response = await fetch('/api/calc/' + encodeURIComponent(slug) + '/compute', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ inputs: inputs, lang: 'es' })
+            });
+            var data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.message || 'No se pudo calcular');
+            var rows = Object.entries(data.result || {}).map(function (entry) {
+              return '<div><dt>' + entry[0].replaceAll('_', ' ') + '</dt><dd><pre>' + pretty(entry[1]).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</pre></dd></div>';
+            }).join('');
+            result.innerHTML = '<h2>Resultado</h2><dl>' + rows + '</dl>';
+          } catch (error) {
+            result.innerHTML = '<p class="error">' + (error && error.message ? error.message : 'No se pudo calcular') + '</p>';
+          } finally {
+            button.disabled = false;
+            button.textContent = 'Calcular';
+            postHeight();
+          }
+        });
+        new ResizeObserver(postHeight).observe(document.body);
+        window.addEventListener('load', postHeight);
       })();
     </script>
-
-    <style is:global>
-      :root {
-        --bg: #ffffff;
-        --bg-soft: #f8fafc;
-        --bg-muted: #f1f5f9;
-        --bg-card: #ffffff;
-        --border: #e2e8f0;
-        --border-strong: #cbd5e1;
-        --text: #0f172a;
-        --text-muted: #475569;
-        --text-subtle: #64748b;
-        --accent: #2563eb;
-        --accent-hover: #1d4ed8;
-        --accent-soft: #eff6ff;
-        --accent-strong: #1e40af;
-        --success: #16a34a;
-        --success-soft: #f0fdf4;
-        --danger: #dc2626;
-        --danger-soft: #fef2f2;
-        --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
-        --shadow: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
-        --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.08);
-        --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.1);
-        --radius-sm: 6px;
-        --radius: 10px;
-        --radius-lg: 14px;
-        --font-body: 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
-      }
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      html { font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
-      body { background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.5; padding: 1rem; }
-      .embed-wrap { max-width: 720px; margin: 0 auto; }
-      .embed-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--border);
-      }
-      .embed-title {
-        font-size: 1.125rem;
-        font-weight: 700;
-        color: var(--text);
-        line-height: 1.3;
-      }
-      .embed-source {
-        font-size: 0.75rem;
-        color: var(--text-subtle);
-        text-decoration: none;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-      .embed-source strong { color: var(--accent); }
-      .embed-source:hover strong { text-decoration: underline; }
-      /* Hide share buttons inside embeds (they depend on parent page) */
-      .embed-wrap .share .btn-share[data-action="embed"],
-      .embed-wrap .share .btn-share[data-action="whatsapp"] { display: none; }
-    </style>
   </body>
 </html>
+
+<style>
+  :root { color-scheme: light; font-family: Inter, system-ui, sans-serif; color: #10213a; background: #fff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .widget { max-width: 720px; margin: auto; padding: 20px; }
+  header { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
+  h1 { margin: 0; font-size: clamp(1.25rem, 4vw, 1.75rem); line-height: 1.2; }
+  header a { flex: none; color: #2563eb; font-size: .8rem; text-decoration: none; }
+  form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 20px; }
+  label { display: grid; gap: 6px; color: #475569; font-size: .86rem; font-weight: 700; }
+  input, select { width: 100%; min-height: 44px; border: 1px solid #cbd5e1; border-radius: 9px; padding: 9px 11px; background: #fff; color: #0f172a; font: inherit; }
+  input:focus, select:focus { outline: 3px solid #dbeafe; border-color: #2563eb; }
+  input[type="checkbox"] { width: 22px; min-height: 22px; }
+  button { grid-column: 1 / -1; min-height: 46px; border: 0; border-radius: 10px; background: #2563eb; color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+  button:disabled { opacity: .65; cursor: wait; }
+  #hc-result { margin-top: 20px; padding: 18px; border-radius: 12px; background: #f1f5f9; }
+  #hc-result h2 { margin: 0 0 12px; font-size: 1.1rem; }
+  dl { display: grid; gap: 10px; margin: 0; }
+  dl div { display: grid; grid-template-columns: minmax(120px, .8fr) minmax(0, 1.2fr); gap: 12px; padding-bottom: 8px; border-bottom: 1px solid #dbe3ec; }
+  dt { color: #64748b; text-transform: capitalize; }
+  dd { margin: 0; font-weight: 700; }
+  pre { margin: 0; white-space: pre-wrap; font: inherit; }
+  .error { color: #b91c1c; }
+  @media (max-width: 540px) { form { grid-template-columns: 1fr; } header { display: grid; } dl div { grid-template-columns: 1fr; gap: 3px; } }
+</style>

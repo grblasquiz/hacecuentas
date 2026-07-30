@@ -253,16 +253,6 @@ export default {
         return Response.redirect(\`https://hacecuentas.com\${redirect.d}\${url.search}\`, redirect.s);
       }
 
-      // 4b) /embed/<slug> de un calc podado: el iframe vive en el sitio de un
-      // tercero y sin esto muestra un 404 adentro de su pagina. Sigue el mismo
-      // destino que el calc. Va aca y no en el middleware de Astro porque
-      // /embed/* es prerender y el middleware no corre para assets estaticos.
-      if (url.pathname.startsWith('/embed/')) {
-        const embedRedirect = REDIRECT_MAP['/' + url.pathname.slice(7)];
-        if (embedRedirect) {
-          return Response.redirect(\`https://hacecuentas.com\${embedRedirect.d}\`, 301);
-        }
-      }
     }
 
     // 5) Fast pages: assets HTML aislados, sin bundle/prerender de Astro.

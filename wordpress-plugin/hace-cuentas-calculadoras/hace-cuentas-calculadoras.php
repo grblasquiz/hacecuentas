@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Hacé Cuentas — Calculadoras
  * Plugin URI:        https://hacecuentas.com/wordpress
- * Description:       Embed interactive Hacé Cuentas calculators (salary, taxes, BMI, loans, VAT and 2700+ more) into your posts and pages with a block or a shortcode. Free, no signup, calculations run in the visitor's browser.
- * Version:           1.0.1
+ * Description:       Embed interactive Hacé Cuentas calculators (salary, taxes, BMI, loans, VAT and hundreds more) into your posts and pages with a block or a shortcode. Free and no signup.
+ * Version:           1.0.2
  * Requires at least: 6.5
  * Requires PHP:      7.2
  * Author:            Hacé Cuentas
@@ -20,12 +20,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'HACECUENTAS_ORIGIN', 'https://hacecuentas.com' );
-define( 'HACECUENTAS_VERSION', '1.0.1' );
+define( 'HACECUENTAS_VERSION', '1.0.2' );
 
 /**
  * Devuelve el título de una calc a partir de su slug.
  *
- * Cachea el catálogo (calcs-slim.json) en un transient 12h para que el texto
+ * Cachea el catálogo embebible en un transient 12h para que el texto
  * ancla del backlink sea la keyword real ("Calculadora de monotributo 2026")
  * y no una versión fea del slug. Si la API no responde, hace fallback a
  * des-sluguear el slug.
@@ -39,7 +39,7 @@ function hacecuentas_title_for( $slug ) {
 	if ( false === $map ) {
 		$map = array();
 		$res = wp_remote_get(
-			HACECUENTAS_ORIGIN . '/api/calcs-slim.json',
+			HACECUENTAS_ORIGIN . '/api/embed-calcs.json',
 			array( 'timeout' => 5 )
 		);
 
@@ -47,8 +47,7 @@ function hacecuentas_title_for( $slug ) {
 			$data = json_decode( wp_remote_retrieve_body( $res ), true );
 			if ( is_array( $data ) ) {
 				foreach ( $data as $c ) {
-					// Sólo calcs AR (l === ''): son las que tienen /embed/<slug>.
-					if ( isset( $c['s'], $c['t'] ) && empty( $c['l'] ) ) {
+					if ( isset( $c['s'], $c['t'] ) ) {
 						$map[ $c['s'] ] = $c['t'];
 					}
 				}
@@ -211,7 +210,7 @@ add_shortcode( 'hacecuentas', 'hacecuentas_shortcode' );
  * @return array
  */
 function hacecuentas_plugin_links( $links ) {
-	$links[] = '<a href="' . esc_url( HACECUENTAS_ORIGIN . '/calculadoras' ) . '" target="_blank" rel="noopener">'
+	$links[] = '<a href="' . esc_url( HACECUENTAS_ORIGIN . '/buscar' ) . '" target="_blank" rel="noopener">'
 		. esc_html__( 'Ver calculadoras', 'hace-cuentas-calculadoras' ) . '</a>';
 	return $links;
 }
@@ -247,7 +246,7 @@ function hacecuentas_welcome_notice() {
 			'em'     => array(),
 		)
 	);
-	echo ' <a href="' . esc_url( HACECUENTAS_ORIGIN . '/calculadoras' ) . '" target="_blank" rel="noopener">'
+	echo ' <a href="' . esc_url( HACECUENTAS_ORIGIN . '/buscar' ) . '" target="_blank" rel="noopener">'
 		. esc_html__( 'Ver calculadoras', 'hace-cuentas-calculadoras' ) . '</a>';
 	echo ' &middot; <a href="' . esc_url( $dismiss ) . '">'
 		. esc_html__( 'Ocultar', 'hace-cuentas-calculadoras' ) . '</a>';

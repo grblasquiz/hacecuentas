@@ -1,8 +1,8 @@
 # Hacé Cuentas — Calculadoras (plugin de WordPress)
 
-Insertá cualquiera de las **más de 2700 calculadoras** de [Hacé Cuentas](https://hacecuentas.com)
+Insertá cualquiera de los **cientos de calculadoras** de [Hacé Cuentas](https://hacecuentas.com)
 en tus posts y páginas de WordPress con un bloque o un shortcode. Gratis, sin registro y sin código:
-los cálculos corren en el navegador del visitante.
+el visitante obtiene el resultado sin salir de tu sitio.
 
 > Sueldo en mano, monotributo, aguinaldo, indemnización, préstamos, interés compuesto, plazo fijo,
 > IMC, calorías, IVA, porcentajes, conversores y mucho más.
@@ -24,7 +24,7 @@ Plugins → Añadir nuevo → buscá **"Hacé Cuentas"** → Instalar → Activa
 
 ### Bloque (editor de bloques / Gutenberg)
 1. En una entrada o página, agregá el bloque **"Calculadora Hacé Cuentas"**.
-2. Tocá una de las **más usadas** (un clic) o buscá entre las más de 2700.
+2. Tocá una de las **más usadas** (un clic) o buscá en el catálogo.
 3. Publicá. Listo.
 
 ### Shortcode (editor clásico, widgets)
@@ -46,7 +46,7 @@ un embed automáticamente (vía oEmbed).
 ## Cómo funciona
 
 - La calculadora se muestra en un **iframe liviano** servido desde `hacecuentas.com`.
-- Los **cálculos corren del lado del cliente** — los datos del visitante no se mandan a ningún servidor.
+- Al calcular, los valores ingresados se envían a Hacé Cuentas sólo para computar y devolver el resultado.
 - El iframe **se autoajusta de alto** según la calculadora.
 - Lo único que el plugin agrega a tu página es un script de ajuste de altura de unos pocos KB.
 - **Enlace a la fuente: opcional y opt-in.** Por defecto el plugin **no inserta ningún enlace** en tu
@@ -56,7 +56,7 @@ un embed automáticamente (vía oEmbed).
 ## Privacidad
 
 No se recolectan datos de tus visitantes. El plugin sólo consulta el catálogo público de
-calculadoras (`/api/calcs-slim.json`) para llenar el selector del editor, cacheado 12 h.
+calculadoras (`/api/embed-calcs.json`) para llenar el selector del editor, cacheado 12 h.
 
 ## Desarrollo
 
@@ -77,4 +77,4 @@ Plugin en JavaScript vanilla, **sin paso de build**:
 
 ---
 
-Hecho por **[Hacé Cuentas](https://hacecuentas.com)** · [Ver todas las calculadoras](https://hacecuentas.com/calculadoras)
+Hecho por **[Hacé Cuentas](https://hacecuentas.com)** · [Buscar calculadoras](https://hacecuentas.com/buscar)

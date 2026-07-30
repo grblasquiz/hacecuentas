@@ -101,7 +101,7 @@
 
 		useEffect( function () {
 			var alive = true;
-			fetch( ORIGIN + '/api/calcs-slim.json' )
+			fetch( ORIGIN + '/api/embed-calcs.json' )
 				.then( function ( r ) {
 					return r.ok ? r.json() : Promise.reject( r.status );
 				} )
@@ -110,9 +110,6 @@
 						return;
 					}
 					var opts = ( Array.isArray( data ) ? data : [] )
-						.filter( function ( x ) {
-							return ! x.l; // sólo calcs AR (tienen /embed/<slug>)
-						} )
 						.map( function ( x ) {
 							return { value: x.s, label: x.t || x.s };
 						} );
@@ -195,7 +192,7 @@
 					icon: 'calculator',
 					label: __( 'Calculadora Hacé Cuentas', 'hacecuentas-calculadoras' ),
 					instructions: __(
-						'Elegí una de las más usadas o buscá entre más de 2700.',
+						'Elegí una de las más usadas o buscá entre todas las disponibles.',
 						'hacecuentas-calculadoras'
 					),
 				},
@@ -213,7 +210,7 @@
 					el(
 						'a',
 						{
-							href: ORIGIN + '/calculadoras',
+							href: ORIGIN + '/buscar',
 							target: '_blank',
 							rel: 'noopener',
 							style: {

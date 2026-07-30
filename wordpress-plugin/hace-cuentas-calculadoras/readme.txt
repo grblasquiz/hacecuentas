@@ -4,26 +4,26 @@ Tags: calculator, embed, shortcode, finance, block
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Embed interactive calculators (salary, taxes, BMI, loans, VAT and 2700+ more) into your posts and pages with a block or a shortcode.
+Embed interactive calculators (salary, taxes, BMI, loans, VAT and hundreds more) into your posts and pages with a block or a shortcode.
 
 == Description ==
 
-**Hacé Cuentas — Calculadoras** lets you embed any of the 2700+ calculators from [hacecuentas.com](https://hacecuentas.com) directly into your WordPress site, without touching code. The calculators are aimed at a Spanish-speaking (mainly Argentine) audience and cover finance, taxes, payroll, health and everyday math.
+**Hacé Cuentas — Calculadoras** lets you embed hundreds of calculators from [hacecuentas.com](https://hacecuentas.com) directly into your WordPress site, without touching code. The calculators are aimed at a Spanish-speaking (mainly Argentine) audience and cover finance, taxes, payroll, health and everyday math.
 
 It is ideal for accounting firms, personal-finance blogs, HR consultancies, real-estate sites, health/fitness sites and media outlets: you add an interactive tool your readers use **without leaving your page**.
 
 = Features =
 
-* **Gutenberg block** with one-click buttons for the most-used calculators, a search box across all 2700+, and a live preview inside the editor.
+* **Gutenberg block** with one-click buttons for the most-used calculators, a searchable catalog, and a live preview inside the editor.
 * **Shortcode** `[hacecuentas slug="calculadora-monotributo-2026"]` for the classic editor or widgets.
 * **Auto-embed by URL**: paste a calculator link in the block editor and it turns into an embed automatically (via oEmbed).
 * **Responsive**: the embed adapts to your content width and adjusts its height automatically.
 * **Optional source link**: if you want, you can enable a credit link back to Hacé Cuentas below the calculator. Off by default — you decide.
-* **Private and lightweight**: calculations run in the visitor's browser. No visitor data is sent to any server and it does not load heavy libraries on your site.
+* **Private and lightweight**: no signup or tracking is required, and the plugin does not load heavy libraries on your site.
 * **Free and no signup.**
 
 = Some popular calculators =
@@ -42,11 +42,11 @@ It is ideal for accounting firms, personal-finance blogs, HR consultancies, real
 
 This plugin connects to **hacecuentas.com**, a service operated by the plugin author, to display the calculators. It relies on it in two ways:
 
-1. **Calculator catalog API** — `https://hacecuentas.com/api/calcs-slim.json`
+1. **Calculator catalog API** — `https://hacecuentas.com/api/embed-calcs.json`
    The plugin requests this public JSON (server-side, from your WordPress install) to map a calculator slug to its human-readable title, so the block picker and the optional credit link show the real calculator name. The request is made the first time a calculator is rendered and the result is cached for 12 hours. **No user or visitor data is sent** — it is a plain read of the public catalog.
 
-2. **Calculator embed** — `https://hacecuentas.com/embed/<slug>`
-   When a calculator is shown on the front end, it is loaded inside an iframe from hacecuentas.com. The visitor's browser loads the calculator from hacecuentas.com and all calculations run client-side inside that iframe. Whatever the visitor types into the calculator stays in their own browser; the plugin does not collect or transmit it.
+2. **Calculator embed and compute API** — `https://hacecuentas.com/embed/<slug>` and `https://hacecuentas.com/api/calc/<slug>/compute`
+   When a calculator is shown, the visitor's browser loads the iframe from hacecuentas.com. On submission, the entered calculator values are sent to hacecuentas.com solely to compute and return the result. The plugin does not create an account or add tracking.
 
 By using this plugin you rely on the hacecuentas.com service. Please review its terms and privacy policy:
 
@@ -83,11 +83,11 @@ Yes. The plugin and the calculators are 100% free and require no signup.
 
 = Does it load heavy scripts on my site? =
 
-No. The calculator is shown inside a lightweight iframe and the calculations run in the visitor's browser. The only script the plugin adds to your page is a small height-adjustment helper (a few KB).
+No. The calculator is shown inside a lightweight iframe. The only script the plugin adds to your page is a small height-adjustment helper (a few KB).
 
 = Is any visitor data sent anywhere? =
 
-No. Calculations happen client-side. The visitor enters their data and the result is computed in their own browser. See the "External services" section for details on the catalog request and the embed iframe.
+The values entered in the calculator are sent to hacecuentas.com when the visitor requests a result, solely to perform that calculation. The plugin itself does not create accounts or add tracking. See "External services" for details.
 
 = Does the plugin add links to my site without permission? =
 
@@ -111,10 +111,14 @@ It clears the temporary cache the plugin creates. No residual data is left behin
 
 == Screenshots ==
 
-1. The "Calculadora Hacé Cuentas" block: one-click buttons for the most-used calculators and a search box across all 2700+, inside the editor.
+1. The "Calculadora Hacé Cuentas" block: one-click buttons for the most-used calculators and a searchable catalog inside the editor.
 2. An embedded calculator, ready for the reader to use — with the optional credit linked back to Hacé Cuentas.
 
 == Changelog ==
+
+= 1.0.2 =
+* Restored the calculator picker and embedded widgets after the Hacé Cuentas catalog migration.
+* Updated the catalog endpoint and removed obsolete links.
 
 = 1.0.1 =
 * Readme translated to English and documented the external service (hacecuentas.com) with terms and privacy links.
@@ -123,6 +127,9 @@ It clears the temporary cache the plugin creates. No residual data is left behin
 * Initial release: Gutenberg block, shortcode and oEmbed auto-embed.
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+Restores the calculator picker and embedded widgets.
 
 = 1.0.1 =
 Readme and external-service documentation updated for the WordPress.org directory.

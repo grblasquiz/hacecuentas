@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import slim from '../../public/api/calcs-slim.json';
+import computeIndex from '../lib/calc-compute-index.json';
 
 // oEmbed JSON endpoint — https://oembed.com/
 //
@@ -20,10 +20,10 @@ export const prerender = false;
 
 const ORIGIN = 'https://hacecuentas.com';
 
-// slug -> título, sólo calcs AR (l === ''), que son las que tienen /embed/<slug>.
+// slug -> título para las calculadoras en español que tienen /embed/<slug>.
 const AR_TITLES = new Map<string, string>();
-for (const c of slim as Array<{ s: string; t: string; l: string }>) {
-  if (!c.l) AR_TITLES.set(c.s, c.t);
+for (const [slug, calc] of Object.entries(computeIndex as Record<string, { h?: string; loc?: string }>)) {
+  if (calc.loc === 'es' && calc.h) AR_TITLES.set(slug, calc.h);
 }
 
 function slugFromUrl(raw: string): string | null {
