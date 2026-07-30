@@ -9,7 +9,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import CuantaLecheBebeExperience from '../../components/generated/CuantaLecheBebeExperience.astro';
 import { hub, TABLA_EDAD, FORMULA, ETAPAS_SOLIDOS } from '../../lib/hubs/cuanta-leche-toma';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
@@ -48,95 +48,7 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={hub} />
+  <CuantaLecheBebeExperience data={hub} />
   <Footer />
 </Layout>
 
-<script is:inline define:vars={{ TABLA: TABLA_EDAD, F: FORMULA, SOLIDOS: ETAPAS_SOLIDOS }}>
-  (function () {
-    const H = window.HC_HUB;
-
-    H.onCompute(function (v, kase) {
-      const modo = (kase && kase.id) || 'formula';
-
-      const semanas = Math.max(0, Math.round(Number(v.semanas) || 0));
-      const peso = Math.max(0.5, Number(v.peso) || 5.5);
-      const precioLata = Math.max(0, Number(v.precioLata) || 0);
-      const meses = semanas / 4.33;
-
-      const fila = TABLA.find((f) => semanas <= f.semMax) || TABLA[TABLA.length - 1];
-      const tomas = fila.tomas;
-
-      // Volumen total del día, con el tope de 1.000 ml.
-      let mlDia = Math.min(fila.mlKgDia * peso, F.mlMaxDia);
-      const topeAplicado = fila.mlKgDia * peso > F.mlMaxDia;
-
-      // En mixta la fórmula cubre el 40% del total; el resto lo pone el pecho.
-      const esMixta = modo === 'mixta';
-      const mlFormula = esMixta ? mlDia * F.fraccionSuplementaria : (modo === 'pecho' ? 0 : mlDia);
-
-      const mlPorToma = mlDia / tomas;
-
-      // Polvo y latas: sólo tienen sentido si hay fórmula de por medio.
-      const gPolvoDia = mlFormula / F.mlPorGramoPolvo;
-      const gPolvoMes = gPolvoDia * F.diasMes;
-      const latasMes = Math.ceil(gPolvoMes / F.gramosPorLata);
-      const costoMes = precioLata > 0 ? latasMes * precioLata : 0;
-
-      const rows = [];
-      const r0 = (x) => Math.round(x);
-
-      rows.push({ k: 'Volumen total del día', ref: fila.mlKgDia + ' ml/kg', v: r0(mlDia), format: 'unit', unit: 'ml', extra: true });
-      rows.push({ k: 'Mililitros por toma', ref: tomas + ' tomas', v: r0(mlPorToma), format: 'unit', unit: 'ml' });
-      rows.push({ k: 'Tomas por día', v: tomas, format: 'plain' });
-      rows.push({ k: 'Equivalente en onzas', ref: '1 oz = 29,57 ml', v: Math.round((mlDia / F.mlPorOnza) * 10) / 10, format: 'unit', unit: 'oz', decimals: 1 });
-
-      if (modo !== 'pecho') {
-        if (esMixta) {
-          rows.push({ k: 'De eso, fórmula', ref: '40% del total', v: r0(mlFormula), format: 'unit', unit: 'ml', extra: true });
-          rows.push({ k: 'De eso, pecho', ref: 'no se mide en ml', v: r0(mlDia - mlFormula), format: 'unit', unit: 'ml' });
-        }
-        rows.push({ k: 'Polvo por día', ref: '1 g cada 7 ml', v: Math.round(gPolvoDia * 10) / 10, format: 'unit', unit: 'g', decimals: 1 });
-        rows.push({ k: 'Polvo por mes', ref: '30,4 días', v: r0(gPolvoMes), format: 'unit', unit: 'g' });
-        rows.push({ k: 'Latas de 400 g por mes', v: latasMes, format: 'plain', extra: true });
-        if (costoMes > 0) rows.push({ k: 'Gasto mensual en fórmula', ref: 'precio × latas', v: costoMes, format: 'ars' });
-      }
-
-      // Sólidos: la etapa se define por meses cumplidos.
-      const etapa = SOLIDOS.find((e) => meses <= e.hastaMeses) || SOLIDOS[SOLIDOS.length - 1];
-      if (modo === 'solidos' || meses >= 6) {
-        rows.push({ k: 'Comidas de sólidos por día', ref: etapa.titulo, v: etapa.comidas, format: 'plain' });
-        rows.push({ k: 'Cucharadas por comida', v: etapa.cucharadas, format: 'plain' });
-      }
-
-      // Gráfico: el reparto del volumen del día en tres franjas horarias.
-      const manana = mlDia * 0.4, tarde = mlDia * 0.35, noche = mlDia * 0.25;
-
-      let sub =
-        peso.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' kg a las ' + semanas + ' semanas · ' +
-        fila.mlKgDia + ' ml/kg/día · ' + r0(mlPorToma) + ' ml en cada una de las ' + tomas + ' tomas';
-      if (modo === 'pecho') {
-        sub += ' · con pecho exclusivo es sólo referencia: el bebé regula';
-      } else if (esMixta) {
-        sub += ' · la fórmula cubre ' + r0(mlFormula) + ' ml y el resto el pecho';
-      } else {
-        sub += ' · ' + latasMes + ' lata' + (latasMes === 1 ? '' : 's') + ' de 400 g al mes';
-      }
-      if (topeAplicado) sub += ' · tope de 1.000 ml aplicado';
-      if (meses >= 6) sub += ' · ' + etapa.titulo.toLowerCase();
-
-      return {
-        total: r0(mlDia).toLocaleString('es-AR') + ' ml',
-        sub: sub,
-        rows: rows,
-        format: 'unit',
-        unit: 'ml',
-        chart: [
-          { label: 'Tomas de la mañana', value: r0(manana), tone: 'main' },
-          { label: 'Tomas de la tarde', value: r0(tarde), tone: 'exit' },
-          { label: 'Tomas de la noche', value: r0(noche), tone: 'prop' },
-        ],
-      };
-    });
-  })();
-</script>

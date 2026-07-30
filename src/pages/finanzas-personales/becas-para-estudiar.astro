@@ -15,7 +15,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import BecasEstudiarExperience from '../../components/generated/BecasEstudiarExperience.astro';
 import { hub, CASE_MATH } from '../../lib/hubs/becas-para-estudiar';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
@@ -54,80 +54,7 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={hub} />
+  <BecasEstudiarExperience data={hub} />
   <Footer />
 </Layout>
 
-<script is:inline define:vars={{ MATH: CASE_MATH }}>
-  (function () {
-    const H = window.HC_HUB;
-
-    H.onCompute(function (v, kase) {
-      const id = (kase && kase.id) || 'progresar-superior';
-      const ref = MATH.becas[id] || MATH.becas['progresar-superior'];
-      const PCT = MATH.pctRetencion;
-
-      // Cuota: 0 = usar el monto de referencia de la línea elegida.
-      const cuota = Math.max(0, Number(v.cuota) || 0) || ref.monto;
-      const cuotas = Math.min(12, Math.max(1, Math.round(Number(v.cuotas) || ref.cuotas)));
-      const certifica = String(v.certifica || 'si') === 'si';
-
-      // Espejo de src/lib/formulas/progresar-retencion-2026.ts:
-      // se acredita el 80% por mes y el 20% se libera al certificar.
-      const retiene = ref.retiene;
-      const cobroMensual = retiene ? cuota * (1 - PCT) : cuota;
-      const retenidoMensual = cuota - cobroMensual;
-      const totalMensualAnual = cobroMensual * cuotas;
-      const retenidoAcumulado = retenidoMensual * cuotas;
-      const totalSiCertifica = totalMensualAnual + retenidoAcumulado;
-      const totalAnual = certifica ? totalSiCertifica : totalMensualAnual;
-
-      const rows = [
-        { k: 'Cuota bruta de la beca', ref: 'Monto publicado', v: cuota },
-        { k: 'Lo que te acreditan por mes', ref: retiene ? 'El 80% de la cuota' : 'Sin retención', v: cobroMensual, extra: true },
-      ];
-      if (retiene) {
-        rows.push({ k: 'Lo que te retienen por mes', ref: 'Hasta acreditar alumno regular', v: retenidoMensual });
-      }
-      rows.push({ k: 'Cuotas del año', ref: 'Según convocatoria', v: cuotas, format: 'unit', unit: 'cuotas' });
-      rows.push({ k: 'Acreditado mes a mes en el año', ref: 'Suma de las ' + cuotas + ' cuotas', v: totalMensualAnual });
-      if (retiene) {
-        rows.push({
-          k: certifica ? 'Retención que cobrás al certificar' : 'Retención que quedaría sin cobrar',
-          ref: 'Pago único',
-          v: retenidoAcumulado,
-        });
-      }
-      rows.push({ k: 'Total del año', ref: certifica ? 'Con la certificación al día' : 'Sin certificar', v: totalAnual, extra: true });
-      rows.push({
-        k: 'Porcentaje retenido de cada cuota',
-        ref: 'Condición de regularidad',
-        v: retiene ? PCT * 100 : 0,
-        format: 'unit',
-        unit: '%',
-        decimals: 1,
-      });
-
-      const sub =
-        (retiene
-          ? 'Te acreditan ' + H.ars(cobroMensual) + ' por mes y retienen ' + H.ars(retenidoMensual)
-          : 'Cobrás ' + H.ars(cuota) + ' por mes, sin retención') +
-        ' · ' + cuotas + (cuotas === 1 ? ' cuota' : ' cuotas') + ' en el año' +
-        (retiene && !certifica ? ' · sin certificar quedan ' + H.ars(retenidoAcumulado) + ' sin liberar' : '');
-
-      return {
-        total: H.ars(totalAnual),
-        sub: sub,
-        rows: rows,
-        chart: [
-          { label: 'Acreditado mes a mes', value: totalMensualAnual, tone: 'main' },
-          {
-            label: certifica ? 'Retenido, liberado al certificar' : 'Retenido sin liberar',
-            value: retenidoAcumulado,
-            tone: certifica ? 'good' : 'warn',
-          },
-        ],
-      };
-    });
-  })();
-</script>

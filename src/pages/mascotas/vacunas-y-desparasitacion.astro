@@ -12,7 +12,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import VacunasMascotasExperience from '../../components/generated/VacunasMascotasExperience.astro';
 import {
   hub,
   CALENDARIO_PERRO,
@@ -58,128 +58,7 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={hub} />
+  <VacunasMascotasExperience data={hub} />
   <Footer />
 </Layout>
 
-<script is:inline define:vars={{ CALENDARIO_PERRO, CALENDARIO_GATO, TALLES_PERRO, TALLES_GATO, CASTRACION }}>
-  (function () {
-    const H = window.HC_HUB;
-
-    // Acá NO hay dinero salvo la referencia de castración, que va explícita.
-    const MESES = { format: 'unit', unit: 'meses', decimals: 1 };
-    const MESES0 = { format: 'unit', unit: 'meses', decimals: 0 };
-    const SEM = { format: 'unit', unit: 'semanas', decimals: 0 };
-    const KG = { format: 'unit', unit: 'kg', decimals: 1 };
-    const DIAS = { format: 'unit', unit: 'días', decimals: 0 };
-    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
-
-    const dec = (n, d) =>
-      Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
-    const pesos = (n) => '$' + Number(Math.round(n) || 0).toLocaleString('es-AR');
-
-    function talle(peso, tabla) {
-      for (let i = 0; i < tabla.length; i++) {
-        if (peso <= tabla[i].hasta) return tabla[i].label;
-      }
-      return tabla[tabla.length - 1].label;
-    }
-
-    /** Próximo hito del calendario: el primero cuyo `desde` supera la edad. */
-    function proximo(edad, calendario) {
-      for (let i = 0; i < calendario.length; i++) {
-        if (edad < calendario[i].desde) return calendario[i];
-      }
-      return calendario[calendario.length - 1];
-    }
-
-    H.onCompute(function (v, caso) {
-      const especie = String(caso || 'perro');
-      const edad = Math.max(0, Math.min(240, Number(v.edadMeses) || 0));
-      const peso = Math.max(0, Math.min(80, Number(v.peso) || 0));
-      const vacunado = String(v.vacunado || 'si') === 'si';
-      const sale = String(v.sale || 'no') === 'si';
-      const sexo = String(v.sexo || 'macho');
-      const tamano = String(v.tamano || 'mediano');
-
-      if (!edad) {
-        return { total: '—', sub: 'Ingresá la edad de tu animal en meses.', rows: [], chart: [] };
-      }
-
-      const calendario = especie === 'gato' ? CALENDARIO_GATO : CALENDARIO_PERRO;
-      const sig = proximo(edad, calendario);
-      const faltaMeses = Math.max(0, sig.desde - edad);
-
-      const claveCastra =
-        especie === 'gato' ? 'gato_' + sexo : 'perro_' + tamano + '_' + sexo;
-      const C = CASTRACION[claveCastra] || CASTRACION.perro_mediano_macho;
-
-      let estadoCastra;
-      if (edad < C.mesesMin) estadoCastra = 'faltan ' + dec(C.mesesMin - edad, 1) + ' meses para la ventana';
-      else if (edad <= C.mesesMax) estadoCastra = 'está dentro de la ventana ideal';
-      else estadoCastra = 'ya pasó la ventana, pero sigue conviniendo castrar';
-
-      const tabla = especie === 'gato' ? TALLES_GATO : TALLES_PERRO;
-      const talleTexto = peso > 0 ? talle(peso, tabla) : 'cargá el peso';
-
-      // Etapa sanitaria en el calendario.
-      const finEsquema = especie === 'gato' ? 3.7 : 3.5;
-      let etapa;
-      if (!vacunado && edad >= finEsquema) etapa = 'sin cobertura: hay que reiniciar el esquema';
-      else if (edad < 1.5) etapa = 'todavía sin edad de primera vacuna';
-      else if (edad < finEsquema) etapa = 'esquema cachorro en curso — sin protección completa';
-      else if (edad < 12) etapa = 'esquema completo, esperando el refuerzo del año';
-      else etapa = 'calendario adulto de refuerzos anuales';
-
-      const rows = [
-        row('Edad de tu animal', edad, MESES, false, etapa),
-        row('Edad en semanas', edad * 4.345, SEM, false, 'para leer el calendario'),
-        row('Faltan para la próxima dosis', faltaMeses, MESES, true, sig.vacuna),
-        row('Esa dosis corresponde a los', sig.desde, MESES, false, sig.edad),
-        row('Desparasitación externa', 30, DIAS, false, 'pipeta o comprimido mensual · Bravecto cada 90'),
-        row('Desparasitación interna', edad < 6 ? 30 : 100, DIAS, false, edad < 6 ? 'cachorro: cada 15 a 30 días' : 'adulto: cada 3 a 4 meses'),
-        row('Ventana de castración — desde', C.mesesMin, MESES0, false, C.ideal),
-        row('Ventana de castración — hasta', C.mesesMax, MESES0, true, estadoCastra),
-      ];
-
-      if (peso > 0) {
-        rows.splice(5, 0, row('Peso para elegir el talle', peso, KG, false, talleTexto));
-      }
-
-      // El calendario cubre hasta los 18 meses en la barra.
-      const tope = 18;
-      const pos = Math.max(0, Math.min(100, (Math.min(edad, tope) / tope) * 100));
-
-      const bandas = [
-        { label: 'Sin cobertura', from: 0, to: 1.5, tone: 'bad' },
-        { label: 'Esquema en curso', from: 1.5, to: finEsquema, tone: 'warn' },
-        { label: 'Cobertura completa', from: finEsquema, to: 12, tone: 'good' },
-        { label: 'Refuerzo anual', from: 12, to: tope, tone: 'main' },
-      ];
-
-      const subPartes = [
-        etapa,
-        'próxima: ' + sig.vacuna,
-        peso > 0 ? 'pipeta ' + talleTexto : 'cargá el peso para el talle de pipeta',
-        'castración ' + estadoCastra + ' (' + pesos(C.costoMin) + ' a ' + pesos(C.costoMax) + ')',
-      ];
-      if (especie === 'gato') {
-        subPartes.push(sale ? 'sale a la calle: suma leucemia felina (FeLV) con test previo' : 'indoor: no necesita FeLV');
-      } else if (edad < finEsquema) {
-        subPartes.push('todavía no lo saques a la calle');
-      }
-
-      return {
-        total: sig.vacuna,
-        sub: subPartes.join(' · '),
-        rows: rows,
-        chart: bandas,
-        format: 'unit',
-        unit: 'meses',
-        decimals: 1,
-        position: Number(pos.toFixed(1)),
-        positionLabel: dec(edad, 1) + ' meses · ' + etapa,
-      };
-    });
-  })();
-</script>

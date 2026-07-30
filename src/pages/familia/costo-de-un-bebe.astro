@@ -9,7 +9,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import CostoBebeExperience from '../../components/generated/CostoBebeExperience.astro';
 import {
   hub, PRECIO_PANAL, CAMBIOS_POR_DIA, JARDIN, FORMULA, RATIO_VARIOS,
 } from '../../lib/hubs/costo-de-un-bebe';
@@ -50,136 +50,7 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={hub} />
+  <CostoBebeExperience data={hub} />
   <Footer />
 </Layout>
 
-<script
-  is:inline
-  define:vars={{ PANAL: PRECIO_PANAL, CAMBIOS: CAMBIOS_POR_DIA, J: JARDIN, F: FORMULA, VARIOS: RATIO_VARIOS }}
->
-  (function () {
-    const H = window.HC_HUB;
-
-    H.onCompute(function (v, kase) {
-      const modo = (kase && kase.id) || 'casa';
-
-      const edadMeses = Math.max(0, Number(v.edadMeses) || 0);
-      const pesoBebe = Math.max(1, Number(v.pesoBebe) || 7.5);
-      const marca = String(v.marca || 'huggies');
-      const precioLata = Math.max(0, Number(v.precioLata) || 0);
-
-      // ── Pañales ────────────────────────────────────────────────────────────
-      const etapa = CAMBIOS.find((c) => edadMeses < c.hastaMeses) || CAMBIOS[CAMBIOS.length - 1];
-      const tabla = PANAL[marca] || PANAL.huggies;
-      const precioUnitario = tabla[etapa.talle] || tabla.m;
-      const panalesMes = etapa.cambios * 30;
-      const costoPanales = Math.round(panalesMes * precioUnitario);
-
-      // ── Fórmula ────────────────────────────────────────────────────────────
-      // Mismo modelo que /bebes/cuanta-leche-toma: ml/kg/día baja con la edad.
-      const mlKgDia = edadMeses < 1 ? 150 : edadMeses < 2 ? 140 : edadMeses < 4 ? 130 : edadMeses < 6 ? 120 : 110;
-      const mlDia = Math.min(mlKgDia * pesoBebe, F.mlMaxDia);
-      const gPolvoMes = (mlDia / F.mlPorGramoPolvo) * F.diasMes;
-      const latasMes = Math.ceil(gPolvoMes / F.gramosPorLata);
-      const costoLeche = precioLata > 0 ? latasMes * precioLata : 0;
-
-      // ── Jardín ─────────────────────────────────────────────────────────────
-      const tipo = String(v.tipoJardin || 'privado_medio');
-      const turno = String(v.turno || 'completo');
-      const zona = String(v.zona || 'caba');
-      const comida = String(v.comida || 'si');
-      // La sala se deriva de la edad: es el ratio docente/niño lo que la encarece.
-      const sala = edadMeses < 4 ? 'lactario' : edadMeses < 12 ? 'cuna' : edadMeses < 24 ? 'sala1' : 'sala2';
-
-      const baseZona = J.baseZona[zona] !== undefined ? J.baseZona[zona] : J.baseZona.interior_medio;
-      const fTipo = J.factorTipo[tipo] !== undefined ? J.factorTipo[tipo] : 1;
-      const fSala = J.factorSala[sala] !== undefined ? J.factorSala[sala] : 1;
-      const fTurno = J.factorTurno[turno] !== undefined ? J.factorTurno[turno] : 1;
-      const rMat = J.ratioMatricula[tipo] !== undefined ? J.ratioMatricula[tipo] : 1.5;
-
-      const cuotaBase = baseZona * fTipo * fSala * fTurno;
-      const cuota = cuotaBase + (comida === 'si' ? J.adicionalComida : 0);
-      const extras = cuotaBase * J.ratioExtras;
-      const matricula = cuota * rMat;
-      // La matrícula se paga una vez: acá se prorratea sobre el ciclo lectivo.
-      const matriculaMes = matricula / J.mesesCiclo;
-      const jardinMes = tipo === 'estatal' ? 0 : cuota + extras + matriculaMes;
-      const jardinAnual = tipo === 'estatal' ? 0 : (cuota + extras) * J.mesesCiclo + matricula;
-
-      const varios = Math.round((costoPanales + costoLeche) * VARIOS);
-
-      const salaLabel = { lactario: 'lactario', cuna: 'sala cuna', sala1: 'sala de 1', sala2: 'sala de 2' }[sala];
-      const turnoLabel = { simple: 'turno simple (4 hs)', extendido: 'turno extendido (6 hs)', completo: 'jornada completa (8 hs)' }[turno];
-
-      const rows = [];
-      let total, sub, chart;
-
-      if (modo === 'solo-jardin') {
-        rows.push({ k: 'Cuota mensual', ref: salaLabel + ' · ' + turnoLabel, v: Math.round(cuota), extra: true });
-        rows.push({ k: 'Extras mensuales', ref: 'materiales, seguro, cooperadora', v: Math.round(extras) });
-        rows.push({ k: 'Matrícula (pago único)', ref: rMat + '× la cuota', v: Math.round(matricula), extra: true });
-        rows.push({ k: 'Matrícula prorrateada por mes', ref: J.mesesCiclo + ' meses de ciclo', v: Math.round(matriculaMes) });
-        rows.push({ k: 'Costo mensual efectivo', v: Math.round(jardinMes), extra: true });
-        rows.push({ k: 'Costo anual total', v: Math.round(jardinAnual) });
-        rows.push({ k: 'Meses del ciclo lectivo', v: J.mesesCiclo, format: 'plain' });
-
-        total = tipo === 'estatal' ? 'Sin cuota' : H.ars(jardinMes);
-        sub = tipo === 'estatal'
-          ? 'Jardín estatal: no cobra cuota ni matrícula, pero las vacantes son muy limitadas. Anotate apenas abra la inscripción.'
-          : salaLabel + ' · ' + turnoLabel + ' · cuota ' + H.ars(cuota) + ' + extras ' + H.ars(extras) +
-            ' + matrícula prorrateada ' + H.ars(matriculaMes) + ' · anual ' + H.ars(jardinAnual);
-        chart = [
-          { label: 'Cuotas del ciclo', value: Math.round(cuota * J.mesesCiclo), tone: 'main' },
-          { label: 'Extras del ciclo', value: Math.round(extras * J.mesesCiclo), tone: 'exit' },
-          { label: 'Matrícula', value: Math.round(matricula), tone: 'prop' },
-        ];
-
-      } else {
-        const conJardin = modo === 'jardin' || modo === 'anual';
-        const mesTotal = costoPanales + costoLeche + varios + (conJardin ? jardinMes : 0);
-
-        rows.push({ k: 'Pañales del mes', ref: etapa.cambios + ' cambios/día · talle ' + etapa.talle.toUpperCase(), v: costoPanales, extra: true });
-        rows.push({ k: 'Pañales por mes', ref: 'unidades', v: panalesMes, format: 'plain' });
-        rows.push({ k: 'Precio unitario del pañal', ref: marca + ' · julio 2026', v: precioUnitario });
-        if (precioLata > 0) {
-          rows.push({ k: 'Leche de fórmula del mes', ref: latasMes + ' latas de 400 g', v: costoLeche, extra: true });
-          rows.push({ k: 'Latas por mes', v: latasMes, format: 'plain' });
-        }
-        rows.push({ k: 'Ropa, higiene y farmacia', ref: '25% de pañales + leche', v: varios });
-        if (conJardin) {
-          rows.push({ k: 'Jardín maternal por mes', ref: salaLabel + ' · ' + turnoLabel, v: Math.round(jardinMes), extra: true });
-        }
-
-        if (modo === 'anual') {
-          rows.push({ k: 'Pañales en 12 meses', v: costoPanales * 12 });
-          if (precioLata > 0) rows.push({ k: 'Leche en 12 meses', v: costoLeche * 12 });
-          rows.push({ k: 'Varios en 12 meses', v: varios * 12 });
-          rows.push({ k: 'Jardín en el ciclo lectivo', ref: J.mesesCiclo + ' meses + matrícula', v: Math.round(jardinAnual) });
-          const anual = (costoPanales + costoLeche + varios) * 12 + jardinAnual;
-          rows.push({ k: 'Total del año', v: Math.round(anual), extra: true });
-          total = H.ars(anual);
-          sub =
-            'Proyección a 12 meses a precios de hoy, con el consumo de un bebé de ' + edadMeses + ' meses · ' +
-            'no incluye inflación ni aumentos de cuota';
-        } else {
-          total = H.ars(mesTotal);
-          sub =
-            'Bebé de ' + edadMeses + ' meses y ' + pesoBebe.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' kg · ' +
-            etapa.cambios + ' pañales por día' +
-            (precioLata > 0 ? ' · ' + latasMes + ' latas de fórmula al mes' : ' · sin gasto en fórmula') +
-            (conJardin ? ' · con ' + salaLabel + ' a ' + turnoLabel : ' · todavía sin jardín');
-        }
-
-        chart = [
-          { label: 'Pañales', value: costoPanales, tone: 'main' },
-          { label: 'Leche de fórmula', value: costoLeche, tone: 'exit' },
-          { label: 'Ropa, higiene y farmacia', value: varios, tone: 'prop' },
-        ];
-        if (conJardin) chart.push({ label: 'Jardín maternal', value: Math.round(jardinMes), tone: 'warn' });
-      }
-
-      return { total: total, sub: sub, rows: rows, chart: chart };
-    });
-  })();
-</script>
