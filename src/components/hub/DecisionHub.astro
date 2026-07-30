@@ -13,6 +13,7 @@ import enCoreStyles from '../../mockups/approved/en-mockup-core.css?raw';
 import ptCoreStyles from '../../mockups/approved/pt-mockup-core.css?raw';
 import ptPtCoreStyles from '../../mockups/approved/pt-pt-mockup-core.css?raw';
 import clCoreStyles from '../../mockups/approved/cl-mockup-core.css?raw';
+import esMxCoreStyles from '../../mockups/approved/es-mx-individual-core.css?raw';
 
 export interface Props {
   data: HubData;
@@ -39,6 +40,16 @@ const approvedCl = import.meta.glob('../../mockups/approved/cl/*.html', {
   import: 'default',
   eager: true,
 }) as Record<string, string>;
+const approvedEs = import.meta.glob('../../mockups/approved/es/*.html', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+const approvedMx = import.meta.glob('../../mockups/approved/mx/*.html', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
 const leaf = data.slug.split('/').filter(Boolean).at(-1);
 const source = !leaf
   ? undefined
@@ -50,14 +61,20 @@ const source = !leaf
         ? approvedPtPt[`../../mockups/approved/pt-pt/${leaf}.html`]
         : data.locale === 'cl'
           ? approvedCl[`../../mockups/approved/cl/${leaf}.html`]
-          : undefined;
+          : data.locale === 'es'
+            ? approvedEs[`../../mockups/approved/es/${leaf}.html`]
+            : data.locale === 'mx'
+              ? approvedMx[`../../mockups/approved/mx/${leaf}.html`]
+              : undefined;
 const baseStyles = data.locale === 'pt'
   ? ptCoreStyles
   : data.locale === 'pt-pt'
     ? ptPtCoreStyles
     : data.locale === 'cl'
       ? clCoreStyles
-      : enCoreStyles;
+      : data.locale === 'es' || data.locale === 'mx'
+        ? esMxCoreStyles
+        : enCoreStyles;
 ---
 
 {source
