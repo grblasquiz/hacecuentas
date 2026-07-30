@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Percentages · UX mockup</title>
+    <link rel="stylesheet" href="en-mockup-core.css" />
+    <style>
+      :root {
+        --blue: #376b7a;
+        --yellow: #e1b24b;
+      }
+      .hero {
+        padding: 45px 22px;
+        background: #fff8e3;
+      }
+      .g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 42px;
+        align-items: center;
+      }
+      .hundred {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 3px;
+        width: 270px;
+        margin: auto;
+      }
+      .hundred i {
+        aspect-ratio: 1;
+        background: #e8e9e6;
+        border-radius: 3px;
+      }
+      .hundred i:nth-child(-n + 37) {
+        background: var(--yellow);
+      }
+      .lab {
+        padding: 55px 22px;
+      }
+      .card {
+        padding: 24px;
+      }
+      .questions {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 9px;
+      }
+      .questions button {
+        padding: 15px;
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 12px;
+        font-weight: 800;
+      }
+      .questions .active {
+        background: var(--blue);
+        color: #fff;
+      }
+      .work {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .formula {
+        padding: 25px;
+        background: #f3f6f5;
+        border-radius: 15px;
+      }
+      .formula input {
+        width: 120px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        font-size: 24px;
+        font-weight: 900;
+      }
+      .answer {
+        padding: 25px;
+        background: var(--blue);
+        color: #fff;
+        border-radius: 15px;
+      }
+      .answer strong {
+        font-size: 48px;
+        display: block;
+      }
+      .explain {
+        margin-top: 15px;
+        padding: 13px;
+        background: #fff5d7;
+        color: #5b4b21;
+        border-radius: 11px;
+      }
+      @media (max-width: 800px) {
+        .g {
+          grid-template-columns: 1fr;
+        }
+        .hundred {
+          transform: scale(0.8);
+        }
+        .questions {
+          grid-template-columns: 1fr 1fr;
+        }
+        .work {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <div class="hc-brand"><span class="hc-logo">HC</span>Hacé Cuentas</div>
+      <nav class="hc-nav">
+        <span>Math</span><span>Money</span><span>School</span>
+      </nav>
+      <div class="hc-tools"><button>Search</button><button>US ▾</button></div>
+    </header>
+    <section class="hero">
+      <div class="wrap g">
+        <div>
+          <div class="crumb">Math / Percentages</div>
+          <div class="eyebrow" style="color: #8b6a17; margin-top: 22px">
+            Choose the question first
+          </div>
+          <h1 class="display">
+            Percent is easy once you know what is the whole.
+          </h1>
+          <p class="lead">
+            Solve part-of, change, markup and reverse-percentage questions with
+            the relationship shown.
+          </p>
+        </div>
+        <div class="hundred" id="hundred"></div>
+      </div>
+    </section>
+    <section class="lab">
+      <div class="wrap card">
+        <div class="questions">
+          <button class="active" data-q="part">What is X% of Y?</button
+          ><button data-q="rate">X is what % of Y?</button
+          ><button data-q="change">% change</button
+          ><button data-q="reverse">Before discount</button>
+        </div>
+        <div class="work">
+          <div class="formula">
+            <h2 id="prompt">
+              What is <input id="x" value="15" /> % of
+              <input id="y" value="240" />?
+            </h2>
+          </div>
+          <div class="answer">
+            <small>Answer</small><strong id="answer">36</strong>
+            <div class="explain" id="explain">
+              15% = 0.15, then 0.15 × 240 = 36.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer class="foot">
+      Production keeps the original header and footer.
+    </footer>
+    <script>
+      (() => {
+        document.querySelector("#hundred").innerHTML = "<i></i>".repeat(100);
+        let q = "part";
+        const $ = (s) => document.querySelector(s);
+        function draw() {
+          let x = +$("#x").value,
+            y = +$("#y").value,
+            a = 0,
+            e = "";
+          if (q === "part") {
+            a = (x / 100) * y;
+            e = `${x}% = ${(x / 100).toFixed(2)}, then × ${y}.`;
+          }
+          if (q === "rate") {
+            a = (x / y) * 100;
+            e = `Part ÷ whole × 100.`;
+          }
+          if (q === "change") {
+            a = ((y - x) / x) * 100;
+            e = `(${y} − ${x}) ÷ ${x} × 100.`;
+          }
+          if (q === "reverse") {
+            a = y / (1 - x / 100);
+            e = `Final ÷ (1 − discount).`;
+          }
+          $("#answer").textContent = Number.isFinite(a) ? a.toFixed(2) : "—";
+          $("#explain").textContent = e;
+        }
+        document.querySelectorAll("[data-q]").forEach(
+          (b) =>
+            (b.onclick = () => {
+              document
+                .querySelectorAll("[data-q]")
+                .forEach((x) => x.classList.remove("active"));
+              b.classList.add("active");
+              q = b.dataset.q;
+              draw();
+            }),
+        );
+        document.querySelectorAll("input").forEach((x) => (x.oninput = draw));
+        draw();
+      })();
+    </script>
+  </body>
+</html>

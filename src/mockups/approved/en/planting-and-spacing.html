@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Planting & spacing · UX mockup</title>
+    <link rel="stylesheet" href="en-mockup-core.css" />
+    <style>
+      :root {
+        --blue: #35705e;
+        --soil: #8c6444;
+        --leaf: #5a9b63;
+      }
+      .hero {
+        padding: 45px 22px;
+        background: #f2f8ef;
+      }
+      .g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 45px;
+        align-items: center;
+      }
+      .bedart {
+        height: 280px;
+        background: #a77b54;
+        transform: skewY(-5deg);
+        border: 12px solid #6d4d35;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        padding: 30px;
+      }
+      .plant {
+        width: 36px;
+        height: 36px;
+        background: var(--leaf);
+        border-radius: 50% 5% 50% 5%;
+        transform: rotate(45deg);
+        justify-self: center;
+      }
+      .planner {
+        padding: 55px 22px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 20px;
+      }
+      .card {
+        padding: 24px;
+      }
+      .field {
+        margin-top: 13px;
+      }
+      .bed {
+        display: grid;
+        gap: 7px;
+        background: #9a704d;
+        padding: 18px;
+        border: 10px solid #704e34;
+        border-radius: 8px;
+        min-height: 340px;
+      }
+      .cell {
+        background: #724f34;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        color: #d8efc5;
+        font-size: 22px;
+      }
+      .stats {
+        display: flex;
+        gap: 9px;
+        margin-top: 14px;
+      }
+      .stats > div {
+        flex: 1;
+        background: #f0f6ef;
+        padding: 12px;
+        border-radius: 11px;
+      }
+      .stats strong {
+        display: block;
+        font-size: 22px;
+      }
+      @media (max-width: 800px) {
+        .g,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .bedart {
+          height: 210px;
+        }
+        .bed {
+          min-height: 280px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <div class="hc-brand"><span class="hc-logo">HC</span>Hacé Cuentas</div>
+      <nav class="hc-nav">
+        <span>Garden</span><span>Home</span><span>Life</span>
+      </nav>
+      <div class="hc-tools"><button>Search</button><button>US ▾</button></div>
+    </header>
+    <section class="hero">
+      <div class="wrap g">
+        <div>
+          <div class="crumb">Garden / Planting & spacing</div>
+          <div class="eyebrow" style="color: var(--leaf); margin-top: 22px">
+            Design the bed first
+          </div>
+          <h1 class="display">Give every plant the room it becomes.</h1>
+          <p class="lead">
+            Turn bed dimensions and crop spacing into a visual planting map with
+            realistic plant counts.
+          </p>
+        </div>
+        <div class="bedart" id="bedart"></div>
+      </div>
+    </section>
+    <section class="planner">
+      <div class="wrap grid">
+        <aside class="card">
+          <h2>Your garden bed</h2>
+          <div class="field">
+            <label>Crop</label
+            ><select id="crop">
+              <option value="12">Tomato · 24 in</option>
+              <option value="6">Lettuce · 12 in</option>
+              <option value="3">Carrot · 6 in</option>
+              <option value="9">Pepper · 18 in</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Length (ft)</label
+            ><input id="length" type="number" value="8" />
+          </div>
+          <div class="field">
+            <label>Width (ft)</label
+            ><input id="width" type="number" value="4" />
+          </div>
+          <div class="field">
+            <label>Layout</label
+            ><select id="layout">
+              <option value="1">Rows</option>
+              <option value="1.15">Staggered</option>
+            </select>
+          </div>
+        </aside>
+        <div class="card">
+          <div class="eyebrow" style="color: var(--blue)">Planting map</div>
+          <div class="bed" id="bed"></div>
+          <div class="stats">
+            <div><small>Plants</small><strong id="count">8</strong></div>
+            <div><small>Rows</small><strong id="rows">2</strong></div>
+            <div><small>Spacing</small><strong id="space">24 in</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer class="foot">
+      Production keeps the original header and footer.
+    </footer>
+    <script>
+      (() => {
+        document.querySelector("#bedart").innerHTML = '<i class="plant"></i>'.repeat(12);
+        const $ = (s) => document.querySelector(s);
+        function draw() {
+          let s = +$("#crop").value * 2,
+            l = +$("#length").value * 12,
+            w = +$("#width").value * 12,
+            k = +$("#layout").value,
+            cols = Math.max(1, Math.floor(l / s)),
+            rows = Math.max(1, Math.floor(w / s)),
+            n = Math.floor(cols * rows * k);
+          $("#bed").style.gridTemplateColumns = `repeat(${cols},1fr)`;
+          $("#bed").innerHTML = '<i class="cell">●</i>'.repeat(n);
+          $("#count").textContent = n;
+          $("#rows").textContent = rows;
+          $("#space").textContent = s + " in";
+        }
+        document
+          .querySelectorAll("input,select")
+          .forEach((x) => (x.oninput = draw));
+        draw();
+      })();
+    </script>
+  </body>
+</html>

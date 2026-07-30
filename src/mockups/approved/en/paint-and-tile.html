@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Paint & tile · UX mockup</title>
+    <link rel="stylesheet" href="en-mockup-core.css" />
+    <style>
+      :root {
+        --blue: #376e78;
+        --paint: #d66f58;
+      }
+      .hero {
+        padding: 45px 22px;
+        background: #fff5ee;
+      }
+      .g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 42px;
+        align-items: center;
+      }
+      .wall {
+        height: 280px;
+        background: #f1d9c7;
+        position: relative;
+        border: 12px solid #c99d78;
+      }
+      .roller {
+        position: absolute;
+        width: 150px;
+        height: 60px;
+        background: var(--paint);
+        left: 25%;
+        top: 55px;
+        border-radius: 12px;
+      }
+      .roller:after {
+        content: "";
+        position: absolute;
+        left: 65px;
+        top: 55px;
+        width: 12px;
+        height: 125px;
+        background: #687b7e;
+      }
+      .tiles {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 45%;
+        height: 55%;
+        background:
+          repeating-linear-gradient(0deg, transparent 0 38px, #fff 39px 42px),
+          repeating-linear-gradient(90deg, #6ea49b 0 38px, #fff 39px 42px);
+      }
+      .work {
+        padding: 55px 22px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 20px;
+      }
+      .card {
+        padding: 24px;
+      }
+      .field {
+        margin-top: 13px;
+      }
+      .surfaces {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+      }
+      .surface {
+        padding: 15px;
+        border-radius: 12px;
+        background: #f4f6f5;
+      }
+      .surface strong {
+        display: block;
+        font-size: 25px;
+        color: var(--blue);
+      }
+      .cutmap {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 3px;
+        margin-top: 18px;
+      }
+      .cutmap i {
+        aspect-ratio: 1;
+        background: #6ea49b;
+      }
+      .cutmap i:nth-child(7n) {
+        background: linear-gradient(90deg, #6ea49b 55%, #e4ecea 55%);
+      }
+      .order {
+        margin-top: 16px;
+        padding: 16px;
+        background: #376e78;
+        color: #fff;
+        border-radius: 13px;
+        font-size: 22px;
+      }
+      @media (max-width: 800px) {
+        .g,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .wall {
+          height: 210px;
+        }
+        .surfaces {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <div class="hc-brand"><span class="hc-logo">HC</span>Hacé Cuentas</div>
+      <nav class="hc-nav">
+        <span>Home</span><span>Construction</span><span>More</span>
+      </nav>
+      <div class="hc-tools"><button>Search</button><button>US ▾</button></div>
+    </header>
+    <section class="hero">
+      <div class="wrap g">
+        <div>
+          <div class="crumb">Home / Paint & tile</div>
+          <div class="eyebrow" style="color: var(--paint); margin-top: 22px">
+            Finish schedule
+          </div>
+          <h1 class="display">Buy for the surfaces—not the room name.</h1>
+          <p class="lead">
+            Separate walls, coats, doors and tile cuts so paint gallons and
+            boxes reflect the actual job.
+          </p>
+        </div>
+        <div class="wall">
+          <i class="roller"></i>
+          <div class="tiles"></div>
+        </div>
+      </div>
+    </section>
+    <section class="work">
+      <div class="wrap grid">
+        <aside class="card">
+          <h2>Room surfaces</h2>
+          <div class="field">
+            <label>Room perimeter (ft)</label
+            ><input id="per" type="number" value="52" />
+          </div>
+          <div class="field">
+            <label>Wall height (ft)</label
+            ><input id="height" type="number" value="8" />
+          </div>
+          <div class="field">
+            <label>Openings (sq ft)</label
+            ><input id="open" type="number" value="55" />
+          </div>
+          <div class="field">
+            <label>Coats</label><input id="coats" type="number" value="2" />
+          </div>
+          <div class="field">
+            <label>Tile area (sq ft)</label
+            ><input id="tile" type="number" value="88" />
+          </div>
+        </aside>
+        <div class="card">
+          <div class="surfaces">
+            <div class="surface">
+              <small>Paintable wall</small><strong id="area">361 ft²</strong>
+            </div>
+            <div class="surface">
+              <small>Paint</small><strong id="gallons">3 gal</strong>
+            </div>
+            <div class="surface">
+              <small>Tile + cuts</small><strong id="tileout">98 ft²</strong>
+            </div>
+          </div>
+          <div class="cutmap" id="cutmap"></div>
+          <div class="order" id="order">
+            Order 3 gallons and 9 boxes of 12 ft² tile.
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer class="foot">
+      Production keeps the original header and footer.
+    </footer>
+    <script>
+      (() => {
+        const $ = (s) => document.querySelector(s);
+        document.querySelector("#cutmap").innerHTML = "<i></i>".repeat(35);
+        function draw() {
+          let a = Math.max(
+              0,
+              +$("#per").value * +$("#height").value - +$("#open").value,
+            ),
+            g = Math.ceil((a * +$("#coats").value) / 350),
+            t = +$("#tile").value * 1.12,
+            b = Math.ceil(t / 12);
+          $("#area").textContent = Math.round(a) + " ft²";
+          $("#gallons").textContent = g + " gal";
+          $("#tileout").textContent = Math.ceil(t) + " ft²";
+          $("#order").textContent =
+            `Order ${g} gallons and ${b} boxes of 12 ft² tile.`;
+        }
+        document.querySelectorAll("input").forEach((x) => (x.oninput = draw));
+        draw();
+      })();
+    </script>
+  </body>
+</html>

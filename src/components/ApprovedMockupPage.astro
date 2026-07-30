@@ -1,9 +1,12 @@
 ---
+import postcss from 'postcss';
+
 interface Props {
   source: string;
+  baseStyles?: string;
 }
 
-const { source } = Astro.props;
+const { source, baseStyles = '' } = Astro.props;
 const styles = [...source.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
   .map((match) => match[1])
   .join('\n');
@@ -16,13 +19,45 @@ const content = body
   .replace(/<header\b[\s\S]*?<\/header>/i, '')
   .replace(/<footer\b[\s\S]*?<\/footer>/i, '')
   .replace(/<script\b[\s\S]*?<\/script>/gi, '');
+
+// Los mockups son documentos completos y usan selectores cortos como `.card`,
+// `.hero` y `body`. Se prefijan al contenedor para que nunca alteren el header,
+// footer ni otros componentes globales del sitio.
+const scopeCss = (css: string) => {
+  const root = postcss.parse(css);
+  root.walkRules((rule) => {
+    if (rule.parent?.type === 'atrule' && rule.parent.name === 'keyframes') return;
+    rule.selectors = rule.selectors.map((selector) => {
+      const clean = selector.trim();
+      if (clean === ':root' || clean === 'html' || clean === 'body') {
+        return '.approved-mockup-page';
+      }
+      if (clean.startsWith('body ')) {
+        return `.approved-mockup-page ${clean.slice(5)}`;
+      }
+      if (clean.startsWith('html ')) {
+        return `.approved-mockup-page ${clean.slice(5)}`;
+      }
+      return `.approved-mockup-page ${clean}`;
+    });
+  });
+  return root.toString();
+};
+const scopedStyles = scopeCss(`${baseStyles}\n${styles}`);
+
+// Igual que el CSS, las búsquedas y listeners del prototipo quedan encerrados
+// dentro de su experiencia: no pisan el buscador ni los controles del header.
+const scopedScripts = scripts
+  .replace(/\bdocument\.querySelectorAll\b/g, 'root.querySelectorAll')
+  .replace(/\bdocument\.querySelector\b/g, 'root.querySelector')
+  .replace(/\bdocument\.addEventListener\b/g, 'root.addEventListener');
 ---
 
 <div class="approved-mockup-page">
   <div hidden set:html={headerControls}></div>
   <Fragment set:html={content} />
 </div>
-<style is:global set:html={styles}></style>
+<style is:global set:html={scopedStyles}></style>
 <style is:global>
   /*
    * El CSS global del sitio define colores propios para headings y para `.faq`.
@@ -43,4 +78,4 @@ const content = body
     color: var(--muted);
   }
 </style>
-<script is:inline set:html={`(()=>{\n${scripts}\n})();`}></script>
+<script is:inline set:html={`(()=>{const root=document.querySelector('.approved-mockup-page');if(!root)return;window.HC_HUB ||= {onCompute(){}};\n${scopedScripts}\n})();`}></script>

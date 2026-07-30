@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Algebra · UX mockup</title>
+    <link rel="stylesheet" href="en-mockup-core.css" />
+    <style>
+      :root {
+        --blue: #365e7b;
+        --orange: #df8047;
+      }
+      .hero {
+        padding: 45px 22px;
+        background: #f1f5fa;
+      }
+      .g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 42px;
+        align-items: center;
+      }
+      .balance {
+        height: 280px;
+        position: relative;
+      }
+      .beam {
+        position: absolute;
+        left: 8%;
+        right: 8%;
+        top: 90px;
+        height: 10px;
+        background: var(--blue);
+      }
+      .beam:after {
+        content: "";
+        position: absolute;
+        left: 48%;
+        top: 10px;
+        border-left: 35px solid transparent;
+        border-right: 35px solid transparent;
+        border-bottom: 140px solid #79909e;
+      }
+      .pan {
+        position: absolute;
+        top: 110px;
+        width: 150px;
+        height: 70px;
+        border-bottom: 8px solid var(--orange);
+        border-radius: 50%;
+      }
+      .left {
+        left: 8%;
+      }
+      .right {
+        right: 8%;
+      }
+      .pan b {
+        display: block;
+        text-align: center;
+        font-size: 32px;
+      }
+      .lab {
+        padding: 55px 22px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 330px 1fr;
+        gap: 20px;
+      }
+      .card {
+        padding: 24px;
+      }
+      .equation {
+        font-size: 35px;
+        font-weight: 950;
+        color: var(--blue);
+        margin: 18px 0;
+      }
+      .field {
+        margin-top: 13px;
+      }
+      .steps {
+        counter-reset: s;
+      }
+      .step {
+        counter-increment: s;
+        padding: 14px 14px 14px 58px;
+        border-bottom: 1px solid var(--line);
+        position: relative;
+      }
+      .step:before {
+        content: counter(s);
+        position: absolute;
+        left: 8px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: #eaf0f5;
+        display: grid;
+        place-items: center;
+        font-weight: 900;
+      }
+      .step b {
+        display: block;
+        color: var(--blue);
+      }
+      .check {
+        margin-top: 16px;
+        padding: 14px;
+        background: #eef6f2;
+        border-left: 4px solid #5b9b75;
+      }
+      @media (max-width: 800px) {
+        .g,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .balance {
+          height: 210px;
+        }
+        .equation {
+          font-size: 27px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <div class="hc-brand"><span class="hc-logo">HC</span>Hacé Cuentas</div>
+      <nav class="hc-nav">
+        <span>Math</span><span>School</span><span>Science</span>
+      </nav>
+      <div class="hc-tools"><button>Search</button><button>US ▾</button></div>
+    </header>
+    <section class="hero">
+      <div class="wrap g">
+        <div>
+          <div class="crumb">Math / Algebra</div>
+          <div class="eyebrow" style="color: var(--orange); margin-top: 22px">
+            Keep both sides balanced
+          </div>
+          <h1 class="display">See why each algebra step is allowed.</h1>
+          <p class="lead">
+            Solve a linear equation with a balance model, transformation trail
+            and substitution check.
+          </p>
+        </div>
+        <div class="balance">
+          <div class="beam"></div>
+          <div class="pan left"><b>3x + 5</b></div>
+          <div class="pan right"><b>26</b></div>
+        </div>
+      </div>
+    </section>
+    <section class="lab">
+      <div class="wrap grid">
+        <aside class="card">
+          <h2>Build the equation</h2>
+          <div class="equation">
+            <input id="a" type="number" value="3" style="width: 70px" />x +
+            <input id="b" type="number" value="5" style="width: 70px" /> =
+            <input id="c" type="number" value="26" style="width: 90px" />
+          </div>
+          <button class="btn" id="solve">Show the reasoning</button>
+        </aside>
+        <div class="card">
+          <div class="eyebrow" style="color: var(--blue)">
+            Transformation trail
+          </div>
+          <div class="steps" id="steps"></div>
+          <div class="check" id="check"></div>
+        </div>
+      </div>
+    </section>
+    <footer class="foot">
+      Production keeps the original header and footer.
+    </footer>
+    <script>
+      (() => {
+        const $ = (s) => document.querySelector(s);
+        function draw() {
+          let a = +$("#a").value,
+            b = +$("#b").value,
+            c = +$("#c").value,
+            x = (c - b) / a;
+          $("#steps").innerHTML =
+            `<div class="step"><b>Start</b>${a}x + ${b} = ${c}</div><div class="step"><b>Subtract ${b} from both sides</b>${a}x = ${c - b}</div><div class="step"><b>Divide both sides by ${a}</b>x = ${Number.isFinite(x) ? x.toFixed(2) : "not defined"}</div>`;
+          $("#check").textContent = Number.isFinite(x)
+            ? `Check: ${a} × ${x.toFixed(2)} + ${b} = ${(a * x + b).toFixed(2)} ✓`
+            : "Coefficient cannot be zero.";
+        }
+        document.querySelectorAll("input").forEach((x) => (x.oninput = draw));
+        $("#solve").onclick = draw;
+        draw();
+      })();
+    </script>
+  </body>
+</html>

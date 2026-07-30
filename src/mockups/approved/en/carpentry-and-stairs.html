@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Carpentry & stairs · UX mockup</title>
+    <link rel="stylesheet" href="en-mockup-core.css" />
+    <style>
+      :root {
+        --blue: #416b74;
+        --wood: #b77b48;
+      }
+      .hero {
+        padding: 45px 22px;
+        background: #f7f2ea;
+      }
+      .g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 42px;
+        align-items: center;
+      }
+      .stairs {
+        height: 280px;
+        display: flex;
+        align-items: end;
+      }
+      .stairs i {
+        height: calc(var(--n) * 38px);
+        width: 48px;
+        background: repeating-linear-gradient(
+          90deg,
+          #bf8653 0 10px,
+          #a96f3e 11px 13px
+        );
+        border: 2px solid #79502f;
+      }
+      .shop {
+        padding: 55px 22px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 330px 1fr;
+        gap: 20px;
+      }
+      .card {
+        padding: 24px;
+      }
+      .field {
+        margin-top: 13px;
+      }
+      .drawing {
+        height: 250px;
+        position: relative;
+        border-left: 3px solid var(--blue);
+        border-bottom: 3px solid var(--blue);
+        background:
+          repeating-linear-gradient(0deg, transparent 0 24px, #edf1f0 25px),
+          repeating-linear-gradient(90deg, transparent 0 24px, #edf1f0 25px);
+      }
+      .slope {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 85%;
+        height: 75%;
+        clip-path: polygon(0 100%, 100% 0, 100% 100%);
+        background: repeating-linear-gradient(
+          90deg,
+          #b77b48 0 42px,
+          #fff 43px 46px
+        );
+      }
+      .dimension {
+        position: absolute;
+        background: #fff;
+        padding: 6px;
+        font-weight: 900;
+      }
+      .rise {
+        left: 5px;
+        top: 15px;
+      }
+      .run {
+        right: 35px;
+        bottom: 5px;
+      }
+      .cutlist {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin-top: 16px;
+      }
+      .cutlist > div {
+        padding: 14px;
+        background: #f7f3ed;
+        border-radius: 11px;
+      }
+      .cutlist strong {
+        display: block;
+        font-size: 22px;
+      }
+      .code {
+        margin-top: 15px;
+        padding: 14px;
+        background: #fff1df;
+        border-left: 4px solid var(--wood);
+      }
+      @media (max-width: 800px) {
+        .g,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .stairs {
+          height: 220px;
+          transform: scale(0.8);
+        }
+        .cutlist {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <div class="hc-brand"><span class="hc-logo">HC</span>Hacé Cuentas</div>
+      <nav class="hc-nav">
+        <span>Home</span><span>Construction</span><span>Math</span>
+      </nav>
+      <div class="hc-tools"><button>Search</button><button>US ▾</button></div>
+    </header>
+    <section class="hero">
+      <div class="wrap g">
+        <div>
+          <div class="crumb">Home / Carpentry & stairs</div>
+          <div class="eyebrow" style="color: var(--wood); margin-top: 22px">
+            Measure before the first cut
+          </div>
+          <h1 class="display">Turn the opening into a buildable staircase.</h1>
+          <p class="lead">
+            Resolve riser count, tread depth, slope and stringer length
+            together—then produce a cut list.
+          </p>
+        </div>
+        <div class="stairs" id="stairs"></div>
+      </div>
+    </section>
+    <section class="shop">
+      <div class="wrap grid">
+        <aside class="card">
+          <h2>Finished dimensions</h2>
+          <div class="field">
+            <label>Total rise (in)</label
+            ><input id="rise" type="number" value="108" />
+          </div>
+          <div class="field">
+            <label>Available run (in)</label
+            ><input id="run" type="number" value="144" />
+          </div>
+          <div class="field">
+            <label>Stair width (in)</label
+            ><input id="width" type="number" value="36" />
+          </div>
+          <div class="field">
+            <label>Target max riser</label
+            ><input id="max" type="number" value="7.75" step=".25" />
+          </div>
+        </aside>
+        <div class="card">
+          <div class="drawing">
+            <div class="slope"></div>
+            <span class="dimension rise" id="riseDim">108″ rise</span
+            ><span class="dimension run" id="runDim">144″ run</span>
+          </div>
+          <div class="cutlist">
+            <div>
+              <small>Risers</small><strong id="risers">14 × 7.71″</strong>
+            </div>
+            <div>
+              <small>Treads</small><strong id="treads">13 × 11.08″</strong>
+            </div>
+            <div>
+              <small>Stringer</small><strong id="stringer">180″</strong>
+            </div>
+          </div>
+          <div class="code" id="code">
+            Comfort check: 2 × riser + tread = 26.5″. Confirm local code,
+            headroom, landing and handrail requirements.
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer class="foot">
+      Production keeps the original header and footer.
+    </footer>
+    <script>
+      (() => {
+        document.querySelector("#stairs").innerHTML = Array.from(
+          { length: 7 },
+          (_, i) => `<i style="--n:${i + 1}"></i>`,
+        ).join("");
+        const $ = (s) => document.querySelector(s);
+        function draw() {
+          let r = +$("#rise").value,
+            run = +$("#run").value,
+            max = +$("#max").value,
+            n = Math.ceil(r / max),
+            rh = r / n,
+            t = n - 1,
+            td = run / t,
+            len = Math.hypot(r, run);
+          $("#riseDim").textContent = r + "″ rise";
+          $("#runDim").textContent = run + "″ run";
+          $("#risers").textContent = n + " × " + rh.toFixed(2) + "″";
+          $("#treads").textContent = t + " × " + td.toFixed(2) + "″";
+          $("#stringer").textContent = Math.ceil(len) + "″";
+          let comfort = 2 * rh + td;
+          $("#code").textContent =
+            `Comfort check: 2 × riser + tread = ${comfort.toFixed(1)}″. ` +
+            (rh > 7.75 || td < 10
+              ? "Geometry may miss common residential limits. "
+              : "Proportions are within common ranges. ") +
+            "Confirm local code, headroom, landing and handrail requirements.";
+        }
+        document.querySelectorAll("input").forEach((x) => (x.oninput = draw));
+        draw();
+      })();
+    </script>
+  </body>
+</html>

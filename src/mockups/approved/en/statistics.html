@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Statistics · UX mockup</title>
+    <link rel="stylesheet" href="en-mockup-core.css" />
+    <style>
+      :root {
+        --blue: #3d6680;
+        --orange: #dc814d;
+      }
+      .hero {
+        padding: 45px 22px;
+        background: #f2f5f8;
+      }
+      .g {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 42px;
+        align-items: center;
+      }
+      .dots {
+        height: 280px;
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        align-items: end;
+        gap: 5px;
+      }
+      .dots i {
+        height: var(--h);
+        background: radial-gradient(
+            circle,
+            var(--orange) 0 5px,
+            transparent 6px
+          )
+          0 100%/100% 18px repeat-y;
+      }
+      .lab {
+        padding: 55px 22px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 20px;
+      }
+      .card {
+        padding: 24px;
+      }
+      .data {
+        width: 100%;
+        min-height: 130px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        font: 18px/1.6 monospace;
+      }
+      .hist {
+        height: 210px;
+        display: flex;
+        align-items: end;
+        gap: 6px;
+      }
+      .hist i {
+        flex: 1;
+        height: var(--h);
+        background: var(--blue);
+        border-radius: 7px 7px 0 0;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 15px;
+      }
+      .stats > div {
+        padding: 13px;
+        background: #f3f6f7;
+        border-radius: 11px;
+      }
+      .stats strong {
+        display: block;
+        font-size: 20px;
+      }
+      .story {
+        margin-top: 15px;
+        padding: 14px;
+        background: #fff3e8;
+        border-left: 4px solid var(--orange);
+      }
+      @media (max-width: 800px) {
+        .g,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .dots {
+          height: 210px;
+        }
+        .stats {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hc-head">
+      <div class="hc-brand"><span class="hc-logo">HC</span>Hacé Cuentas</div>
+      <nav class="hc-nav">
+        <span>Math</span><span>School</span><span>Data</span>
+      </nav>
+      <div class="hc-tools"><button>Search</button><button>US ▾</button></div>
+    </header>
+    <section class="hero">
+      <div class="wrap g">
+        <div>
+          <div class="crumb">Math / Statistics</div>
+          <div class="eyebrow" style="color: var(--orange); margin-top: 22px">
+            Shape before average
+          </div>
+          <h1 class="display">See the distribution the mean can hide.</h1>
+          <p class="lead">
+            Paste a dataset, inspect its shape and compare center, spread and
+            outliers in one view.
+          </p>
+        </div>
+        <div class="dots" id="heroDots"></div>
+      </div>
+    </section>
+    <section class="lab">
+      <div class="wrap grid">
+        <aside class="card">
+          <h2>Your values</h2>
+          <textarea id="data" class="data">
+12, 14, 15, 15, 16, 18, 19, 20, 22, 45</textarea
+          ><button class="btn" id="analyze" style="margin-top: 14px">
+            Analyze distribution
+          </button>
+        </aside>
+        <div class="card">
+          <div class="hist" id="hist"></div>
+          <div class="stats">
+            <div><small>Mean</small><strong id="mean">19.6</strong></div>
+            <div><small>Median</small><strong id="median">17</strong></div>
+            <div><small>Std. deviation</small><strong id="sd">9.3</strong></div>
+            <div><small>Range</small><strong id="range">33</strong></div>
+          </div>
+          <div class="story" id="story">
+            The high value pulls the mean above the median. Median is the more
+            representative center here.
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer class="foot">
+      Production keeps the original header and footer.
+    </footer>
+    <script>
+      (() => {
+        document.querySelector("#heroDots").innerHTML = Array.from(
+          { length: 10 },
+          (_, i) =>
+            `<i style="--h:${50 + Math.sin((i / 9) * Math.PI) * 210}px"></i>`,
+        ).join("");
+        const $ = (s) => document.querySelector(s);
+        function draw() {
+          let a = $("#data")
+            .value.split(/[ ,\\n]+/)
+            .map(Number)
+            .filter(Number.isFinite)
+            .sort((x, y) => x - y);
+          if (!a.length) return;
+          let n = a.length,
+            mean = a.reduce((s, x) => s + x, 0) / n,
+            med = n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2,
+            sd = Math.sqrt(a.reduce((s, x) => s + (x - mean) ** 2, 0) / n),
+            min = a[0],
+            max = a[n - 1],
+            bins = 8,
+            c = Array(bins).fill(0);
+          a.forEach(
+            (x) =>
+              c[
+                Math.min(
+                  bins - 1,
+                  Math.floor(((x - min) / (max - min || 1)) * bins),
+                )
+              ]++,
+          );
+          $("#hist").innerHTML = c
+            .map(
+              (x) => `<i style="--h:${20 + (x / Math.max(...c)) * 190}px"></i>`,
+            )
+            .join("");
+          $("#mean").textContent = mean.toFixed(1);
+          $("#median").textContent = med.toFixed(1);
+          $("#sd").textContent = sd.toFixed(1);
+          $("#range").textContent = (max - min).toFixed(1);
+          $("#story").textContent =
+            Math.abs(mean - med) > sd * 0.2
+              ? "The mean and median separate, suggesting skew or outliers. Inspect the tails before summarizing."
+              : "Mean and median are close; the center appears fairly balanced.";
+        }
+        $("#analyze").onclick = draw;
+        $("#data").oninput = draw;
+        draw();
+      })();
+    </script>
+  </body>
+</html>
