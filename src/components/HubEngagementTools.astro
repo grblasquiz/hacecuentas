@@ -29,6 +29,18 @@
       </div>
     </details>
 
+    <div class="hc-hub-alert" data-hub-alert>
+      <div>
+        <strong data-alert-title>¿Querés que te avisemos cuando cambien los números?</strong>
+        <small data-alert-subtitle>Dejanos tu mail y te escribimos sólo cuando haya una actualización real.</small>
+      </div>
+      <form data-hub-alert-form>
+        <input type="email" autocomplete="email" required placeholder="tu@email.com" aria-label="Tu email">
+        <button type="submit" data-alert-submit>Avisame</button>
+      </form>
+      <p data-alert-status hidden></p>
+    </div>
+
     <div class="hc-hub-vote" data-hub-vote>
       <span data-vote-question>¿Te sirvió esta calculadora?</span>
       <button type="button" data-hub-vote-value="up" aria-label="Sí, me sirvió">👍</button>
@@ -58,6 +70,13 @@
     downAria: string;
     thanks: string;
     frameTitle: string;
+    alertTitle: string;
+    alertSubtitle: string;
+    alertButton: string;
+    alertSending: string;
+    alertSuccess: string;
+    alertSaved: string;
+    alertError: string;
   };
 
   const COPY: Record<string, Copy> = {
@@ -73,6 +92,13 @@
       downAria: 'No me sirvió',
       thanks: '¡Gracias por votar!',
       frameTitle: 'Calculadora de Hacé Cuentas',
+      alertTitle: '¿Querés que te avisemos cuando cambien los números?',
+      alertSubtitle: 'Dejanos tu mail y te escribimos sólo cuando haya una actualización real.',
+      alertButton: 'Avisame',
+      alertSending: 'Guardando…',
+      alertSuccess: '✅ Listo. Revisá tu mail: el aviso quedó activado.',
+      alertSaved: '✅ Listo. El aviso quedó activado.',
+      alertError: 'No pudimos activar el aviso. Probá de nuevo.',
     },
     pt: {
       embedTitle: 'Incorporar esta calculadora',
@@ -86,6 +112,13 @@
       downAria: 'Não foi útil',
       thanks: 'Obrigado pelo seu voto!',
       frameTitle: 'Calculadora do Hacé Cuentas',
+      alertTitle: 'Quer receber um aviso quando os números mudarem?',
+      alertSubtitle: 'Deixe seu email. Só escreveremos quando houver uma atualização real.',
+      alertButton: 'Avise-me',
+      alertSending: 'Salvando…',
+      alertSuccess: '✅ Pronto. Confira seu email: o aviso foi ativado.',
+      alertSaved: '✅ Pronto. O aviso foi ativado.',
+      alertError: 'Não foi possível ativar o aviso. Tente novamente.',
     },
     en: {
       embedTitle: 'Embed this calculator',
@@ -99,6 +132,13 @@
       downAria: 'No, it was not helpful',
       thanks: 'Thanks for voting!',
       frameTitle: 'Hacé Cuentas calculator',
+      alertTitle: 'Want an email when the numbers change?',
+      alertSubtitle: 'Leave your email. We will only write when there is a real update.',
+      alertButton: 'Notify me',
+      alertSending: 'Saving…',
+      alertSuccess: '✅ Done. Check your email: the alert is active.',
+      alertSaved: '✅ Done. The alert is active.',
+      alertError: 'We could not activate the alert. Please try again.',
     },
   };
 
@@ -200,6 +240,9 @@
       setText('[data-embed-note]', copy.note);
       setText('[data-vote-question]', copy.question);
       setText('[data-vote-thanks]', copy.thanks);
+      setText('[data-alert-title]', copy.alertTitle);
+      setText('[data-alert-subtitle]', copy.alertSubtitle);
+      setText('[data-alert-submit]', copy.alertButton);
 
       const preview = tools.querySelector<HTMLAnchorElement>('[data-embed-preview]');
       if (preview) preview.href = embedUrl;
@@ -257,6 +300,48 @@
             if (thanks) thanks.hidden = false;
           }, 450);
         });
+      });
+
+      const alertForm = tools.querySelector<HTMLFormElement>('[data-hub-alert-form]');
+      const alertStatus = tools.querySelector<HTMLElement>('[data-alert-status]');
+      const alertInput = alertForm?.querySelector<HTMLInputElement>('input[type="email"]');
+      const alertButton = alertForm?.querySelector<HTMLButtonElement>('button[type="submit"]');
+      if (/(^|;)\s*hc_authed=1(;|$)/.test(document.cookie) && alertInput) {
+        alertInput.hidden = true;
+        alertInput.required = false;
+      }
+      alertForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!alertButton || alertButton.disabled) return;
+        const idle = copy.alertButton;
+        alertButton.disabled = true;
+        alertButton.textContent = copy.alertSending;
+        try {
+          const response = await fetch('/api/hub-alerts/subscribe', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: slug, email: alertInput?.value.trim().toLowerCase() || undefined }),
+          });
+          const data: any = await response.json().catch(() => null);
+          if (!response.ok || !data?.ok) throw new Error(data?.error || copy.alertError);
+          alertForm.hidden = true;
+          if (alertStatus) {
+            alertStatus.textContent = data.sent ? copy.alertSuccess : copy.alertSaved;
+            alertStatus.hidden = false;
+          }
+          try { localStorage.setItem(`hc-hub-alert:${slug}`, '1'); } catch {}
+          window.gtag?.('event', 'alert_subscribe', { calc_slug: slug, calculator_surface: 'hub' });
+        } catch (error) {
+          if (alertStatus) {
+            alertStatus.textContent = error instanceof Error ? error.message : copy.alertError;
+            alertStatus.hidden = false;
+            alertStatus.classList.add('is-error');
+          }
+        } finally {
+          alertButton.disabled = false;
+          alertButton.textContent = idle;
+        }
       });
 
       calculator.appendChild(fragment);
@@ -353,6 +438,46 @@
     color: #64748b;
     font-size: 0.78rem;
   }
+  .hc-hub-alert {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem 1rem;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    background: #eff6ff;
+  }
+  .hc-hub-alert strong, .hc-hub-alert small { display: block; color: #1e3a5f; }
+  .hc-hub-alert strong { font-size: 0.82rem; line-height: 1.35; }
+  .hc-hub-alert small { margin-top: 0.18rem; color: #64748b; font-size: 0.7rem; line-height: 1.4; }
+  .hc-hub-alert form { display: flex; gap: 0.45rem; }
+  .hc-hub-alert input {
+    width: min(220px, 42vw);
+    min-height: 42px;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #fff;
+    color: #1e293b;
+    font: inherit;
+    font-size: 0.78rem;
+  }
+  .hc-hub-alert button {
+    min-height: 42px;
+    padding: 0.55rem 0.85rem;
+    border: 0;
+    border-radius: 8px;
+    background: #1d4ed8;
+    color: #fff;
+    font: inherit;
+    font-size: 0.76rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .hc-hub-alert p { grid-column: 1 / -1; margin: 0; color: #15803d; font-size: 0.76rem; font-weight: 700; }
+  .hc-hub-alert p.is-error { color: #b91c1c; }
   .hc-hub-vote button {
     display: inline-grid;
     place-items: center;
@@ -382,6 +507,9 @@
     box-shadow: none !important;
   }
   @media (max-width: 520px) {
+    .hc-hub-alert { grid-template-columns: 1fr; }
+    .hc-hub-alert form { width: 100%; }
+    .hc-hub-alert input { width: 100%; min-width: 0; }
     .hc-hub-vote { flex-wrap: wrap; }
     .hc-hub-vote > span { flex-basis: 100%; text-align: center; }
   }

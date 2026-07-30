@@ -127,11 +127,53 @@ async function runPass(env, { dry = false } = {}) {
   ).all()).results || [];
 
   const attrCache = new Map();
+  let hubVersions = null;
   let checked = 0, changed = 0, sent = 0, failed = 0;
   const changes = [];
 
   for (const a of rows) {
     checked++;
+    if (String(a.slug).startsWith('hub:')) {
+      if (!hubVersions) {
+        try {
+          const response = await fetch(`${siteBase}/api/hub-alert-versions.json`, { cache: 'no-store' });
+          hubVersions = response.ok ? await response.json() : {};
+        } catch { hubVersions = {}; }
+      }
+      const path = String(a.slug).slice(4);
+      const current = hubVersions[path];
+      const newVersion = current?.version || '';
+      if (!newVersion || newVersion === a.last_headline) {
+        if (!dry) await env.DB.prepare('UPDATE result_alerts SET last_checked_at = ? WHERE id = ?').bind(now, a.id).run();
+        continue;
+      }
+      changed++;
+      changes.push({ id: a.id, slug: a.slug, from: a.last_headline, to: newVersion });
+      if (dry) continue;
+      const calcUrl = `${siteBase}${path}?utm_source=alert&utm_medium=email&utm_campaign=hub-update`;
+      const unsubUrl = `${siteBase}/api/alerts/unsubscribe?token=${encodeURIComponent(a.unsub_token)}`;
+      const html = `<div style="font-family:system-ui,-apple-system,sans-serif;max-width:500px;margin:auto;color:#1e293b">
+        <p style="color:#0f766e;font-weight:700">🔔 Hacé Cuentas — actualización</p>
+        <h2>Se actualizaron los números de ${esc(a.headline_label || 'esta calculadora')}</h2>
+        <p>Cambiaron valores, reglas o datos de referencia. Volvé a calcular para ver el resultado actualizado.</p>
+        <p><a href="${esc(calcUrl)}" style="display:inline-block;background:#0f766e;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:700">Ver números actualizados →</a></p>
+        <p style="font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px">Recibís este aviso porque lo activaste en Hacé Cuentas. <a href="${esc(unsubUrl)}" style="color:#64748b">Dar de baja</a>.</p>
+      </div>`;
+      try {
+        if (env.EMAIL) await env.EMAIL.send({
+          from, to: a.email, subject: `🔔 Se actualizaron los números de ${a.headline_label || 'tu calculadora'}`, html,
+        });
+        sent++;
+      } catch (e) {
+        failed++;
+        console.error('[alerts] hub send fail', a.email, String(e).slice(0, 160));
+        continue;
+      }
+      await env.DB.prepare(
+        'UPDATE result_alerts SET last_result = ?, last_headline = ?, last_checked_at = ?, last_changed_at = ? WHERE id = ?',
+      ).bind(JSON.stringify({ version: newVersion }), newVersion, now, now, a.id).run();
+      continue;
+    }
     let inputs;
     try { inputs = JSON.parse(a.inputs); } catch { continue; }
     const result = await recompute(siteBase, a.slug, inputs);

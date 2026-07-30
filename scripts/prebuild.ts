@@ -163,6 +163,7 @@ async function main() {
     task('compute-index', 'generate-compute-index'),
     // Índice inverso profileKey → calcs que lo usan, para /mi-hacecuentas.
     task('profile-usage', 'generate-profile-usage'),
+    mjsTask('hub-alert-versions', 'generate-hub-alert-versions'),
     // Conteo de calcs en los estáticos de public/ (llms.txt, ai.txt, openapi,
     // ai-plugin) — no pueden importar calc-counts.ts, así que se patchean acá.
     task('calc-counts', 'sync-calc-counts'),
