@@ -1,11 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { ADSENSE_SERVING_ENABLED, GOOGLE_CERTIFIED_CMP_ENABLED, isAdsenseExcludedPath } from '../src/lib/adsense';
+import {
+  ADSENSE_APPROVED_PATHS,
+  ADSENSE_SERVING_ENABLED,
+  GOOGLE_CERTIFIED_CMP_ENABLED,
+  isAdsenseApprovedPath,
+  isAdsenseExcludedPath,
+} from '../src/lib/adsense';
 import { canAdvertiseCalc, hasValidHumanEditorialReview } from '../src/lib/content-policy';
 
 describe('seguridad de serving AdSense', () => {
   it('no permite serving mientras no exista CMP certificada', () => {
     expect(GOOGLE_CERTIFIED_CMP_ENABLED).toBe(false);
     expect(ADSENSE_SERVING_ENABLED).toBe(false);
+  });
+
+  it('mantiene el inventario publicitario en opt-in durante la revisión', () => {
+    expect(ADSENSE_APPROVED_PATHS.size).toBe(0);
+    expect(isAdsenseApprovedPath('/tecnologia/almacenamiento')).toBe(false);
+    expect(isAdsenseApprovedPath('/tecnologia/almacenamiento?utm_source=test')).toBe(false);
   });
 
   it.each(['/buscar', '/buscar?q=', '/mi-hacecuentas', '/mi/alquiler', '/login', '/recuperar-clave', '/sugerir', '/sugerencias', '/contacto', '/embed/calculadora-imc', '/descargar/resultado', '/cookies', '/privacidad', '/terminos', '/aviso-legal', '/404', '/confirmacion', '/error'])('excluye %s', (path) => {

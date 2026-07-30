@@ -178,6 +178,52 @@ CHROME['pt-pt'] = { ...CHROME.pt, actualiza: 'Atualiza à medida que preenche os
 for (const l of ['cl', 'co', 'mx', 'uy', 'py', 've', 'pe', 'ec', 'do', 'es']) CHROME[l] = CHROME['es-neutro'];
 
 const T = (data.locale && CHROME[data.locale]) || CHROME.ar;
+const REVIEW_COPY: Record<string, {
+  edited: string;
+  role: string;
+  checked: string;
+  updated: string;
+  scope: string;
+  links: string;
+}> = {
+  ar: {
+    edited: 'Edición responsable',
+    role: 'Fundador y editor de Hacé Cuentas',
+    checked: 'Fórmula y fuentes verificadas',
+    updated: 'Última revisión',
+    scope: 'Herramienta educativa y orientativa. No reemplaza asesoramiento profesional cuando corresponda.',
+    links: 'Cómo revisamos esta herramienta',
+  },
+  'es-neutro': {
+    edited: 'Edición responsable',
+    role: 'Fundador y editor de Hacé Cuentas',
+    checked: 'Fórmula y fuentes verificadas',
+    updated: 'Última revisión',
+    scope: 'Herramienta educativa y orientativa. No sustituye asesoramiento profesional cuando corresponda.',
+    links: 'Cómo revisamos esta herramienta',
+  },
+  en: {
+    edited: 'Responsible editor',
+    role: 'Founder and editor of Hacé Cuentas',
+    checked: 'Formula and sources checked',
+    updated: 'Last reviewed',
+    scope: 'Educational guidance only. It does not replace qualified professional advice when applicable.',
+    links: 'How we review this tool',
+  },
+  pt: {
+    edited: 'Edição responsável',
+    role: 'Fundador e editor do Hacé Cuentas',
+    checked: 'Fórmula e fontes verificadas',
+    updated: 'Última revisão',
+    scope: 'Ferramenta educativa e orientativa. Não substitui aconselhamento profissional quando aplicável.',
+    links: 'Como revisamos esta ferramenta',
+  },
+};
+REVIEW_COPY['pt-pt'] = REVIEW_COPY.pt;
+for (const l of ['cl', 'co', 'mx', 'uy', 'py', 've', 'pe', 'ec', 'do', 'es']) {
+  REVIEW_COPY[l] = REVIEW_COPY['es-neutro'];
+}
+const R = (data.locale && REVIEW_COPY[data.locale]) || REVIEW_COPY.ar;
 /* Home del mercado: los hubs de AR/globales siguen apuntando a "/". */
 const HOME = data.locale ? `/${data.locale}` : '/';
 
@@ -358,6 +404,29 @@ const otherCases = cases.slice(1);
       </div>
     </section>
 
+    <aside class="editorial-review" aria-label={R.edited}>
+      <div class="editorial-review__author">
+        <span class="editorial-review__avatar" aria-hidden="true">MR</span>
+        <p>
+          <small>{R.edited}</small>
+          <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a>
+          <span>{R.role}</span>
+        </p>
+      </div>
+      <ul>
+        <li><span aria-hidden="true">✓</span> {R.checked}</li>
+        <li><span aria-hidden="true">◷</span> {R.updated}: <time datetime={data.lastReviewed}>{data.lastReviewed}</time></li>
+      </ul>
+      <p class="editorial-review__scope">{R.scope}</p>
+      <p class="editorial-review__links">
+        <a href="/politica-editorial">{R.links}</a>
+        <span aria-hidden="true">·</span>
+        <a href="/metodologia">Metodología</a>
+        <span aria-hidden="true">·</span>
+        <a href="/contacto">Reportar un error</a>
+      </p>
+    </aside>
+
     <HubRelatedPosts posts={data.relatedPosts} />
 
     {siblingHubs.length > 0 && (
@@ -389,6 +458,20 @@ const otherCases = cases.slice(1);
   .hc-hub .cluster-links div{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
   .hc-hub .cluster-links a{color:var(--hc-ink);font-weight:700;text-decoration:none;line-height:1.35}
   .hc-hub .cluster-links a:hover{text-decoration:underline}
+  .hc-hub .editorial-review{margin:28px 0 0;padding:22px;border:1px solid var(--hc-rule);border-radius:18px;background:var(--hc-paper);display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1fr);gap:14px 24px;color:var(--hc-ink)}
+  .hc-hub .editorial-review__author{display:flex;gap:12px;align-items:center}
+  .hc-hub .editorial-review__avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--hc-blue);color:#fff;font-weight:900;font-size:13px;flex:0 0 auto}
+  .hc-hub .editorial-review__author p{margin:0;display:grid;gap:2px}
+  .hc-hub .editorial-review__author small{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--hc-muted)}
+  .hc-hub .editorial-review__author a{color:var(--hc-ink);font-weight:900;text-decoration:none}
+  .hc-hub .editorial-review__author a:hover{text-decoration:underline}
+  .hc-hub .editorial-review__author span{font-size:13px;color:var(--hc-muted)}
+  .hc-hub .editorial-review ul{list-style:none;margin:0;padding:0;display:grid;gap:7px;align-content:center;font-size:13px;font-weight:700}
+  .hc-hub .editorial-review ul span{color:var(--hc-good);font-weight:900}
+  .hc-hub .editorial-review__scope{grid-column:1/-1;margin:0;padding-top:13px;border-top:1px solid var(--hc-rule);font-size:13px;line-height:1.55;color:var(--hc-muted)}
+  .hc-hub .editorial-review__links{grid-column:1/-1;margin:0;display:flex;flex-wrap:wrap;gap:6px;font-size:13px}
+  .hc-hub .editorial-review__links a{color:var(--hc-blue);font-weight:800}
+  @media(max-width:680px){.hc-hub .editorial-review{grid-template-columns:1fr}}
 </style>
 
 <script is:inline define:vars={{ PUNTO_DECIMAL, NUM_LOCALE, MONEDA, CASES: cases, HAS_CASES: !!data.cases }}>

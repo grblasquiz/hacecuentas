@@ -3,7 +3,7 @@ import CookieConsent from '../components/CookieConsent.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
 import ProfileStore from '../components/ProfileStore.astro';
 import HubInterlinking from '../components/HubInterlinking.astro';
-import { ADSENSE_SERVING_ENABLED, isAdsenseExcludedPath } from '../lib/adsense';
+import { ADSENSE_SERVING_ENABLED, isAdsenseApprovedPath, isAdsenseExcludedPath } from '../lib/adsense';
 import { HC_ALLOWED_PARAMS } from '../lib/analytics';
 import HubCalculationTracking from '../components/HubCalculationTracking.astro';
 import HubEngagementTools from '../components/HubEngagementTools.astro';
@@ -128,7 +128,9 @@ const descriptionForSearch = effectiveDescription.trim().length < 70
 const seoDescription = compactSeoDescription(descriptionForSearch);
 // Defensa central para Auto Ads: estas pantallas no tienen contenido editorial
 // monetizable aunque una página olvide pasar noAds={true}.
-const effectiveNoAds = noAds || noindex || isAdsenseExcludedPath(cleanPath);
+// Monetización opt-in: incluso con serving + CMP habilitados, una URL nueva no
+// recibe anuncios hasta entrar en la allowlist editorial de adsense.ts.
+const effectiveNoAds = noAds || noindex || isAdsenseExcludedPath(cleanPath) || !isAdsenseApprovedPath(cleanPath);
 const fullCanonical = canonical
   ? (canonical.startsWith('http') ? canonical : `${siteUrl}${canonical}`)
   : `${siteUrl}${cleanPath}`;

@@ -15,7 +15,28 @@ export const ADSENSE_SERVING_ENABLED = ADSENSE_SERVING_REQUESTED && GOOGLE_CERTI
 
 const NO_ADS_PATH_RE = /^\/(?:buscar(?:\/|$)|mi-hacecuentas(?:\/|$)|mi(?:\/|$)|login(?:\/|$)|auth(?:\/|$)|cuenta(?:\/|$)|recuperar(?:-[^/]+)?(?:\/|$)|sugerir(?:\/|$)|sugerencias(?:\/|$)|contacto(?:\/|$)|embed(?:\/|$)|descarg(?:a|ar|as)(?:\/|$)|cookies(?:\/|$)|privacidad(?:\/|$)|terminos(?:\/|$)|aviso-legal(?:\/|$)|404(?:\/|$)|500(?:\/|$)|confirm(?:acion)?(?:\/|$)|gracias(?:\/|$)|error(?:\/|$))/i;
 
-export function isAdsenseExcludedPath(pathname: string): boolean {
+/**
+ * Allowlist positiva de inventario publicitario.
+ *
+ * Tener una URL indexable no la vuelve automáticamente monetizable. Cuando la
+ * cuenta y la CMP estén aprobadas, las primeras páginas se agregan acá después
+ * de una revisión manual individual. Un catálogo nuevo, una ruta localizada o
+ * un hub recién publicado queda sin anuncios por defecto.
+ */
+export const ADSENSE_APPROVED_PATHS: ReadonlySet<string> = new Set<string>([
+  // Intencionalmente vacío durante la revisión de la cuenta.
+]);
+
+function normalizePath(pathname: string): string {
   const clean = pathname.split(/[?#]/, 1)[0].replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
+  return clean.length > 1 ? clean.replace(/\/+$/, '') : clean;
+}
+
+export function isAdsenseApprovedPath(pathname: string): boolean {
+  return ADSENSE_APPROVED_PATHS.has(normalizePath(pathname));
+}
+
+export function isAdsenseExcludedPath(pathname: string): boolean {
+  const clean = normalizePath(pathname);
   return NO_ADS_PATH_RE.test(clean);
 }
