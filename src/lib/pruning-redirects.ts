@@ -3937,7 +3937,6 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/co/calculadora-subsidio-desempleo-proteccion-cesante-colombia': '/co/trabajo/incapacidad-y-licencias',
   '/co/calculadora-subsidio-vivienda-mi-casa-ya-colombia-2026': '/co/finanzas/comprar-vivienda',
   '/co/calculadora-tarifa-electrica-colombia-mes-recibo-codensa': '/co/vida/recibos-de-servicios',
-  '/co/calculadora-tarifa-taxi-bogota-2026-unidades-recargos': '/co/automotor/costo-de-tener-carro',
   '/co/calculadora-tarjeta-credito-colombia-tasa-usura-cuota-pago-minimo': '/co/finanzas/creditos-y-tarjetas',
   '/co/calculadora-tasa-de-cambio-paralelo-colombia-dolar-blue': '/co/finanzas/donde-pongo-mis-ahorros',
   '/co/calculadora-tasa-impuesto-renta-fictop-paraisos-fiscales-colombia': '/co/impuestos/patrimonio-y-herencia',

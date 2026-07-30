@@ -1,0 +1,174 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-rutina-cuidados-mascotas" set:html={`
+    <section class="hero"><div class="shell hero-grid"><div><div class="crumb">Mascotas / Rutina y cuidados</div><div class="eyebrow">Planificador diario para mascotas</div><h1>Una rutina sana, sin tener que adivinar.</h1><p class="lede">Calculá cuánto ejercicio, juego, cepillado y cuidado necesita tu mascota según su especie, edad y nivel de actividad.</p><div class="stamps"><span class="stamp">Resultado personalizado</span><span class="stamp">Perros y gatos</span><span class="stamp">Rutina semanal clara</span></div></div><div class="hero-art" aria-hidden="true"><div class="art-orbit"><div class="ball"></div><div class="brush"></div><div class="bowl"></div><div class="mini-card one"><span class="mini-dot"></span>Próximo baño: 35 días</div><div class="mini-card two"><span class="mini-dot"></span>2 paseos por día</div></div></div></div></section>
+
+    <section class="section"><div class="shell"><div class="section-head"><div class="eyebrow">Armá su plan</div><h2>Primero, elegí a quién cuidamos</h2><p>La rutina cambia por completo entre perros y gatos. Podés alternar y comparar sin perder los datos cargados.</p></div>
+      <div class="species"><button class="active" data-species="perro"><span class="animal-icon">●</span><span><strong>Perro</strong><small>Paseos, ejercicio, baño, cepillado y uñas.</small></span></button><button data-species="gato"><span class="animal-icon">◉</span><span><strong>Gato</strong><small>Juego activo, rascador, cepillado y uñas.</small></span></button></div>
+      <div class="calculator">
+        <div class="panel">
+          <h3>Contanos sobre tu mascota</h3><p class="panel-intro">Usamos estos datos para ajustar la intensidad y la frecuencia de cada cuidado.</p>
+          <div class="fields">
+            <div class="field full" id="breedField"><label for="raza">Raza</label><select id="raza"><option value="otra">Mestizo u otra raza</option><option value="labrador">Labrador Retriever</option><option value="golden">Golden Retriever</option><option value="pastor">Pastor Alemán</option><option value="husky">Husky Siberiano</option><option value="boxer">Boxer</option><option value="beagle" selected>Beagle</option><option value="caniche">Caniche / Poodle</option><option value="salchicha">Dachshund</option><option value="bulldog">Bulldog Francés</option><option value="chihuahua">Chihuahua</option></select><div class="help">Si es mestizo, usamos su energía y tamaño.</div></div>
+            <div class="field"><label for="edad">Etapa de vida</label><select id="edad"><option value="cachorro">Cachorro</option><option value="adulto" selected>Adulto</option><option value="senior">Senior</option></select></div>
+            <div class="field"><label for="energia">Nivel de energía</label><select id="energia"><option value="baja">Baja</option><option value="media" selected>Media</option><option value="alta">Alta</option></select></div>
+            <div class="field" id="sizeField"><label for="tamano">Tamaño</label><select id="tamano"><option value="chico">Chico</option><option value="mediano" selected>Mediano</option><option value="grande">Grande</option><option value="gigante">Gigante</option></select></div>
+            <div class="field"><label for="pelo">Tipo de pelo</label><select id="pelo"><option value="corto">Corto</option><option value="medio" selected>Medio</option><option value="largo">Largo</option><option value="rizado">Rizado</option><option value="doble">Doble capa</option></select></div>
+            <div class="field"><label for="piel">Tipo de piel</label><select id="piel"><option value="normal" selected>Normal</option><option value="sensible">Sensible</option><option value="grasa">Grasa</option></select></div>
+            <div class="field"><label for="superficie" id="surfaceLabel">Dónde camina</label><select id="superficie"><option value="asfalto">Mayormente asfalto</option><option value="mixta" selected>Superficie mixta</option><option value="blanda">Pasto o interior</option></select><div class="help" id="surfaceHelp">El asfalto ayuda a desgastar las uñas.</div></div>
+          </div>
+          <div class="actions"><button class="primary" id="calculate">Actualizar rutina</button><button class="secondary" id="reset">Reiniciar</button></div>
+        </div>
+        <div class="panel result" aria-live="polite">
+          <div class="result-top"><div><div class="result-label">Su rutina recomendada</div><div class="big-result" id="mainResult">60 minutos por día</div><div class="result-sub" id="resultSub">Beagle adulto · 2 salidas de 30 minutos · baño cada 35 días · uñas cada 3 a 4 semanas.</div></div><span class="status" id="status">Actividad media</span></div>
+          <div class="schedule">
+            <div class="schedule-card"><span id="metric1Label">Salidas</span><strong id="metric1">2 por día</strong></div>
+            <div class="schedule-card"><span id="metric2Label">Cada salida</span><strong id="metric2">30 min</strong></div>
+            <div class="schedule-card"><span>Próximo baño</span><strong id="metric3">35 días</strong></div>
+            <div class="schedule-card"><span>Corte de uñas</span><strong id="metric4">3–4 semanas</strong></div>
+          </div>
+          <div class="intensity"><div class="intensity-head"><span>Suave</span><span>Media</span><span>Alta</span></div><div class="track"><div class="fill" id="fill"></div></div></div>
+        </div>
+      </div>
+    </div></section>
+
+    <section class="section week"><div class="shell"><div class="section-head"><div class="eyebrow">Vista semanal</div><h2>Qué toca hacer cada día</h2><p>Una agenda simple para distribuir actividad y cuidados sin concentrar todo en un solo momento.</p></div><div class="week-grid" id="week"></div></div></section>
+
+    <section class="section always"><div class="shell"><div class="section-head"><div class="eyebrow">Todos los cuidados</div><h2>La rutina completa, siempre visible</h2><p>El cálculo ajusta las frecuencias, pero estos cuatro pilares no desaparecen.</p></div><div class="case-grid">
+      <article class="case"><div class="num">1</div><h3>Movimiento</h3><p id="caseMove"><strong>60 minutos diarios</strong> en dos salidas. Olfatear también cuenta como ejercicio mental.</p></article>
+      <article class="case"><div class="num">2</div><h3>Higiene</h3><p id="caseBath"><strong>Baño cada 35 días.</strong> Entre baños, limpiá patas y cepillá para proteger la piel.</p></article>
+      <article class="case"><div class="num">3</div><h3>Pelo y uñas</h3><p id="caseGroom"><strong>Cepillado 3 veces por semana.</strong> Revisá también el espolón, que no se desgasta.</p></article>
+      <article class="case"><div class="num">4</div><h3>Señales de alerta</h3><p><strong>Frená y consultá</strong> ante dolor, jadeo excesivo, falta de apetito o cambios repentinos de conducta.</p></article>
+    </div><div class="notice"><div class="notice-mark">i</div><div>Esta guía es orientativa para animales sanos. La edad, la raza, el clima y cualquier condición médica pueden cambiar la recomendación; ante dudas, consultá con un veterinario.</div></div></div></section>
+
+    <section class="section"><div class="shell faq"><div class="section-head"><div class="eyebrow">Dudas frecuentes</div><h2>Lo importante, explicado simple</h2></div>
+      <div class="faq-item"><button class="faq-q">¿Olfatear cuenta como ejercicio?<span class="plus">+</span></button><div class="faq-a">Sí. Un paseo con tiempo para olfatear suma carga mental y puede cansar más que caminar la misma cantidad de minutos a ritmo constante.</div></div>
+      <div class="faq-item"><button class="faq-q">¿Bañarlo muy seguido puede hacerle mal?<span class="plus">+</span></button><div class="faq-a">Sí. El exceso de baño elimina la protección natural de la piel. Si se ensucia seguido, normalmente alcanza con limpiar patas y panza y mantener el cepillado.</div></div>
+      <div class="faq-item"><button class="faq-q">¿Cómo sé si las uñas están largas?<span class="plus">+</span></button><div class="faq-a">En perros, si hacen clic sobre un piso liso ya necesitan revisión. En perros y gatos hay que controlar especialmente el espolón porque no toca el piso.</div></div>
+      <div class="faq-item"><button class="faq-q">¿Los gatos necesitan ejercicio?<span class="plus">+</span></button><div class="faq-a">Sí, a través del juego. Lo ideal es repartir sesiones cortas con juguetes que simulen una presa y sumar rascadores y lugares para trepar.</div></div>
+    </div></section>
+  `} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-rutina-cuidados-mascotas')?document.currentScript.previousElementSibling:document.querySelector('.mockup-rutina-cuidados-mascotas');
+
+    (() => {
+      const $=id=>root.querySelector("#"+id);
+      let species='perro';
+      const breedMinutes={labrador:90,golden:90,pastor:120,husky:120,boxer:90,beagle:60,caniche:60,salchicha:45,bulldog:30,chihuahua:30};
+      const breedNames={labrador:'Labrador Retriever',golden:'Golden Retriever',pastor:'Pastor Alemán',husky:'Husky Siberiano',boxer:'Boxer',beagle:'Beagle',caniche:'Caniche',salchicha:'Dachshund',bulldog:'Bulldog Francés',chihuahua:'Chihuahua',otra:'Mestizo'};
+      const base={baja:{chico:25,mediano:35,grande:45,gigante:50},media:{chico:40,mediano:55,grande:65,gigante:75},alta:{chico:60,mediano:80,grande:100,gigante:110}};
+      const bathBase={corto:49,medio:35,largo:25,rizado:25,doble:49};
+      const val=id=>$(id).value;
+      function bathDays(){
+        let d=bathBase[val('pelo')];
+        d*=val('energia')==='alta'?.7:val('energia')==='baja'?1.2:1;
+        d*=val('piel')==='sensible'?1.2:val('piel')==='grasa'?.8:1;
+        return Math.max(14,Math.min(70,Math.round(d)));
+      }
+      function nails(){
+        if(species==='gato'){
+          if(val('edad')==='senior')return [2,2];
+          if(val('edad')==='cachorro')return [3,4];
+          return val('superficie')==='blanda'?[2,2]:val('energia')==='alta'?[3,4]:[2,3];
+        }
+        let r=val('energia')==='alta'?[4,6]:val('energia')==='baja'?[2,3]:[3,4];
+        if(val('superficie')==='asfalto')r=[r[0]+1,r[1]+2];
+        if(val('superficie')==='blanda')r=[Math.max(2,r[0]-1),Math.max(2,r[1]-1)];
+        if(val('edad')==='senior')r=[Math.max(2,r[0]-1),Math.max(2,r[1]-1)];
+        return r;
+      }
+      function weekCards(kind,brush){
+        const names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+        $('week').innerHTML=names.map((n,i)=>{
+          let icon=kind==='perro'?'●':'◉', text=kind==='perro'?'Paseo y olfato':'Juego activo';
+          if(i===2||i===5){icon='▥';text='Cepillado'}
+          if(brush>=7){icon='▥';text='Cepillado diario'}
+          return `<div class="day ${i===0?'highlight':''}"><strong>${n}</strong><span>${icon}</span><small>${text}</small></div>`;
+        }).join('');
+      }
+      function compute(){
+        const age=val('edad'),energy=val('energia'),hair=val('pelo');
+        const brush=(hair==='largo'||hair==='rizado')?7:hair==='doble'?4:species==='gato'?2:3;
+        const u=nails(), bath=bathDays();
+        if(species==='gato'){
+          const play=age==='senior'?20:age==='cachorro'?45:30;
+          $('mainResult').textContent=`${play} minutos de juego por día`;
+          $('resultSub').textContent=`En 2 o 3 sesiones · cepillado ${brush} veces por semana · uñas cada ${u[0]===u[1]?u[0]:u[0]+' a '+u[1]} semanas.`;
+          $('metric1Label').textContent='Sesiones de juego';$('metric1').textContent='2–3 por día';
+          $('metric2Label').textContent='Juego total';$('metric2').textContent=`${play} min`;
+          $('metric3').textContent=hair==='largo'?'Sólo si hace falta':'No rutinario';$('metric4').textContent=`${u[0]===u[1]?u[0]:u[0]+'–'+u[1]} semanas`;
+          $('status').textContent=play>=40?'Actividad alta':play<=20?'Actividad suave':'Actividad media';
+          $('fill').style.width=Math.min(100,play/60*100)+'%';
+          $('caseMove').innerHTML=`<strong>${play} minutos de juego diario</strong> en sesiones cortas con una captura al final.`;
+          $('caseBath').innerHTML='<strong>No necesita baños rutinarios.</strong> Consultá si deja de acicalarse o cambia el estado del pelo.';
+          $('caseGroom').innerHTML=`<strong>Cepillado ${brush} veces por semana.</strong> Uñas cada ${u[0]===u[1]?u[0]:u[0]+' a '+u[1]} semanas y rascador disponible.`;
+          weekCards('gato',brush);return;
+        }
+        const breed=val('raza');let minutes=breedMinutes[breed]||base[energy][val('tamano')];
+        if(age==='cachorro')minutes=Math.min(minutes,40);if(age==='senior')minutes=Math.round(minutes*.65);
+        const outings=age==='adulto'?2:3, each=Math.round(minutes/outings);
+        $('mainResult').textContent=`${minutes} minutos por día`;
+        $('resultSub').textContent=`${breedNames[breed]} ${age} · ${outings} salidas de ${each} minutos · baño cada ${bath} días · uñas cada ${u[0]} a ${u[1]} semanas.`;
+        $('metric1Label').textContent='Salidas';$('metric1').textContent=`${outings} por día`;
+        $('metric2Label').textContent='Cada salida';$('metric2').textContent=`${each} min`;
+        $('metric3').textContent=`${bath} días`;$('metric4').textContent=`${u[0]}–${u[1]} semanas`;
+        $('status').textContent=minutes>=90?'Actividad alta':minutes>=60?'Actividad media':'Actividad suave';
+        $('fill').style.width=Math.min(100,minutes/130*100)+'%';
+        $('caseMove').innerHTML=`<strong>${minutes} minutos diarios</strong> en ${outings} salidas. Olfatear también cuenta como ejercicio mental.`;
+        $('caseBath').innerHTML=`<strong>Baño cada ${bath} días.</strong> Entre baños, limpiá patas y cepillá para proteger la piel.`;
+        $('caseGroom').innerHTML=`<strong>Cepillado ${brush} veces por semana.</strong> Uñas cada ${u[0]} a ${u[1]} semanas.`;
+        weekCards('perro',brush);
+      }
+      root.querySelectorAll('[data-species]').forEach(b=>b.addEventListener('click',()=>{
+        species=b.dataset.species;root.querySelectorAll('[data-species]').forEach(x=>x.classList.toggle('active',x===b));
+        $('breedField').style.display=species==='perro'?'block':'none';$('sizeField').style.display=species==='perro'?'block':'none';
+        $('surfaceLabel').textContent=species==='perro'?'Dónde camina':'¿Usa rascador?';
+        $('surfaceHelp').textContent=species==='perro'?'El asfalto ayuda a desgastar las uñas.':'Elegí superficie blanda para indicar que no tiene rascador.';
+        compute();
+      }));
+      $('calculate').addEventListener('click',compute);
+      root.querySelectorAll('select').forEach(s=>s.addEventListener('change',compute));
+      $('reset').addEventListener('click',()=>{
+        species='perro';root.querySelectorAll('[data-species]').forEach(x=>x.classList.toggle('active',x.dataset.species==='perro'));
+        $('raza').value='beagle';$('edad').value='adulto';$('energia').value='media';$('tamano').value='mediano';$('pelo').value='medio';$('piel').value='normal';$('superficie').value='mixta';
+        $('breedField').style.display='block';$('sizeField').style.display='block';$('surfaceLabel').textContent='Dónde camina';$('surfaceHelp').textContent='El asfalto ayuda a desgastar las uñas.';compute();
+      });
+      root.querySelectorAll('.faq-q').forEach(q=>q.addEventListener('click',()=>q.parentElement.classList.toggle('open')));
+      compute();
+    })();
+  
+})();
+</script>
+<style is:global>
+
+    .mockup-rutina-cuidados-mascotas{--ink:#172033;--muted:#637083;--line:#dfe5eb;--blue:#174b7a;--blue2:#eaf4fb;--mint:#38b99a;--mint2:#e9f8f3;--sand:#fff6e8;--orange:#e78a36;--paper:#fbfcfa;--white:#fff;--shadow:0 18px 45px rgba(23,75,122,.09)}
+    .mockup-rutina-cuidados-mascotas *{box-sizing:border-box}.mockup-rutina-cuidados-mascotas{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .mockup-rutina-cuidados-mascotas button,.mockup-rutina-cuidados-mascotas input,.mockup-rutina-cuidados-mascotas select{font:inherit}.mockup-rutina-cuidados-mascotas .shell{max-width:1180px;margin:auto;padding:0 24px}.mockup-rutina-cuidados-mascotas .mock-header{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;background:#fff}.mockup-rutina-cuidados-mascotas .nav{display:flex;align-items:center;justify-content:space-between;gap:30px}.mockup-rutina-cuidados-mascotas .brand{display:flex;align-items:center;gap:10px;font-weight:850}.mockup-rutina-cuidados-mascotas .brand-mark{width:30px;height:34px;border-radius:7px;background:var(--blue);display:grid;place-items:center;color:#fff;font-size:16px}.mockup-rutina-cuidados-mascotas .links{display:flex;gap:25px;color:#4c5869;font-size:14px;font-weight:700}.mockup-rutina-cuidados-mascotas .nav-actions{display:flex;gap:9px}.mockup-rutina-cuidados-mascotas .nav-pill{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 14px;color:#435063}
+    .mockup-rutina-cuidados-mascotas .hero{padding:54px 0 38px;background:linear-gradient(135deg,#f4fbf8 0%,#fffaf1 100%)}.mockup-rutina-cuidados-mascotas .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:58px;align-items:center}.mockup-rutina-cuidados-mascotas .crumb{font-size:14px;color:var(--blue);font-weight:750;margin-bottom:17px}.mockup-rutina-cuidados-mascotas .eyebrow{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--blue);font-weight:850}.mockup-rutina-cuidados-mascotas .hero h1{font-size:54px;line-height:1.03;letter-spacing:-.045em;margin:14px 0 18px;max-width:740px}.mockup-rutina-cuidados-mascotas .lede{font-size:19px;line-height:1.58;color:#546174;max-width:700px}.mockup-rutina-cuidados-mascotas .stamps{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px}.mockup-rutina-cuidados-mascotas .stamp{border:1px solid #cbded8;background:#fff;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:750;color:#3d5c57}
+    .mockup-rutina-cuidados-mascotas .hero-art{position:relative;min-height:330px;display:grid;place-items:center}.mockup-rutina-cuidados-mascotas .art-orbit{width:300px;height:300px;border-radius:50%;background:#dff4ed;position:relative;box-shadow:inset 0 0 0 25px rgba(255,255,255,.55)}.mockup-rutina-cuidados-mascotas .bowl{position:absolute;width:146px;height:75px;left:77px;top:154px;border-radius:10px 10px 72px 72px;background:var(--blue);box-shadow:0 12px 0 #123e66}.mockup-rutina-cuidados-mascotas .bowl:before{content:"";position:absolute;width:96px;height:15px;border-radius:50%;background:#fff;left:25px;top:13px}.mockup-rutina-cuidados-mascotas .ball{position:absolute;width:65px;height:65px;border-radius:50%;background:var(--orange);left:51px;top:58px;box-shadow:inset -12px -7px 0 rgba(255,255,255,.2)}.mockup-rutina-cuidados-mascotas .ball:after{content:"";position:absolute;width:68px;height:15px;border:5px solid #fff;border-left:0;border-right:0;transform:rotate(30deg);top:20px;left:-2px}.mockup-rutina-cuidados-mascotas .brush{position:absolute;width:95px;height:30px;border-radius:18px;background:var(--mint);right:25px;top:83px;transform:rotate(-18deg)}.mockup-rutina-cuidados-mascotas .brush:after{content:"";position:absolute;width:57px;height:48px;border-radius:9px;background:repeating-linear-gradient(90deg,#174b7a 0 3px,transparent 3px 9px);right:13px;top:23px}.mockup-rutina-cuidados-mascotas .mini-card{position:absolute;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);border-radius:16px;padding:13px 16px;font-weight:800;font-size:13px}.mockup-rutina-cuidados-mascotas .mini-card.one{right:-25px;bottom:33px}.mockup-rutina-cuidados-mascotas .mini-card.two{left:-30px;top:125px}.mockup-rutina-cuidados-mascotas .mini-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--mint);margin-right:7px}
+    .mockup-rutina-cuidados-mascotas .section{padding:64px 0}.mockup-rutina-cuidados-mascotas .section-head{text-align:center;max-width:760px;margin:0 auto 30px}.mockup-rutina-cuidados-mascotas .section-head h2{font-size:35px;letter-spacing:-.035em;margin:9px 0}.mockup-rutina-cuidados-mascotas .section-head p{color:var(--muted);line-height:1.6}.mockup-rutina-cuidados-mascotas .species{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:850px;margin:0 auto 38px}.mockup-rutina-cuidados-mascotas .species button{border:1px solid var(--line);background:#fff;border-radius:18px;padding:18px;display:flex;text-align:left;gap:15px;cursor:pointer;transition:.2s}.mockup-rutina-cuidados-mascotas .species button:hover{transform:translateY(-2px)}.mockup-rutina-cuidados-mascotas .species button.active{border:2px solid var(--blue);background:var(--blue2)}.mockup-rutina-cuidados-mascotas .animal-icon{flex:0 0 46px;height:46px;border-radius:13px;background:var(--mint2);display:grid;place-items:center;font-size:24px}.mockup-rutina-cuidados-mascotas .species strong{display:block;font-size:17px;margin-bottom:4px}.mockup-rutina-cuidados-mascotas .species small{color:var(--muted);line-height:1.4}
+    .mockup-rutina-cuidados-mascotas .calculator{display:grid;grid-template-columns:.88fr 1.12fr;gap:22px;align-items:start}.mockup-rutina-cuidados-mascotas .panel{background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:var(--shadow)}.mockup-rutina-cuidados-mascotas .panel h3{font-size:22px;margin:0 0 7px}.mockup-rutina-cuidados-mascotas .panel-intro{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 23px}.mockup-rutina-cuidados-mascotas .fields{display:grid;grid-template-columns:1fr 1fr;gap:15px}.mockup-rutina-cuidados-mascotas .field.full{grid-column:1/-1}.mockup-rutina-cuidados-mascotas .field label{display:block;font-size:13px;font-weight:800;margin-bottom:7px}.mockup-rutina-cuidados-mascotas .field select{width:100%;height:49px;border:1px solid #ccd5df;border-radius:12px;background:#fff;padding:0 38px 0 13px;color:var(--ink);outline:none}.mockup-rutina-cuidados-mascotas .field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,75,122,.12)}.mockup-rutina-cuidados-mascotas .help{font-size:11px;color:#778292;line-height:1.4;margin-top:6px}.mockup-rutina-cuidados-mascotas .actions{display:flex;gap:10px;margin-top:22px}.mockup-rutina-cuidados-mascotas .primary,.mockup-rutina-cuidados-mascotas .secondary{border-radius:12px;padding:13px 18px;font-weight:850;cursor:pointer}.mockup-rutina-cuidados-mascotas .primary{border:1px solid var(--blue);background:var(--blue);color:#fff;flex:1}.mockup-rutina-cuidados-mascotas .secondary{border:1px solid #ccd5df;background:#fff;color:#415064}
+    .mockup-rutina-cuidados-mascotas .result{background:linear-gradient(145deg,#174b7a,#28678e);color:#fff;overflow:hidden}.mockup-rutina-cuidados-mascotas .result .panel-intro{color:#dcecf5}.mockup-rutina-cuidados-mascotas .result-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.mockup-rutina-cuidados-mascotas .result-label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#bfe1f2;font-weight:850}.mockup-rutina-cuidados-mascotas .big-result{font-size:39px;line-height:1.05;font-weight:900;letter-spacing:-.045em;margin:8px 0}.mockup-rutina-cuidados-mascotas .result-sub{color:#eaf4f8;line-height:1.5;font-size:14px;max-width:620px}.mockup-rutina-cuidados-mascotas .status{background:#e7faf4;color:#155b4d;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:850;white-space:nowrap}.mockup-rutina-cuidados-mascotas .schedule{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-top:23px}.mockup-rutina-cuidados-mascotas .schedule-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);border-radius:15px;padding:15px}.mockup-rutina-cuidados-mascotas .schedule-card span{display:block;color:#cbe1ec;font-size:12px;margin-bottom:4px}.mockup-rutina-cuidados-mascotas .schedule-card strong{font-size:20px}.mockup-rutina-cuidados-mascotas .intensity{margin-top:22px}.mockup-rutina-cuidados-mascotas .intensity-head{display:flex;justify-content:space-between;font-size:12px;color:#dcecf5;margin-bottom:8px}.mockup-rutina-cuidados-mascotas .track{height:12px;background:rgba(255,255,255,.18);border-radius:999px;overflow:hidden}.mockup-rutina-cuidados-mascotas .fill{height:100%;width:46%;background:linear-gradient(90deg,#53d4b4,#ffc16d);border-radius:999px;transition:.35s}
+    .mockup-rutina-cuidados-mascotas .week{padding-top:6px}.mockup-rutina-cuidados-mascotas .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:23px}.mockup-rutina-cuidados-mascotas .day{border:1px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center;background:#fff}.mockup-rutina-cuidados-mascotas .day strong{display:block;color:var(--blue);font-size:12px}.mockup-rutina-cuidados-mascotas .day span{display:block;font-size:20px;margin:8px 0}.mockup-rutina-cuidados-mascotas .day small{font-size:10px;color:var(--muted);line-height:1.25}.mockup-rutina-cuidados-mascotas .day.highlight{background:var(--mint2);border-color:#acdacc}
+    .mockup-rutina-cuidados-mascotas .always{background:#f3f7f6}.mockup-rutina-cuidados-mascotas .case-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.mockup-rutina-cuidados-mascotas .case{background:#fff;border:1px solid var(--line);border-radius:19px;padding:20px}.mockup-rutina-cuidados-mascotas .case .num{width:34px;height:34px;border-radius:10px;background:var(--blue2);color:var(--blue);display:grid;place-items:center;font-weight:900}.mockup-rutina-cuidados-mascotas .case h3{font-size:17px;margin:15px 0 8px}.mockup-rutina-cuidados-mascotas .case p{font-size:13px;line-height:1.5;color:var(--muted);margin:0}.mockup-rutina-cuidados-mascotas .case strong{color:var(--ink)}.mockup-rutina-cuidados-mascotas .notice{display:flex;gap:13px;background:var(--sand);border:1px solid #f0d7ae;border-radius:17px;padding:18px;margin-top:20px;color:#63451f;line-height:1.5;font-size:13px}.mockup-rutina-cuidados-mascotas .notice-mark{width:26px;height:26px;flex:0 0 26px;background:#f3c87f;color:#684419;border-radius:50%;display:grid;place-items:center;font-weight:900}
+    .mockup-rutina-cuidados-mascotas .faq{max-width:880px;margin:auto}.mockup-rutina-cuidados-mascotas .faq-item{border-bottom:1px solid var(--line)}.mockup-rutina-cuidados-mascotas .faq-q{width:100%;border:0;background:transparent;padding:20px 4px;display:flex;justify-content:space-between;text-align:left;color:var(--ink);font-weight:800;cursor:pointer}.mockup-rutina-cuidados-mascotas .faq-a{display:none;padding:0 35px 20px 4px;color:var(--muted);line-height:1.65}.mockup-rutina-cuidados-mascotas .faq-item.open .faq-a{display:block}.mockup-rutina-cuidados-mascotas .faq-item.open .plus{transform:rotate(45deg)}.mockup-rutina-cuidados-mascotas .plus{font-size:22px;transition:.2s}.mockup-rutina-cuidados-mascotas .mock-footer{height:105px;border-top:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:13px;background:#fff}
+    @media(max-width:850px){.mockup-rutina-cuidados-mascotas .links{display:none}.mockup-rutina-cuidados-mascotas .hero-grid,.mockup-rutina-cuidados-mascotas .calculator{grid-template-columns:1fr}.mockup-rutina-cuidados-mascotas .hero h1{font-size:42px}.mockup-rutina-cuidados-mascotas .hero-art{min-height:290px}.mockup-rutina-cuidados-mascotas .case-grid{grid-template-columns:1fr 1fr}.mockup-rutina-cuidados-mascotas .week-grid{grid-template-columns:repeat(4,1fr)}}@media(max-width:560px){.mockup-rutina-cuidados-mascotas .shell{padding:0 16px}.mockup-rutina-cuidados-mascotas .nav-actions .nav-pill:first-child{display:none}.mockup-rutina-cuidados-mascotas .hero{padding-top:38px}.mockup-rutina-cuidados-mascotas .hero h1{font-size:36px}.mockup-rutina-cuidados-mascotas .hero-art{display:none}.mockup-rutina-cuidados-mascotas .species,.mockup-rutina-cuidados-mascotas .fields,.mockup-rutina-cuidados-mascotas .case-grid{grid-template-columns:1fr}.mockup-rutina-cuidados-mascotas .schedule{grid-template-columns:1fr}.mockup-rutina-cuidados-mascotas .week-grid{grid-template-columns:repeat(2,1fr)}.mockup-rutina-cuidados-mascotas .panel{padding:21px}.mockup-rutina-cuidados-mascotas .big-result{font-size:32px}.mockup-rutina-cuidados-mascotas .result-top{display:block}.mockup-rutina-cuidados-mascotas .status{display:inline-block;margin-top:12px}}
+  
+.mockup-rutina-cuidados-mascotas { width:100%; overflow:hidden; }
+.mockup-rutina-cuidados-mascotas .top, .mockup-rutina-cuidados-mascotas header.top { display:none !important; }
+.mockup-rutina-cuidados-mascotas .foot { display:none !important; }
+.mockup-rutina-cuidados-mascotas .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-rutina-cuidados-mascotas .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-rutina-cuidados-mascotas .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-rutina-cuidados-mascotas .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-rutina-cuidados-mascotas .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-rutina-cuidados-mascotas :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-rutina-cuidados-mascotas input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-rutina-cuidados-mascotas input[type="number"]::-webkit-inner-spin-button, .mockup-rutina-cuidados-mascotas input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-rutina-cuidados-mascotas .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-rutina-cuidados-mascotas support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}
