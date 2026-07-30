@@ -87,7 +87,13 @@ export default defineConfig({
     defaultStrategy: 'hover',
   },
 
-  ...(IS_STATIC_SPLIT ? {} : { adapter: cloudflare() }),
+  // El build no necesita abrir una sesión remota para resolver bindings:
+  // Wrangler los inyecta al desplegar. Mantenerlos locales evita que un token
+  // válido para deploy pero sin permiso de Remote Dev bloquee la compilación.
+  ...(IS_STATIC_SPLIT ? {} : { adapter: cloudflare({
+    remoteBindings: false,
+    prerenderEnvironment: 'node',
+  }) }),
 
   vite: {
     build: {

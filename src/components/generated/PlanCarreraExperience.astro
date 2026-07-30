@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-plan-carrera" set:html={`<div class="crumb">Salud / Running</div><h1>La carrera se prepara por bloques, no acumulando kilómetros al azar.</h1><p class="lead">Partí de tu volumen actual, sumá semanas de adaptación y reservá descarga antes del objetivo.</p><section class="coach"><aside class="profile"><h2>Punto de partida</h2><label>Distancia objetivo<select id="distance"><option value="10">10K</option><option value="21">21K</option><option value="42">Maratón</option></select></label><label>Semanas disponibles<input id="weeks" type="number" value="12" min="4" max="24"></label><label>Km semanales actuales<input id="base" type="number" value="18"></label><label>Días que podés correr<input id="days" type="number" value="4" min="2" max="6"></label></aside><section class="plan"><h2>Mapa de carga</h2><div class="weeks" id="blocks"></div><div class="warning" id="warning"></div></section></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-plan-carrera')?document.currentScript.previousElementSibling:document.querySelector('.mockup-plan-carrera');
+
+const $=x=>root.querySelector("#"+x);function render(){let n=+$('weeks').value,base=+$('base').value,target=+$('distance').value,days=+$('days').value,arr=[];for(let w=1;w<=n;w++){let recovery=w%4===0,peak=w===n-2,km=peak?Math.max(base,target*(target===42?1.5:1.2)):recovery?base*(1+Math.floor(w/4)*.12)*.75:base*(1+(w-1)*.06);if(w>n-2)km*=.65;arr.push({w,km,recovery,peak})}$('blocks').innerHTML=arr.map(x=>`<div class=\"week ${x.recovery?'recovery':''} ${x.peak?'peak':''}\"><b>Semana ${x.w}</b><div class=\"load\"><i style=\"width:${Math.min(100,x.km/Math.max(...arr.map(y=>y.km))*100)}%\"></i></div><strong>${Math.round(x.km)} km</strong><span>${x.recovery?'Descarga':x.peak?'Pico específico':x.w>n-2?'Taper':'Construcción'} · ${days} días</span></div>`).join('');$('warning').textContent='No aumentes volumen e intensidad al mismo tiempo. Dolor que altera la pisada, fiebre, dolor torácico o mareos requieren detener el entrenamiento y consultar.'}
+root.querySelectorAll('input,select').forEach(x=>x.oninput=render);render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-plan-carrera{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--orange:#e47a45;--green:#3d9d77;--paper:#f5f7f5}.mockup-plan-carrera *{box-sizing:border-box}.mockup-plan-carrera{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-plan-carrera input,.mockup-plan-carrera select{font:inherit}.mockup-plan-carrera .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-plan-carrera .crumb{color:var(--blue);font-weight:850}.mockup-plan-carrera h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-plan-carrera .lead{font-size:18px;color:var(--muted)}.mockup-plan-carrera .coach{display:grid;grid-template-columns:300px 1fr;gap:20px;margin-top:26px}.mockup-plan-carrera .profile,.mockup-plan-carrera .plan{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px}.mockup-plan-carrera .profile label{display:block;font-size:12px;font-weight:850;margin:14px 0}.mockup-plan-carrera .profile input,.mockup-plan-carrera .profile select{display:block;width:100%;border:0;border-bottom:2px solid var(--line);padding:8px 0;color:var(--ink);font-weight:900}.mockup-plan-carrera .weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:20px}.mockup-plan-carrera .week{border-radius:15px;background:#f2f6f4;padding:14px;min-height:150px}.mockup-plan-carrera .week.recovery{background:#dff2e9}.mockup-plan-carrera .week.peak{background:#fff0dd;border-top:5px solid var(--orange)}.mockup-plan-carrera .week b{display:block;color:var(--blue)}.mockup-plan-carrera .week span{font-size:12px;color:var(--muted)}.mockup-plan-carrera .load{height:10px;background:#dce5e2;border-radius:99px;margin:12px 0}.mockup-plan-carrera .load i{display:block;height:100%;background:var(--blue);border-radius:99px}.mockup-plan-carrera .warning{margin-top:15px;padding:14px;border-left:5px solid var(--orange);background:#fff7e8}@media(max-width:800px){.mockup-plan-carrera .coach{grid-template-columns:1fr}.mockup-plan-carrera .weeks{grid-template-columns:1fr 1fr}}
+.mockup-plan-carrera { width:100%; overflow:hidden; }
+.mockup-plan-carrera .top, .mockup-plan-carrera header.top { display:none !important; }
+.mockup-plan-carrera .foot { display:none !important; }
+.mockup-plan-carrera .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-plan-carrera .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-plan-carrera .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-plan-carrera .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-plan-carrera .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-plan-carrera :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-plan-carrera input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-plan-carrera input[type="number"]::-webkit-inner-spin-button, .mockup-plan-carrera input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-plan-carrera .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-plan-carrera support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

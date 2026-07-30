@@ -1,0 +1,31 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-nutrientes-diarios" set:html={`<div class="crumb">Salud / Nutrientes diarios</div><h1>La variedad se puede revisar sin contar cada miligramo.</h1><p class="lead">Marcá los grupos presentes hoy y detectá huecos prácticos; no reemplaza requerimientos individuales ni análisis clínicos.</p><section class="basket"><div class="groups"><h2>Qué apareció en tu día</h2><div class="grid" id="grid"></div></div><aside class="score"><div class="ring" id="ring"><b id="points"></b></div><div class="gaps" id="gaps"></div><p class="note">Necesidades específicas cambian por edad, embarazo, medicación, patologías y patrón alimentario. Los suplementos no se indican sólo con este checklist.</p></aside></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-nutrientes-diarios')?document.currentScript.previousElementSibling:document.querySelector('.mockup-nutrientes-diarios');
+
+const foods=[['Verduras variadas','Fibra, folato, potasio'],['Frutas','Vitamina C y fibra'],['Legumbres','Hierro, fibra, proteína'],['Lácteos o equivalente','Calcio y proteína'],['Huevos/carnes/tofu','Proteína, hierro, B12 según fuente'],['Cereales integrales','Fibra y energía'],['Frutos secos/semillas','Grasas, magnesio'],['Agua','Hidratación']],on=new Set([0,1,4,7]),$=x=>root.querySelector("#"+x);function render(){$('grid').innerHTML=foods.map((f,i)=>`<button class=\"food ${on.has(i)?'on':''}\" data-i=\"${i}\"><b>${f[0]}</b><small>${f[1]}</small></button>`).join('');let score=on.size/foods.length*100;$('ring').style.setProperty('--fill',score+'%');$('points').textContent=Math.round(score)+'%';let missing=foods.map((f,i)=>[f,i]).filter(x=>!on.has(x[1])).slice(0,3);$('gaps').innerHTML=missing.length?missing.map(x=>`<div class=\"gap\">Faltó ${x[0][0].toLowerCase()}</div>`).join(''):'<div class=\"gap\">Hay buena variedad de grupos.</div>';root.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{let i=+b.dataset.i;on.has(i)?on.delete(i):on.add(i);render()})}render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-nutrientes-diarios{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--green:#3d9d77;--orange:#e47a45;--paper:#f5f7f5}.mockup-nutrientes-diarios *{box-sizing:border-box}.mockup-nutrientes-diarios{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-nutrientes-diarios button{font:inherit}.mockup-nutrientes-diarios .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-nutrientes-diarios .crumb{color:var(--blue);font-weight:850}.mockup-nutrientes-diarios h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-nutrientes-diarios .lead{font-size:18px;color:var(--muted)}.mockup-nutrientes-diarios .basket{display:grid;grid-template-columns:1fr 300px;gap:20px;margin-top:26px}.mockup-nutrientes-diarios .groups,.mockup-nutrientes-diarios .score{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px}.mockup-nutrientes-diarios .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.mockup-nutrientes-diarios .food{border:1px solid var(--line);border-radius:15px;background:#fff;padding:15px;text-align:left;color:var(--ink)}.mockup-nutrientes-diarios .food.on{background:#dff2e9;border-color:#79b99d}.mockup-nutrientes-diarios .food b{display:block}.mockup-nutrientes-diarios .food small{color:var(--muted)}.mockup-nutrientes-diarios .ring{width:220px;height:220px;border-radius:50%;background:conic-gradient(var(--green) var(--fill),#e4ebe8 0);display:grid;place-items:center;margin:auto;position:relative}.mockup-nutrientes-diarios .ring:after{content:"";position:absolute;inset:35px;background:#fff;border-radius:50%}.mockup-nutrientes-diarios .ring b{z-index:1;font-size:38px;color:var(--blue)}.mockup-nutrientes-diarios .gaps{margin-top:18px}.mockup-nutrientes-diarios .gap{padding:10px;border-left:4px solid var(--orange);background:#fff2df;margin-top:7px}.mockup-nutrientes-diarios .note{font-size:12px;color:var(--muted);margin-top:15px}@media(max-width:760px){.mockup-nutrientes-diarios .basket{grid-template-columns:1fr}.mockup-nutrientes-diarios .grid{grid-template-columns:1fr}}
+.mockup-nutrientes-diarios { width:100%; overflow:hidden; }
+.mockup-nutrientes-diarios .top, .mockup-nutrientes-diarios header.top { display:none !important; }
+.mockup-nutrientes-diarios .foot { display:none !important; }
+.mockup-nutrientes-diarios .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-nutrientes-diarios .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-nutrientes-diarios .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-nutrientes-diarios .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-nutrientes-diarios .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-nutrientes-diarios :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-nutrientes-diarios input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-nutrientes-diarios input[type="number"]::-webkit-inner-spin-button, .mockup-nutrientes-diarios input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-nutrientes-diarios .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-nutrientes-diarios support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

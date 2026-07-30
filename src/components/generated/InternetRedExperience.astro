@@ -1,0 +1,28 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-internet-red" set:html={`<div class="crumb">Tecnología / Internet y red</div><h1>Más megas no arreglan una señal que no llega.</h1><p class="lead">Separá velocidad contratada, cobertura Wi‑Fi y cantidad de equipos para detectar dónde está el cuello de botella.</p><section class="network"><div class="house"><div class="rooms" id="rooms"></div></div><aside class="panel"><h2>Tu red</h2><label>Velocidad contratada Mbps<input id="speed" type="range" min="20" max="1000" value="300"></label><label>Dispositivos activos<input id="devices" type="range" min="1" max="40" value="12"></label><label>Paredes hasta el ambiente lejano<input id="walls" type="range" min="0" max="6" value="3"></label><div class="diagnosis" id="diagnosis"></div></aside></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-internet-red')?document.currentScript.previousElementSibling:document.querySelector('.mockup-internet-red');
+const $=x=>root.querySelector("#"+x),names=['Living','Cocina','Dormitorio','Escritorio','Patio','Habitación'];function render(){let s=+$('speed').value,d=+$('devices').value,w=+$('walls').value,per=s/d,signal=Math.max(5,100-w*18);$('rooms').innerHTML=names.map((n,i)=>`<div class=\"room ${i>3&&signal<55?'weak':''}\"><span>${n}</span>${i===0?'<i class=\"waves\"></i><b class=\"router\">Wi‑Fi</b>':`<b>${Math.max(5,signal-i*5)}%</b>`}</div>`).join('');$('diagnosis').innerHTML=`<b>${per.toFixed(0)} Mbps por equipo si todos usan a la vez</b><br>${signal<55?'La cobertura es el problema probable: reubicar router, cablear o sumar access point.':per<10?'La capacidad compartida puede quedarse corta.':'Capacidad y cobertura razonables para el escenario.'}`}root.querySelectorAll('input').forEach(x=>x.oninput=render);render();
+})();
+</script>
+<style is:global>
+.mockup-internet-red{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--green:#3d9d77;--red:#d75f55;--paper:#f5f7f5}.mockup-internet-red *{box-sizing:border-box}.mockup-internet-red{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-internet-red input,.mockup-internet-red button{font:inherit}.mockup-internet-red .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-internet-red .crumb{color:var(--blue);font-weight:850}.mockup-internet-red h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-internet-red .lead{font-size:18px;color:var(--muted)}.mockup-internet-red .network{display:grid;grid-template-columns:1fr 300px;gap:20px;margin-top:26px}.mockup-internet-red .house,.mockup-internet-red .panel{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px}.mockup-internet-red .rooms{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,180px);gap:8px}.mockup-internet-red .room{border:3px solid var(--blue);display:grid;place-items:center;position:relative}.mockup-internet-red .room span{font-weight:800}.mockup-internet-red .router{width:50px;height:50px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center}.mockup-internet-red .waves{position:absolute;width:130px;height:130px;border:3px solid var(--green);border-radius:50%;opacity:.4}.mockup-internet-red .weak{background:#fff0ed}.mockup-internet-red .panel label{display:block;font-size:12px;font-weight:850;margin:15px 0}.mockup-internet-red .panel input{display:block;width:100%;accent-color:var(--blue)}.mockup-internet-red .diagnosis{padding:14px;background:#e3f1eb;border-radius:14px;margin-top:15px}@media(max-width:760px){.mockup-internet-red .network{grid-template-columns:1fr}.mockup-internet-red .rooms{grid-template-columns:1fr 1fr}}
+.mockup-internet-red { width:100%; overflow:hidden; }
+.mockup-internet-red .top, .mockup-internet-red header.top { display:none !important; }
+.mockup-internet-red .foot { display:none !important; }
+.mockup-internet-red .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-internet-red .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-internet-red .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-internet-red .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-internet-red .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-internet-red :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-internet-red input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-internet-red input[type="number"]::-webkit-inner-spin-button, .mockup-internet-red input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-internet-red .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-internet-red support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

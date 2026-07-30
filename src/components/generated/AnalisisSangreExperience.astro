@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-analisis-sangre" set:html={`<div class="crumb">Salud / Análisis de sangre</div><h1>Leé tu informe. No te diagnostiques con un número.</h1><p class="lead">Cargá el valor junto con el rango y la unidad impresos por tu laboratorio; la herramienta ordena señales y tendencias.</p><section class="report"><div class="sheet"><h2>Resultados del informe</h2><div class="row"><b>Prueba</b><b>Resultado</b><b>Mínimo</b><b>Máximo</b></div><div id="rows"></div><button class="add" id="add">Agregar prueba</button></div><aside class="guide"><h2>Cómo leerlo</h2><div id="summary"></div><div class="legend">Los rangos cambian según laboratorio, método, edad, sexo y contexto. Usá siempre el rango de tu propio informe.</div><div class="alert">Un valor fuera del rango puede no indicar enfermedad; uno dentro del rango tampoco la descarta. Interpretalo con síntomas, antecedentes y tu profesional.</div></aside></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-analisis-sangre')?document.currentScript.previousElementSibling:document.querySelector('.mockup-analisis-sangre');
+
+let tests=[['Glucosa',96,70,99,'mg/dL'],['Hemoglobina',13.8,12,16,'g/dL'],['TSH',4.8,.4,4,'mUI/L']];const $=x=>root.querySelector("#"+x);function render(){ $('rows').innerHTML=tests.map((t,i)=>`<div class=\"row\"><span><b>${t[0]}</b><br><small>${t[4]}</small></span><input data-i=\"${i}\" data-k=\"1\" value=\"${t[1]}\" type=\"number\" step=\".1\"><input data-i=\"${i}\" data-k=\"2\" value=\"${t[2]}\" type=\"number\" step=\".1\"><span><input data-i=\"${i}\" data-k=\"3\" value=\"${t[3]}\" type=\"number\" step=\".1\"><em class=\"flag ${t[1]>=t[2]&&t[1]<=t[3]?'in':'out'}\">${t[1]>=t[2]&&t[1]<=t[3]?'en rango':'revisar'}</em></span></div>`).join('');let out=tests.filter(t=>t[1]<t[2]||t[1]>t[3]);$('summary').innerHTML=`<div class=\"trend\"><b>${tests.length-out.length} dentro del rango informado</b><i style=\"width:${(tests.length-out.length)/tests.length*100}%\"></i></div><p>${out.length?`${out.length} resultado(s) para conversar con tu profesional.`:'Ningún valor marcado, sin reemplazar la interpretación clínica.'}</p>`;root.querySelectorAll('[data-i]').forEach(x=>x.oninput=()=>{tests[+x.dataset.i][+x.dataset.k]=+x.value;render()})}
+$('add').onclick=()=>{tests.push(['Nueva prueba',0,0,1,'unidad']);render()};render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-analisis-sangre{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--red:#d75f55;--green:#3d9d77;--yellow:#ffd36c;--paper:#f5f7f5}.mockup-analisis-sangre *{box-sizing:border-box}.mockup-analisis-sangre{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-analisis-sangre input,.mockup-analisis-sangre button{font:inherit}.mockup-analisis-sangre .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-analisis-sangre .crumb{color:var(--blue);font-weight:850}.mockup-analisis-sangre h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-analisis-sangre .lead{font-size:18px;color:var(--muted)}.mockup-analisis-sangre .report{display:grid;grid-template-columns:1fr 300px;gap:20px;margin-top:26px}.mockup-analisis-sangre .sheet,.mockup-analisis-sangre .guide{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px}.mockup-analisis-sangre .row{display:grid;grid-template-columns:1.2fr 100px 90px 90px;gap:9px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.mockup-analisis-sangre .row input{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px}.mockup-analisis-sangre .flag{border-radius:99px;padding:6px;text-align:center;font-size:11px;font-weight:900}.mockup-analisis-sangre .flag.in{background:#dff2e9;color:#246b52}.mockup-analisis-sangre .flag.out{background:#ffe2dd;color:#8d332f}.mockup-analisis-sangre .guide h2{margin:0}.mockup-analisis-sangre .legend{padding:14px;background:#fff2d9;border-radius:14px;margin-top:15px}.mockup-analisis-sangre .trend{margin-top:18px}.mockup-analisis-sangre .trend i{display:block;height:10px;background:var(--blue);border-radius:99px;margin-top:6px}.mockup-analisis-sangre .alert{margin-top:18px;border-left:5px solid var(--red);padding:13px;background:#fff0ed}.mockup-analisis-sangre .add{margin-top:14px;border:0;border-radius:11px;background:var(--blue);color:#fff;padding:11px 15px;font-weight:900}@media(max-width:780px){.mockup-analisis-sangre .report{grid-template-columns:1fr}.mockup-analisis-sangre .row{grid-template-columns:1fr 80px 70px}.mockup-analisis-sangre .row span:nth-child(4){display:none}}
+.mockup-analisis-sangre { width:100%; overflow:hidden; }
+.mockup-analisis-sangre .top, .mockup-analisis-sangre header.top { display:none !important; }
+.mockup-analisis-sangre .foot { display:none !important; }
+.mockup-analisis-sangre .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-analisis-sangre .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-analisis-sangre .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-analisis-sangre .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-analisis-sangre .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-analisis-sangre :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-analisis-sangre input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-analisis-sangre input[type="number"]::-webkit-inner-spin-button, .mockup-analisis-sangre input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-analisis-sangre .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-analisis-sangre support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

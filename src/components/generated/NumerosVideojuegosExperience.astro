@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-numeros-videojuegos" set:html={`<div class="crumb">Ocio / Diseño de juegos</div><h1>El progreso también se diseña con cuentas.</h1><p class="lead">Probá una curva de experiencia y mirá cuánto grind exige cada nivel al jugador.</p><section class="hud"><aside class="controls"><div class="level">LV <span id="levelOut"></span></div><label>Nivel objetivo<input id="level" type="number" value="20" min="2" max="60"></label><label>XP base del nivel 1<input id="base" type="number" value="100"></label><label>Crecimiento por nivel %<input id="growth" type="number" value="12"></label><label>XP por partida<input id="perGame" type="number" value="450"></label></aside><div><h2>Curva de esfuerzo</h2><div class="xpbar"><i id="progress"></i></div><div class="curve" id="curve"></div><div class="insights"><div class="insight"><span>XP total</span><b id="total"></b></div><div class="insight"><span>Partidas</span><b id="games"></b></div><div class="insight"><span>Último nivel</span><b id="last"></b></div></div></div></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-numeros-videojuegos')?document.currentScript.previousElementSibling:document.querySelector('.mockup-numeros-videojuegos');
+
+const $=x=>root.querySelector("#"+x);function render(){let n=Math.min(60,+$('level').value),b=+$('base').value,g=1+(+$('growth').value/100),pg=Math.max(1,+$('perGame').value),arr=Array.from({length:n},(_,i)=>b*g**i),max=arr.at(-1),total=arr.reduce((a,x)=>a+x,0);$('levelOut').textContent=n;$('curve').innerHTML=arr.map(x=>`<i style=\"height:${x/max*100}%\"></i>`).join('');$('progress').style.width=Math.min(100,pg/max*100)+'%';$('total').textContent=Math.round(total).toLocaleString('es-AR')+' XP';$('games').textContent=Math.ceil(total/pg);$('last').textContent=Math.round(max).toLocaleString('es-AR')+' XP'}
+root.querySelectorAll('input').forEach(x=>x.oninput=render);render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-numeros-videojuegos{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--purple:#7959a8;--lime:#a6d94f;--paper:#f5f7f5}.mockup-numeros-videojuegos *{box-sizing:border-box}.mockup-numeros-videojuegos{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-numeros-videojuegos input,.mockup-numeros-videojuegos button{font:inherit}.mockup-numeros-videojuegos .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-numeros-videojuegos .crumb{color:var(--blue);font-weight:850}.mockup-numeros-videojuegos h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-numeros-videojuegos .lead{font-size:18px;color:var(--muted)}.mockup-numeros-videojuegos .hud{margin-top:25px;background:#142f47;color:#fff;border-radius:28px;padding:26px;display:grid;grid-template-columns:300px 1fr;gap:28px}.mockup-numeros-videojuegos .controls label{display:block;font-size:12px;color:#c8dae4;margin:14px 0}.mockup-numeros-videojuegos .controls input{display:block;width:100%;border:1px solid #ffffff30;background:#ffffff0c;color:#fff;border-radius:10px;padding:10px;margin-top:6px}.mockup-numeros-videojuegos .level{font-size:60px;font-weight:950;color:var(--lime)}.mockup-numeros-videojuegos .xpbar{height:25px;background:#ffffff18;border-radius:99px;overflow:hidden}.mockup-numeros-videojuegos .xpbar i{display:block;height:100%;background:var(--lime)}.mockup-numeros-videojuegos .curve{display:flex;align-items:end;gap:6px;height:260px;margin-top:20px}.mockup-numeros-videojuegos .curve i{flex:1;background:var(--purple);border-radius:7px 7px 0 0;min-height:4px}.mockup-numeros-videojuegos .insights{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}.mockup-numeros-videojuegos .insight{background:#fff;color:var(--ink);border-radius:14px;padding:14px}.mockup-numeros-videojuegos .insight b{display:block;font-size:23px;color:var(--blue)}@media(max-width:760px){.mockup-numeros-videojuegos .hud{grid-template-columns:1fr}.mockup-numeros-videojuegos .insights{grid-template-columns:1fr}}
+.mockup-numeros-videojuegos { width:100%; overflow:hidden; }
+.mockup-numeros-videojuegos .top, .mockup-numeros-videojuegos header.top { display:none !important; }
+.mockup-numeros-videojuegos .foot { display:none !important; }
+.mockup-numeros-videojuegos .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-numeros-videojuegos .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-numeros-videojuegos .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-numeros-videojuegos .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-numeros-videojuegos .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-numeros-videojuegos :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-numeros-videojuegos input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-numeros-videojuegos input[type="number"]::-webkit-inner-spin-button, .mockup-numeros-videojuegos input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-numeros-videojuegos .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-numeros-videojuegos support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

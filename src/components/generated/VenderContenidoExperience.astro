@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-vender-contenido" set:html={`<div class="crumb">Negocios / Productos digitales</div><h1>No vendas “contenido”. Vendé una transformación concreta.</h1><p class="lead">Armá una escalera de oferta y descubrí cuántas ventas necesita cada nivel para llegar a tu objetivo.</p><section class="funnel"><div class="ladder"><div class="offer"><small>Entrada</small><b>Guía</b><input id="p1" type="number" value="12000"></div><div class="offer"><small>Principal</small><b>Curso</b><input id="p2" type="number" value="65000"></div><div class="offer"><small>Premium</small><b>Programa</b><input id="p3" type="number" value="220000"></div></div><aside class="economics"><h2>Meta y audiencia</h2><label>Ingreso mensual objetivo<input id="goal" type="number" value="1800000"></label><label>Audiencia alcanzable<input id="audience" type="number" value="5000"></label><label>Conversión estimada %<input id="conversion" type="number" step=".1" value="1.5"></label><div class="target"><span>Ventas necesarias con mix</span><b id="sales"></b></div><p class="mix" id="mix"></p></aside></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-vender-contenido')?document.currentScript.previousElementSibling:document.querySelector('.mockup-vender-contenido');
+
+const $=x=>root.querySelector("#"+x);function render(){let prices=[$('p1'),$('p2'),$('p3')].map(x=>+x.value),avg=prices[0]*.5+prices[1]*.35+prices[2]*.15,g=+$('goal').value,a=+$('audience').value,c=+$('conversion').value/100,needed=Math.ceil(g/avg),possible=Math.floor(a*c);$('sales').textContent=needed+' ventas';$('mix').textContent=`Mix sugerido: ${Math.ceil(needed*.5)} guías, ${Math.ceil(needed*.35)} cursos y ${Math.ceil(needed*.15)} programas. Con tu alcance y conversión estimás ${possible} compradores; ${possible>=needed?'la meta entra en el escenario.':'necesitás más alcance, conversión o ticket.'}`}
+root.querySelectorAll('input').forEach(x=>x.oninput=render);render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-vender-contenido{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--purple:#795aa8;--yellow:#ffd36c;--paper:#f5f7f5}.mockup-vender-contenido *{box-sizing:border-box}.mockup-vender-contenido{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-vender-contenido input,.mockup-vender-contenido button{font:inherit}.mockup-vender-contenido .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-vender-contenido .crumb{color:var(--blue);font-weight:850}.mockup-vender-contenido h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-vender-contenido .lead{font-size:18px;color:var(--muted)}.mockup-vender-contenido .funnel{margin-top:26px;display:grid;grid-template-columns:1fr 320px;gap:22px}.mockup-vender-contenido .ladder{display:flex;align-items:flex-end;gap:10px;min-height:430px}.mockup-vender-contenido .offer{flex:1;border-radius:18px 18px 0 0;padding:18px;background:#fff;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:flex-end}.mockup-vender-contenido .offer:nth-child(2){height:68%;background:#e8e1f4}.mockup-vender-contenido .offer:nth-child(3){height:88%;background:var(--blue);color:#fff}.mockup-vender-contenido .offer:nth-child(1){height:48%}.mockup-vender-contenido .offer b{font-size:24px}.mockup-vender-contenido .offer small{color:inherit;opacity:.75}.mockup-vender-contenido .offer input{width:100%;border:0;border-bottom:2px solid currentColor;background:transparent;padding:8px 0;color:inherit;font-weight:900}.mockup-vender-contenido .economics{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px}.mockup-vender-contenido .economics h2{margin:0}.mockup-vender-contenido .economics label{display:block;font-size:12px;font-weight:850;margin:15px 0}.mockup-vender-contenido .economics input{display:block;width:100%;border:0;border-bottom:2px solid var(--line);padding:8px 0}.mockup-vender-contenido .target{background:var(--yellow);border-radius:16px;padding:17px}.mockup-vender-contenido .target b{display:block;font-size:30px;color:var(--blue)}.mockup-vender-contenido .mix{margin-top:14px;color:var(--muted)}@media(max-width:800px){.mockup-vender-contenido .funnel{grid-template-columns:1fr}.mockup-vender-contenido .ladder{min-height:340px}.mockup-vender-contenido .offer{padding:12px}}
+.mockup-vender-contenido { width:100%; overflow:hidden; }
+.mockup-vender-contenido .top, .mockup-vender-contenido header.top { display:none !important; }
+.mockup-vender-contenido .foot { display:none !important; }
+.mockup-vender-contenido .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-vender-contenido .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-vender-contenido .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-vender-contenido .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-vender-contenido .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-vender-contenido :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-vender-contenido input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-vender-contenido input[type="number"]::-webkit-inner-spin-button, .mockup-vender-contenido input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-vender-contenido .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-vender-contenido support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

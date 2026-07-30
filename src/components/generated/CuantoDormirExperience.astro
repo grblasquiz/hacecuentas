@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-cuanto-dormir" set:html={`<div class="crumb">Salud / Sueño</div><h1>La hora de levantarte define cuándo empieza la noche.</h1><p class="lead">Calculá una ventana de descanso realista y sumá el tiempo que necesitás para dormirte.</p><section class="night"><aside class="settings"><h2>Tu mañana</h2><label>Edad<select id="age"><option value="8">13–17 años</option><option value="7" selected>18–60 años</option><option value="7.5">61–64 años</option><option value="7">65 años o más</option></select></label><label>Hora de despertar<input id="wake" type="time" value="07:00"></label><label>Minutos para dormirte<input id="latency" type="number" value="20" min="0" max="120"></label><label>Despertares acumulados (min)<input id="awake" type="number" value="15"></label></aside><div class="window"><div class="moon"><b id="bed"></b></div><div style="width:100%"><div class="timeline"><i id="sleepbar"></i></div><div class="times"><span>Acostarte</span><span>Despertarte</span></div><div class="quality" id="quality"></div></div></div></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-cuanto-dormir')?document.currentScript.previousElementSibling:document.querySelector('.mockup-cuanto-dormir');
+
+const $=x=>root.querySelector("#"+x);function render(){let need=+$('age').value,lat=+$('latency').value,awake=+$('awake').value,[h,m]=$('wake').value.split(':').map(Number),wake=h*60+m,bed=(wake-need*60-lat-awake+1440)%1440,hh=String(Math.floor(bed/60)).padStart(2,'0'),mm=String(Math.round(bed%60)).padStart(2,'0');$('bed').textContent=`${hh}:${mm}`;$('sleepbar').style.cssText=`left:${bed/1440*100}%;width:${Math.min(100,(need*60+lat+awake)/1440*100)}%`;$('quality').innerHTML=`<b>${need} h de sueño objetivo</b><br>Reservá ${Math.round(need*60+lat+awake)} minutos en cama. La calidad y la regularidad también importan.`}
+root.querySelectorAll('input,select').forEach(x=>x.oninput=render);render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-cuanto-dormir{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--sky:#b9dcec;--yellow:#ffd36c;--paper:#f5f7f5}.mockup-cuanto-dormir *{box-sizing:border-box}.mockup-cuanto-dormir{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-cuanto-dormir input,.mockup-cuanto-dormir select{font:inherit}.mockup-cuanto-dormir .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-cuanto-dormir .crumb{color:var(--blue);font-weight:850}.mockup-cuanto-dormir h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-cuanto-dormir .lead{font-size:18px;color:var(--muted)}.mockup-cuanto-dormir .night{margin-top:26px;background:linear-gradient(#174b7a,#2e6c91);color:#fff;border-radius:28px;padding:28px;display:grid;grid-template-columns:310px 1fr;gap:30px}.mockup-cuanto-dormir .settings label{display:block;color:#d7e8f0;font-size:12px;font-weight:850;margin:15px 0}.mockup-cuanto-dormir .settings input,.mockup-cuanto-dormir .settings select{display:block;width:100%;border:1px solid #ffffff35;background:#ffffff10;color:#fff;border-radius:10px;padding:10px;margin-top:6px}.mockup-cuanto-dormir .window{display:grid;place-items:center}.mockup-cuanto-dormir .moon{width:300px;height:300px;border-radius:50%;background:var(--sky);box-shadow:inset -70px 0 #174b7a;display:grid;place-items:center;color:var(--ink)}.mockup-cuanto-dormir .moon b{font-size:35px;margin-left:-25px}.mockup-cuanto-dormir .timeline{margin-top:20px;height:18px;border-radius:99px;background:#ffffff25;position:relative}.mockup-cuanto-dormir .timeline i{position:absolute;height:100%;background:var(--yellow);border-radius:99px}.mockup-cuanto-dormir .times{display:flex;justify-content:space-between;margin-top:8px}.mockup-cuanto-dormir .quality{margin-top:18px;background:#fff;color:var(--ink);border-radius:16px;padding:16px}.mockup-cuanto-dormir .quality b{color:var(--blue)}@media(max-width:760px){.mockup-cuanto-dormir .night{grid-template-columns:1fr}.mockup-cuanto-dormir .moon{width:240px;height:240px}}
+.mockup-cuanto-dormir { width:100%; overflow:hidden; }
+.mockup-cuanto-dormir .top, .mockup-cuanto-dormir header.top { display:none !important; }
+.mockup-cuanto-dormir .foot { display:none !important; }
+.mockup-cuanto-dormir .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-cuanto-dormir .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-cuanto-dormir .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-cuanto-dormir .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-cuanto-dormir .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-cuanto-dormir :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-cuanto-dormir input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-cuanto-dormir input[type="number"]::-webkit-inner-spin-button, .mockup-cuanto-dormir input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-cuanto-dormir .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-cuanto-dormir support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

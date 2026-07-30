@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-fuerza-gimnasio" set:html={`<div class="crumb">Salud / Fuerza</div><h1>Progresá la carga sin perder la técnica.</h1><p class="lead">Estimá tu repetición máxima, elegí el objetivo y convertí el porcentaje en discos y series.</p><section class="rack"><aside class="session"><h2>Última serie sólida</h2><label>Ejercicio<select id="exercise"><option>Sentadilla</option><option>Press banca</option><option>Peso muerto</option></select></label><label>Peso levantado (kg)<input id="weight" type="number" value="80"></label><label>Repeticiones<input id="reps" type="number" value="6" min="1" max="15"></label><label>Objetivo<select id="goal"><option value=".72">Volumen</option><option value=".82">Fuerza</option><option value=".62">Técnica</option></select></label></aside><section class="plates"><div class="barbell"><div class="shaft"><div class="side"><i class="plate big"></i><i class="plate mid"></i><i class="plate small"></i></div><div class="side"><i class="plate small"></i><i class="plate mid"></i><i class="plate big"></i></div></div></div><div class="numbers"><div class="number"><span>1RM estimado</span><b id="one"></b></div><div class="number"><span>Carga de trabajo</span><b id="work"></b></div><div class="number"><span>Volumen sugerido</span><b id="volume"></b></div></div><div class="plan" id="plan"></div></section></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-fuerza-gimnasio')?document.currentScript.previousElementSibling:document.querySelector('.mockup-fuerza-gimnasio');
+
+const $=x=>root.querySelector("#"+x);function render(){let w=+$('weight').value,r=+$('reps').value,p=+$('goal').value,one=w*(1+r/30),work=Math.round(one*p/2.5)*2.5,sets=p>.8?4:p>.7?4:3,reps=p>.8?4:p>.7?8:10;$('one').textContent=Math.round(one)+' kg';$('work').textContent=work+' kg';$('volume').textContent=`${sets} × ${reps}`;$('plan').textContent='Subí peso sólo si completás las series con técnica estable y repeticiones en reserva. Dolor agudo, mareos o falta de aire inusual requieren parar y consultar.'}
+root.querySelectorAll('input,select').forEach(x=>x.oninput=render);render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-fuerza-gimnasio{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--red:#d75f55;--green:#3d9d77;--paper:#f5f7f5}.mockup-fuerza-gimnasio *{box-sizing:border-box}.mockup-fuerza-gimnasio{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-fuerza-gimnasio input,.mockup-fuerza-gimnasio select,.mockup-fuerza-gimnasio button{font:inherit}.mockup-fuerza-gimnasio .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-fuerza-gimnasio .crumb{color:var(--blue);font-weight:850}.mockup-fuerza-gimnasio h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-fuerza-gimnasio .lead{font-size:18px;color:var(--muted)}.mockup-fuerza-gimnasio .rack{margin-top:26px;display:grid;grid-template-columns:330px 1fr;gap:20px}.mockup-fuerza-gimnasio .session,.mockup-fuerza-gimnasio .plates{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px}.mockup-fuerza-gimnasio .session label{display:block;font-size:12px;font-weight:850;margin:14px 0}.mockup-fuerza-gimnasio .session input,.mockup-fuerza-gimnasio .session select{display:block;width:100%;border:0;border-bottom:2px solid var(--line);padding:8px 0;color:var(--ink);font-weight:900}.mockup-fuerza-gimnasio .barbell{height:220px;display:flex;align-items:center;justify-content:center}.mockup-fuerza-gimnasio .shaft{height:18px;width:80%;background:#8b9995;display:flex;justify-content:space-between;align-items:center}.mockup-fuerza-gimnasio .side{display:flex;align-items:center}.mockup-fuerza-gimnasio .plate{width:22px;border-radius:4px;background:var(--blue);border:2px solid #fff}.mockup-fuerza-gimnasio .plate.big{height:130px}.mockup-fuerza-gimnasio .plate.mid{height:100px;background:var(--red)}.mockup-fuerza-gimnasio .plate.small{height:75px;background:var(--green)}.mockup-fuerza-gimnasio .numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.mockup-fuerza-gimnasio .number{background:#f2f6f4;border-radius:14px;padding:15px}.mockup-fuerza-gimnasio .number b{display:block;font-size:26px;color:var(--blue)}.mockup-fuerza-gimnasio .plan{margin-top:16px;padding:15px;border-left:5px solid var(--red);background:#fff1ed}@media(max-width:760px){.mockup-fuerza-gimnasio .rack{grid-template-columns:1fr}.mockup-fuerza-gimnasio .numbers{grid-template-columns:1fr}}
+.mockup-fuerza-gimnasio { width:100%; overflow:hidden; }
+.mockup-fuerza-gimnasio .top, .mockup-fuerza-gimnasio header.top { display:none !important; }
+.mockup-fuerza-gimnasio .foot { display:none !important; }
+.mockup-fuerza-gimnasio .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-fuerza-gimnasio .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-fuerza-gimnasio .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-fuerza-gimnasio .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-fuerza-gimnasio .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-fuerza-gimnasio :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-fuerza-gimnasio input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-fuerza-gimnasio input[type="number"]::-webkit-inner-spin-button, .mockup-fuerza-gimnasio input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-fuerza-gimnasio .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-fuerza-gimnasio support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

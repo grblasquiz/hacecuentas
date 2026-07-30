@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-tiempo-juego" set:html={`<div class="crumb">Ocio / Tiempo de juego</div><h1>Terminá el juego sin entregar toda tu semana.</h1><p class="lead">Pasá las horas estimadas a sesiones reales y reservá descansos antes de empezar la campaña.</p><section class="planner"><aside class="settings"><h2>Tu campaña</h2><label>Duración estimada (h)<input id="total" type="number" value="45"></label><label>Días de juego por semana<input id="days" type="number" value="4" min="1" max="7"></label><label>Minutos por sesión<input id="session" type="number" value="90"></label><label>Estilo<select id="style"><option value="story">Historia principal</option><option value="complete">Completista</option><option value="casual">Casual</option></select></label><div class="finish"><span>Tiempo para terminar</span><b id="weeksOut"></b></div></aside><section class="calendar"><h2>Semana sostenible</h2><div class="weeks" id="calendar"></div><div class="balance" id="balance"></div></section></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-tiempo-juego')?document.currentScript.previousElementSibling:document.querySelector('.mockup-tiempo-juego');
+
+const $=x=>root.querySelector("#"+x),names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];function render(){let total=+$('total').value*($('style').value==='complete'?1.5:$('style').value==='casual'?.8:1),days=Math.min(7,+$('days').value),session=+$('session').value,weekly=days*session/60,weeks=Math.ceil(total/weekly);$('weeksOut').textContent=weeks+' semanas';$('calendar').innerHTML=names.map((n,i)=>{let play=i<days,long=session>120;return`<div class=\"day ${play?'play':''} ${play&&long?'long':''}\"><b>${n}</b><span>${play?session+' min':'descanso'}</span></div>`}).join('');$('balance').textContent=session>150?'Sesiones muy largas: probá dividirlas para sostener atención y descanso.':days===7?'Reservar al menos un día sin jugar ayuda a que el plan no se vuelva obligación.':`Carga semanal: ${weekly.toFixed(1)} horas. El plan deja ${7-days} días libres.`}
+root.querySelectorAll('input,select').forEach(x=>x.oninput=render);render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-tiempo-juego{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--orange:#e47a45;--mint:#dff2e9;--paper:#f5f7f5}.mockup-tiempo-juego *{box-sizing:border-box}.mockup-tiempo-juego{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-tiempo-juego input,.mockup-tiempo-juego select{font:inherit}.mockup-tiempo-juego .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-tiempo-juego .crumb{color:var(--blue);font-weight:850}.mockup-tiempo-juego h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-tiempo-juego .lead{font-size:18px;color:var(--muted)}.mockup-tiempo-juego .planner{display:grid;grid-template-columns:290px 1fr;gap:20px;margin-top:26px}.mockup-tiempo-juego .settings,.mockup-tiempo-juego .calendar{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px}.mockup-tiempo-juego .settings label{display:block;font-size:12px;font-weight:850;margin:14px 0}.mockup-tiempo-juego .settings input,.mockup-tiempo-juego .settings select{display:block;width:100%;border:0;border-bottom:2px solid var(--line);padding:8px 0;color:var(--ink);font-weight:900}.mockup-tiempo-juego .finish{background:var(--blue);color:#fff;border-radius:16px;padding:17px;margin-top:18px}.mockup-tiempo-juego .finish b{font-size:28px;display:block}.mockup-tiempo-juego .weeks{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}.mockup-tiempo-juego .day{min-height:100px;border-radius:12px;background:#f2f6f4;padding:9px}.mockup-tiempo-juego .day.play{background:var(--mint);border-top:5px solid var(--blue)}.mockup-tiempo-juego .day.long{background:#fff0dd;border-color:var(--orange)}.mockup-tiempo-juego .day b{display:block}.mockup-tiempo-juego .day span{font-size:11px;color:var(--muted)}.mockup-tiempo-juego .balance{margin-top:15px;padding:14px;border-left:5px solid var(--orange);background:#fff8ea}@media(max-width:760px){.mockup-tiempo-juego .planner{grid-template-columns:1fr}.mockup-tiempo-juego .weeks{overflow-x:auto}.mockup-tiempo-juego .day{min-width:100px}}
+.mockup-tiempo-juego { width:100%; overflow:hidden; }
+.mockup-tiempo-juego .top, .mockup-tiempo-juego header.top { display:none !important; }
+.mockup-tiempo-juego .foot { display:none !important; }
+.mockup-tiempo-juego .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-tiempo-juego .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-tiempo-juego .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-tiempo-juego .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-tiempo-juego .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-tiempo-juego :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-tiempo-juego input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-tiempo-juego input[type="number"]::-webkit-inner-spin-button, .mockup-tiempo-juego input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-tiempo-juego .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-tiempo-juego support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

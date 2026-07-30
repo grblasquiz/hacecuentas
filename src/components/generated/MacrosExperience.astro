@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-macros" set:html={`<div class="crumb">Salud / Alimentación</div><h1>Los macros son un reparto, no tres metas aisladas.</h1><p class="lead">Partí de energía y proteína, y mirá cómo se distribuye el resto sin convertir cada comida en una ecuación.</p><section class="mealLab"><aside class="settings"><h2>Escenario diario</h2><label>Calorías objetivo<input id="kcal" type="number" value="2200"></label><label>Peso (kg)<input id="weight" type="number" value="72"></label><label>Proteína por kg<select id="protein"><option value="1.2">1,2 g — general</option><option value="1.6" selected>1,6 g — activo</option><option value="2">2 g — fuerza/déficit</option></select></label><label>Grasas (% energía)<input id="fat" type="number" value="30"></label></aside><section class="plateCard"><div class="plate" id="plate"></div><div class="legend"><div class="macro"><span>Proteína</span><b id="p"></b></div><div class="macro"><span>Carbohidratos</span><b id="c"></b></div><div class="macro"><span>Grasas</span><b id="f"></b></div></div><div class="context">Son estimaciones, no una prescripción. Preferencias, tolerancia, actividad, salud y adherencia definen el reparto útil.</div></section></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-macros')?document.currentScript.previousElementSibling:document.querySelector('.mockup-macros');
+
+const $=x=>root.querySelector("#"+x);function render(){let k=+$('kcal').value,w=+$('weight').value,p=w*+$('protein').value,f=k*(+$('fat').value/100)/9,c=Math.max(0,(k-p*4-f*9)/4),pp=p*4/k*100,cp=c*4/k*100;$('plate').style.setProperty('--p',pp+'%');$('plate').style.setProperty('--c',cp+'%');$('p').textContent=Math.round(p)+' g';$('c').textContent=Math.round(c)+' g';$('f').textContent=Math.round(f)+' g'}
+root.querySelectorAll('input,select').forEach(x=>x.oninput=render);render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-macros{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--green:#3d9d77;--orange:#e47a45;--yellow:#ffd36c;--paper:#f5f7f5}.mockup-macros *{box-sizing:border-box}.mockup-macros{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-macros input,.mockup-macros select{font:inherit}.mockup-macros .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-macros .crumb{color:var(--blue);font-weight:850}.mockup-macros h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-macros .lead{font-size:18px;color:var(--muted)}.mockup-macros .mealLab{display:grid;grid-template-columns:330px 1fr;gap:24px;margin-top:26px}.mockup-macros .settings,.mockup-macros .plateCard{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px}.mockup-macros .settings label{display:block;font-size:12px;font-weight:850;margin:14px 0}.mockup-macros .settings input,.mockup-macros .settings select{display:block;width:100%;border:0;border-bottom:2px solid var(--line);padding:8px 0;color:var(--ink);font-weight:900}.mockup-macros .plate{width:330px;height:330px;border-radius:50%;margin:auto;background:conic-gradient(var(--blue) 0 var(--p),var(--green) var(--p) calc(var(--p) + var(--c)),var(--yellow) 0);border:15px solid #f5f8f6}.mockup-macros .legend{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}.mockup-macros .macro{padding:14px;border-radius:14px;background:#f2f6f4}.mockup-macros .macro b{display:block;font-size:25px;color:var(--blue)}.mockup-macros .context{margin-top:15px;padding:14px;border-left:5px solid var(--orange);background:#fff2dd}@media(max-width:760px){.mockup-macros .mealLab{grid-template-columns:1fr}.mockup-macros .plate{width:260px;height:260px}}
+.mockup-macros { width:100%; overflow:hidden; }
+.mockup-macros .top, .mockup-macros header.top { display:none !important; }
+.mockup-macros .foot { display:none !important; }
+.mockup-macros .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-macros .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-macros .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-macros .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-macros .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-macros :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-macros input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-macros input[type="number"]::-webkit-inner-spin-button, .mockup-macros input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-macros .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-macros support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

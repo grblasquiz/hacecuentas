@@ -226,6 +226,37 @@ const entries = [
   ['ecuaciones-polinomios-mockup.html', 'EcuacionesPolinomiosExperience', 'ecuaciones-polinomios'],
   ['estadistica-descriptiva-mockup.html', 'EstadisticaDescriptivaExperience', 'estadistica-descriptiva'],
   ['estadistica-inferencial-mockup.html', 'EstadisticaInferencialExperience', 'estadistica-inferencial'],
+  ['fracciones-mockup.html', 'FraccionesExperience', 'fracciones'],
+  ['geometria-analitica-mockup.html', 'GeometriaAnaliticaExperience', 'geometria-analitica'],
+  ['limites-integrales-mockup.html', 'LimitesIntegralesExperience', 'limites-integrales'],
+  ['sistemas-matrices-mockup.html', 'SistemasMatricesExperience', 'sistemas-matrices'],
+  ['sucesiones-series-mockup.html', 'SucesionesSeriesExperience', 'sucesiones-series'],
+  ['capital-trabajo-mockup.html', 'CapitalTrabajoExperience', 'capital-trabajo'],
+  ['creador-contenido-mockup.html', 'CreadorContenidoExperience', 'creador-contenido'],
+  ['cuanto-vale-negocio-mockup.html', 'CuantoValeNegocioExperience', 'cuanto-vale-negocio'],
+  ['indicadores-marca-mockup.html', 'IndicadoresMarcaExperience', 'indicadores-marca'],
+  ['precio-venta-mockup.html', 'PrecioVentaExperience', 'precio-venta'],
+  ['publicar-redes-mockup.html', 'PublicarRedesExperience', 'publicar-redes'],
+  ['tarifas-hora-mockup.html', 'TarifasHoraExperience', 'tarifas-hora'],
+  ['vender-contenido-mockup.html', 'VenderContenidoExperience', 'vender-contenido'],
+  ['nutricion-deportiva-mockup.html', 'NutricionDeportivaExperience', 'nutricion-deportiva'],
+  ['numeros-videojuegos-mockup.html', 'NumerosVideojuegosExperience', 'numeros-videojuegos'],
+  ['tiempo-juego-mockup.html', 'TiempoJuegoExperience', 'tiempo-juego'],
+  ['analisis-sangre-mockup.html', 'AnalisisSangreExperience', 'analisis-sangre'],
+  ['cuanto-dormir-mockup.html', 'CuantoDormirExperience', 'cuanto-dormir'],
+  ['fuerza-gimnasio-mockup.html', 'FuerzaGimnasioExperience', 'fuerza-gimnasio'],
+  ['macros-mockup.html', 'MacrosExperience', 'macros'],
+  ['nutrientes-diarios-mockup.html', 'NutrientesDiariosExperience', 'nutrientes-diarios'],
+  ['peso-embarazo-mockup.html', 'PesoEmbarazoExperience', 'peso-embarazo'],
+  ['plan-carrera-mockup.html', 'PlanCarreraExperience', 'plan-carrera'],
+  ['ritmo-pace-mockup.html', 'RitmoPaceExperience', 'ritmo-pace'],
+  ['sueno-pantallas-mockup.html', 'SuenoPantallasExperience', 'sueno-pantallas'],
+  ['almacenamiento-mockup.html', 'AlmacenamientoExperience', 'almacenamiento'],
+  ['audio-mockup.html', 'AudioExperience', 'audio'],
+  ['costo-ia-mockup.html', 'CostoIaExperience', 'costo-ia'],
+  ['internet-red-mockup.html', 'InternetRedExperience', 'internet-red'],
+  ['nitidez-encuadre-mockup.html', 'NitidezEncuadreExperience', 'nitidez-encuadre'],
+  ['liquidacion-latam-mockup.html', 'LiquidacionLatamExperience', 'liquidacion-latam'],
 ];
 
 const prefixCss = (css, scope) => {
@@ -246,8 +277,10 @@ const prefixCss = (css, scope) => {
 const escapeTemplate = (value) => value.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 
 fs.mkdirSync(targetDir, { recursive: true });
+const onlyComponents = new Set((process.env.HC_MOCKUP_ONLY ?? '').split(',').map((item) => item.trim()).filter(Boolean));
 
 for (const [file, component, slug] of entries) {
+  if (onlyComponents.size && !onlyComponents.has(component)) continue;
   const html = fs.readFileSync(path.join(sourceDir, file), 'utf8');
   const styles = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]).join('\n');
   const replacements = [...html.matchAll(/document\.querySelector\("main"\)\.innerHTML=`([\s\S]*?)`;/g)];
@@ -483,9 +516,41 @@ const pages = [
   ['src/pages/matematica/ecuaciones-y-polinomios.astro', 'EcuacionesPolinomiosExperience', '../../components/generated/EcuacionesPolinomiosExperience.astro'],
   ['src/pages/matematica/estadistica-descriptiva.astro', 'EstadisticaDescriptivaExperience', '../../components/generated/EstadisticaDescriptivaExperience.astro'],
   ['src/pages/matematica/estadistica-inferencial.astro', 'EstadisticaInferencialExperience', '../../components/generated/EstadisticaInferencialExperience.astro'],
+  ['src/pages/matematica/fracciones.astro', 'FraccionesExperience', '../../components/generated/FraccionesExperience.astro'],
+  ['src/pages/matematica/geometria-analitica.astro', 'GeometriaAnaliticaExperience', '../../components/generated/GeometriaAnaliticaExperience.astro'],
+  ['src/pages/matematica/limites-e-integrales.astro', 'LimitesIntegralesExperience', '../../components/generated/LimitesIntegralesExperience.astro'],
+  ['src/pages/matematica/sistemas-y-matrices.astro', 'SistemasMatricesExperience', '../../components/generated/SistemasMatricesExperience.astro'],
+  ['src/pages/matematica/sucesiones-y-series.astro', 'SucesionesSeriesExperience', '../../components/generated/SucesionesSeriesExperience.astro'],
+  ['src/pages/negocios/capital-de-trabajo.astro', 'CapitalTrabajoExperience', '../../components/generated/CapitalTrabajoExperience.astro'],
+  ['src/pages/negocios/creador-de-contenido.astro', 'CreadorContenidoExperience', '../../components/generated/CreadorContenidoExperience.astro'],
+  ['src/pages/negocios/cuanto-vale-mi-negocio.astro', 'CuantoValeNegocioExperience', '../../components/generated/CuantoValeNegocioExperience.astro'],
+  ['src/pages/negocios/indicadores-de-marca.astro', 'IndicadoresMarcaExperience', '../../components/generated/IndicadoresMarcaExperience.astro'],
+  ['src/pages/negocios/precio-de-venta.astro', 'PrecioVentaExperience', '../../components/generated/PrecioVentaExperience.astro'],
+  ['src/pages/negocios/publicar-en-redes.astro', 'PublicarRedesExperience', '../../components/generated/PublicarRedesExperience.astro'],
+  ['src/pages/negocios/tarifas-por-hora.astro', 'TarifasHoraExperience', '../../components/generated/TarifasHoraExperience.astro'],
+  ['src/pages/negocios/vender-mi-contenido.astro', 'VenderContenidoExperience', '../../components/generated/VenderContenidoExperience.astro'],
+  ['src/pages/nutricion/nutricion-deportiva.astro', 'NutricionDeportivaExperience', '../../components/generated/NutricionDeportivaExperience.astro'],
+  ['src/pages/ocio/numeros-de-videojuegos.astro', 'NumerosVideojuegosExperience', '../../components/generated/NumerosVideojuegosExperience.astro'],
+  ['src/pages/ocio/tiempo-de-juego.astro', 'TiempoJuegoExperience', '../../components/generated/TiempoJuegoExperience.astro'],
+  ['src/pages/salud/analisis-de-sangre.astro', 'AnalisisSangreExperience', '../../components/generated/AnalisisSangreExperience.astro'],
+  ['src/pages/salud/cuanto-dormir.astro', 'CuantoDormirExperience', '../../components/generated/CuantoDormirExperience.astro'],
+  ['src/pages/salud/fuerza-y-gimnasio.astro', 'FuerzaGimnasioExperience', '../../components/generated/FuerzaGimnasioExperience.astro'],
+  ['src/pages/salud/macros.astro', 'MacrosExperience', '../../components/generated/MacrosExperience.astro'],
+  ['src/pages/salud/nutrientes-diarios.astro', 'NutrientesDiariosExperience', '../../components/generated/NutrientesDiariosExperience.astro'],
+  ['src/pages/salud/peso-en-el-embarazo.astro', 'PesoEmbarazoExperience', '../../components/generated/PesoEmbarazoExperience.astro'],
+  ['src/pages/salud/plan-de-carrera.astro', 'PlanCarreraExperience', '../../components/generated/PlanCarreraExperience.astro'],
+  ['src/pages/salud/ritmo-y-pace.astro', 'RitmoPaceExperience', '../../components/generated/RitmoPaceExperience.astro'],
+  ['src/pages/salud/sueno-y-pantallas.astro', 'SuenoPantallasExperience', '../../components/generated/SuenoPantallasExperience.astro'],
+  ['src/pages/tecnologia/almacenamiento.astro', 'AlmacenamientoExperience', '../../components/generated/AlmacenamientoExperience.astro'],
+  ['src/pages/tecnologia/audio.astro', 'AudioExperience', '../../components/generated/AudioExperience.astro'],
+  ['src/pages/tecnologia/costo-de-ia.astro', 'CostoIaExperience', '../../components/generated/CostoIaExperience.astro'],
+  ['src/pages/tecnologia/internet-y-red.astro', 'InternetRedExperience', '../../components/generated/InternetRedExperience.astro'],
+  ['src/pages/tecnologia/nitidez-y-encuadre.astro', 'NitidezEncuadreExperience', '../../components/generated/NitidezEncuadreExperience.astro'],
+  ['src/pages/trabajo/liquidacion-latam.astro', 'LiquidacionLatamExperience', '../../components/generated/LiquidacionLatamExperience.astro'],
 ];
 
 for (const [page, component, importPath] of pages) {
+  if (onlyComponents.size && !onlyComponents.has(component)) continue;
   const fullPath = path.join('/Users/marrod/hacecuentas', page);
   let source = fs.readFileSync(fullPath, 'utf8');
   source = source.replace(/import DecisionHub from ['"][^'"]+['"];/, `import ${component} from '${importPath}';`);

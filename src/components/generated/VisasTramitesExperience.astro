@@ -34,28 +34,46 @@ const cases=[
 ];let active=0;
 const destNames={br:"Brasil",us:"Estados Unidos",schengen:"Espacio Schengen",mx:"México",uk:"Reino Unido",ca:"Canadá",other:"el destino elegido"};
 const purposeNames={tourism:"turismo",study:"estudio",work:"trabajo",transit:"tránsito"};
+const official={
+ us:"https://travel.state.gov/content/travel/en/us-visas/tourism-visit.html",
+ ca:"https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/check-visa-eta.html",
+ uk:"https://www.gov.uk/check-uk-visa",
+ schengen:"https://travel-europe.europa.eu/es/etias",
+ mx:"https://consulmex.sre.gob.mx/montreal/index.php/en/foreigners/visa/354-how-can-i-know-if-i-need-a-visa-to-go-to-me",
+ br:"https://www.gov.br/mre/pt-br/consulado-paso-de-los-libres/assuntos-migratorios-covid-19/entrada-en-brasil"
+};
+function requirement(nationality,dest,purpose,days,departure){
+ const short=purpose==="tourism"&&days<=90;
+ if(nationality==="ar"){
+  if(dest==="us") return {status:"Necesitás visa B1/B2",complexity:"Alto",start:"Antes de comprar",detail:"Con pasaporte argentino, el turismo en Estados Unidos requiere una visa de visitante B-2 o B1/B2 vigente. Argentina no integra el Visa Waiver Program; ESTA no reemplaza la visa.",tasks:["Comprobar si ya tenés una visa B1/B2 vigente","Si no la tenés: completar DS-160, pagar el arancel y gestionar entrevista","No comprar servicios no reembolsables antes de obtener la visa"]};
+  if(dest==="br"&&short) return {status:"No necesitás visa",complexity:"Bajo",start:"2 semanas antes",detail:"Para turismo en Brasil podés viajar con DNI tarjeta físico vigente o pasaporte argentino vigente. El DNI digital del teléfono no sirve como documento de viaje.",tasks:["Elegir DNI tarjeta físico o pasaporte vigente","Confirmar requisitos sanitarios y condiciones de la aerolínea"]};
+  if(dest==="schengen"&&short) return {status:"No necesitás visa",complexity:"Bajo",start:"3 semanas antes",detail:departure<new Date("2026-10-01")?"Para turismo de hasta 90 días en un período de 180, el pasaporte argentino está exento de visa. ETIAS todavía no está operativo y no admite solicitudes.":"Para turismo de hasta 90 días en 180 no necesitás visa. ETIAS está previsto para el último trimestre de 2026, pero la UE aún debe confirmar la fecha exacta: verificá el portal oficial antes de viajar.",tasks:["Controlar la regla acumulada de 90 días dentro de 180","Pasaporte: al menos 3 meses de vigencia después de la salida prevista y emitido hace menos de 10 años","Revisar el estado oficial de ETIAS; no pagar en sitios intermediarios"]};
+  if(dest==="mx"&&purpose==="tourism"&&days<=180) return {status:"No necesitás visa",complexity:"Bajo",start:"2 semanas antes",detail:"Con pasaporte argentino ordinario vigente, México exime de visa para visitas sin actividad remunerada de hasta 180 días. La admisión y el plazo final los determina migración.",tasks:["Viajar con pasaporte vigente","Preparar reserva, domicilio, motivo del viaje y pasaje de salida","No realizar actividades remuneradas con condición de visitante"]};
+  if(dest==="uk"&&purpose==="tourism"&&days<=180) return {status:"Necesitás ETA",complexity:"Medio",start:"Antes de volar",detail:"Con pasaporte argentino y visita de hasta 6 meses no necesitás visa de turista, pero sí una ETA británica aprobada y vinculada al mismo pasaporte.",tasks:["Solicitar la ETA únicamente en GOV.UK o la app UK ETA","Usar para viajar el mismo pasaporte de la solicitud","Cada viajero, incluidos niños y bebés, necesita su propia ETA"]};
+  if(dest==="ca"&&short) return {status:"Visa o eTA según antecedentes",complexity:"Medio/alto",start:"Antes de comprar",detail:"El pasaporte argentino normalmente requiere visa de visitante. Si viajás por aire y tuviste visa canadiense en los últimos 10 años o tenés una visa estadounidense no inmigrante vigente, podés ser elegible para eTA.",tasks:["Responder el verificador oficial de Canadá","Si no cumplís la excepción: solicitar visa de visitante","Si cumplís y viajás por aire: tramitar eTA; por tierra o mar sigue correspondiendo visa"]};
+ }
+ if(dest==="us"&&nationality==="cl"&&short) return {status:"Necesitás ESTA",complexity:"Medio",start:"Antes de volar",detail:"Chile integra el Visa Waiver Program para visitas elegibles: necesitás pasaporte electrónico y ESTA aprobada. Otros motivos o estadías requieren visa.",tasks:["Confirmar que el viaje entra en Visa Waiver Program","Solicitar ESTA en el sitio oficial","Viajar con el pasaporte electrónico usado en la solicitud"]};
+ if(dest==="uk"&&nationality==="co"&&short) return {status:"Necesitás visa de visitante",complexity:"Alto",start:"Antes de comprar",detail:"Los ciudadanos colombianos necesitan visa para visitar el Reino Unido; la ETA no aplica a pasaportes colombianos.",tasks:["Usar el verificador oficial de GOV.UK","Solicitar Standard Visitor visa y preparar documentación","Esperar la decisión antes de contratar servicios no reembolsables"]};
+ if(dest==="ca"&&nationality==="cl"&&short) return {status:"Necesitás eTA si volás",complexity:"Medio",start:"Antes de volar",detail:"Con pasaporte chileno, para viajar a Canadá por aire necesitás eTA. Por tierra o mar normalmente no se exige eTA, pero sí pasaporte válido.",tasks:["Tramitar eTA en Canada.ca si viajás por aire","Usar el mismo pasaporte vinculado a la autorización"]};
+ if(purpose==="study"||purpose==="work"||days>90) return {status:"Necesitás permiso específico",complexity:"Alto",start:"3 a 6 meses antes",detail:`Una estadía de ${purposeNames[purpose]} o de ${days} días no se resuelve con las reglas de turismo. Necesitás verificar visa o permiso específico antes de comprar.`,tasks:["Identificar la categoría exacta de visa o permiso","Revisar requisitos de fondos, admisión, contrato, seguro y antecedentes","Confirmar si el permiso debe obtenerse antes de ingresar"]};
+ return {status:"Caso no cubierto con certeza",complexity:"Revisión oficial",start:"Antes de comprar",detail:"Esta combinación no está cargada con una respuesta confiable. Usá el verificador oficial del destino; no asumimos una exención.",tasks:["Abrir el verificador oficial del destino","Confirmar requisito según el pasaporte exacto y el motivo","Guardar una copia de la respuesta o normativa vigente"]};
+}
 function monthsBetween(a,b){return Math.max(0,Math.floor((b-a)/(1000*60*60*24*30.44)))}
 function compute(){
  const dest=$("destination").value,purpose=$("purpose").value,days=Math.max(1,Number($("days").value)||1);
  const departure=new Date($("departure").value+"T12:00:00"),expiry=new Date($("passportExpiry").value+"T12:00:00");
  const months=Number.isNaN(departure.getTime())||Number.isNaN(expiry.getTime())?0:monthsBetween(departure,expiry);
- const regional=$("nationality").value==="ar"&&dest==="br"&&purpose==="tourism";
- const longStay=days>90||purpose==="study"||purpose==="work";
- let status=regional?"Revisión simple":longStay?"Necesitás trámite previo":"Verificá visa o autorización";
- let complexity=regional?"Bajo":longStay?"Alto":"Medio";
- let start=regional?"2 semanas antes":longStay?"3 a 6 meses antes":"1 a 3 meses antes";
- const tasks=["Confirmar el documento admitido y su vigencia en la web oficial",`Revisar condiciones de ingreso a ${destNames[dest]}`];
- if(!regional)tasks.push("Confirmar si corresponde visa, eVisa o autorización electrónica");
- if(longStay)tasks.push(`Verificar permiso específico para ${purposeNames[purpose]} y estadías de ${days} días`);
+ const req=requirement($("nationality").value,dest,purpose,days,departure);
+ const tasks=[...req.tasks];
  if($("connections").value==="yes")tasks.push("Controlar requisitos de tránsito de cada escala");
  if($("minors").value==="yes")tasks.push("Preparar autorizaciones y documentación de los menores");
  if(months<6)tasks.push("Revisar si la vigencia restante del pasaporte es suficiente");
  tasks.push("Guardar reservas, seguro y pasaje de salida accesibles sin conexión");
- $("status").textContent=status;$("complexity").textContent=complexity;$("start").textContent=start;$("count").textContent=`${tasks.length} controles`;
+ $("status").textContent=req.status;$("complexity").textContent=req.complexity;$("start").textContent=req.start;$("count").textContent=`${tasks.length} controles`;
  $("validity").textContent=months?`${months} meses de vigencia`:"Revisar fechas";
- $("summary").textContent=`Para un viaje de ${purposeNames[purpose]} a ${destNames[dest]} por ${days} días, empezá por confirmar el requisito migratorio y la vigencia documental antes de hacer compras no reembolsables.`;
+ $("summary").textContent=req.detail;
  $("tasks").innerHTML=tasks.map((t,i)=>`<div class="task"><i>${i+1}</i><span>${t}</span></div>`).join("");
- $("warning").textContent=months<6?"Atención: la vigencia restante es menor a 6 meses. Confirmá la exigencia exacta del destino antes de comprar.":"Los requisitos pueden cambiar. Confirmalos en el consulado, organismo migratorio y aerolínea antes de pagar.";
+ $("warning").innerHTML=months<3?"Atención: la vigencia restante es menor a 3 meses. Revisá el requisito exacto antes de comprar.":`Información revisada el 30/07/2026. Los requisitos pueden cambiar. <a href="${official[dest]||'#'}" target="_blank" rel="nofollow noopener" style="color:inherit;text-decoration:underline">Confirmá en la fuente oficial</a>.`;
 }
 function preset(i){active=i;const c=cases[i];$("destination").value=c.destination;$("purpose").value=c.purpose;$("days").value=c.days;$("minors").value=c.minors;$("connections").value=c.connections;$("scenario").textContent=c.name;root.querySelectorAll("[data-case]").forEach((el,n)=>el.classList.toggle("active",n===i));compute()}
 root.querySelectorAll("[data-case]").forEach(el=>el.addEventListener("click",()=>preset(Number(el.dataset.case))));

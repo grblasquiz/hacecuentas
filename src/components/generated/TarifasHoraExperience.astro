@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-tarifas-hora" set:html={`<div class="crumb">Negocios / Tarifas</div><h1>No todas tus horas se pueden facturar.</h1><p class="lead">Tu tarifa debe sostener ingresos, gastos, vacaciones y el tiempo invisible de vender y administrar.</p><section class="clockroom"><div class="clock" id="clock"><strong id="rate"></strong><span>por hora facturable</span></div><div class="model"><div class="fields"><label>Ingreso mensual objetivo<input id="income" type="number" value="1800000"></label><label>Gastos del negocio<input id="cost" type="number" value="450000"></label><label>Horas trabajadas al mes<input id="hours" type="number" value="140"></label><label>% realmente facturable<input id="billable" type="number" value="60" min="10" max="100"></label><label>Días libres al año<input id="off" type="number" value="30"></label><label>Margen de seguridad %<input id="margin" type="number" value="15"></label></div><div class="quote"><span>Proyecto de 12 horas</span><b id="project"></b></div><div class="example" id="explain"></div></div></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-tarifas-hora')?document.currentScript.previousElementSibling:document.querySelector('.mockup-tarifas-hora');
+
+const $=x=>root.querySelector("#"+x),money=n=>'$ '+Math.ceil(n/100)*100 .toLocaleString?.('es-AR')||n;function render(){let inc=+$('income').value,c=+$('cost').value,h=+$('hours').value,b=+$('billable').value/100,off=+$('off').value,m=1+(+$('margin').value/100),available=h*b*(1-off/365),r=(inc+c)/Math.max(1,available)*m;$('rate').textContent='$ '+Math.ceil(r).toLocaleString('es-AR');$('project').textContent='$ '+Math.ceil(r*12).toLocaleString('es-AR');$('clock').style.setProperty('--billable',b*100+'%');$('explain').textContent=`De ${h} horas trabajadas, aproximadamente ${Math.round(h*b)} son cobrables. El resto también necesita financiamiento.`}
+root.querySelectorAll('input').forEach(x=>x.oninput=render);render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-tarifas-hora{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--orange:#e47a45;--green:#3d9d77;--paper:#f5f7f5}.mockup-tarifas-hora *{box-sizing:border-box}.mockup-tarifas-hora{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-tarifas-hora input{font:inherit}.mockup-tarifas-hora .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-tarifas-hora .crumb{color:var(--blue);font-weight:850}.mockup-tarifas-hora h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-tarifas-hora .lead{font-size:18px;color:var(--muted)}.mockup-tarifas-hora .clockroom{display:grid;grid-template-columns:390px 1fr;gap:25px;align-items:center;margin-top:25px}.mockup-tarifas-hora .clock{width:360px;height:360px;border-radius:50%;background:conic-gradient(var(--green) 0 var(--billable),#dce6e2 var(--billable));position:relative;display:grid;place-items:center}.mockup-tarifas-hora .clock:after{content:"";position:absolute;inset:65px;background:#fff;border-radius:50%}.mockup-tarifas-hora .clock strong{position:relative;z-index:1;font-size:38px;color:var(--blue)}.mockup-tarifas-hora .clock span{position:absolute;z-index:1;margin-top:70px;color:var(--muted)}.mockup-tarifas-hora .model{background:#fff;border:1px solid var(--line);border-radius:24px;padding:23px}.mockup-tarifas-hora .fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.mockup-tarifas-hora .fields label{font-size:12px;font-weight:850}.mockup-tarifas-hora .fields input{display:block;width:100%;border:0;border-bottom:2px solid var(--line);padding:9px 0;font-weight:900;color:var(--ink)}.mockup-tarifas-hora .quote{margin-top:22px;background:var(--blue);color:#fff;border-radius:18px;padding:20px;display:flex;justify-content:space-between}.mockup-tarifas-hora .quote b{font-size:34px}.mockup-tarifas-hora .quote span{color:#dce9ef}.mockup-tarifas-hora .example{margin-top:15px;padding:14px;border-left:5px solid var(--orange);background:#fff2df}@media(max-width:800px){.mockup-tarifas-hora .clockroom{grid-template-columns:1fr}.mockup-tarifas-hora .clock{width:290px;height:290px;margin:auto}.mockup-tarifas-hora .fields{grid-template-columns:1fr}}
+.mockup-tarifas-hora { width:100%; overflow:hidden; }
+.mockup-tarifas-hora .top, .mockup-tarifas-hora header.top { display:none !important; }
+.mockup-tarifas-hora .foot { display:none !important; }
+.mockup-tarifas-hora .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-tarifas-hora .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-tarifas-hora .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-tarifas-hora .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-tarifas-hora .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-tarifas-hora :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-tarifas-hora input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-tarifas-hora input[type="number"]::-webkit-inner-spin-button, .mockup-tarifas-hora input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-tarifas-hora .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-tarifas-hora support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

@@ -1,0 +1,32 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-sueno-pantallas" set:html={`<div class="crumb">Salud / Sueño y pantallas</div><h1>No apagues el día en el mismo segundo que la pantalla.</h1><p class="lead">Armá un aterrizaje digital gradual que sea compatible con tu horario y tus obligaciones.</p><section class="sunset"><div class="phone"><small>Modo descanso</small><b id="cutoff"></b><div class="screen"><i></i></div><p id="saved"></p></div><aside class="settings"><h2>Tu atardecer digital</h2><label>Hora de acostarte <input id="bed" type="time" value="23:30"></label><label>Minutos de transición <input id="buffer" type="range" min="15" max="120" value="60"></label><label>Minutos actuales de pantalla nocturna <input id="current" type="range" min="0" max="240" value="120"></label><div class="routine" id="routine"></div></aside></section>`} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-sueno-pantallas')?document.currentScript.previousElementSibling:document.querySelector('.mockup-sueno-pantallas');
+
+const $=x=>root.querySelector("#"+x);function render(){let [h,m]=$('bed').value.split(':').map(Number),b=+$('buffer').value,cur=+$('current').value,cut=(h*60+m-b+1440)%1440,time=`${String(Math.floor(cut/60)).padStart(2,'0')}:${String(cut%60).padStart(2,'0')}`;$('cutoff').textContent=time;$('saved').textContent=`Recuperás hasta ${Math.min(cur,b)} min para una rutina sin pantalla.`;$('routine').innerHTML=`<div class=\"step\"><b>${time}</b><span> silenciar notificaciones y bajar brillo</span></div><div class=\"step\"><b>${b>=45?'Actividad puente':'Transición corta'}</b><span> higiene, preparar mañana, lectura o respiración</span></div><div class=\"step\"><b>${$('bed').value}</b><span> acostarte con el teléfono fuera del alcance</span></div>`}
+root.querySelectorAll('input').forEach(x=>x.oninput=render);render();
+
+})();
+</script>
+<style is:global>
+
+.mockup-sueno-pantallas{--blue:#174b7a;--ink:#182a32;--muted:#65747c;--line:#d7e1df;--purple:#725aa5;--yellow:#ffd36c;--paper:#f5f7f5}.mockup-sueno-pantallas *{box-sizing:border-box}.mockup-sueno-pantallas{margin:0;font:15px/1.4 Inter,system-ui;color:var(--ink);background:var(--paper)}.mockup-sueno-pantallas input,.mockup-sueno-pantallas button{font:inherit}.mockup-sueno-pantallas .shell{max-width:1160px;margin:auto;padding:34px 22px}.mockup-sueno-pantallas .crumb{color:var(--blue);font-weight:850}.mockup-sueno-pantallas h1{font-size:clamp(42px,6vw,68px);line-height:1;letter-spacing:-.055em;margin:30px 0 12px}.mockup-sueno-pantallas .lead{font-size:18px;color:var(--muted)}.mockup-sueno-pantallas .sunset{margin-top:26px;background:linear-gradient(135deg,#f7cb83,#705c9d 70%,#174b7a);border-radius:28px;padding:28px;color:#fff;display:grid;grid-template-columns:330px 1fr;gap:28px}.mockup-sueno-pantallas .phone{width:260px;height:430px;border:14px solid #172c3c;border-radius:42px;background:#fff;color:var(--ink);padding:20px;margin:auto}.mockup-sueno-pantallas .phone b{display:block;font-size:32px;color:var(--blue)}.mockup-sueno-pantallas .phone .screen{height:220px;background:linear-gradient(#9bd5ed,#fff3d5);border-radius:22px;margin-top:18px;display:grid;place-items:center}.mockup-sueno-pantallas .screen i{width:90px;height:90px;background:var(--yellow);border-radius:50%}.mockup-sueno-pantallas .settings label{display:block;color:#e1e8ef;font-size:12px;font-weight:850;margin:16px 0}.mockup-sueno-pantallas .settings input{display:block;width:100%;accent-color:var(--yellow)}.mockup-sueno-pantallas .routine{margin-top:18px}.mockup-sueno-pantallas .step{background:#ffffff16;border:1px solid #ffffff25;border-radius:13px;padding:13px;margin-top:8px}.mockup-sueno-pantallas .step b{color:#fff}.mockup-sueno-pantallas .step span{color:#dce7ee}@media(max-width:760px){.mockup-sueno-pantallas .sunset{grid-template-columns:1fr}.mockup-sueno-pantallas .phone{width:230px;height:370px}.mockup-sueno-pantallas .phone .screen{height:170px}}
+.mockup-sueno-pantallas { width:100%; overflow:hidden; }
+.mockup-sueno-pantallas .top, .mockup-sueno-pantallas header.top { display:none !important; }
+.mockup-sueno-pantallas .foot { display:none !important; }
+.mockup-sueno-pantallas .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-sueno-pantallas .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-sueno-pantallas .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-sueno-pantallas .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-sueno-pantallas .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-sueno-pantallas :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-sueno-pantallas input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-sueno-pantallas input[type="number"]::-webkit-inner-spin-button, .mockup-sueno-pantallas input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-sueno-pantallas .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-sueno-pantallas support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}
