@@ -1,0 +1,116 @@
+---
+/**
+ * Tracking de conversión para los hubs con experiencias propias.
+ *
+ * Las calculadoras legacy emiten `calculator_used` desde Calculator.astro.
+ * Los hubs nuevos tienen runtimes inline independientes, por lo que este
+ * listener delegado reconoce la acción explícita de calcular sin modificar
+ * cientos de componentes ni enviar inputs/resultados a Analytics.
+ */
+---
+
+<script>
+  declare global {
+    interface Window {
+      gtag?: (...args: any[]) => void;
+      dataLayer?: any[];
+    }
+  }
+
+  const ACTION_TEXT =
+    /\b(calcular|calculá|actualizar|atualizar|analizar|simular|convertir|resolver|generar|comparar|cotizar|confirmar|ver resultado|obtener resultado|calculate|update|estimate|compute|compare|convert)\b/i;
+  const EXCLUDED_BUTTON =
+    '.case, .mode, .tab, .preset, .swap, .reset, [data-case], [data-mode], [data-tab], [data-reset]';
+  const trackedAt = new WeakMap<Element, number>();
+
+  function sessionId(): string {
+    try {
+      const key = 'hc_sid';
+      let value = sessionStorage.getItem(key);
+      if (!value) {
+        value =
+          crypto?.randomUUID?.() ??
+          `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+        sessionStorage.setItem(key, value);
+      }
+      return value;
+    } catch {
+      return `v-${Date.now().toString(36)}`;
+    }
+  }
+
+  function currencyForPath(pathname: string): string {
+    if (pathname.startsWith('/co/')) return 'COP';
+    if (pathname.startsWith('/mx/')) return 'MXN';
+    if (pathname.startsWith('/cl/')) return 'CLP';
+    if (pathname.startsWith('/pe/')) return 'PEN';
+    if (pathname.startsWith('/uy/')) return 'UYU';
+    if (pathname.startsWith('/py/')) return 'PYG';
+    if (pathname.startsWith('/do/')) return 'DOP';
+    if (pathname.startsWith('/ec/')) return 'USD';
+    if (pathname.startsWith('/ve/')) return 'VES';
+    if (pathname.startsWith('/es/')) return 'EUR';
+    if (pathname.startsWith('/pt-pt/')) return 'EUR';
+    if (pathname.startsWith('/pt/')) return 'BRL';
+    return 'ARS';
+  }
+
+  function hubRoot(node: Element): Element | null {
+    if (node.closest('.calc-container')) return null;
+    return node.closest('form.calc, .calc, [data-calculator], [class*="mockup-"]');
+  }
+
+  function track(root: Element): void {
+    const now = performance.now();
+    if (now - (trackedAt.get(root) || 0) < 600) return;
+    trackedAt.set(root, now);
+
+    const slug = location.pathname.replace(/^\/|\/$/g, '') || 'inicio';
+    const params = {
+      calc_slug: slug,
+      formula_id: `hub:${slug}`,
+      session_id: sessionId(),
+      value: 1.0,
+      currency: currencyForPath(location.pathname),
+      calculator_surface: 'hub',
+    };
+
+    try {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'calculator_used', params);
+      } else {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: 'calculator_used', ...params });
+      }
+    } catch {
+      // Analytics nunca debe afectar el cálculo.
+    }
+  }
+
+  document.addEventListener(
+    'click',
+    (event) => {
+      const button = (event.target as Element | null)?.closest('button, [role="button"]');
+      if (!button || button.matches(EXCLUDED_BUTTON)) return;
+      const root = hubRoot(button);
+      if (!root) return;
+      const primaryControl =
+        button.matches('.go, .primary, [type="submit"]') ||
+        /(?:calc|calculate|update|submit|result)/i.test(button.id);
+      if (!primaryControl && !ACTION_TEXT.test(button.textContent || '')) return;
+      track(root);
+    },
+    { capture: true },
+  );
+
+  document.addEventListener(
+    'submit',
+    (event) => {
+      const form = event.target as HTMLFormElement | null;
+      if (!form || form.closest('.calc-container')) return;
+      const root = hubRoot(form);
+      if (root) track(root);
+    },
+    { capture: true },
+  );
+</script>
