@@ -4,15 +4,17 @@ import postcss from 'postcss';
 interface Props {
   source: string;
   baseStyles?: string;
+  sharedScript?: string;
 }
 
-const { source, baseStyles = '' } = Astro.props;
+const { source, baseStyles = '', sharedScript = '' } = Astro.props;
 const styles = [...source.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
   .map((match) => match[1])
   .join('\n');
 const scripts = [...source.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)]
   .map((match) => match[1])
-  .join('\n');
+  .join('\n') + '\n' + sharedScript;
+const dataPage = source.match(/<body[^>]*\bdata-page=["']([^"']+)["'][^>]*>/i)?.[1];
 const body = source.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] ?? source;
 const headerControls = body.match(/<header\b[^>]*>([\s\S]*?)<\/header>/i)?.[1] ?? '';
 const content = body
@@ -48,12 +50,14 @@ const scopedStyles = scopeCss(`${baseStyles}\n${styles}`);
 // Igual que el CSS, las búsquedas y listeners del prototipo quedan encerrados
 // dentro de su experiencia: no pisan el buscador ni los controles del header.
 const scopedScripts = scripts
+  .replace(/\bdocument\.body\.dataset\.page\b/g, 'root.dataset.page')
+  .replace(/\bdocument\.getElementById\((["'])([^"']+)\1\)/g, "root.querySelector('#$2')")
   .replace(/\bdocument\.querySelectorAll\b/g, 'root.querySelectorAll')
   .replace(/\bdocument\.querySelector\b/g, 'root.querySelector')
   .replace(/\bdocument\.addEventListener\b/g, 'root.addEventListener');
 ---
 
-<div class="approved-mockup-page">
+<div class="approved-mockup-page" data-page={dataPage}>
   <div hidden set:html={headerControls}></div>
   <Fragment set:html={content} />
 </div>
@@ -78,4 +82,4 @@ const scopedScripts = scripts
     color: var(--muted);
   }
 </style>
-<script is:inline set:html={`(()=>{const root=document.querySelector('.approved-mockup-page');if(!root)return;window.HC_HUB ||= {onCompute(){}};\n${scopedScripts}\n})();`}></script>
+<script is:inline set:html={`(()=>{const root=document.querySelector('.approved-mockup-page');if(!root)return;window.HC_HUB ||= {onCompute(){}};\n${scopedScripts}\nroot.querySelector('.site-header')?.remove();root.querySelector('.site-footer')?.remove();})();`}></script>

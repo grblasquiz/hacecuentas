@@ -14,6 +14,9 @@ import ptCoreStyles from '../../mockups/approved/pt-mockup-core.css?raw';
 import ptPtCoreStyles from '../../mockups/approved/pt-pt-mockup-core.css?raw';
 import clCoreStyles from '../../mockups/approved/cl-mockup-core.css?raw';
 import esMxCoreStyles from '../../mockups/approved/es-mx-individual-core.css?raw';
+import latamCoreStyles from '../../mockups/approved/latam-58-core.css?raw';
+import latamCountryStyles from '../../mockups/approved/latam-country-canvas.css?raw';
+import latamCountryScript from '../../mockups/approved/latam-country-canvas.js?raw';
 
 export interface Props {
   data: HubData;
@@ -50,6 +53,27 @@ const approvedMx = import.meta.glob('../../mockups/approved/mx/*.html', {
   import: 'default',
   eager: true,
 }) as Record<string, string>;
+const approvedPe = import.meta.glob('../../mockups/approved/pe/*.html', {
+  query: '?raw', import: 'default', eager: true,
+}) as Record<string, string>;
+const approvedCo = import.meta.glob('../../mockups/approved/co/*.html', {
+  query: '?raw', import: 'default', eager: true,
+}) as Record<string, string>;
+const approvedPy = import.meta.glob('../../mockups/approved/py/*.html', {
+  query: '?raw', import: 'default', eager: true,
+}) as Record<string, string>;
+const approvedUy = import.meta.glob('../../mockups/approved/uy/*.html', {
+  query: '?raw', import: 'default', eager: true,
+}) as Record<string, string>;
+const approvedEc = import.meta.glob('../../mockups/approved/ec/*.html', {
+  query: '?raw', import: 'default', eager: true,
+}) as Record<string, string>;
+const approvedDo = import.meta.glob('../../mockups/approved/do/*.html', {
+  query: '?raw', import: 'default', eager: true,
+}) as Record<string, string>;
+const approvedVe = import.meta.glob('../../mockups/approved/ve/*.html', {
+  query: '?raw', import: 'default', eager: true,
+}) as Record<string, string>;
 const leaf = data.slug.split('/').filter(Boolean).at(-1);
 const source = !leaf
   ? undefined
@@ -65,6 +89,20 @@ const source = !leaf
             ? approvedEs[`../../mockups/approved/es/${leaf}.html`]
             : data.locale === 'mx'
               ? approvedMx[`../../mockups/approved/mx/${leaf}.html`]
+              : data.locale === 'pe'
+                ? approvedPe[`../../mockups/approved/pe/${leaf}.html`]
+                : data.locale === 'co'
+                  ? approvedCo[`../../mockups/approved/co/${leaf}.html`]
+                  : data.locale === 'py'
+                    ? approvedPy[`../../mockups/approved/py/${leaf}.html`]
+                    : data.locale === 'uy'
+                      ? approvedUy[`../../mockups/approved/uy/${leaf}.html`]
+                      : data.locale === 'ec'
+                        ? approvedEc[`../../mockups/approved/ec/${leaf}.html`]
+                        : data.locale === 'do'
+                          ? approvedDo[`../../mockups/approved/do/${leaf}.html`]
+                          : data.locale === 've'
+                            ? approvedVe[`../../mockups/approved/ve/${leaf}.html`]
               : undefined;
 const baseStyles = data.locale === 'pt'
   ? ptCoreStyles
@@ -74,10 +112,13 @@ const baseStyles = data.locale === 'pt'
       ? clCoreStyles
       : data.locale === 'es' || data.locale === 'mx'
         ? esMxCoreStyles
+        : ['pe', 'co', 'py', 'uy', 'ec', 'do', 've'].includes(data.locale)
+          ? latamCoreStyles + (['uy', 'ec', 'do', 've'].includes(data.locale) ? '\n' + latamCountryStyles : '')
         : enCoreStyles;
+const sharedScript = ['uy', 'ec', 'do', 've'].includes(data.locale) ? latamCountryScript : '';
 ---
 
 {source
-  ? <ApprovedMockupPage source={source} baseStyles={baseStyles} />
+  ? <ApprovedMockupPage source={source} baseStyles={baseStyles} sharedScript={sharedScript} />
   : <DecisionHubClassic data={data} />
 }
