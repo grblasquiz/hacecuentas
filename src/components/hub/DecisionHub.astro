@@ -9,6 +9,7 @@
 import type { HubData } from '../../lib/hubs/types';
 import ApprovedMockupPage from '../ApprovedMockupPage.astro';
 import DecisionHubClassic from './DecisionHubClassic.astro';
+import HubEditorialSupport from './HubEditorialSupport.astro';
 import enCoreStyles from '../../mockups/approved/en-mockup-core.css?raw';
 import ptCoreStyles from '../../mockups/approved/pt-mockup-core.css?raw';
 import ptPtCoreStyles from '../../mockups/approved/pt-pt-mockup-core.css?raw';
@@ -116,9 +117,15 @@ const baseStyles = data.locale === 'pt'
           ? latamCoreStyles + (['uy', 'ec', 'do', 've'].includes(data.locale) ? '\n' + latamCountryStyles : '')
         : enCoreStyles;
 const sharedScript = ['uy', 'ec', 'do', 've'].includes(data.locale) ? latamCountryScript : '';
+const sourceHasH1 = !!source && /<h1\b/i.test(source);
 ---
 
 {source
-  ? <ApprovedMockupPage source={source} baseStyles={baseStyles} sharedScript={sharedScript} />
+  ? (
+    <>
+      <ApprovedMockupPage source={source} baseStyles={baseStyles} sharedScript={sharedScript} />
+      <HubEditorialSupport data={data} renderH1={!sourceHasH1} />
+    </>
+  )
   : <DecisionHubClassic data={data} />
 }

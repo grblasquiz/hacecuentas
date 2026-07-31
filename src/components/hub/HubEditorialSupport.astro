@@ -1,0 +1,235 @@
+---
+import type { HubData } from '../../lib/hubs/types';
+
+export interface Props {
+  data: HubData;
+  renderH1?: boolean;
+}
+
+const { data, renderH1 = false } = Astro.props;
+
+type EditorialCopy = {
+  context: string;
+  contextTitle: string;
+  faq: string;
+  sources: string;
+  reviewed: string;
+};
+
+const COPY: Record<string, EditorialCopy> = {
+  ar: {
+    context: 'Cómo usar esta herramienta',
+    contextTitle: 'Qué responde y qué conviene revisar',
+    faq: 'Preguntas frecuentes',
+    sources: 'Fuentes y referencias',
+    reviewed: 'Última revisión',
+  },
+  en: {
+    context: 'How to use this tool',
+    contextTitle: 'What it answers and what to check',
+    faq: 'Frequently asked questions',
+    sources: 'Sources and references',
+    reviewed: 'Last reviewed',
+  },
+  pt: {
+    context: 'Como usar esta ferramenta',
+    contextTitle: 'O que ela responde e o que você deve verificar',
+    faq: 'Perguntas frequentes',
+    sources: 'Fontes e referências',
+    reviewed: 'Última revisão',
+  },
+  'pt-pt': {
+    context: 'Como utilizar esta ferramenta',
+    contextTitle: 'O que responde e o que deve verificar',
+    faq: 'Perguntas frequentes',
+    sources: 'Fontes e referências',
+    reviewed: 'Última revisão',
+  },
+  es: {
+    context: 'Cómo usar esta herramienta',
+    contextTitle: 'Qué responde y qué conviene revisar',
+    faq: 'Preguntas frecuentes',
+    sources: 'Fuentes y referencias',
+    reviewed: 'Última revisión',
+  },
+};
+
+const T = COPY[data.locale ?? 'ar'] ?? COPY.es;
+---
+
+<section class="hub-editorial-support" aria-labelledby={`editorial-${data.slug.replaceAll('/', '-')}`}>
+  <div class="hub-editorial-support__wrap">
+    {renderH1 && <h1>{data.h1}</h1>}
+
+    <header class="hub-editorial-support__intro">
+      <p class="hub-editorial-support__eyebrow">{T.context}</p>
+      <h2 id={`editorial-${data.slug.replaceAll('/', '-')}`}>{T.contextTitle}</h2>
+      <p>{data.lede}</p>
+      <p>{data.inputsIntro}</p>
+      <p class="hub-editorial-support__reviewed">
+        <strong>{T.reviewed}:</strong> <time datetime={data.lastReviewed}>{data.lastReviewed}</time>
+      </p>
+    </header>
+
+    <div class="hub-editorial-support__grid">
+      <section aria-labelledby={`faq-${data.slug.replaceAll('/', '-')}`}>
+        <h2 id={`faq-${data.slug.replaceAll('/', '-')}`}>{T.faq}</h2>
+        <div class="hub-editorial-support__faq">
+          {data.faq.map((item) => (
+            <details>
+              <summary>{item.q}</summary>
+              <p>{item.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {data.sources.length > 0 && (
+        <aside class="hub-editorial-support__sources" aria-labelledby={`sources-${data.slug.replaceAll('/', '-')}`}>
+          <h2 id={`sources-${data.slug.replaceAll('/', '-')}`}>{T.sources}</h2>
+          <ul>
+            {data.sources.map((source) => (
+              <li>
+                <a href={source.url} rel="noopener noreferrer">{source.name}</a>
+                {source.publisher && <span>{source.publisher}</span>}
+                {source.date && <time datetime={source.date}>{source.date}</time>}
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .hub-editorial-support {
+    background: #f7f8fa;
+    border-top: 1px solid #e2e6eb;
+    color: #18212d;
+    padding: clamp(2.5rem, 5vw, 5rem) 1.25rem;
+  }
+
+  .hub-editorial-support__wrap {
+    margin: 0 auto;
+    max-width: 1120px;
+  }
+
+  .hub-editorial-support h1,
+  .hub-editorial-support h2 {
+    color: #18212d;
+  }
+
+  .hub-editorial-support h1 {
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    line-height: 1.05;
+    margin: 0 0 2rem;
+  }
+
+  .hub-editorial-support__intro {
+    max-width: 780px;
+  }
+
+  .hub-editorial-support__eyebrow {
+    color: #315f86;
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    margin-bottom: .5rem;
+    text-transform: uppercase;
+  }
+
+  .hub-editorial-support__intro h2,
+  .hub-editorial-support__grid h2 {
+    font-size: clamp(1.45rem, 3vw, 2rem);
+    line-height: 1.2;
+    margin: 0 0 1rem;
+  }
+
+  .hub-editorial-support__intro p {
+    color: #465466;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .hub-editorial-support__reviewed {
+    font-size: .875rem !important;
+  }
+
+  .hub-editorial-support__grid {
+    display: grid;
+    gap: 2.5rem;
+    grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr);
+    margin-top: 3rem;
+  }
+
+  .hub-editorial-support__faq {
+    background: #fff;
+    border: 1px solid #dce2e8;
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  .hub-editorial-support__faq details + details {
+    border-top: 1px solid #e4e8ed;
+  }
+
+  .hub-editorial-support__faq summary {
+    cursor: pointer;
+    font-weight: 750;
+    line-height: 1.4;
+    min-height: 48px;
+    padding: 1rem 1.25rem;
+  }
+
+  .hub-editorial-support__faq p {
+    color: #465466;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .hub-editorial-support__sources {
+    align-self: start;
+    background: #fff;
+    border: 1px solid #dce2e8;
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+
+  .hub-editorial-support__sources h2 {
+    font-size: 1.2rem;
+  }
+
+  .hub-editorial-support__sources ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .hub-editorial-support__sources li + li {
+    border-top: 1px solid #e4e8ed;
+    margin-top: .85rem;
+    padding-top: .85rem;
+  }
+
+  .hub-editorial-support__sources a {
+    color: #285b82;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .hub-editorial-support__sources span,
+  .hub-editorial-support__sources time {
+    color: #5b6878;
+    display: block;
+    font-size: .8125rem;
+    margin-top: .25rem;
+  }
+
+  @media (max-width: 760px) {
+    .hub-editorial-support__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
