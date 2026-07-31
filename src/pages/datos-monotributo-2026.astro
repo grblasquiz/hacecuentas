@@ -12,6 +12,7 @@ import {
   CUOTA_SERVICIOS,
   CUOTA_BIENES,
   PARAMS_FISICOS,
+  PRECIO_UNITARIO_MAX_BIENES,
   META,
   fmtARS,
   componentes,
@@ -22,7 +23,8 @@ import {
 // Patrón espejado de /datasets: schema Dataset + licencia CC-BY 4.0 + bloque "Cómo citar"
 // → cuando un medio o blog cita la tabla, atribuye con link = backlink editorial.
 
-const ULTIMA_REVISION = '2026-07-09';
+const ULTIMA_REVISION = '2026-07-31';
+const VIGENCIA_LABEL = '1 de agosto de 2026';
 
 // Filas de la tabla maestra (computadas desde la fuente única).
 const filas = CATEGORIAS.map((cat) => ({
@@ -44,9 +46,9 @@ const cuotaMaxBienes = CUOTA_BIENES.K;
 const ratioServBienesK = CUOTA_SERVICIOS.K / CUOTA_BIENES.K;
 const facturacionMensualMaxA = TOPES.A / 12;
 
-const title = "Escala monotributo 2026: topes y cuota de cada categoría";
+const title = 'Monotributo agosto 2026: categorías, topes y cuotas';
 const description =
-  'Categorías del monotributo 2026: las 11 (A a K) con el tope de facturación anual y mensual, la cuota de servicios y de venta de bienes, y el desglose impositivo. Tabla oficial ARCA vigente desde febrero 2026, descargable (CC-BY 4.0).';
+  'Escala del monotributo desde agosto 2026: topes de facturación, cuotas de servicios y bienes, impuesto integrado, SIPA y obra social. Datos oficiales ARCA.';
 
 const PAGE_URL = 'https://hacecuentas.com/datos-monotributo-2026';
 
@@ -65,11 +67,11 @@ const faq = [
   },
   {
     q: '¿Por qué en las categorías altas servicios paga más que venta de bienes?',
-    a: `Por la reforma 2026: las categorías I, J y K dejaron de toparse en H y ahora aplican también a servicios, pero con cuota distinta. En la categoría K, servicios paga ${ratioServBienesK.toFixed(1)}× lo que paga venta de bienes (${fmtARS(cuotaMaxServ)} vs ${fmtARS(cuotaMaxBienes)}). Los topes de facturación son iguales para ambas actividades.`,
+    a: `Las categorías I, J y K admiten servicios y venta de bienes, pero el impuesto integrado cambia según la actividad. En la categoría K, servicios paga ${ratioServBienesK.toFixed(1)}× lo que paga venta de bienes (${fmtARS(cuotaMaxServ)} vs ${fmtARS(cuotaMaxBienes)}). Los topes de ingresos son iguales.`,
   },
   {
     q: '¿Cuándo es la recategorización del monotributo 2026?',
-    a: `La recategorización es semestral (enero y julio). La de julio 2026 cierra el 5 de agosto de 2026. Se revisa la facturación de los últimos 12 meses para ubicarte en la categoría correcta.`,
+    a: `La recategorización se realiza en febrero y agosto. El trámite del segundo semestre puede hacerse hasta el 5 de agosto de 2026, evaluando los últimos 12 meses. Si mantenés la categoría o tenés menos de 6 meses de actividad, no corresponde recategorizarte.`,
   },
   {
     q: '¿Qué pasa si me excedo del tope de facturación de mi categoría?',
@@ -77,7 +79,7 @@ const faq = [
   },
   {
     q: '¿Desde cuándo rigen estos valores?',
-    a: `Desde el ${new Date(META.vigencia).toLocaleDateString('es-AR')}. Son los valores oficiales publicados por ARCA (ex AFIP).`,
+    a: `Desde el ${VIGENCIA_LABEL}. Hasta el 31 de julio corresponde la escala anterior. Son valores oficiales publicados por ARCA.`,
   },
   {
     q: '¿Qué incluye la cuota mensual del monotributo?',
@@ -85,7 +87,7 @@ const faq = [
   },
   {
     q: '¿De dónde salen estos datos?',
-    a: `De ARCA (Administración Federal, ex AFIP), fuente oficial del régimen. Los topes están validados además contra C5N y el Estudio Bertora Brown. La fuente está enlazada al final de la página.`,
+    a: `De la tabla oficial de montos y categorías publicada por ARCA. La fuente primaria está enlazada al final de la página.`,
   },
   {
     q: '¿Puedo usar esta tabla en mi web, nota o trabajo?',
@@ -113,7 +115,7 @@ const datasetSchema = {
   },
   sourceOrganization: {
     '@type': 'GovernmentOrganization',
-    name: 'ARCA (Administración Federal de Ingresos Públicos)',
+    name: 'ARCA (Agencia de Recaudación y Control Aduanero)',
     url: META.fuenteUrl,
   },
   keywords: ['Monotributo', 'ARCA', 'Categorías monotributo', 'Topes monotributo', '2026', 'Argentina'],
@@ -121,6 +123,7 @@ const datasetSchema = {
     'Tope de facturación anual (ARS)', 'Cuota mensual servicios (ARS)',
     'Cuota mensual venta de bienes (ARS)', 'Impuesto integrado (ARS)',
     'Aporte SIPA (ARS)', 'Aporte obra social (ARS)',
+    'Alquileres devengados anuales (ARS)', 'Precio unitario máximo de bienes (ARS)',
   ],
   identifier: 'https://hacecuentas.com/datos/monotributo-2026.json',
   version: '2026',
@@ -195,7 +198,7 @@ const schema = {
           <p class="cf-sub">Topes de facturación y cuotas mensuales de las 11 categorías, para servicios y venta de bienes.</p>
           <ul class="cf-pills">
             <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Fuente oficial ARCA</li>
-            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Vigentes desde febrero</li>
+            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Rigen desde 1/8/2026</li>
             <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos abiertos CC-BY 4.0</li>
           </ul>
           <p class="mo-updated">
@@ -220,10 +223,15 @@ const schema = {
         </div>
       </header>
 
+      <div class="cf-callout cf-callout--warn mo-effective" role="note">
+        <span class="cf-callout__ico" aria-hidden="true">📅</span>
+        <p><strong>Nueva escala desde el 1 de agosto de 2026.</strong> Para períodos anteriores corresponde consultar la tabla histórica de ARCA. La recategorización vence el 5 de agosto.</p>
+      </div>
+
       <p class="answer-snippet cf-sr">
         Monotributo 2026: 11 categorías de la A (tope {fmtARS(topeMin)} anuales, cuota {fmtARS(cuotaMin)})
         a la K (tope {fmtARS(topeMax)}, cuota {fmtARS(cuotaMaxServ)} servicios). Valores oficiales de ARCA
-        vigentes desde el {new Date(META.vigencia).toLocaleDateString('es-AR')}.
+        con aplicación desde el {VIGENCIA_LABEL}.
       </p>
 
       <PriorityDecisionCta
@@ -275,7 +283,7 @@ const schema = {
             </div>
           ))}
         </div>
-        <p class="mo-foot">Altura = tope anual de facturación. Las categorías I, J y K sólo admiten servicios desde la reforma.</p>
+        <p class="mo-foot">Altura = tope anual de ingresos brutos. Las categorías I, J y K admiten servicios y venta de bienes.</p>
       </section>
 
       <!-- Tabla maestra -->
@@ -289,6 +297,7 @@ const schema = {
         </div>
         <div class="cf-tablewrap">
           <table class="cf-table">
+            <caption class="cf-sr">Escala oficial del monotributo con aplicación desde agosto de 2026</caption>
             <thead>
               <tr><th>Cat.</th><th>Tope anual</th><th>Promedio mensual</th><th>Cuota servicios</th><th>Cuota bienes</th></tr>
             </thead>
@@ -305,13 +314,14 @@ const schema = {
             </tbody>
           </table>
         </div>
+        <p class="mo-table-note">Las cuotas corresponden a un titular sin adherentes. Puede variar si además aportás por otro régimen, alquilás inmuebles, sos jubilado o agregás familiares a la obra social.</p>
       </section>
 
       <!-- Claves -->
       <section class="cf-section">
         <p class="cf-eyebrow">Claves 2026</p>
         <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Qué tenés que mirar</h2>
-        <div class="cf-cards cf-cards--3">
+        <div class="cf-cards cf-cards--4">
           <div class="cf-minicard cf-minicard--dark">
             <span class="cf-minicard__ico" aria-hidden="true">📈</span>
             <p class="cf-minicard__title">Servicios llega hasta la K</p>
@@ -321,6 +331,12 @@ const schema = {
             <span class="cf-minicard__ico" aria-hidden="true">⚖️</span>
             <p class="cf-minicard__title">Mismos topes de ingresos</p>
             <p class="cf-minicard__desc">Servicios y venta de bienes comparten el mismo límite anual en cada categoría.</p>
+          </div>
+          <div class="cf-minicard">
+            <span class="cf-minicard__ico" aria-hidden="true">🏷️</span>
+            <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Precio unitario</p>
+            <div class="cf-minicard__big">{fmtARS(PRECIO_UNITARIO_MAX_BIENES)}</div>
+            <p class="cf-minicard__desc" style="margin-top:0.3rem">Máximo por unidad para venta de cosas muebles.</p>
           </div>
           <div class="cf-minicard">
             <span class="cf-minicard__ico" aria-hidden="true">💳</span>
@@ -380,7 +396,7 @@ const schema = {
             </div>
           </div>
           <div class="cf-breakdown">
-            <p class="cf-side-eyebrow">Composición aproximada</p>
+            <p class="cf-side-eyebrow">Composición oficial</p>
             {[
               { k: 'Impuesto integrado', v: componentes('C', 'servicios').integrado },
               { k: 'Aporte jubilatorio · SIPA', v: componentes('C', 'servicios').sipa },
@@ -393,7 +409,7 @@ const schema = {
               </div>
             ))}
             <div class="cf-breakdown__total"><span>Cuota total</span><strong>{fmtARS(componentes('C', 'servicios').total)}</strong></div>
-            <p class="mo-note" style="margin-top:0.6rem">El dato exacto es el total oficial; el desglose mantiene la proporción aproximada de cada componente.</p>
+            <p class="mo-note" style="margin-top:0.6rem">Importes oficiales para un titular sin adherentes. Existen excepciones previsionales y de obra social.</p>
           </div>
         </div>
       </section>
@@ -418,7 +434,7 @@ const schema = {
           <div class="mo-reca">
             <span class="mo-reca__k">Frecuencia</span>
             <strong class="mo-reca__v">Semestral</strong>
-            <span class="mo-reca__n">Enero y julio · fuente {META.fuente}</span>
+            <span class="mo-reca__n">Febrero y agosto · fuente {META.fuente}</span>
           </div>
         </div>
       </div>
@@ -456,7 +472,7 @@ const schema = {
         </div>
         <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
           <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
-          <p>Superficie y energía son los parámetros históricos del régimen y los alquileres son orientativos: confirmalos contra ARCA antes de usarlos al límite.</p>
+          <p>Valores oficiales desde agosto 2026. Superficie y energía no se consideran, en general, en ciudades de menos de 40.000 habitantes; revisá las excepciones de ARCA.</p>
         </div>
       </section>
 
@@ -495,11 +511,11 @@ const schema = {
             <p class="cf-side-eyebrow">Fuente oficial</p>
             <p class="mo-src__title">Datos verificados</p>
             <div class="mo-src">
-              <div class="mo-src__item"><strong>ARCA · Monotributo</strong><span>Montos y categorías vigentes desde {new Date(META.vigencia).toLocaleDateString('es-AR')}</span></div>
+              <div class="mo-src__item"><strong><a href={META.fuenteUrl} rel="noopener">ARCA · Montos y categorías</a></strong><span>Valores con aplicación desde {VIGENCIA_LABEL}</span></div>
               <div class="mo-src__item"><strong>Ley 24.977</strong><span>Régimen Simplificado para Pequeños Contribuyentes</span></div>
               <div class="mo-src__item"><strong>Ley 27.743</strong><span>Actualización semestral según IPC</span></div>
             </div>
-            <p class="mo-src__foot">● Última revisión: {new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</p>
+            <p class="mo-src__foot">● Última revisión: 31/7/2026</p>
           </div>
         </div>
       </div>
@@ -518,7 +534,7 @@ const schema = {
           </a>
           <a class="cf-relcard" href="/recategorizacion-monotributo-julio-2026">
             <span class="cf-relcard__ico" aria-hidden="true">📅</span>
-            <span class="cf-relcard__title">Recategorización julio</span>
+            <span class="cf-relcard__title">Recategorización de agosto</span>
             <span class="cf-relcard__desc">Revisá los últimos 12 meses y verificá si tenés que cambiar.</span>
             <span class="cf-relcard__link">Revisar recategorización <span aria-hidden="true">→</span></span>
           </a>
@@ -687,6 +703,8 @@ const schema = {
 
 <style>
   .mo .mo-updated { font-size: 0.75rem; color: var(--text-subtle); margin: 1rem 0 0; }
+  .mo .mo-effective { margin: 0 0 1.25rem; }
+  .mo .mo-table-note { margin: 0.75rem 0 0; color: var(--text-subtle); font-size: 0.78rem; line-height: 1.55; }
   .mo .mo-updated a { color: var(--accent); }
   .mo .mo-deco-wrap { position: relative; }
   .mo .mo-badge { top: 50%; right: -14px; transform: translateY(-50%); width: 44px; height: 44px; font-size: 1.1rem; }

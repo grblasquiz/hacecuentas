@@ -7,9 +7,9 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'alquiler/aumento-de-alquiler',
-  title: '¿Cuánto me van a aumentar el alquiler? — ICL, IPC y ajuste trimestral 2026',
+  title: 'Calculadora de aumento de alquiler: ICL e IPC 2026',
   description:
-    'Calculá el aumento de tu alquiler con el índice que dice tu contrato: ICL del BCRA, IPC del INDEC, ajuste trimestral/cuatrimestral/semestral o porcentaje pactado. Con datos oficiales y la cuota nueva al instante.',
+    'Calculá el aumento del alquiler por ICL del BCRA, IPC del INDEC o porcentaje pactado. Revisá fórmula, coeficiente y cuota nueva.',
   silo: 'Alquiler',
   siloHref: '/alquiler',
 
@@ -17,7 +17,7 @@ export const hub: HubData = {
   h1: '¿Cuánto me van a aumentar el alquiler?',
   lede:
     'Partimos del caso más habitual: contrato con ajuste por ICL del BCRA. Poné tu alquiler y las dos fechas y mirá la cuota nueva. Si tu contrato ajusta por otro índice, lo cambiás abajo.',
-  stamps: ['Actualizado 27-07-2026', 'ICL del BCRA e IPC del INDEC oficiales', '5 calculadoras adentro'],
+  stamps: ['Actualizado 31-07-2026', 'ICL del BCRA e IPC del INDEC oficiales', 'Fórmula explicada'],
 
   resultLabel: 'Tu alquiler nuevo',
 
@@ -53,7 +53,7 @@ export const hub: HubData = {
         ],
         warn: [
           'El INDEC publica el IPC alrededor del día 12-15 del mes siguiente: si el ajuste cae antes, el último mes todavía no está',
-          'Con IPC el aumento suele ser mayor que con ICL, porque el ICL se frena por el componente salarial',
+          'No compares IPC e ICL como intercambiables: corresponde el índice escrito en el contrato',
         ],
         plazo: 'el IPC del mes se publica entre el 12 y el 15 del mes siguiente.',
       },
@@ -83,8 +83,8 @@ export const hub: HubData = {
           'Plazo más corto, más flexibilidad, y garantía propietaria o seguro de caución',
         ],
         warn: [
-          'Renegociás antes: si tu alquiler quedó por debajo del mercado, el salto a los 2 años puede ser del 20% al 40% de una sola vez',
-          'Sumá expensas y servicios: pueden ser un 30-50% extra sobre el alquiler',
+          'La proyección mantiene una tasa constante y no anticipa la inflación real ni una futura renegociación',
+          'Sumá expensas y servicios por separado: no forman parte del índice de actualización',
         ],
         plazo: 'desde el DNU 70/2023 el plazo mínimo legal ya no existe: se pacta libre.',
       },
@@ -226,7 +226,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Conviene un contrato de 2 o de 3 años?',
-      a: 'Depende de la inflación esperada y de cuánto pienses quedarte. Dos años suelen traer un alquiler inicial más bajo pero te obligan a renegociar antes, con saltos que pueden ir del 20% al 40%. Tres años dan más previsibilidad a cambio de un inicio algo más alto.',
+      a: 'Depende de cuánto pensás quedarte, la cláusula de rescisión y las condiciones pactadas. Un plazo mayor reduce la frecuencia de renegociación, pero no garantiza un precio más conveniente. Compará índice, frecuencia, depósito, expensas y salida.',
     },
     {
       q: '¿Qué índice puedo pactar para actualizar el alquiler?',
@@ -238,7 +238,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué pasa si mi contrato es en UVA o en dólares?',
-      a: 'No aplica ni ICL ni IPC. En UVA: alquiler expresado en UVAs × valor UVA del día (lo publica el BCRA). En dólares: monto en USD × el tipo de cambio pactado, que tiene que estar explícito en el contrato (BNA vendedor, MEP, oficial). Si no lo aclara, se suele interpretar el oficial BNA vendedor y ahí empiezan los conflictos.',
+      a: 'No uses esta fórmula salvo que el contrato lo indique. En UVA se multiplica la cantidad pactada por el valor UVA correspondiente. En moneda extranjera manda la cláusula de moneda, pago y eventual conversión. Si es ambigua, conviene asesorarse antes de pagar una diferencia discutida.',
     },
     {
       q: '¿Puedo negociar que no se aplique el aumento?',
@@ -246,7 +246,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué gastos se olvidan al comparar alquileres?',
-      a: 'Las expensas y los servicios, que pueden sumar entre un 30% y un 50% sobre el alquiler, el seguro de caución o la garantía, la comisión inmobiliaria si corresponde, y la cláusula de rescisión anticipada con su multa.',
+      a: 'Expensas, servicios, seguro de caución o garantía, depósito, comisión inmobiliaria cuando corresponda y rescisión anticipada. Comparalos por separado porque no todos se actualizan con el índice del alquiler.',
     },
   ],
 
@@ -289,7 +289,7 @@ export const hub: HubData = {
     '/calculadora-contrato-alquiler-2-anios-vs-3-anios',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-07-31',
   audience: 'AR',
 };
 

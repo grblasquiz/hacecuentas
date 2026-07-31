@@ -41,17 +41,17 @@ import {
  *
  * Aplica a los 3 aportes personales con la MISMA base máxima.
  * Se actualiza mensualmente por IPC (Dec. 274/2024). Valor vigente:
- *   Junio 2026: $4.414.652,38 (Resolución ANSES 139/2026).
+ *   Julio 2026: $4.509.567,41 (Resolución ANSES 186/2026).
  * ⚠️ Actualizar cada mes. Fuente: ANSES — argentina.gob.ar/trabajo/seguridadsocial/imss
  */
-export const BASE_IMPONIBLE_MAXIMA_APORTES = 4_414_652.38;
+export const BASE_IMPONIBLE_MAXIMA_APORTES = 4_509_567.41;
 
 /**
  * Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato
  * (src/lib/data-freshness.ts). Refleja la base imponible máxima vigente
- * (junio 2026, Res. ANSES 139/2026). Actualizar junto con BASE_IMPONIBLE_MAXIMA_APORTES.
+ * (julio 2026, Res. ANSES 186/2026). Actualizar junto con BASE_IMPONIBLE_MAXIMA_APORTES.
  */
-export const DATA_AS_OF = '2026-06-01';
+export const DATA_AS_OF = '2026-07-01';
 
 export interface SueldoInputs {
   bruto?: number;

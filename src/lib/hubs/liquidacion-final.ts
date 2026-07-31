@@ -2,7 +2,7 @@ import type { HubData } from './types';
 
 export const hub: HubData = {
   slug: 'trabajo/liquidacion-final',
-  title: 'Renuncio: ¿cuánto cobro de liquidación final? — Calculadora 2026',
+  title: 'Calculadora de liquidación final por renuncia 2026',
   description:
     'Si renunciás no cobrás indemnización por antigüedad, preaviso ni integración: sólo lo devengado. Calculá días trabajados, SAC proporcional y vacaciones no gozadas. Casas particulares (ley 26.844) incluido.',
   silo: 'Trabajo',
@@ -12,7 +12,7 @@ export const hub: HubData = {
   h1: 'Renunciás. Veamos qué te tienen que pagar.',
   lede:
     'La renuncia no es un despido: no hay indemnización por antigüedad, ni preaviso a tu favor, ni integración del mes. Lo que sí se cobra es todo lo devengado hasta el último día. Partimos del caso más común y lo ajustás con tus datos.',
-  stamps: ['Actualizado 27-07-2026', 'LCT arts. 121, 123, 150 y 156', '5 calculadoras adentro'],
+  stamps: ['Revisado 31-07-2026', 'LCT actualizada', 'Cálculo explicado'],
 
   resultLabel: 'Estimación inicial',
 
@@ -27,7 +27,7 @@ export const hub: HubData = {
         answer: 'Al renunciar cobrás lo devengado: días del mes, SAC proporcional y vacaciones no gozadas.',
         yes: [
           'Días trabajados del último mes (sueldo ÷ 30 × días)',
-          'SAC proporcional del semestre en curso (Art. 121 LCT)',
+          'SAC proporcional al tiempo trabajado en el semestre (arts. 121 a 123 LCT)',
           'Vacaciones no gozadas, a razón de sueldo ÷ 25 por día (Art. 156 LCT)',
           'SAC sobre esas vacaciones (Art. 123 LCT)',
         ],
@@ -36,7 +36,7 @@ export const hub: HubData = {
           'NO cobrás preaviso ni integración del mes: al revés, sos vos quien debe preavisar (Art. 240)',
           'Si no preavisás, el empleador puede descontarte el equivalente al plazo omitido',
         ],
-        plazo: 'la liquidación final vence a los 4 días hábiles del cese; la renuncia se hace por telegrama gratuito o ante escribano.',
+        plazo: 'para personal mensual o quincenal, el pago vence dentro de 4 días hábiles; para pago semanal, dentro de 3. La renuncia se formaliza por telegrama laboral físico o digital, o ante la autoridad laboral.',
       },
       {
         id: 'casas-particulares',
@@ -54,7 +54,7 @@ export const hub: HubData = {
           'Si en cambio te DESPIDIERON sin causa, se suman: indemnización por antigüedad de 1 mes de sueldo por año o fracción mayor a 3 meses (Art. 48), preaviso (Art. 42) e integración del mes del cese por los días que faltaban (Art. 43)',
           'En ese caso de despido el régimen no tiene tope de convenio: no se aplica Vizzoti',
           'Al renunciar tenés que preavisar 10 días (Art. 42); si no lo hacés, te pueden descontar ese plazo',
-          'Con menos de 16 hs semanales no hay aportes obligatorios, pero los rubros devengados se deben igual',
+          'La registración y los aportes son obligatorios cualquiera sea la cantidad de horas; el importe cambia según el tramo horario',
         ],
         plazo: 'si el cese fuera un despido, la fracción mayor a 3 meses suma un año entero de antigüedad (Art. 48).',
       },
@@ -88,7 +88,7 @@ export const hub: HubData = {
           'Con menos de 6 meses no hay tramo completo: se liquida 1 día por cada 20 trabajados',
           'La antigüedad no te da indemnización si renunciás: sólo define vacaciones y plazos',
         ],
-        plazo: 'los períodos en negro cuentan igual para la antigüedad y habilitan las multas de la ley 24.013.',
+        plazo: 'los períodos no registrados pueden discutirse y probarse, pero las indemnizaciones automáticas de los arts. 8 a 17 de la ley 24.013 fueron derogadas.',
       },
     ],
   },
@@ -99,7 +99,7 @@ export const hub: HubData = {
     { id: 'sueldo', label: 'Último sueldo bruto mensual', prefix: '$', value: '1.500.000', thousands: true },
     { id: 'diasMes', label: 'Días trabajados en el último mes', type: 'number', min: 0, max: 30, value: 15, suffix: 'días' },
     { id: 'diasVac', label: 'Días de vacaciones no gozadas', type: 'number', min: 0, max: 60, value: 14, suffix: 'días' },
-    { id: 'mesesSemestre', label: 'Meses trabajados del semestre en curso', type: 'number', min: 1, max: 6, value: 3 },
+    { id: 'mesesSemestre', label: 'Días trabajados del semestre en curso', type: 'number', min: 0, max: 180, value: 90, suffix: 'días' },
     { id: 'anios', label: 'Años de antigüedad', type: 'number', min: 0, max: 50, value: 4 },
     { id: 'meses', label: 'Meses sueltos además de los años', type: 'number', min: 0, max: 11, value: 5 },
   ],
@@ -121,15 +121,15 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué rubros tiene la liquidación final por renuncia?',
-      a: 'Cuatro: días trabajados del mes (sueldo ÷ 30 × días), aguinaldo proporcional del semestre (Art. 121 LCT), vacaciones no gozadas a sueldo ÷ 25 por día (Art. 156) y el SAC sobre esas vacaciones (Art. 123). Nada más.',
+      a: 'Como base: días trabajados del mes, aguinaldo proporcional y vacaciones no gozadas. También pueden existir horas extra, comisiones, premios u otros conceptos ya devengados. El SAC sobre vacaciones no gozadas tiene criterios jurídicos divergentes, por eso el resultado debe tomarse como estimación.',
     },
     {
       q: '¿Con cuánta anticipación tengo que avisar que renuncio?',
-      a: 'El Art. 240 LCT exige que la renuncia se comunique por telegrama laboral (es gratuito en el correo) o ante escribano. El preaviso del trabajador es de 15 días. Si te vas sin preavisar, el empleador puede descontarte de la liquidación el equivalente al plazo omitido.',
+      a: 'El Art. 240 LCT actualizado exige comunicar la renuncia mediante despacho telegráfico físico o digital, gratuito, o ante la autoridad administrativa laboral. El preaviso del trabajador es de 15 días. Si se omite, puede discutirse la indemnización sustitutiva correspondiente.',
     },
     {
       q: '¿Cuándo me tienen que pagar la liquidación final?',
-      a: 'Dentro de los 4 días hábiles de la extinción del contrato. Si no te pagan, intimá por telegrama laboral dándole 2 días hábiles: recién ahí se configura la mora y podés reclamar.',
+      a: 'La LCT remite a los plazos de pago: hasta 4 días hábiles para remuneración mensual o quincenal y hasta 3 para semanal. Si no pagan, conviene intimar de manera fehaciente y buscar asesoramiento antes de fijar plazos por cuenta propia.',
     },
     {
       q: '¿Cómo se calculan las vacaciones no gozadas al renunciar?',
@@ -145,11 +145,11 @@ export const hub: HubData = {
     },
     {
       q: '¿La liquidación final por renuncia paga Impuesto a las Ganancias?',
-      a: 'Sí. A diferencia de la indemnización por antigüedad del despido —que está exenta hasta el tope—, todo lo que se cobra por renuncia es remuneración común: días trabajados, SAC proporcional y vacaciones no gozadas tributan y sufren aportes.',
+      a: 'No todos los rubros tienen el mismo tratamiento. Días trabajados y SAC son remunerativos; las vacaciones no gozadas al extinguirse el contrato tienen naturaleza indemnizatoria. Ganancias y aportes dependen del concepto y del caso, por lo que conviene revisar el recibo con un profesional.',
     },
     {
       q: 'Estuve parte del tiempo en negro: ¿cuenta para la antigüedad?',
-      a: 'Cuenta desde el ingreso real, no desde la fecha de registración. Ese tiempo suma para el tramo de vacaciones y, si además intimás antes de irte, habilita las multas de la ley 24.013 por deficiente registración.',
+      a: 'La antigüedad puede reclamarse desde el ingreso real si se logra probar. Las indemnizaciones automáticas de los arts. 8 a 17 de la ley 24.013 fueron derogadas por la ley 27.742, aunque siguen pudiendo existir diferencias salariales, aportes y otros reclamos.',
     },
     {
       q: '¿Me conviene renunciar o negociar un retiro por mutuo acuerdo?',
@@ -160,8 +160,8 @@ export const hub: HubData = {
   sources: [
     {
       name: 'Ley de Contrato de Trabajo 20.744 — arts. 121, 123, 150, 155, 156 y 240',
-      url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm',
-      publisher: 'InfoLeg',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/ley-20744-25552/actualizacion',
+      publisher: 'Argentina.gob.ar',
       date: 'texto ordenado vigente',
     },
     {
@@ -175,6 +175,11 @@ export const hub: HubData = {
       url: 'https://www.argentina.gob.ar/trabajo',
       publisher: 'Ministerio de Trabajo, Empleo y Seguridad Social',
     },
+    {
+      name: 'Registración, aportes y contribuciones de casas particulares',
+      url: 'https://www.arca.gob.ar/casasparticulares/aportes-contribuciones-ART/conceptos.asp',
+      publisher: 'ARCA',
+    },
   ],
 
   replaces: [
@@ -185,7 +190,7 @@ export const hub: HubData = {
     '/calculadora-dias-vacaciones-ganadas-antiguedad-lct',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-07-31',
   audience: 'AR',
 };
 

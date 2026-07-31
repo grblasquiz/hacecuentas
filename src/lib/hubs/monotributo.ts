@@ -1,5 +1,5 @@
 import type { HubData } from './types';
-import { CATEGORIAS, TOPES, CUOTA_SERVICIOS, CUOTA_BIENES, PARAMS_FISICOS, PROP, META } from '../data/monotributo-2026';
+import { CATEGORIAS, TOPES, CUOTA_SERVICIOS, CUOTA_BIENES, PARAMS_FISICOS, componentes, META } from '../data/monotributo-2026';
 
 /**
  * Escala serializable para el <script> de la página.
@@ -15,7 +15,7 @@ export const ESCALA = CATEGORIAS.map((c) => ({
   cuotaBienes: Math.round(CUOTA_BIENES[c]),
   superficie: PARAMS_FISICOS[c].superficie,
   energia: PARAMS_FISICOS[c].energia,
-  prop: PROP[c],
+  prop: (() => { const x = componentes(c, 'servicios'); return [x.integrado, x.sipa, x.obraSocial]; })(),
 }));
 
 export const VIGENCIA = META;
@@ -38,7 +38,7 @@ export const hub: HubData = {
   slug: 'impuestos/monotributo',
   title: '¿Qué categoría de monotributo me toca? — Escala y cuota 2026',
   description:
-    'Calculá tu categoría de monotributo con la escala vigente de ARCA: cuota mensual, tope de facturación, recategorización de julio, y la comparación contra responsable inscripto, autónomo y empleado en relación de dependencia.',
+    'Calculá tu categoría con la escala de ARCA desde agosto 2026: cuota, tope de facturación y comparación con responsable inscripto, autónomo y empleado.',
   silo: 'Impuestos',
   siloHref: '/impuestos',
 
@@ -72,7 +72,7 @@ export const hub: HubData = {
         warn: [
           'Manda el parámetro MÁS ALTO: si por ingresos caés en C pero la superficie te lleva a E, pagás E',
           'Los ingresos son BRUTOS facturados, no lo que te queda después de gastos',
-          'Desde la reforma 2026 servicios también llega hasta la categoría K, pero paga cuota más alta que bienes en las categorías altas',
+          'Desde la reforma de 2024 servicios también llega hasta la categoría K, con otra cuota en las categorías altas',
           'Si sos empleado en relación de dependencia además del monotributo, no pagás el componente jubilatorio ni el de obra social',
         ],
         plazo: 'el alta se hace online en ARCA con clave fiscal nivel 2 y la cuota vence el día 20 de cada mes.',
@@ -80,7 +80,7 @@ export const hub: HubData = {
       {
         id: 'recategorizar',
         label: 'Me toca recategorizar',
-        hint: 'Semestral: enero y julio',
+        hint: 'Semestral: febrero y agosto',
         answer: 'Comparás tus ingresos de los últimos 12 meses contra la escala nueva y ajustás la categoría.',
         yes: [
           'Ingresos brutos de los últimos 12 meses corridos, no del año calendario',
@@ -90,7 +90,7 @@ export const hub: HubData = {
         ],
         warn: [
           'Si no recategorizás, ARCA puede recategorizarte de oficio y aplicar una multa del 50% del impuesto integrado',
-          'La recategorización de julio 2026 cierra el 5 de agosto y el primer pago con valores nuevos es el 20 de agosto',
+          'La recategorización del segundo semestre 2026 cierra el 5 de agosto y el primer pago con valores nuevos es el 20 de agosto',
           'Si estás en la misma categoría que ya tenías, igual conviene confirmarla en el portal',
           'Superar el tope de la categoría K te excluye del régimen: pasás a responsable inscripto',
         ],
@@ -221,7 +221,7 @@ export const hub: HubData = {
     },
   ],
   fineprint:
-    'Es una orientación. La escala se actualiza cada semestre por IPC y los parámetros de superficie, energía y alquileres son orientativos: confirmá tu categoría en el portal de monotributo de ARCA antes de pagar.',
+    'Es una orientación. La escala y los parámetros se actualizan semestralmente: confirmá tu situación y las excepciones aplicables en el portal de ARCA antes de pagar.',
 
   chart: {
     type: 'steps',
@@ -239,7 +239,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuándo hay que recategorizarse?',
-      a: 'Dos veces al año: hasta el 5 de febrero y hasta el 5 de agosto, mirando siempre los 12 meses corridos anteriores. La recategorización de julio 2026 cierra el 5 de agosto y el primer pago con la escala nueva es el 20 de agosto. Si tus ingresos bajaron también corresponde recategorizar hacia abajo.',
+      a: 'Dos veces al año: hasta el 5 de febrero y hasta el 5 de agosto, mirando los 12 meses anteriores. El segundo período 2026 cierra el 5 de agosto y el primer pago con la escala nueva es el 20 de agosto. Si tus parámetros bajaron también puede corresponder una categoría inferior.',
     },
     {
       q: '¿Qué pasa si no me recategorizo a tiempo?',
@@ -255,7 +255,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Los servicios pueden llegar a la categoría K?',
-      a: 'Sí. Hasta la reforma de 2026 los prestadores de servicios topeaban en la categoría H y las I, J y K eran exclusivas de venta de cosas muebles. Hoy las tres categorías altas están abiertas a las dos actividades, con los mismos topes de facturación pero con cuota distinta: en servicios la cuota de las categorías altas es bastante más cara.',
+      a: 'Sí. La reforma de 2024 habilitó las categorías I, J y K para servicios. Las dos actividades comparten topes de ingresos, pero pagan distinto impuesto integrado y por eso difiere la cuota total.',
     },
     {
       q: '¿Qué pasa si supero el tope de la categoría K?',

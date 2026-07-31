@@ -2,9 +2,9 @@ import type { HubData } from './types';
 
 export const hub: HubData = {
   slug: 'trabajo/sueldo-bruto-y-neto',
-  title: '¿Cuánto me queda en mano del sueldo bruto? — Calculadora 2026 (Argentina)',
+  title: 'Calculadora de sueldo bruto a neto 2026 Argentina',
   description:
-    'De bruto a neto, de neto a bruto, recibo completo con todos los conceptos y neto de autónomos y monotributistas. Con los aportes del 17% (jubilación, PAMI y obra social), el tope SIPA vigente y la escala de Ganancias 2026.',
+    'Calculá sueldo bruto a neto y neto a bruto en Argentina. Incluye aportes con tope SIPA de julio 2026, Ganancias estimada y monotributo por categoría.',
   silo: 'Trabajo',
   siloHref: '/trabajo',
 
@@ -13,10 +13,10 @@ export const hub: HubData = {
   lede:
     'Partimos del caso más habitual: tenés el bruto y querés saber cuánto cobrás. Si lo tuyo es al revés —cuánto te tienen que poner de bruto para cobrar X— o si sos monotributista, cambiá el caso abajo.',
   stamps: [
-    'Actualizado 27-07-2026',
-    'Aportes 17% · tope SIPA vigente',
-    'Escala de Ganancias 2026 aplicada',
-    '4 calculadoras adentro',
+    'Revisado 31-07-2026',
+    'Tope SIPA julio 2026',
+    'Ganancias estimada con escala 2026',
+    'Cálculo explicado',
   ],
 
   resultLabel: 'Estimación inicial',
@@ -59,17 +59,17 @@ export const hub: HubData = {
       },
       {
         id: 'recibo',
-        label: 'Quiero el recibo completo con todos los conceptos',
-        hint: 'Liquidación mensual',
-        answer: 'El recibo suma sueldo, aportes, aguinaldo devengado, vacaciones y el costo para el empleador.',
+        label: 'Quiero ver el desglose del recibo',
+        hint: 'Liquidación mensual estimada',
+        answer: 'El desglose separa aportes personales, Ganancias, descuentos cargados y costo patronal estimado.',
         yes: [
           'Neto mensual desglosado concepto por concepto',
-          'Aguinaldo (SAC) devengado: la mitad de la mejor remuneración del semestre (LCT art. 121)',
-          'Vacaciones según antigüedad (LCT art. 150) valuadas a bruto/25 (art. 155)',
+          'Jubilación, PAMI y obra social calculados sobre la base imponible aplicable',
+          'Ganancias mensual estimada según cargas declaradas',
           'Costo laboral estimado para el empleador con contribuciones patronales',
         ],
         warn: [
-          'El recibo real puede traer presentismo, antigüedad, viáticos o adicionales de convenio que acá no están',
+          'El recibo real puede traer presentismo, antigüedad, viáticos, SAC, vacaciones o adicionales que acá no están',
           'Las contribuciones patronales (~26,4%) son una estimación: no incluyen ART ni seguro de vida obligatorio',
         ],
         plazo: 'guardá el duplicado del recibo: prescribe a los 2 años (LCT art. 256).',
@@ -78,9 +78,9 @@ export const hub: HubData = {
         id: 'autonomo',
         label: 'Soy autónomo o monotributista',
         hint: 'Factura, no recibo',
-        answer: 'El monotributista no tiene aportes del 17%: paga una cuota fija mensual más Ingresos Brutos.',
+        answer: 'El monotributista no tiene aportes del 17%: paga la cuota de su categoría más Ingresos Brutos y otros gastos.',
         yes: [
-          'Cuota mensual de monotributo según categoría (impuesto integrado + SIPA + obra social)',
+          'Cuota mensual de monotributo para servicios según categoría, con valores desde agosto de 2026',
           'Ingresos Brutos provinciales sobre lo facturado',
           'Un estimado de gastos fijos (contador, banco, comisiones)',
         ],
@@ -88,7 +88,7 @@ export const hub: HubData = {
           'No hay aguinaldo, ni vacaciones pagas, ni indemnización: para comparar con un empleado hay que descontar eso del bolsillo',
           'La categoría se revisa cada 6 meses (enero y julio): facturar de más te recategoriza y te sube la cuota',
         ],
-        plazo: 'la cuota vence el día 20 de cada mes.',
+        plazo: 'la cuota vence el día 20; la escala usada en este módulo rige desde el 1 de agosto de 2026.',
       },
     ],
   },
@@ -241,9 +241,9 @@ export const hub: HubData = {
     },
     {
       name: 'Bases imponibles mínima y máxima para aportes — valores vigentes',
-      url: 'https://www.argentina.gob.ar/trabajo/seguridadsocial',
-      publisher: 'ANSES / Secretaría de Seguridad Social',
-      date: 'vigente 2026',
+      url: 'https://www.boletinoficial.gob.ar/detalleAviso/primera/343717/20260630',
+      publisher: 'ANSES — Resolución 186/2026',
+      date: 'julio 2026',
     },
     {
       name: 'Ley de Contrato de Trabajo 20.744 — arts. 121, 122, 128, 150 y 155 (aguinaldo, pago y vacaciones)',
@@ -274,6 +274,6 @@ export const hub: HubData = {
     '/calculadora-bonus-anual-marco-fiscal-neto',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-07-31',
   audience: 'AR',
 };

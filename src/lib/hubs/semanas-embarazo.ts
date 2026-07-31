@@ -16,7 +16,7 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'embarazo/semanas',
-  title: '¿De cuántas semanas estoy? — Calculadora de semanas de embarazo 2026',
+  title: 'Calculadora de semanas de embarazo y fecha de parto',
   description:
     'Calculá de cuántas semanas y días estás, en qué mes y trimestre vas, la fecha probable de parto y cuánto mide tu bebé. Por fecha de última menstruación, por ecografía o embarazo gemelar.',
   silo: 'Embarazo',
@@ -27,7 +27,7 @@ export const hub: HubData = {
   lede:
     'Partimos del método más usado: contar desde el primer día de tu última menstruación. Si te databan por ecografía o esperás mellizos, cambiá el método abajo y las cuentas se ajustan.',
   stamps: [
-    'Actualizado 27-07-2026',
+    'Revisado 31-07-2026',
     'Criterio OMS / ACOG de edad gestacional',
     '10 calculadoras adentro',
     'Orientativo: no reemplaza tu control obstétrico',
@@ -46,7 +46,7 @@ export const hub: HubData = {
         hint: 'Regla de Naegele — el método estándar',
         answer: 'Con la FUM se cuenta desde el primer día de tu última menstruación: 40 semanas hasta la fecha probable de parto.',
         yes: [
-          'Semanas y días exactos de gestación contados desde el primer día de la última menstruación',
+          'Semanas y días estimados de gestación contados desde el primer día de la última menstruación',
           'Mes de embarazo y trimestre según el criterio de la OMS y ACOG',
           'Fecha probable de parto: FUM + 280 días (regla de Naegele)',
           'Ajuste por duración de tu ciclo si no es de 28 días',
@@ -55,9 +55,9 @@ export const hub: HubData = {
         warn: [
           'Resultado orientativo: no reemplaza diagnóstico, tratamiento ni seguimiento profesional. Consultá con un profesional de la salud matriculado.',
           'Si tus ciclos son irregulares o no recordás bien la FUM, la estimación puede correrse una o dos semanas: la ecografía del primer trimestre es más confiable',
-          'La fecha probable de parto es una referencia estadística. Solo un 4% de los bebés nace exactamente ese día',
+          'La fecha probable de parto es una referencia; el nacimiento puede ocurrir antes o después',
         ],
-        plazo: 'la primera ecografía se hace entre las semanas 8 y 12: es la que fija la edad gestacional definitiva.',
+        plazo: 'la ecografía temprana ayuda a confirmar o ajustar la edad gestacional; la fecha obstétrica documentada por tu equipo es la referencia clínica.',
       },
       {
         id: 'ecografia',
@@ -76,7 +76,7 @@ export const hub: HubData = {
           'Después de las 22 semanas la ecografía pierde precisión para datar: no se cambia la fecha probable de parto ya establecida',
           'Esta estimación usa tablas de referencia; el informe de tu ecografista es el dato válido',
         ],
-        plazo: 'la ecografía que mejor data el embarazo es la de las semanas 11 a 13+6 (tamiz del primer trimestre).',
+        plazo: 'la ecografía del primer trimestre suele ofrecer la datación más precisa; usá la edad gestacional escrita en el informe.',
       },
       {
         id: 'gemelar',
@@ -158,11 +158,11 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué método manda: la última menstruación o la ecografía?',
-      a: 'Manda la ecografía del primer trimestre cuando difiere de la FUM en más de 5 a 7 días. Una vez que tu obstetra fija la edad gestacional con esa ecografía, esa fecha ya no se cambia con ecografías posteriores, aunque el bebé mida más o menos de lo esperado.',
+      a: 'Tu equipo compara la FUM con la primera ecografía precisa y documenta la mejor estimación obstétrica. El umbral para cambiar la fecha depende de la semana en que se hizo la ecografía; no conviene reemplazar esa decisión con una regla única. Las ecografías posteriores no suelen usarse para redatar un embarazo ya bien fechado.',
     },
     {
       q: '¿La fecha probable de parto es la fecha real?',
-      a: 'No. Es una referencia estadística: apenas alrededor del 4% de los bebés nace exactamente ese día y la enorme mayoría nace en la ventana de las 37 a las 41+6 semanas. Sirve para programar controles y estudios, no para agendar el nacimiento.',
+      a: 'No. Es una referencia para seguir el embarazo y programar controles; el nacimiento puede ocurrir antes o después. La fecha que vale para el seguimiento es la mejor estimación obstétrica documentada por tu equipo de salud.',
     },
     {
       q: '¿Cambian las semanas si espero mellizos o gemelos?',
@@ -212,7 +212,7 @@ export const hub: HubData = {
     '/calculadora-calendario-ecografias-embarazo-semanas',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-07-31',
   audience: 'AR',
 };
 

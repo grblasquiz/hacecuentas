@@ -1,7 +1,8 @@
 /**
  * Datos fiscales y laborales de COLOMBIA 2026 — tabla maestra única.
  * Fuentes oficiales, verificado por WebSearch 2026-06-10:
- * - SMLMV 2026: Decreto 1469 de 2025 (29-dic-2025) → $1.750.905 (+23% vs 2025).
+ * - SMLMV 2026: Decreto transitorio 0159 de 2026 → $1.750.905 (+23% vs 2025),
+ *   expedido tras la suspensión provisional del Decreto 1469 de 2025.
  * - Auxilio de transporte 2026: Decreto 1470 de 2025 → $249.095.
  * - UVT 2026: Resolución DIAN 000238 del 15-dic-2025 → $52.374 (IPC clase media 5,17%).
  * - UVT 2025: $49.799 (DIAN; rige para topes de declaración del año gravable 2025 que se presenta en 2026).
@@ -20,7 +21,7 @@ export const COLOMBIA_2026 = {
   anio: 2026,
 
   // ───────────────────────── Salario mínimo ─────────────────────────
-  smlmv: 1_750_905,            // Decreto 1469/2025 (MinTrabajo, 29-dic-2025). Vigente desde 01-ene-2026.
+  smlmv: 1_750_905,            // Decreto transitorio 0159/2026; mismo monto aplicado desde 01-ene-2026.
   auxilioTransporte: 249_095,  // Decreto 1470/2025. Aplica a quien gana hasta 2 SMLMV. SMLMV + auxilio = $2.000.000.
   topeAuxilioSmlmv: 2,         // auxilio de transporte sólo si salario < 2 SMLMV ($3.501.810)
   smdlv: 1_750_905 / 30,       // salario mínimo diario legal vigente = $58.363,50

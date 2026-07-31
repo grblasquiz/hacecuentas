@@ -38,12 +38,12 @@ describe('sueldoAR — bruto→neto (golden values 2026, soltero sin cargas)', (
     expect(r.neto).toBe(2_490_000);
   });
 
-  it('$5.000.000 → aportes topeados en $750.491 (Ley 24.241) y paga Ganancias', () => {
+  it('$5.000.000 → aportes topeados en $766.626 (Ley 24.241) y paga Ganancias', () => {
     const r = sueldoAR({ bruto: 5_000_000, ...SOLTERO });
-    expect(r.aportes).toBe(750_491); // 4.414.652,38 × 0,17
+    expect(r.aportes).toBe(766_626); // 4.509.567,41 × 0,17 (julio 2026)
     expect(r.ganancias).toBeGreaterThan(0);
     // Neto de la tabla de referencia del JSON.
-    expect(r.neto).toBe(3_966_499);
+    expect(r.neto).toBe(3_954_075);
   });
 
   it('bruto inválido/0 lanza error (no devuelve 0 silencioso)', () => {
