@@ -31,20 +31,20 @@ export const DISCLAIMER =
 
 export const hub: HubData = {
   slug: 'salud/peso-en-el-embarazo',
-  title: '¿Cuánto peso tengo que subir en el embarazo? Kilos por semana y calorías por trimestre',
+  title: 'Aumento de peso en el embarazo: calculadora por semana',
   description:
-    'Tu rango de aumento de peso según el IMC previo al embarazo (IOM 2009), cuánto deberías haber subido a la semana en la que estás, las calorías extra de cada trimestre y de la lactancia, y el plazo realista para volver al peso de antes.',
+    'Calculá el rango orientativo de aumento de peso para tu semana de embarazo según tu IMC previo. Incluye curva, rango total y fuentes médicas.',
   silo: 'Salud',
   siloHref: '/salud',
 
-  eyebrow: 'Guía y estimación del embarazo',
-  h1: '¿Cuánto peso tengo que subir en el embarazo?',
+  eyebrow: 'Aumento de peso durante el embarazo',
+  h1: '¿Cuánto peso es esperable subir en cada semana?',
   lede:
-    'No es un número igual para todas: el rango lo define tu IMC antes de quedar embarazada, y lo que te toca hoy depende de la semana. Partimos del segundo trimestre, que es cuando aparece la pregunta. Si estás en otra etapa —gemelar, dando la teta o ya en el posparto— la cambiás abajo.',
+    'Compará tu aumento acumulado con un rango orientativo basado en tu IMC previo y la semana gestacional. La tendencia y el control obstétrico importan más que una medición aislada.',
   stamps: [
     'Rangos IOM 2009 · OMS',
     'Calorías extra ACOG por trimestre',
-    '7 calculadoras adentro',
+    'Revisado 31-07-2026',
   ],
 
   resultLabel: 'Aumento total recomendado',
@@ -291,7 +291,7 @@ export const hub: HubData = {
     '/calculadora-posparto-recuperacion',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-07-31',
   audience: 'global',
 };
 
