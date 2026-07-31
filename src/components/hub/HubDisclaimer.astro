@@ -1,0 +1,42 @@
+---
+import type { HubData } from '../../lib/hubs/types';
+import { getCalculatorDisclaimer, needsProfessionalDisclaimer } from '../../lib/disclaimers';
+
+interface Props { data: HubData; }
+const { data } = Astro.props;
+const language = data.locale === 'en' ? 'en' : data.locale === 'pt' || data.locale === 'pt-pt' ? 'pt' : 'es';
+const category = data.silo.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const subject = { slug: data.slug, category, h1: data.h1, title: data.title };
+const show = needsProfessionalDisclaimer(subject);
+const disclaimer = getCalculatorDisclaimer(subject, language);
+const labels = language === 'en'
+  ? { title: 'Important before you decide', detail: 'About this estimate' }
+  : language === 'pt'
+    ? { title: 'Importante antes de decidir', detail: 'Sobre esta estimativa' }
+    : { title: 'Importante antes de decidir', detail: 'Sobre esta estimación' };
+const detail = data.fineprint?.trim();
+const showDetail = detail && detail !== disclaimer;
+---
+
+{show && (
+  <aside class="hub-disclaimer" role="note" aria-label={labels.title}>
+    <div class="hub-disclaimer__icon" aria-hidden="true">i</div>
+    <div>
+      <h2>{labels.title}</h2>
+      <p>{disclaimer}</p>
+      {showDetail && <details><summary>{labels.detail}</summary><p>{detail}</p></details>}
+    </div>
+  </aside>
+)}
+
+<style>
+  .hub-disclaimer{max-width:1180px;margin:24px auto;padding:18px 20px;display:grid;grid-template-columns:30px 1fr;gap:13px;border:1px solid color-mix(in srgb,var(--warning,#b7791f) 35%,#d9d2c5);border-left:4px solid var(--warning,#b7791f);border-radius:12px;background:color-mix(in srgb,var(--warning-soft,#fff7e6) 75%,#fff);color:var(--ink,#263238);box-sizing:border-box}
+  .hub-disclaimer__icon{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:var(--warning,#b7791f);color:#fff;font:800 15px/1 Georgia,serif}
+  h2{margin:1px 0 5px!important;color:inherit!important;font-size:16px!important;line-height:1.3!important}
+  p{margin:0;font-size:14px;line-height:1.6;color:inherit}
+  details{margin-top:8px;font-size:13px;color:var(--muted,#59636a)}
+  summary{cursor:pointer;font-weight:700}
+  details p{margin-top:5px;font-size:13px;color:inherit}
+  @media(max-width:1220px){.hub-disclaimer{margin:20px}}
+  @media(max-width:600px){.hub-disclaimer{margin:16px;padding:15px 14px;grid-template-columns:25px 1fr}.hub-disclaimer__icon{width:23px;height:23px}}
+</style>

@@ -5,10 +5,10 @@ type CalcLike = { slug?: string; category?: string; h1?: string; title?: string 
 
 const RX = {
   dose: /dosis|dose|dosagem|posolog|suplement|medicamento|farmaco/,
-  tax: /impuesto|tribut|monotribut|ganancias|iva\b|iibb|arca\b|afip\b|retencion|percepcion|tax\b|irs\b|irpf|isr\b|sat\b|hacienda|sunat|dian\b|dgi\b/,
-  labor: /sueldo|salario|aguinaldo|indemniz|vacacion|liquidacion|paritaria|antiguedad|horas-extra|preaviso|finiquito|despido|nomina|laboral|licencia-(matern|patern|laboral)|severance|payroll/,
-  legal: /licencia|registro|documento|dni\b|pasaporte|visa\b|certificado|partida|permiso|multa|patente|tramite|sucesion|herencia|divorcio|contrato|alquiler|escritura|legal|judicial|notarial|ciudadania/,
-  investment: /invers|cedear|bono|obligacion-negociable|accion|dividendo|portfolio|cartera|dca\b|fire\b|mep\b|ccl\b|cripto|bitcoin|ethereum|trading|broker|alyc|plazo-fijo|fci\b|fondo-comun|tasa-interna|tir\b|yield|rendimiento/,
+  tax: /\b(impuesto|tribut|monotribut|ganancias|iva|iibb|arca|afip|retencion|percepcion|tax|irs|irpf|isr|sat|hacienda|sunat|dian|dgi)\w*\b/,
+  labor: /\b(sueldo|salario|aguinaldo|indemniz|vacacion|liquidacion|paritaria|antiguedad|preaviso|finiquito|despido|nomina|laboral|severance|payroll)\w*\b|horas-extra|licencia-(matern|patern|laboral)/,
+  legal: /\b(licencia|registro|documento|dni|pasaporte|visa|certificado|partida|permiso|multa|patente|tramite|sucesion|herencia|divorcio|contrato|alquiler|escritura|legal|judicial|notarial|ciudadania)\w*\b/,
+  investment: /\b(invers|cedear|bono|accion|dividendo|portfolio|cartera|dca|fire|mep|ccl|cripto|bitcoin|ethereum|trading|broker|alyc|fci|yield|rendimiento)\w*\b|obligacion-negociable|plazo-fijo|fondo-comun|tasa-interna|\btir\b/,
   structural: /estructura|estructural|cimiento|fundacion|losa|viga|columna|hormigon|acero|carga|muro-portante|resistencia/,
 };
 
@@ -17,10 +17,23 @@ function haystack(calc: CalcLike): string {
     .toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
+function normalizedCategory(value = ''): string {
+  const category = value.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const aliases: Record<string, string> = {
+    health: 'salud', saude: 'salud', fitness: 'deportes', esporte: 'deportes', sports: 'deportes',
+    pets: 'mascotas', animais: 'mascotas', impostos: 'impuestos', taxes: 'impuestos',
+    trabalho: 'trabajo', work: 'trabajo', money: 'finanzas', dinheiro: 'finanzas', finance: 'finanzas',
+    finances: 'finanzas', construction: 'construccion', construcao: 'construccion',
+    cooking: 'cocina', cozinha: 'cocina', family: 'familia', familia: 'familia',
+    business: 'negocios', negocios: 'negocios', mathematics: 'matematica', math: 'matematica',
+  };
+  return aliases[category] || category;
+}
+
 /** Clasifica por riesgo real para evitar avisos de CNV/contador fuera de contexto. */
 export function classifyDisclaimerDomain(calc: CalcLike): DisclaimerDomain {
   const text = haystack(calc);
-  const category = (calc.category || '').toLocaleLowerCase('es');
+  const category = normalizedCategory(calc.category);
   if (RX.dose.test(text) && ['salud', 'familia', 'mascotas', 'deportes'].includes(category)) return 'medical-dose';
   if (category === 'salud') return 'health';
   if (category === 'mascotas') return 'pets';
@@ -36,6 +49,11 @@ export function classifyDisclaimerDomain(calc: CalcLike): DisclaimerDomain {
   if (category === 'finanzas') return 'finance';
   if (category === 'negocios') return 'business';
   return 'general';
+}
+
+/** Dominios donde una cifra puede afectar salud, derechos, patrimonio o seguridad. */
+export function needsProfessionalDisclaimer(calc: CalcLike): boolean {
+  return !['general', 'math', 'cooking'].includes(classifyDisclaimerDomain(calc));
 }
 
 const COPY: Record<DisclaimerLanguage, Record<DisclaimerDomain, string>> = {

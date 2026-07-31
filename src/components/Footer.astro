@@ -16,6 +16,8 @@
  * tema sigue vivo en el Header).
  */
 export interface Props { lang?: 'es' | 'en' | 'pt'; }
+import HubDisclaimer from './hub/HubDisclaimer.astro';
+import { ALL_HUBS } from '../lib/hubs/registry';
 const { lang = 'es' } = Astro.props;
 const year = new Date().getFullYear();
 const isEn = lang === 'en';
@@ -30,6 +32,8 @@ const localePrefix = isNeutralSpanish ? `/${localeSegment}` : '';
 const decisionRoomLocales = new Set(['mx', 'co', 'cl', 'pe']);
 const hasDecisionRooms = decisionRoomLocales.has(localeSegment);
 const P = lang === 'es' ? '' : `/${lang}`; // prefijo de locale para links internos
+const currentHubSlug = Astro.url.pathname.replace(/^\/+|\/+$/g, '').replace(/\.html$/, '');
+const currentHub = ALL_HUBS.find((hub) => hub.slug === currentHubSlug);
 
 // Logos de marca oficiales (simple-icons, single-path, fill: currentColor).
 const SOCIAL_ICONS: Record<string, string> = {
@@ -128,6 +132,7 @@ const socialLinks = [
 ];
 ---
 
+{currentHub && <HubDisclaimer data={currentHub} />}
 <footer class="site-footer" data-lang={lang}>
   <div class="foot-wrap">
     <div class="footGrid" data-nosnippet>
