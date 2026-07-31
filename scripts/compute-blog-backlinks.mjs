@@ -35,7 +35,8 @@ const gone = new Set(); // 410: no hay reemplazo, se descarta el link
 const redirect = new Map(); // 301: se reemplaza por el destino vivo
 const gone410 = path.join(ROOT, 'src/lib/gone-410.ts');
 if (fs.existsSync(gone410)) {
-  const src = fs.readFileSync(gone410, 'utf8');
+  const src = fs.readFileSync(gone410, 'utf8') +
+    fs.readFileSync(path.join(ROOT, 'src/lib/removed-ymyl-hubs.ts'), 'utf8');
   for (const m of src.matchAll(/["'](\/[^"']+)["']\s*,/g)) gone.add(m[1]);
 }
 const pruning = path.join(ROOT, 'src/lib/pruning-redirects.ts');

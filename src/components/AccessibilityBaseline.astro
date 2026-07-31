@@ -1,0 +1,106 @@
+---
+/** Correcciones transversales para templates legacy/generados. */
+---
+
+<script is:inline>
+  (function () {
+    function enhance(root) {
+      var scope = root && root.querySelectorAll ? root : document;
+
+      // Un searchbox no admite aria-expanded. Cuando controla un listbox es un
+      // combobox real; si no controla nada, aria-expanded se elimina.
+      scope.querySelectorAll('input[type="search"][aria-expanded]').forEach(function (input) {
+        var controls = input.getAttribute('aria-controls');
+        var popup = controls && document.getElementById(controls);
+        if (popup && popup.getAttribute('role') === 'listbox') {
+          input.setAttribute('role', 'combobox');
+          input.setAttribute('aria-autocomplete', 'list');
+          input.setAttribute('aria-haspopup', 'listbox');
+        } else {
+          input.removeAttribute('aria-expanded');
+        }
+      });
+
+      // Los mockups generados suelen usar <label> seguido de <input> sin for/id.
+      // Vincularlos acá mantiene el nombre accesible sin copy duplicado.
+      var serial = 0;
+      scope.querySelectorAll('input, select, textarea').forEach(function (control) {
+        if (control.type === 'hidden' || control.getAttribute('aria-label') || control.getAttribute('aria-labelledby')) return;
+        if (control.id && document.querySelector('label[for="' + CSS.escape(control.id) + '"]')) return;
+        if (control.closest('label')) return;
+        var wrap = control.closest('.field, .smonth, .input-wrap, .form-group');
+        var label = wrap && wrap.querySelector('label');
+        if (!label) return;
+        if (!control.id) control.id = 'hc-auto-field-' + (++serial);
+        label.setAttribute('for', control.id);
+      });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { enhance(document); }, { once: true });
+    else enhance(document);
+    document.addEventListener('astro:page-load', function () { enhance(document); });
+  })();
+</script>
+
+<style is:global>
+  /* WCAG 2.5.8: superficie táctil mínima para controles desplegables/FAQ. */
+  main details > summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding-block: 10px;
+    line-height: 1.35;
+  }
+
+  /* Los templates visuales usaban 8–10px en información que sí debe leerse. */
+  main :where(.help, .eyebrow, .result-label, .section-label, .semester-head span, .mode small, .tlabs, .stamp, .tag) {
+    font-size: 0.75rem !important;
+    line-height: 1.4;
+  }
+
+  /* Contraste AA para texto secundario sobre superficies claras y oscuras. */
+  main :where(.help, .semester-head span, .mode small, .tlabs) {
+    color: #536176 !important;
+  }
+  main :where(.result, [class*="--dark"], [class*="dark-"]) :where(.result-label, .help, .tlabs, small) {
+    color: #c6d2df !important;
+  }
+
+  /* Paleta AA compartida para la experiencia generada y superficies claras. */
+  main .mockup-aguinaldo { --muted: #566176; }
+  main .mockup-aguinaldo :where(.eyebrow, .reset) { color: #78480b !important; }
+  main .mockup-aguinaldo :where(.section-head p, .best-grid > div > p) { color: #566176 !important; }
+  .site-footer .foot-dots,
+  .site-footer .foot-dots .fd { color: #596579 !important; }
+  .site-footer :where(.foot-legal p, .foot-bottom p, .foot-bottom a, .foot-green) {
+    color: #596579 !important;
+  }
+
+  /* Home: el mismo piso de contraste y tamaño para cards, método y bloques editoriales. */
+  main .hc-home :where(.section-title p, .popular-card p, .fresh-card p, .method-copy p, .world-copy p) {
+    color: #536176 !important;
+  }
+  main .hc-home .popular-card span {
+    color: #536176 !important;
+    font-size: 0.75rem !important;
+  }
+  main .hc-home .method-card :where(small, span) {
+    color: #536176 !important;
+    font-size: 0.75rem !important;
+  }
+  main .hc-home .method-copy a {
+    background-color: #315fca !important;
+    color: #fff !important;
+  }
+
+  /* CTA compartido de las experiencias generadas: blanco ≥4.5:1. */
+  main .calcbtn {
+    background-color: #78480b !important;
+    color: #fff !important;
+  }
+
+  @media (max-width: 700px) {
+    main :where(input, select, textarea) { font-size: 1rem; }
+    main :where(button, [role="button"], a.btn, .calcbtn) { min-height: 44px; }
+  }
+</style>

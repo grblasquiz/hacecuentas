@@ -111,7 +111,8 @@ const retired = new Map();
 for (const m of readFileSync(PRUNING, 'utf8').matchAll(/['"](\/[^'"]+)['"]\s*:\s*['"]([^'"]+)['"]/g)) {
   retired.set(m[1], `301 pruning → ${m[2]}`);
 }
-for (const line of readFileSync(GONE, 'utf8').split(/\r?\n/)) {
+const goneSources = readFileSync(GONE, 'utf8') + readFileSync(join(ROOT, 'src', 'lib', 'removed-ymyl-hubs.ts'), 'utf8');
+for (const line of goneSources.split(/\r?\n/)) {
   const m = line.match(/^\s*["'](\/[^"']+)["'],?\s*$/);
   if (m) retired.set(m[1], '410 Gone');
 }

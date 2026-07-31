@@ -41,7 +41,13 @@ async function inspect(url) {
   const parts = path.split('/');
   const prefix = localePrefixes.has(parts[0]) ? parts[0] : '';
   const title = decode(html.match(/<title>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s*\|\s*Hacé Cuentas\s*$/i, ''));
-  const h1 = decode(html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1]?.replace(/<[^>]+>/g, ''));
+  // Los tags inline separan palabras visualmente (<br>, <strong>, etc.).
+  // Reemplazarlos por vacío concatena tokens al generar tarjetas relacionadas.
+  const h1 = decode(
+    html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1]
+      ?.replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' '),
+  );
   const description = decode(html.match(/<meta\s+name="description"\s+content="([^"]*)"/i)?.[1]);
   return {
     slug: path,

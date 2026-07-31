@@ -128,7 +128,8 @@ function parseRedirectSources(): Map<string, string> {
 const redirectSources = parseRedirectSources();
 const goneUrls = new Set<string>();
 {
-  const goneTs = readFileSync(join(ROOT, 'src/lib/gone-410.ts'), 'utf8');
+  const goneTs = readFileSync(join(ROOT, 'src/lib/gone-410.ts'), 'utf8') +
+    readFileSync(join(ROOT, 'src/lib/removed-ymyl-hubs.ts'), 'utf8');
   const re = /"(\/[^"]+)"/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(goneTs)) !== null) goneUrls.add(m[1]);

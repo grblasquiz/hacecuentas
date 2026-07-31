@@ -80,6 +80,9 @@ const pruningEntries = parsePruningRedirects(pruningTs);
 const goneTs = readFileSync(
   join(REPO_ROOT, 'src', 'lib', 'gone-410.ts'),
   'utf8',
+) + readFileSync(
+  join(REPO_ROOT, 'src', 'lib', 'removed-ymyl-hubs.ts'),
+  'utf8',
 );
 const goneRe = /"(\/[^"]+)"/g;
 const goneEntries = [];

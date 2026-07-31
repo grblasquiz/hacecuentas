@@ -10,6 +10,7 @@ import {
 describe('catálogo de eventos', () => {
   it('incluye exactamente los eventos de la spec', () => {
     const spec = [
+      'calculator_start', 'calculator_complete', 'result_share', 'save_to_dashboard', 'related_click',
       'hc_home_search_focus', 'hc_search_started', 'hc_search_submitted',
       'hc_search_result_clicked', 'hc_search_no_results', 'hc_category_filter_used',
       'hc_calculator_view', 'hc_calculator_input_started', 'hc_calculator_submit',

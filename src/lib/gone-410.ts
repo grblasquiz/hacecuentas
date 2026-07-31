@@ -1,3 +1,5 @@
+import { REMOVED_YMYL_HUB_URLS } from './removed-ymyl-hubs.ts';
+
 /**
  * Lista de URLs zombie con verdadero 0-trafico (0 impressions, 0 clicks)
  * que devuelven HTTP 410 Gone en el middleware.
@@ -17,6 +19,7 @@
  * Generated: 2026-05-27 (1182 URLs total — 521 previas + 661 batch hoy)
  */
 export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
+  ...REMOVED_YMYL_HUB_URLS,
   "/blog/guia-imc-peso-saludable",
   "/calculadora-aave-flash-loan-arbitraje-fee-net-profit",
   "/calculadora-abertura-pvc-vs-aluminio-ahorro-anual",

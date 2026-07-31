@@ -7,6 +7,7 @@ import { ADSENSE_SERVING_ENABLED, isAdsenseApprovedPath, isAdsenseExcludedPath }
 import { HC_ALLOWED_PARAMS } from '../lib/analytics';
 import HubCalculationTracking from '../components/HubCalculationTracking.astro';
 import HubEngagementTools from '../components/HubEngagementTools.astro';
+import AccessibilityBaseline from '../components/AccessibilityBaseline.astro';
 import { compactSeoTitle } from '../lib/seo-title';
 import { compactSeoDescription } from '../lib/seo-description';
 import { seoDescriptionFor } from '../lib/seo-description-overrides';
@@ -614,6 +615,16 @@ const globalSchema = {
       .hero-lead { font-size: 1.0625rem; max-width: 620px; margin: 0 auto 1rem; color: var(--text-muted); line-height: 1.6; }
       .trust-row { display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
       .trust-pill { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.3125rem 0.75rem; background: var(--success-soft); color: var(--success); border-radius: 999px; font-size: 0.8125rem; font-weight: 500; }
+      /* Hero actual de Home: evita esperar el CSS scoped para pintar el LCP. */
+      body[data-page-type="home"] .hc-home .hero { display: block; min-height: 0; width: min(1180px, calc(100% - 40px)); margin-inline: auto; padding: 84px 0 92px; text-align: left; }
+      body[data-page-type="home"] .hc-home .hero-copy { max-width: 900px; }
+      body[data-page-type="home"] .hc-home .hero h1 { margin: 20px 0 24px; color: #174b7a; font-size: clamp(58px, 6.3vw, 86px); line-height: .93; letter-spacing: -.07em; }
+      body[data-page-type="home"] .hc-home .hero h1 em { color: #477df4; font-style: normal; }
+      body[data-page-type="home"] .hc-home .hero-copy > p { max-width: 720px; color: #68758a; font-size: 18px; line-height: 1.65; }
+      @media (max-width: 620px) {
+        body[data-page-type="home"] .hc-home .hero { padding: 48px 0 58px; }
+        body[data-page-type="home"] .hc-home .hero h1 { font-size: clamp(52px, 17vw, 68px); }
+      }
     </style>
 
     <!-- Preconnect: establece conexión (DNS + TCP + TLS) antes de que se necesite.
@@ -669,8 +680,17 @@ const globalSchema = {
         anonymize_ip: true,
         send_page_view: true,
       });
-      gtag('config', 'AW-18096606872');
+      // Ads se configura sólo cuando hay una conversión real. Configurarlo en
+      // cada pageview hace que gtag cargue un segundo runtime (~100 KiB) aunque
+      // ad_storage siga denied. GA4/Consent Mode permanecen activos desde head.
+      var googleAdsConfigured = false;
+      function ensureGoogleAdsTag() {
+        if (googleAdsConfigured) return;
+        googleAdsConfigured = true;
+        gtag('config', 'AW-18096606872', { send_page_view: false });
+      }
       function gtagSendEvent(url) {
+        ensureGoogleAdsTag();
         var callback = function () {
           if (typeof url === 'string') { window.location = url; }
         };
@@ -684,6 +704,7 @@ const globalSchema = {
       // Usado por Calculator.astro al completar cada cálculo (cada uso = 1 conversión).
       function gtagTriggerConversion() {
         if (typeof gtag !== 'function') return;
+        ensureGoogleAdsTag();
         gtag('event', 'conversion_event_default', {});
       }
     </script>
@@ -693,10 +714,9 @@ const globalSchema = {
          recién salía después de parsear todo el DOM, perdiendo pageviews en sesiones
          cortas (bounce <2s, clicks rápidos). Con async en head la red arranca
          inmediato y el inline de arriba ya dejó el pageview encolado en dataLayer.
-         IMPORTANTE: un solo <script gtag/js> es suficiente para múltiples productos
-         Google (GA4 + Ads). El gtag('config','AW-...') del inline registra el ID de
-         Ads en el runtime ya cargado. Cargar 2 scripts de gtag/js duplica 105KB
-         de JS unused sin agregar funcionalidad. (PSI audit 2026-05-19: confirmado). -->
+         IMPORTANTE: sólo GA4 se configura en pageview. Ads se registra lazy al
+         disparar una conversión directa; las conversiones normales de calculadora
+         siguen entrando por calculator_used en GA4 e importación a Google Ads. -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
 
     <!-- AdSense re-alta 2026-06-09 (ca-pub-6276944768601561), versión performance-safe.
@@ -785,6 +805,7 @@ const globalSchema = {
     <!-- Mi Hacé Cuentas: store del perfil numérico. Primero en el body para que
          window.HCProfile exista antes que los inline scripts de las calcs. -->
     <ProfileStore />
+    <AccessibilityBaseline />
     <HubCalculationTracking />
     <HubEngagementTools />
     <slot name="header" />

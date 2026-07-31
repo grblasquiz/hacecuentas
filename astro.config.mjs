@@ -144,14 +144,11 @@ export default defineConfig({
             if (id.includes('?astro') && id.includes('type=script')) {
               return undefined;
             }
-            // El mapa de loaders de fórmulas (~3.476 dynamic imports) va a SU
-            // PROPIO chunk, ANTES de la regla lib-shared. Si cae en lib-shared,
-            // como Calculator y Layout importan lib-shared estáticamente, los
-            // ~635KB del mapa terminan en el critical path del botón Calcular.
-            // Aislado, baja en paralelo vía el import() de Calculator.astro:3050.
-            if (id.includes('formula-loader-map')) {
-              return 'formula-map';
-            }
+            // No forzar formula-loader-map a un manualChunk. Rollup ya conserva
+            // el import() como chunk dinámico; al nombrarlo manualmente, Vite
+            // colocaba también ahí su helper de imports dinámicos y Layout lo
+            // terminaba importando estáticamente para Web Vitals, arrastrando
+            // las ~3.476 entradas al critical path de todas las páginas.
             // src/lib/* → chunking automático de Vite por el grafo real de cada
             // entry (Batch B 2026-07-10). Antes una regla catch-all forzaba TODO
             // /src/lib a un único 'lib-shared' (~1.4MB sin comprimir) que incluía

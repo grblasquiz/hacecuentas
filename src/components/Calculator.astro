@@ -3809,21 +3809,12 @@ const formatFreshnessDate = (iso: string): string => {
   // módulo, o sea DENTRO de la ventana de LCP — los ~93KB (brotli) del mapa
   // competían por ancho de banda con el CSS render-blocking y empujaban el
   // "element render delay" (PSI mobile: LCP 8,3s en /calculadora-imc).
-  // Ahora arranca con lo que pase primero: window.load + idle, o el primer
-  // contacto del usuario con el form. Así el click en "Calcular" sigue siendo
+  // Ahora arranca con el primer cambio real de un campo de la calculadora.
+  // Así el click en "Calcular" sigue siendo
   // instantáneo (el chunk ya bajó mientras completa los campos) pero el LCP
   // pinta sin competencia.
   let _loaderMapPromise: Promise<typeof import('../lib/formula-loader-map')> | null = null;
   const loaderMap = () => (_loaderMapPromise ??= import('../lib/formula-loader-map'));
-  {
-    const warm = () => { loaderMap(); };
-    const onLoad = () => (window.requestIdleCallback || ((f: any) => setTimeout(f, 300)))(warm);
-    if (document.readyState === 'complete') onLoad();
-    else window.addEventListener('load', onLoad, { once: true });
-    for (const ev of ['pointerdown', 'keydown', 'focusin'] as const) {
-      document.addEventListener(ev, warm, { once: true, passive: true, capture: true });
-    }
-  }
   const formulaCache = new Map<string, Function>();
   // A4: hooks opcionales que exporta el MÓDULO de la fórmula (no la función de
   // cómputo). Se cachean por formulaId junto con la función. Ver contrato A4
@@ -4937,6 +4928,7 @@ const formatFreshnessDate = (iso: string): string => {
       if (funnelInputStarted) return;
       funnelInputStarted = true;
       productTrack('hc_calculator_input_started');
+      productTrack('calculator_start');
     }, { capture: true });
     window.addEventListener('pagehide', () => {
       if (!funnelInputStarted || funnelSuccess || funnelAbandonSent) return;
@@ -4990,13 +4982,18 @@ const formatFreshnessDate = (iso: string): string => {
       applyConditional(); // estado inicial (antes de cualquier auto-cálculo)
     }
 
-    // Pre-cargar fórmula en background (chunk separado, no bloquea render)
+    // Cargar la fórmula sólo cuando el usuario empieza a editar o calcular.
+    // No hacerlo al inicializar: todas las landings incluyen Calculator y ese
+    // preload agregaba ~93 KiB brotli al critical path aunque no hubiera uso.
     let formulaRef: Function | null = null;
-    const formulaReady = loadFormula(formulaId).then((f) => {
-      formulaRef = f;
-      if (!f) console.error(`Fórmula no encontrada: ${formulaId}`);
-      return f;
-    });
+    let formulaReady: Promise<Function | null> | null = null;
+    const getFormulaReady = () => (formulaReady ??= loadFormula(formulaId).then((f) => {
+        formulaRef = f;
+        if (!f) console.error(`Fórmula no encontrada: ${formulaId}`);
+        return f;
+      }));
+    form.addEventListener('input', getFormulaReady, { once: true, passive: true });
+    form.addEventListener('change', getFormulaReady, { once: true, passive: true });
     const chartWrap = container.querySelector<HTMLElement>('[data-chart-wrap]');
     const chartCanvas = container.querySelector<HTMLCanvasElement>('[data-chart-canvas]');
     const chartDownloadBtn = container.querySelector<HTMLButtonElement>('[data-chart-download]');
@@ -5893,7 +5890,7 @@ const formatFreshnessDate = (iso: string): string => {
           _lastInputs = { ...rawInputs };
 
           // Asegurar que la fórmula esté cargada (primer submit puede esperar el chunk)
-          const formula = formulaRef ?? (await formulaReady);
+          const formula = formulaRef ?? (await getFormulaReady());
           if (!formula) {
             const _msg = CALC_LANG === 'en' ? 'We could not load the calculator. Check your connection and retry.'
               : CALC_LANG === 'pt' ? 'Não foi possível carregar a calculadora. Verifique sua conexão e tente de novo.'
@@ -5972,6 +5969,7 @@ const formatFreshnessDate = (iso: string): string => {
           results.classList.remove('is-stale');
           funnelSuccess = true;
           productTrack('hc_calculator_success');
+          productTrack('calculator_complete');
           // Anunciar el resultado a lectores de pantalla UNA sola vez (texto
           // final, ya formateado — no los pasos intermedios de animateValue).
           if (srAnnounce && _primaryText) {
@@ -6489,6 +6487,7 @@ const formatFreshnessDate = (iso: string): string => {
             (window as any).gtag('event', 'share_whatsapp', { calc_slug: slug });
           }
           productTrack('hc_result_share', { input_mode: 'whatsapp' });
+          productTrack('result_share', { input_mode: 'whatsapp' });
           window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
         } else if (action === 'save-result') {
           // Guardar resultado → snapshot {slug,title,inputs,resultado,fecha} en
@@ -6545,6 +6544,7 @@ const formatFreshnessDate = (iso: string): string => {
             }
             if (typeof (window as any).gtag === 'function') (window as any).gtag('event', 'save_result', { calc_slug: slug });
             productTrack('hc_result_save', { input_mode: 'local_snapshot' });
+            productTrack('save_to_dashboard', { input_mode: 'local_snapshot' });
           } catch { /* localStorage lleno/bloqueado: no romper la página */ }
         } else if (action === 'save-calc') {
           // A3 — Guardado ACTIVO con nombre → localStorage 'hc:saved-calcs' (lo lee /mi).
@@ -6587,6 +6587,7 @@ const formatFreshnessDate = (iso: string): string => {
               setTimeout(() => { lbl.textContent = orig; btn.classList.remove('copied'); }, 1600);
             }
             if (typeof (window as any).gtag === 'function') (window as any).gtag('event', 'save_calc', { calc_slug: slug });
+            productTrack('save_to_dashboard', { input_mode: 'named_calculation' });
           } catch { /* localStorage lleno/bloqueado: no romper la página */ }
         } else if (action === 'embed-reveal') {
           const embed = (container.querySelector<HTMLElement>('.embed-cta') || document.querySelector<HTMLElement>('.embed-cta'));
@@ -6660,6 +6661,7 @@ const formatFreshnessDate = (iso: string): string => {
               (window as any).gtag('event', 'share_link', { calc_slug: slug });
             }
             productTrack('hc_result_share', { input_mode: 'copy_link' });
+            productTrack('result_share', { input_mode: 'copy_link' });
             setTimeout(() => {
               label.textContent = original;
               btn.classList.remove('copied');
@@ -6696,6 +6698,7 @@ const formatFreshnessDate = (iso: string): string => {
                 (window as any).gtag('event', 'share_native', { calc_slug: slug });
               }
               productTrack('hc_result_share', { input_mode: 'native' });
+              productTrack('result_share', { input_mode: 'native' });
             } catch { /* el usuario canceló la hoja nativa: no hacer nada */ }
           } else {
             const wrap = btn.closest('[data-share-wrap]');

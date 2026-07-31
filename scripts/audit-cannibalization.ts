@@ -178,7 +178,8 @@ for (const c of calcs) {
 type Cls = 'exact' | 'same_intent' | 'complementary' | 'false_match';
 interface Pair { a: string; b: string; classification: Cls; titleSim: number; intentSim: number;
   sameFormula: boolean; sameFields: boolean; sameOutputs: boolean; sameCategory: boolean;
-  topic: string | null; autoRedirectSafe: boolean; suggestedCanonical: string | null; }
+  topic: string | null; autoRedirectSafe: boolean; suggestedCanonical: string | null;
+  queryOverlapRequired: boolean; }
 
 const seenPairs = new Set<string>();
 const pairs: Pair[] = [];
@@ -219,16 +220,15 @@ for (const slugs of buckets.values()) {
       if (classification === 'false_match') continue;
 
       const topic = sa.topic || sb.topic;
-      // Canonical sugerido para exactos: la de más contenido (proxy de autoridad).
+      // Nunca sugerimos un ganador sólo por similitud léxica o estructural.
+      // La consolidación requiere overlap material de queries observado en GSC/Bing.
       let suggestedCanonical: string | null = null;
-      if (classification === 'exact') {
-        suggestedCanonical = contentScore(sa.c) >= contentScore(sb.c) ? x : y;
-      }
       pairs.push({
         a: x, b: y, classification, titleSim: +titleSim.toFixed(2), intentSim: +intentSim.toFixed(2),
         sameFormula, sameFields, sameOutputs, sameCategory, topic,
-        autoRedirectSafe: classification === 'exact',
+        autoRedirectSafe: false,
         suggestedCanonical,
+        queryOverlapRequired: true,
       });
     }
   }
@@ -248,18 +248,18 @@ const summary = {
   complementary: pairs.filter((p) => p.classification === 'complementary').length,
   priorityPairs: pairs.filter((p) => p.topic).length,
   flagshipIntents: flagshipAudit,
-  note: 'REPORT-ONLY. No se aplicaron redirecciones. Los "exact" son candidatos a 301, requieren confirmación humana.',
+  note: 'REPORT-ONLY. No se aplican ni sugieren redirecciones sin overlap material de queries observado en GSC/Bing y revisión humana.',
 };
 
 if (!existsSync(REPORTS_DIR)) mkdirSync(REPORTS_DIR, { recursive: true });
 writeFileSync(join(REPORTS_DIR, 'cannibalization-report.json'), JSON.stringify({ summary, pairs }, null, 2), 'utf8');
 
 const csvCell = (v: string) => (/[",\n;]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v);
-const header = ['classification', 'topic', 'a', 'b', 'suggestedCanonical', 'titleSim', 'intentSim', 'sameFormula', 'sameFields', 'sameOutputs', 'sameCategory', 'autoRedirectSafe'];
+const header = ['classification', 'topic', 'a', 'b', 'suggestedCanonical', 'titleSim', 'intentSim', 'sameFormula', 'sameFields', 'sameOutputs', 'sameCategory', 'autoRedirectSafe', 'queryOverlapRequired'];
 const lines = [header.join(',')];
 for (const p of pairs) {
   lines.push([p.classification, p.topic || '', p.a, p.b, p.suggestedCanonical || '', String(p.titleSim), String(p.intentSim),
-    String(p.sameFormula), String(p.sameFields), String(p.sameOutputs), String(p.sameCategory), String(p.autoRedirectSafe)]
+    String(p.sameFormula), String(p.sameFields), String(p.sameOutputs), String(p.sameCategory), String(p.autoRedirectSafe), String(p.queryOverlapRequired)]
     .map((c) => csvCell(String(c))).join(','));
 }
 writeFileSync(join(REPORTS_DIR, 'cannibalization-report.csv'), lines.join('\n') + '\n', 'utf8');

@@ -19,6 +19,12 @@
 
 /** Catálogo cerrado de eventos del funnel. Cualquier evento nuevo se agrega acá. */
 export const HC_EVENTS = [
+  // Funnel unificado cross-calculator (nombres estables para GA4/BI).
+  'calculator_start',
+  'calculator_complete',
+  'result_share',
+  'save_to_dashboard',
+  'related_click',
   // Búsqueda / home
   'hc_home_search_focus',
   'hc_search_started',

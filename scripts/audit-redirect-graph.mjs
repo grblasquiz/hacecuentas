@@ -297,7 +297,8 @@ const { map: rawMap, overlaps } = combineRedirectEntries(
   staticParsed.entries,
 );
 const gone410 = parseGone410(
-  readFileSync(join(ROOT, 'src', 'lib', 'gone-410.ts'), 'utf8'),
+  readFileSync(join(ROOT, 'src', 'lib', 'gone-410.ts'), 'utf8') +
+  readFileSync(join(ROOT, 'src', 'lib', 'removed-ymyl-hubs.ts'), 'utf8'),
 );
 const prunedPaths = new Set(pruningEntries.map((entry) => normalizePath(entry.source)));
 const sitemapInventory = loadIndexedPaths();
