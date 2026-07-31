@@ -66,7 +66,7 @@ const uf2 = (n: number) =>
 
 export const hub: HubData = {
   slug: 'cl/hogar/arrendar-o-comprar',
-  title: 'Arrendar o comprar en Chile: qué te conviene según los números',
+  title: 'Arrendar o comprar en Chile: qué conviene según los números',
   description:
     'Compara el costo total de seguir arrendando —con el reajuste por IPC que dice tu contrato— contra comprar con pie y crédito hipotecario en UF. Incluye el subsidio de arriendo MINVU, el patrimonio que acumulas comprando y el año en que la compra se paga sola.',
   silo: 'Hogar',

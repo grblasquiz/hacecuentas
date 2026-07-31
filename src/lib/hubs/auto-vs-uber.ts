@@ -149,14 +149,14 @@ const DISCLAIMER =
 
 export const hub: HubData = {
   slug: 'auto/auto-o-uber',
-  title: '¿Me conviene tener auto o usar Uber? — Calculadora del punto de equilibrio',
+  title: 'Precio de remis por km 2026 y comparador auto vs. Uber',
   description:
-    'Compará el costo real del auto propio (patente, seguro, nafta, service, estacionamiento y depreciación) contra Uber, DiDi, Cabify, remis o colectivo. Te decimos a partir de cuántos viajes por mes te conviene el auto.',
+    'Calculá cuánto sale un remis por kilómetro en 2026 y compará el viaje contra Uber, DiDi, Cabify, colectivo o auto propio, incluyendo patente, seguro, nafta, service, estacionamiento y depreciación.',
   silo: 'Auto',
   siloHref: '/auto',
 
   eyebrow: 'Comparador de costos de movilidad',
-  h1: '¿Me conviene tener auto o usar Uber?',
+  h1: '¿Cuánto sale el kilómetro de remis y cuándo conviene frente al auto o Uber?',
   lede:
     'La respuesta no es un precio: es un umbral. El auto propio tiene un costo fijo que pagás aunque no lo saques del garage, y las apps tienen un costo que crece con cada viaje. Hay un punto donde se cruzan, y ese punto es la respuesta.',
   stamps: [

@@ -17,14 +17,14 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'inversiones/interes-compuesto',
-  title: '¿Cuánto crece mi plata con interés compuesto? Calculadora 2026',
+  title: 'Calculadora de interés compuesto y conversor TNA a TEA y TEM',
   description:
     'Calculá cuánto vale tu inversión dentro de X años con aportes mensuales, cuánto tarda en duplicarse por la regla del 72, cuál de dos tasas conviene y cómo pasar de TNA a TEM y TEA. Con el desglose entre capital aportado e interés ganado.',
   silo: 'Inversiones',
   siloHref: '/inversiones',
 
   eyebrow: 'Guía y estimación de inversiones',
-  h1: '¿Cuánto crece mi plata con interés compuesto?',
+  h1: 'Interés compuesto: calculá el rendimiento y convertí TNA a TEA',
   lede:
     'El interés compuesto es el interés que empieza a generar interés. Partimos del caso más común —cuánto vas a tener dentro de X años— y desde ahí mirás cuánto tarda en duplicarse, comparás dos tasas o traducís una TNA a TEA.',
   stamps: ['Actualizado 27-07-2026', 'Capitalización configurable · TNA / TEM / TEA', '13 calculadoras adentro'],

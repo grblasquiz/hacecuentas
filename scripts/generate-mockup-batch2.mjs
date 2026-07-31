@@ -147,7 +147,13 @@ for (const [,component,,route,title] of selectedPages) {
   const canonical=`https://hacecuentas.com/${route}`;
   const lang=route==='en'?'en':route.startsWith('pt')?'pt':'es';
   const schema=lang==='en'?'WebApplication':'WebApplication';
-  const output=`---\nexport const prerender = true;\nimport Layout from '${rel('src/layouts/Layout.astro')}';\nimport Header from '${rel('src/components/Header.astro')}';\nimport Footer from '${rel('src/components/Footer.astro')}';\nimport ${component} from '${rel(`src/components/generated/${component}.astro`)}';\nconst canonical='${canonical}';\nconst schema={'@context':'https://schema.org','@type':'${schema}',name:${JSON.stringify(title)},url:canonical,operatingSystem:'Web'};\n---\n<Layout title=${JSON.stringify(title+' | Hacé Cuentas')} description=${JSON.stringify(title+'. Herramienta clara, gratuita y actualizada.')} canonical={canonical} schema={schema} lang="${lang}">\n  <Header />\n  <${component} />\n  <Footer />\n</Layout>\n`;
+  const hubFile=path.join(root,'src/lib/hubs',`${route}.ts`);
+  const hasHub=fs.existsSync(hubFile);
+  const hubImport=hasHub?`\nimport { hub } from '${rel(`src/lib/hubs/${route}.ts`).replace(/\\.ts$/, '')}';`:'';
+  const layoutTitle=hasHub?'{hub.title}':JSON.stringify(title+' | Hacé Cuentas');
+  const layoutDescription=hasHub?'{hub.description}':JSON.stringify(title+'. Herramienta clara, gratuita y actualizada.');
+  const schemaName=hasHub?'hub.title':JSON.stringify(title);
+  const output=`---\nexport const prerender = true;\nimport Layout from '${rel('src/layouts/Layout.astro')}';\nimport Header from '${rel('src/components/Header.astro')}';\nimport Footer from '${rel('src/components/Footer.astro')}';\nimport ${component} from '${rel(`src/components/generated/${component}.astro`)}';${hubImport}\nconst canonical='${canonical}';\nconst schema={'@context':'https://schema.org','@type':'${schema}',name:${schemaName},url:canonical,operatingSystem:'Web'};\n---\n<Layout title=${layoutTitle} description=${layoutDescription} canonical={canonical} schema={schema} lang="${lang}">\n  <Header />\n  <${component} />\n  <Footer />\n</Layout>\n`;
   fs.mkdirSync(pageDir,{recursive:true});
   fs.writeFileSync(pagePath,output);
 }

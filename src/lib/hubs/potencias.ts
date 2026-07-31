@@ -23,16 +23,16 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'matematica/potencias-y-raices',
-  title: 'Potencias, raíces, logaritmos y factorización — calculadora con el paso a paso',
+  title: 'Calculadora de MCM y MCD, potencias, raíces y logaritmos',
   description:
     'Calculá potencias y raíces, logaritmos en cualquier base, MCD y MCM por el algoritmo de Euclides, números primos y factorización, y notación científica. Con el procedimiento completo, no sólo el resultado.',
   silo: 'Matemática',
   siloHref: '/matematica',
 
   eyebrow: 'Calculadora con procedimiento',
-  h1: 'Potencias, raíces, logaritmos y factorización',
+  h1: 'Mínimo común múltiplo (MCM), MCD, potencias y raíces',
   lede:
-    'Elegí qué necesitás resolver y te devolvemos el resultado con el camino: la descomposición en primos factor por factor, los restos del algoritmo de Euclides, el cambio de base del logaritmo. Eso es lo que hay que escribir en la carpeta, y es lo que una calculadora de celular no te muestra.',
+    'Calculá el mínimo común múltiplo (MCM) o el máximo común divisor (MCD) de dos números, o elegí potencias, raíces y logaritmos. Te mostramos la descomposición en primos, el algoritmo de Euclides y cada paso de la cuenta.',
   stamps: [
     'Actualizado 27-07-2026',
     'Con el paso a paso de cada cuenta',

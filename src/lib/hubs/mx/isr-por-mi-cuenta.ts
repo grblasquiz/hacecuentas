@@ -54,14 +54,14 @@ export const FACTURO_MX = {
 
 export const hub: HubData = {
   slug: 'mx/impuestos/isr-por-mi-cuenta',
-  title: 'ISR si facturas por tu cuenta: RESICO, régimen general y retenciones',
+  title: 'Calculadora de impuestos RIF 2026: RESICO, ISR y régimen general',
   description:
-    'Calcula cuánto ISR pagas facturando por tu cuenta en México: cuota de RESICO, pago provisional del régimen general, retenciones de una factura de honorarios y lo que te descuentan las plataformas digitales.',
+    'El RIF fue sustituido para nuevas altas: compara RESICO y régimen general y calcula cuánto ISR pagas por tu cuenta en México, las retenciones de honorarios y los descuentos de plataformas digitales.',
   silo: 'Impuestos',
   siloHref: '/mx/impuestos',
 
   eyebrow: 'México · Facturo por mi cuenta',
-  h1: 'Facturo por mi cuenta: ¿cuánto ISR pago y qué régimen me conviene?',
+  h1: '¿Todavía existe el RIF? Calculá tus impuestos con RESICO o régimen general',
   lede:
     'Con el mismo ingreso, la diferencia entre RESICO y el régimen general puede ser de varios miles de pesos al mes. Depende de cuánto puedas deducir y de quién sea tu cliente. Elige tu caso y compara.',
   stamps: [
@@ -253,6 +253,10 @@ export const hub: HubData = {
   breakdownIntro: 'Las barras comparan cada concepto contra el mayor del cálculo.',
 
   faq: [
+    {
+      q: '¿Todavía existe el RIF y cómo se calculan sus impuestos en 2026?',
+      a: 'No. El Régimen de Incorporación Fiscal (RIF) dejó de admitir nuevas altas y fue sustituido por RESICO para la mayoría de las personas físicas con actividad empresarial. Si venías tributando en RIF y conservaste el régimen por las reglas transitorias, no corresponde usar una calculadora genérica de RIF: tus porcentajes dependen del año de permanencia y de tu situación ante el SAT. Para una actividad nueva en 2026, compará RESICO contra el régimen general con esta calculadora.',
+    },
     {
       q: '¿Me conviene RESICO o el régimen general?',
       a: 'Depende de tu margen. RESICO cobra una tasa baja sobre el ingreso cobrado pero no deja deducir un solo peso de gastos; el régimen general aplica una tarifa progresiva más alta, pero sobre la utilidad. Si tus gastos deducibles son mínimos, como en muchos servicios profesionales, RESICO casi siempre gana. Si tienes costos fuertes de insumos, personal o mercancía, el general puede salir más barato. Este hub compara los dos con tus propios números.',

@@ -18,14 +18,14 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'tecnologia/impresion-3d',
-  title: 'Impresión 3D: ¿cuánto sale la pieza? — Calculadora de costo 2026',
+  title: 'Costo de impresión 3D por hora y por pieza — Calculadora 2026',
   description:
-    'Calculá cuánto sale imprimir una pieza en 3D: gramos de filamento o mililitros de resina, luz consumida, desgaste y amortización de la impresora, tu hora de trabajo y el precio final con margen. PLA, ABS, PETG, TPU, ASA y resina.',
+    'Calculá el costo de una impresora 3D por hora y por pieza: filamento o resina, luz consumida, desgaste, amortización, mano de obra y precio final con margen. PLA, ABS, PETG, TPU, ASA y resina.',
   silo: 'Tecnología',
   siloHref: '/tecnologia',
 
   eyebrow: 'Guía y estimación de costos',
-  h1: 'Impresión 3D: ¿cuánto sale la pieza?',
+  h1: '¿Cuánto cuesta una impresión 3D por hora y por pieza?',
   lede:
     'El filamento es la parte visible del costo, pero no la más grande. Con el volumen del modelo, el relleno y los datos de tu impresora sale el costo real —material, luz, desgaste y tu hora— y el precio que tenés que cobrar.',
   stamps: ['Actualizado 27-07-2026', 'PLA, PETG, ABS, TPU, ASA y resina', '9 calculadoras adentro'],

@@ -10,6 +10,20 @@
  * mercadolibre → comision-venta-vendedor, etc.).
  */
 export const PRIORITY_PATHS: string[] = [
+  // Clústeres de consultas GSC 30-abr–29-jul 2026 consolidados en hubs canónicos.
+  '/embarazo/dias-fertiles',
+  '/trabajo/indemnizacion-por-despido',
+  '/mx/trabajo/sueldo-neto',
+  '/salud/peso-ideal-imc',
+  '/inversiones/interes-compuesto',
+  '/auto/auto-o-uber',
+  '/matematica/potencias-y-raices',
+  '/matematica/regla-de-tres',
+  '/valores-bcra',
+  '/tecnologia/impresion-3d',
+  '/hogar/huella-de-carbono',
+  '/estudio/cuanto-tardo-en-leer',
+  '/mx/impuestos/isr-por-mi-cuenta',
   '/calculadora-conversor-metros-lineales-a-metros-cuadrados',
   '/dias-entre-dos-fechas',
   '/calculadora-comision-venta-vendedor',
@@ -45,6 +59,26 @@ export const PRIORITY_PATHS: string[] = [
   '/calculadora-seguro-auto-estimado',
   '/blog',
 ];
+
+/**
+ * Intenciones detectadas en GSC y landing canónica que debe absorber todas
+ * sus variantes. Evita volver a crear calculadoras podadas por cada keyword.
+ */
+export const GSC_QUERY_TARGETS: Record<string, string[]> = {
+  '/embarazo/dias-fertiles': ['calcular ciclo menstrual', 'calculadora menstrual', 'ciclo menstrual calcular'],
+  '/trabajo/indemnizacion-por-despido': ['calcular indemnización', 'calcular indemnizacion', 'calculadora de liquidación', 'calculadora de finiquito'],
+  '/mx/trabajo/sueldo-neto': ['sueldo neto mexico', 'sueldo bruto a neto', 'calculadora impuestos sueldo'],
+  '/salud/peso-ideal-imc': ['imc tabla', 'tabla de peso', 'tabla de peso y altura'],
+  '/inversiones/interes-compuesto': ['tna a tea', 'calculadora tna a tea', 'tea a tem'],
+  '/auto/auto-o-uber': ['precio remis x km 2026', 'cuanto cuesta el km de remis', 'cuanto sale el kilometro en remis'],
+  '/matematica/potencias-y-raices': ['mcm', 'mínimo común múltiplo', 'que es el mcm', 'como calcular el mcm'],
+  '/matematica/regla-de-tres': ['regla de 3', 'regla de tres', 'como hacer una regla de tres'],
+  '/valores-bcra': ['uva bcra', 'valor uva bcra', 'valor uva hoy bcra', 'badlar hoy'],
+  '/tecnologia/impresion-3d': ['coste de impresora 3d por hora', 'impresora 3d coste por hora'],
+  '/hogar/huella-de-carbono': ['cuantos arboles debo plantar para compensar mi huella de carbono', 'arboles necesarios para compensar emisiones co2'],
+  '/estudio/cuanto-tardo-en-leer': ['palabras por minuto', 'palabras por minuto lectura', 'lectura de palabras por minuto'],
+  '/mx/impuestos/isr-por-mi-cuenta': ['calculadora de impuestos rif', 'calculadora rif de impuestos', 'calculadora rif'],
+};
 
 /**
  * Aliases que GSC reportó con impresiones y que deben responder 301

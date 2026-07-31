@@ -28,14 +28,14 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'embarazo/dias-fertiles',
-  title: '¿Cuáles son mis días fértiles? — Calculadora de ovulación 2026',
+  title: 'Calculadora de ciclo menstrual, ovulación y días fértiles 2026',
   description:
-    'Calculá tu ventana fértil y el día de ovulación según tu ciclo, tengas ciclos regulares o irregulares. Datá la concepción desde la FUM o la fecha probable de parto y mirá tus probabilidades reales según la edad. No es un método anticonceptivo.',
+    'Calculá tu ciclo menstrual, próximo período, ventana fértil y día de ovulación, tengas ciclos regulares o irregulares. Usá la FUM o la fecha probable de parto y mirá tus probabilidades según la edad. No es un método anticonceptivo.',
   silo: 'Embarazo',
   siloHref: '/embarazo',
 
   eyebrow: 'Guía y estimación de fertilidad',
-  h1: '¿Cuáles son mis días fértiles?',
+  h1: 'Calculadora de ciclo menstrual y días fértiles',
   lede:
     'La ventana fértil son los 5 días previos a la ovulación más el día de la ovulación: seis días en total, porque los espermatozoides sobreviven hasta 5 días y el óvulo apenas 24 horas. Partimos del caso más común —ciclo regular— y lo ajustás con tus datos.',
   stamps: [
