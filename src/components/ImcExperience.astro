@@ -42,12 +42,12 @@ const { data } = Astro.props;
         </div>
       </div>
 
-      <form class="imc-calculator" id="imc-form">
+      <form class="imc-calculator" id="imc-form" novalidate>
         <div class="imc-card-title">
           <h2>Tus datos</h2>
           <div class="imc-units" role="group" aria-label="Sistema de unidades">
-            <button type="button" class="is-active" data-unit="metric">Métrico</button>
-            <button type="button" data-unit="imperial">Imperial</button>
+            <button type="button" class="is-active" data-unit="metric" aria-pressed="true">Métrico</button>
+            <button type="button" data-unit="imperial" aria-pressed="false">Imperial</button>
           </div>
         </div>
 
@@ -55,7 +55,7 @@ const { data } = Astro.props;
           <label>
             <span>Peso</span>
             <span class="imc-input">
-              <input id="imc-weight" name="peso" type="number" value="70" min="20" max="660" step="0.1" inputmode="decimal" />
+              <input id="imc-weight" name="peso" type="number" value="70" min="20" max="300" step="0.1" inputmode="decimal" required aria-describedby="imc-weight-example" />
               <b id="imc-weight-unit">kg</b>
             </span>
             <small id="imc-weight-example">Ej.: 70</small>
@@ -63,7 +63,7 @@ const { data } = Astro.props;
           <label>
             <span>Altura</span>
             <span class="imc-input">
-              <input id="imc-height" name="altura" type="number" value="170" min="100" max="250" step="1" inputmode="decimal" />
+              <input id="imc-height" name="altura" type="number" value="170" min="100" max="250" step="1" inputmode="decimal" required aria-describedby="imc-height-example" />
               <b id="imc-height-unit">cm</b>
             </span>
             <small id="imc-height-example">Ej.: 170</small>
@@ -77,16 +77,17 @@ const { data } = Astro.props;
         </button>
 
         <div class="imc-advanced" id="imc-advanced" hidden>
-          <label><span>Edad</span><span class="imc-input imc-input--small"><input id="imc-age" type="number" value="35" min="18" max="110" /><b>años</b></span></label>
-          <label><span>Sexo</span><select id="imc-sex"><option value="m">Masculino</option><option value="f">Femenino</option></select></label>
-          <label><span>Cintura</span><span class="imc-input imc-input--small"><input id="imc-waist" type="number" value="85" min="40" max="200" /><b>cm</b></span></label>
-          <label><span>Grasa corporal</span><span class="imc-input imc-input--small"><input id="imc-fat" type="number" value="22" min="0" max="70" step="0.1" /><b>%</b></span></label>
+          <label><span>Edad (opcional)</span><span class="imc-input imc-input--small"><input id="imc-age" type="number" placeholder="Ej.: 35" min="18" max="110" /><b>años</b></span></label>
+          <label><span>Sexo (para peso ideal)</span><select id="imc-sex"><option value="">No indicar</option><option value="m">Masculino</option><option value="f">Femenino</option></select></label>
+          <label><span>Cintura (opcional)</span><span class="imc-input imc-input--small"><input id="imc-waist" type="number" placeholder="Ej.: 85" min="40" max="200" step="0.1" /><b id="imc-waist-unit">cm</b></span></label>
+          <p class="imc-measure-help">Medila a mitad de camino entre la última costilla y la parte superior de la cadera, después de exhalar normalmente.</p>
         </div>
 
         <button class="imc-submit" type="submit">
           <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8 6h8M8 10h2m2 0h2m2 0h0M8 14h2m2 0h2m2 0h0M8 18h2m2 0h2m2 0h0"/></svg>
           Calcular mi IMC
         </button>
+        <p class="imc-form-error" id="imc-form-error" role="alert" hidden></p>
         <p class="imc-privacy"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><span>Tus datos son privados y se usan solo para este cálculo.<br />No se guardan ni se comparten.</span></p>
       </form>
     </div>
@@ -123,14 +124,15 @@ const { data } = Astro.props;
           </article>
           <article>
             <span class="imc-insight-icon imc-insight-icon--blue"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/><path d="m14.5 9.5 5-5M16.5 4.5h3v3"/></svg></span>
-            <div><b>Peso ideal estimado</b><strong id="imc-ideal">62 – 66 kg</strong><small>Promedio de fórmulas clínicas.</small></div>
+            <div><b>Peso ideal estimado</b><strong id="imc-ideal">—</strong><small id="imc-ideal-copy">Indicá sexo para comparar tres fórmulas.</small></div>
           </article>
           <article>
             <span class="imc-insight-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7.5h18v9H3z"/><path d="M6 7.5v3m3-3v2m3-2v3m3-3v2m3-2v3"/></svg></span>
-            <div><b>Relación cintura/altura</b><strong id="imc-whtr">0,50</strong><small id="imc-whtr-copy">Objetivo: menor a 0,50.</small></div>
+            <div><b>Relación cintura/altura</b><strong id="imc-whtr">—</strong><small id="imc-whtr-copy">Agregá tu cintura para estimarla.</small></div>
           </article>
         </div>
         <p class="imc-disclaimer"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></svg> Orientativo, no reemplaza una consulta médica.</p>
+        <p class="imc-age-note" id="imc-age-note" hidden>En mayores de 65 años, interpretá el IMC junto con cambios recientes de peso, fuerza, alimentación y masa muscular.</p>
       </div>
     </div>
   </section>
@@ -165,6 +167,37 @@ const { data } = Astro.props;
     </div>
   </section>
 
+  <section class="imc-reference imc-shell" aria-labelledby="imc-reference-title">
+    <div class="imc-reference__intro">
+      <span class="imc-kicker">Cálculo y referencia</span>
+      <h2 id="imc-reference-title">Cómo se calcula el IMC</h2>
+      <p><strong>IMC = peso (kg) ÷ altura² (m).</strong> Por ejemplo, con 70 kg y 1,70 m: 70 ÷ (1,70 × 1,70) = <strong>24,2</strong>. La tabla sirve para adultos; no se usa igual durante el embarazo ni en menores de 18 años.</p>
+    </div>
+    <div class="imc-table-wrap" tabindex="0" aria-label="Tabla de clasificación del IMC, desplazable horizontalmente">
+      <table>
+        <caption>Clasificación del IMC en adultos según la OMS</caption>
+        <thead><tr><th scope="col">IMC</th><th scope="col">Categoría</th><th scope="col">Lectura orientativa</th></tr></thead>
+        <tbody>
+          <tr><td>&lt; 18,5</td><td>Bajo peso</td><td>Puede requerir evaluación nutricional</td></tr>
+          <tr><td>18,5–24,9</td><td>Peso normal</td><td>Rango de referencia poblacional</td></tr>
+          <tr><td>25,0–29,9</td><td>Sobrepeso</td><td>Riesgo que aumenta de forma gradual</td></tr>
+          <tr><td>30,0–34,9</td><td>Obesidad grado I</td><td>Conviene una evaluación integral</td></tr>
+          <tr><td>35,0–39,9</td><td>Obesidad grado II</td><td>Riesgo elevado</td></tr>
+          <tr><td>≥ 40,0</td><td>Obesidad grado III</td><td>Riesgo muy elevado</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="imc-next">
+      <h3>Completá la foto, no te quedes con un solo número</h3>
+      <p>El IMC no distingue grasa de músculo ni muestra dónde se distribuye la grasa corporal.</p>
+      <div>
+        <a href="/salud/grasa-corporal">Calcular grasa corporal <span aria-hidden="true">→</span></a>
+        <a href="/salud/calorias-de-los-alimentos">Entender calorías y porciones <span aria-hidden="true">→</span></a>
+        <a href="/salud/peso-en-el-embarazo">Peso durante el embarazo <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
   <section class="imc-faq imc-shell">
     <h2>Preguntas frecuentes</h2>
     <div class="imc-faq__list">
@@ -188,6 +221,7 @@ const { data } = Astro.props;
   const form = document.querySelector<HTMLFormElement>('#imc-form');
   const advancedButton = document.querySelector<HTMLButtonElement>('.imc-advanced-toggle');
   const advanced = document.querySelector<HTMLElement>('#imc-advanced');
+  const errorMessage = document.querySelector<HTMLElement>('#imc-form-error');
   let unit: 'metric' | 'imperial' = 'metric';
 
   advancedButton?.addEventListener('click', () => {
@@ -202,50 +236,82 @@ const { data } = Astro.props;
       if (next === unit) return;
       const weight = document.querySelector<HTMLInputElement>('#imc-weight')!;
       const height = document.querySelector<HTMLInputElement>('#imc-height')!;
+      const waist = document.querySelector<HTMLInputElement>('#imc-waist')!;
       if (next === 'imperial') {
         weight.value = String(Math.round(Number(weight.value) * 2.20462));
         height.value = String(Math.round(Number(height.value) / 2.54));
+        if (waist.value) waist.value = String(Math.round(Number(waist.value) / 2.54 * 10) / 10);
         weight.min = '44'; weight.max = '660'; height.min = '39'; height.max = '98';
+        waist.min = '16'; waist.max = '79';
         document.querySelector('#imc-weight-unit')!.textContent = 'lb';
         document.querySelector('#imc-height-unit')!.textContent = 'in';
+        document.querySelector('#imc-waist-unit')!.textContent = 'in';
         document.querySelector('#imc-weight-example')!.textContent = 'Ej.: 154';
         document.querySelector('#imc-height-example')!.textContent = 'Ej.: 67';
       } else {
         weight.value = String(Math.round(Number(weight.value) / 2.20462));
         height.value = String(Math.round(Number(height.value) * 2.54));
+        if (waist.value) waist.value = String(Math.round(Number(waist.value) * 2.54 * 10) / 10);
         weight.min = '20'; weight.max = '300'; height.min = '100'; height.max = '250';
+        waist.min = '40'; waist.max = '200';
         document.querySelector('#imc-weight-unit')!.textContent = 'kg';
         document.querySelector('#imc-height-unit')!.textContent = 'cm';
+        document.querySelector('#imc-waist-unit')!.textContent = 'cm';
         document.querySelector('#imc-weight-example')!.textContent = 'Ej.: 70';
         document.querySelector('#imc-height-example')!.textContent = 'Ej.: 170';
       }
       unit = next;
-      document.querySelectorAll('[data-unit]').forEach((item) => item.classList.toggle('is-active', item === button));
+      document.querySelectorAll<HTMLButtonElement>('[data-unit]').forEach((item) => {
+        const active = item === button;
+        item.classList.toggle('is-active', active);
+        item.setAttribute('aria-pressed', String(active));
+      });
       calculate();
     });
   });
 
-  function calculate() {
+  function showError(message: string) {
+    if (!errorMessage) return;
+    errorMessage.textContent = message;
+    errorMessage.hidden = !message;
+  }
+
+  function calculate(showValidation = false) {
     const rawWeight = Number(document.querySelector<HTMLInputElement>('#imc-weight')?.value);
     const rawHeight = Number(document.querySelector<HTMLInputElement>('#imc-height')?.value);
     const weight = unit === 'imperial' ? rawWeight / 2.20462 : rawWeight;
     const heightCm = unit === 'imperial' ? rawHeight * 2.54 : rawHeight;
-    if (!weight || !heightCm) return;
+    const validWeight = weight >= 20 && weight <= 300;
+    const validHeight = heightCm >= 100 && heightCm <= 250;
+    if (!validWeight || !validHeight) {
+      if (showValidation) showError(unit === 'metric'
+        ? 'Ingresá un peso entre 20 y 300 kg y una altura entre 100 y 250 cm.'
+        : 'Ingresá un peso entre 44 y 660 lb y una altura entre 39 y 98 in.');
+      return false;
+    }
+    showError('');
     const age = Number(document.querySelector<HTMLInputElement>('#imc-age')?.value) || 0;
-    const waist = Number(document.querySelector<HTMLInputElement>('#imc-waist')?.value) || 0;
-    const sex = document.querySelector<HTMLSelectElement>('#imc-sex')?.value || 'm';
+    const rawWaist = Number(document.querySelector<HTMLInputElement>('#imc-waist')?.value) || 0;
+    const waist = unit === 'imperial' ? rawWaist * 2.54 : rawWaist;
+    if ((age && (age < 18 || age > 110)) || (waist && (waist < 40 || waist > 200))) {
+      if (showValidation) showError('Revisá los datos opcionales: edad entre 18 y 110 años y cintura entre 40 y 200 cm.');
+      return false;
+    }
+    const sex = document.querySelector<HTMLSelectElement>('#imc-sex')?.value || '';
     const heightM = heightCm / 100;
     const bmi = weight / (heightM * heightM);
-    const healthyMin = age >= 65 ? 23 : 18.5;
-    const healthyMax = age >= 65 ? 28 : 24.9;
+    const healthyMin = 18.5;
+    const healthyMax = 24.9;
     const minWeight = healthyMin * heightM * heightM;
     const maxWeight = healthyMax * heightM * heightM;
     const inchesOverFive = Math.max(0, heightCm / 2.54 - 60);
-    const devine = sex === 'f' ? 45.5 + 2.3 * inchesOverFive : 50 + 2.3 * inchesOverFive;
-    const robinson = sex === 'f' ? 49 + 1.7 * inchesOverFive : 52 + 1.9 * inchesOverFive;
-    const lorentz = (heightCm - 100) - ((heightCm - 150) / (sex === 'f' ? 2.5 : 4));
-    const ideal = (devine + robinson + lorentz) / 3;
-    const category = bmi < 18.5 ? 'Bajo peso' : bmi < 25 ? 'Peso saludable' : bmi < 30 ? 'Sobrepeso' : 'Obesidad';
+    const devine = sex ? (sex === 'f' ? 45.5 + 2.3 * inchesOverFive : 50 + 2.3 * inchesOverFive) : 0;
+    const robinson = sex ? (sex === 'f' ? 49 + 1.7 * inchesOverFive : 52 + 1.9 * inchesOverFive) : 0;
+    const lorentz = sex ? (heightCm - 100) - ((heightCm - 150) / (sex === 'f' ? 2.5 : 4)) : 0;
+    const ideals = [devine, robinson, lorentz].filter((value) => value > 0);
+    const idealLow = ideals.length ? Math.min(...ideals) : 0;
+    const idealHigh = ideals.length ? Math.max(...ideals) : 0;
+    const category = bmi < 18.5 ? 'Bajo peso' : bmi < 25 ? 'Peso saludable' : bmi < 30 ? 'Sobrepeso' : bmi < 35 ? 'Obesidad grado I' : bmi < 40 ? 'Obesidad grado II' : 'Obesidad grado III';
     const tone = bmi < 18.5 ? 'low' : bmi < 25 ? 'healthy' : bmi < 30 ? 'high' : 'obesity';
     const position = Math.max(0, Math.min(100, ((bmi - 15) / 25) * 100));
     const range = `${decimal(minWeight)}–${decimal(maxWeight)} kg`;
@@ -254,21 +320,28 @@ const { data } = Astro.props;
     document.querySelector('#imc-category')!.setAttribute('data-tone', tone);
     document.querySelector('#imc-range-copy')!.textContent = range;
     document.querySelector('#imc-range')!.textContent = `${decimal(minWeight)} – ${decimal(maxWeight, 0)} kg`;
-    document.querySelector('#imc-ideal')!.textContent = `${decimal(ideal - 2, 0)} – ${decimal(ideal + 2, 0)} kg`;
+    document.querySelector('#imc-ideal')!.textContent = ideals.length ? `${decimal(idealLow, 0)} – ${decimal(idealHigh, 0)} kg` : '—';
+    document.querySelector('#imc-ideal-copy')!.textContent = ideals.length
+      ? 'Rango entre Devine, Robinson y Lorentz; no es una meta clínica.'
+      : 'Indicá sexo para comparar tres fórmulas.';
     document.querySelector('#imc-marker-label')!.textContent = decimal(bmi);
     (document.querySelector('#imc-marker-label') as HTMLElement).style.left = `${position}%`;
     (document.querySelector('#imc-marker') as HTMLElement).style.left = `${position}%`;
     const whtr = waist / heightCm;
     document.querySelector('#imc-whtr')!.textContent = waist ? decimal(whtr, 2) : '—';
-    document.querySelector('#imc-whtr-copy')!.textContent = waist ? (whtr < .5 ? 'Dentro del objetivo saludable.' : 'Objetivo: menor a 0,50.') : 'Agregá tu cintura para estimarlo.';
+    document.querySelector('#imc-whtr-copy')!.textContent = waist
+      ? (bmi >= 35 ? 'Con IMC ≥ 35 esta relación aporta poca información adicional.' : whtr < .4 ? 'Valor bajo: revisá que la medición sea correcta.' : whtr < .5 ? 'Sin aumento de riesgo por adiposidad central.' : whtr < .6 ? 'Adiposidad central aumentada.' : 'Adiposidad central alta.')
+      : 'Agregá tu cintura para estimarla.';
+    const ageNote = document.querySelector<HTMLElement>('#imc-age-note');
+    if (ageNote) ageNote.hidden = age < 65;
+    return true;
   }
 
   form?.addEventListener('submit', (event) => {
     event.preventDefault();
-    calculate();
-    document.querySelector('.imc-results')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (calculate(true)) document.querySelector('.imc-results')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
-  form?.querySelectorAll('input, select').forEach((field) => field.addEventListener('input', calculate));
+  form?.querySelectorAll('input, select').forEach((field) => field.addEventListener('input', () => calculate(false)));
   calculate();
 </script>
 
@@ -311,7 +384,7 @@ const { data } = Astro.props;
   .imc-input:focus-within { border-color:var(--blue);box-shadow:0 0 0 3px rgba(36,107,255,.1); }
   .imc-input input { width:100%;min-width:0;border:0;outline:0;padding:18px 0;font-size:52px;line-height:1;color:#071b33;background:transparent;appearance:textfield; }
   .imc-input b { color:#506078;font-weight:500;font-size:16px; }
-  .imc-primary-fields small { display:block;color:#a0aabd;margin:8px 0 0;font-size:13px; }
+  .imc-primary-fields small { display:block;color:#66788e;margin:8px 0 0;font-size:13px; }
   .imc-advanced-toggle { margin-top:28px;width:100%;border:1px solid #dfe4ea;border-radius:10px;background:#fff;display:flex;align-items:center;gap:16px;padding:17px 18px;color:#173451;font-size:15px;cursor:pointer;box-shadow:0 3px 10px rgba(15,38,65,.04); }
   .imc-advanced-toggle em { font-style:normal;color:#66788e; }
   .imc-chevron { margin-left:auto;font-size:20px;transition:.2s; }
@@ -322,9 +395,11 @@ const { data } = Astro.props;
   .imc-advanced[hidden] { display:none; }
   .imc-input--small input { font-size:18px;padding:12px 0; }
   .imc-advanced select { width:100%;height:48px;border:1.5px solid #d7dde5;border-radius:10px;padding:0 12px;background:#fff;color:var(--ink); }
+  .imc-measure-help { grid-column:1/-1;color:#53657a;font-size:12px;line-height:1.55;margin:0; }
   .imc-submit { width:100%;border:0;border-radius:9px;background:linear-gradient(90deg,#1766ff,#2878ff);color:#fff;font-size:21px;padding:20px;margin-top:24px;display:flex;align-items:center;justify-content:center;gap:13px;cursor:pointer;box-shadow:0 10px 20px rgba(36,107,255,.22); }
   .imc-submit:hover { filter:brightness(.96);transform:translateY(-1px); }
   .imc-submit svg { width:22px;fill:none;stroke:currentColor;stroke-width:1.5; }
+  .imc-form-error { color:#a51d1d;background:#fff0f0;border:1px solid #f2b8b8;border-radius:8px;padding:10px 12px;font-size:13px;margin:12px 0 0; }
   .imc-privacy { display:flex;justify-content:center;gap:12px;color:#63748b;font-size:12px;line-height:1.5;margin:24px 0 0; }
   .imc-privacy>svg { width:18px;height:18px;flex:0 0 18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round; }
   .imc-results-wrap { position:relative;margin-top:-62px;padding-bottom:54px;z-index:2; }
@@ -352,6 +427,7 @@ const { data } = Astro.props;
   .imc-insights article div { display:grid;gap:6px; }.imc-insights b{font-size:13px}.imc-insights strong{font-size:24px;color:var(--green)}.imc-insights article:nth-child(2) strong{color:var(--blue)}.imc-insights small{color:#65758a;font-size:11px}
   .imc-disclaimer { grid-column:1/-1;text-align:center;border-top:1px solid #dce2e9;color:#718096;font-size:12px;padding:14px;margin:0;display:flex;align-items:center;justify-content:center;gap:7px; }
   .imc-disclaimer svg { width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
+  .imc-age-note { grid-column:1/-1;text-align:center;background:#f5f8fc;color:#465b73;font-size:13px;line-height:1.55;padding:14px 20px;margin:0;border-top:1px solid #dce2e9; }
   .imc-understand { padding:12px 0 65px; }.imc-understand>h2,.imc-faq>h2,.imc-sources>h2{font-size:32px;letter-spacing:-.03em;margin:0 0 25px}
   .imc-education { display:grid;grid-template-columns:repeat(3,1fr);gap:26px; }
   .imc-education article { border:1px solid #dfe4ea;border-radius:14px;padding:28px;display:flex;gap:18px;min-height:210px; }
@@ -359,12 +435,13 @@ const { data } = Astro.props;
   .imc-education article>span svg { width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round; }
   .imc-education h3{font-size:17px;margin:4px 0 12px}.imc-education p{font-size:13px;line-height:1.7;color:#55677c;margin:0 0 18px}.imc-education a{font-size:13px;color:var(--blue);font-weight:700}
   .imc-detail { padding:55px 0; }.imc-detail__copy{background:#f4f8fc;border-radius:18px;padding:48px}.imc-kicker{color:var(--green);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}.imc-detail h2{font-size:34px;max-width:720px;margin:10px 0 14px}.imc-detail__copy>p{color:#52657b;line-height:1.75;max-width:850px}.imc-detail__columns{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px}.imc-detail h3{font-size:17px}.imc-detail ul{padding-left:20px;color:#52657b;line-height:1.65;font-size:14px}.imc-detail li{margin-bottom:10px}
+  .imc-reference { padding:34px 0 48px; }.imc-reference__intro{max-width:850px}.imc-reference h2{font-size:34px;letter-spacing:-.03em;margin:10px 0 12px}.imc-reference__intro p{color:#52657b;line-height:1.75;margin:0 0 26px}.imc-table-wrap{overflow-x:auto;border:1px solid #dfe5ec;border-radius:14px}.imc-table-wrap:focus{outline:3px solid rgba(36,107,255,.22);outline-offset:3px}.imc-reference table{width:100%;border-collapse:collapse;min-width:650px}.imc-reference caption{text-align:left;font-weight:750;font-size:15px;padding:18px 20px;background:#f4f8fc}.imc-reference th,.imc-reference td{text-align:left;padding:14px 20px;border-top:1px solid #e4e9ef;font-size:14px}.imc-reference th{color:#334b66;background:#fbfcfe}.imc-reference td{color:#52657b}.imc-reference td:first-child{font-weight:750;color:var(--ink);white-space:nowrap}.imc-next{margin-top:28px;border-left:4px solid var(--green);background:#f3fbf7;border-radius:0 12px 12px 0;padding:24px 26px}.imc-next h3{margin:0 0 8px}.imc-next p{color:#52657b;margin:0 0 16px}.imc-next>div{display:flex;gap:12px;flex-wrap:wrap}.imc-next a{background:#fff;border:1px solid #cfe4d8;border-radius:8px;padding:10px 13px;color:#155d48;font-size:13px;font-weight:700;text-decoration:none}.imc-next a:hover{border-color:var(--green)}
   .imc-faq { padding:50px 0 70px; }.imc-faq__list{display:grid;gap:8px}.imc-faq details{border:1px solid #dfe5ec;border-radius:8px;background:#fff;padding:0 18px}.imc-faq summary{cursor:pointer;list-style:none;padding:16px 0;font-weight:650;display:flex;justify-content:space-between;gap:20px}.imc-faq summary::-webkit-details-marker{display:none}.imc-faq details p{color:#52657b;line-height:1.7;font-size:14px;margin:0;padding:0 0 18px;max-width:940px}.imc-faq details[open] summary span{transform:rotate(45deg)}
   .imc-sources { padding:0 0 80px; }.imc-sources>div{display:grid;grid-template-columns:1fr 1fr;gap:12px}.imc-sources a{border:1px solid #e2e7ed;border-radius:10px;padding:15px 17px;display:grid;gap:4px;color:var(--ink);text-decoration:none}.imc-sources a:hover{border-color:var(--blue)}.imc-sources a b{font-size:13px}.imc-sources a span{font-size:11px;color:#6a7b90}
   @media(max-width:900px){
     .imc-shell{width:min(100% - 28px,680px)}.imc-hero{padding:30px 0 92px}.imc-hero__grid{grid-template-columns:1fr;gap:38px}.imc-intro h1{font-size:48px}.imc-intro h1 br{display:none}.imc-illustration{display:none}.imc-calculator{padding:26px}.imc-results{grid-template-columns:1fr;padding:30px 24px 0}.imc-score{border-right:0;border-bottom:1px solid #dce2e9;padding:0 0 28px}.imc-scale{padding:30px 0}.imc-insights{grid-template-columns:1fr}.imc-insights article{border-right:0;border-bottom:1px solid #dce2e9;padding:20px 4px}.imc-education{grid-template-columns:1fr}.imc-detail__columns{grid-template-columns:1fr}.imc-sources>div{grid-template-columns:1fr}
   }
   @media(max-width:560px){
-    .imc-shell{width:calc(100% - 24px)}.imc-hero{padding-top:18px}.imc-crumbs{margin-bottom:22px}.imc-intro h1{font-size:39px}.imc-lede{font-size:16px;line-height:1.6}.imc-trust{gap:10px;justify-content:space-between;font-size:12px}.imc-trust i{width:28px;height:28px}.imc-calculator{padding:22px 18px}.imc-card-title{align-items:flex-start}.imc-card-title h2{font-size:23px}.imc-units button{padding:8px 11px;font-size:12px}.imc-primary-fields{gap:12px}.imc-input{padding:0 10px}.imc-input input{font-size:38px;padding:15px 0}.imc-advanced-toggle{font-size:13px;text-align:left}.imc-advanced-toggle em{display:none}.imc-advanced{grid-template-columns:1fr}.imc-submit{font-size:18px}.imc-results-wrap{margin-top:-50px}.imc-results{padding-inline:18px}.imc-scale__labels b{font-size:10px}.imc-scale__labels small{font-size:9px}.imc-insights strong{font-size:21px}.imc-understand>h2,.imc-faq>h2,.imc-sources>h2{font-size:27px}.imc-education article{padding:22px 18px}.imc-detail{padding:32px 0}.imc-detail__copy{padding:28px 20px}.imc-detail h2{font-size:28px}.imc-faq{padding-top:30px}
+    .imc-shell{width:calc(100% - 24px)}.imc-hero{padding-top:18px}.imc-crumbs{margin-bottom:22px}.imc-intro h1{font-size:39px}.imc-lede{font-size:16px;line-height:1.6}.imc-trust{gap:10px;justify-content:flex-start;flex-wrap:wrap;font-size:12px}.imc-trust span{white-space:normal}.imc-trust i{width:28px;height:28px}.imc-calculator{padding:22px 18px}.imc-card-title{align-items:flex-start}.imc-card-title h2{font-size:23px}.imc-units button{padding:8px 11px;font-size:12px}.imc-primary-fields{gap:12px}.imc-input{padding:0 10px}.imc-input input{font-size:38px;padding:15px 0}.imc-primary-fields small{color:#66788e}.imc-advanced-toggle{font-size:13px;text-align:left}.imc-advanced-toggle em{display:none}.imc-advanced{grid-template-columns:1fr}.imc-submit{font-size:18px}.imc-results-wrap{margin-top:-50px}.imc-results{padding-inline:18px}.imc-scale__labels b{font-size:10px}.imc-scale__labels small{font-size:9px}.imc-insights strong{font-size:21px}.imc-understand>h2,.imc-faq>h2,.imc-sources>h2,.imc-reference h2{font-size:27px}.imc-education article{padding:22px 18px}.imc-detail{padding:32px 0}.imc-detail__copy{padding:28px 20px}.imc-detail h2{font-size:28px}.imc-faq{padding-top:30px}.imc-next{padding:20px 18px}
   }
 </style>

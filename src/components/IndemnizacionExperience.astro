@@ -26,15 +26,18 @@ const { data, caseMath } = Astro.props;
       <form class="calculator" id="severance-form">
         <div class="calc-head"><h2>Estimá tu indemnización</h2><span>Resultado orientativo</span></div>
         <fieldset><legend>¿Cuál es tu situación?</legend><div class="cases">
-          {data.cases.items.map((item:any, i:number)=><label class:list={{active:i===0}}><input type="radio" name="case" value={item.id} checked={i===0}><i><svg viewBox="0 0 18 18"><path d="m4 9 3 3 7-7"/></svg></i><strong>{item.label}</strong><small>{item.hint}</small></label>)}
+          {data.cases.items.filter((item:any)=>['sin-causa','fuerza-mayor','embarazo','discriminatorio','preaviso'].includes(item.id)).map((item:any, i:number)=><label class:list={{active:i===0}}><input type="radio" name="case" value={item.id} checked={i===0}><i><svg viewBox="0 0 18 18"><path d="m4 9 3 3 7-7"/></svg></i><strong>{item.label}</strong><small>{item.hint}</small></label>)}
         </div></fieldset>
         <div class="input-title">Tus datos principales</div>
         <label class="field salary"><span>Mejor sueldo bruto del último año</span><div><b>$</b><input id="salary" inputmode="numeric" value="1.500.000"></div></label>
-        <div class="fields">
-          <label class="field"><span>Años de antigüedad</span><input id="years" type="number" min="0" value="7"></label>
-          <label class="field"><span>Meses extra</span><input id="months" type="number" min="0" max="11" value="5"></label>
-          <label class="field"><span>Día del despido</span><input id="day" type="number" min="1" max="31" value="15"></label>
+        <div class="fields date-fields">
+          <label class="field"><span>Fecha real de ingreso</span><input id="start-date" type="date" value="2019-02-15" required></label>
+          <label class="field"><span>Fecha del despido</span><input id="end-date" type="date" value="2026-07-31" required></label>
+          <label class="field"><span>Mejor sueldo del semestre</span><div><b>$</b><input id="semester-salary" inputmode="numeric" value="1.500.000"></div></label>
         </div>
+        <div class="checks"><label><input id="trial" type="checkbox"> Estaba en período de prueba</label><label><input id="notice-given" type="checkbox"> Me dieron y trabajé el preaviso completo</label></div>
+        <input id="years" type="hidden" value="7"><input id="months" type="hidden" value="5"><input id="day" type="hidden" value="31">
+        <p class="form-error" id="form-error" role="alert"></p>
         <details class="cap"><summary>Agregar tope de convenio</summary><label class="field"><span>Tope Art. 245 · dejalo en 0 si no lo sabés</span><div><b>$</b><input id="cap" inputmode="numeric" value="0"></div></label><p>Si el tope recorta más del 33%, se aplica el piso del 67% del fallo Vizzoti.</p></details>
         <section class="result" aria-live="polite">
           <div class="result-head"><div><span>Estimación total bruta</span><strong id="total">$0</strong></div><b id="salary-count">0 sueldos + rubros</b></div>
@@ -48,7 +51,7 @@ const { data, caseMath } = Astro.props;
     </div>
   </section>
 
-  <section class="breakdown shell">
+  <section class="breakdown shell" id="breakdown">
     <header><span>Tu liquidación, concepto por concepto</span><h2>Entendé cómo se forma el total</h2><p>Podés comparar cada rubro con el recibo o la propuesta que te dieron.</p></header>
     <div class="breakdown-grid">
       <article class="card rows-card"><h3>Desglose estimado</h3><div class="rows" id="rows"></div><div class="row total-row"><div><i><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 9h6M9 14h6"/></svg></i><span><b>Total estimado bruto</b><small>Antes de descuentos o retenciones</small></span></div><strong id="total-row">$0</strong></div></article>
@@ -92,7 +95,7 @@ const { data, caseMath } = Astro.props;
   };
   function compute({announce=false}={}){
     const id=form.querySelector('input[name=case]:checked')?.value||'sin-causa',m=MATH[id]||{factor:1,extra:0},salary=number($('salary').value),years=Math.max(0,Number($('years').value||0)),months=Math.max(0,Math.min(11,Number($('months').value||0))),day=Math.max(1,Math.min(30,Number($('day').value||1))),cap=Math.max(0,number($('cap').value)),totalMonths=years*12+months,computable=years+(months>3?1:0),noticeMonths=totalMonths>60?2:1;
-    let base=salary,vizzoti=false;if(cap>0){const floor=salary*.67;if(cap<floor){base=floor;vizzoti=true}else base=cap}
+    let base=salary,vizzoti=false;if(cap>0){const floor=salary*.67;base=Math.min(salary,Math.max(cap,floor));vizzoti=cap<floor}
     const seniority=base*computable*m.factor,notice=salary*noticeMonths,sacNotice=notice/12,integration=salary/30*Math.max(0,30-day),sacIntegration=integration/12,sacProp=salary/2*3/6,vacDays=totalMonths<=60?14:totalMonths<=120?21:totalMonths<=240?28:35,vacation=salary/25*(vacDays/2),sacVacation=vacation/12,aggravated=salary*m.extra;
     const rows=[];if(m.factor>0)rows.push(['Indemnización por antigüedad','Art. 245',seniority]);rows.push(['Preaviso',noticeMonths+' '+(noticeMonths===1?'mes':'meses'),notice],['SAC sobre preaviso','Art. 123',sacNotice],['Integración del mes','Art. 233',integration],['SAC sobre integración','Art. 123',sacIntegration],['Aguinaldo proporcional','Art. 121',sacProp],['Vacaciones no gozadas','Art. 156',vacation],['SAC sobre vacaciones','Art. 123',sacVacation]);if(aggravated>0)rows.push(['Indemnización agravada','13 sueldos',aggravated]);
     const total=rows.reduce((a,r)=>a+r[2],0),other=total-seniority-notice;
@@ -111,9 +114,11 @@ const { data, caseMath } = Astro.props;
     }
   }
   form.addEventListener('submit',e=>{e.preventDefault();compute({announce:true})});
+  const syncDates=()=>{const start=new Date($('start-date').value+'T12:00:00'),end=new Date($('end-date').value+'T12:00:00');if(isNaN(start)||isNaN(end)||end<start){$('form-error').textContent='Revisá las fechas: el despido debe ser posterior al ingreso.';return}$('form-error').textContent='';let years=end.getFullYear()-start.getFullYear(),months=end.getMonth()-start.getMonth();if(end.getDate()<start.getDate())months--;if(months<0){years--;months+=12}$('years').value=Math.max(0,years);$('months').value=Math.max(0,months);$('day').value=end.getDate();compute()};
+  $('start-date').addEventListener('change',syncDates);$('end-date').addEventListener('change',syncDates);
   form.querySelectorAll('input[name=case]').forEach(input=>input.addEventListener('change',()=>compute()));
   document.querySelector('.share').addEventListener('click',async()=>{const text='Mi indemnización estimada es '+$('total').textContent;try{if(navigator.share)await navigator.share({title:'Indemnización por despido',text,url:location.href});else await navigator.clipboard.writeText(text+' '+location.href)}catch{}});
-  compute();
+  syncDates();
 })();
 </script>
 
@@ -127,6 +132,7 @@ const { data, caseMath } = Astro.props;
   :global(#rows .row small){display:block;font-size:8px;color:#78899c;margin-top:2px}
   :global(#rows .row>strong){text-align:right;font-size:13px}
   :global(.actions button.confirmed){background:#148657}
+  .checks{display:grid;gap:8px;margin:12px 0}.checks label{display:flex;gap:8px;align-items:center;font-size:12px;color:#50657c}.checks input{width:17px;height:17px;accent-color:var(--blue)}.form-error{color:#a32626;font-size:12px;min-height:18px}.cases label:focus-within{outline:3px solid #91b9f7;outline-offset:2px}.cases strong{font-size:11px}.cases small{font-size:10px}.field span,.result-head span{font-size:11px}.result-summary span,.row small{font-size:10px}.fineprint,.warning,.update-status{font-size:11px}
   .update-status{display:block;min-height:16px;margin-top:6px;color:#bce9d6;font-size:9px;text-align:center}
   @media(max-width:900px){.hero-grid{grid-template-columns:1fr}.intro{text-align:center}.eyebrow,.trust{justify-content:center}.hero-art{max-width:500px}.breakdown-grid,.content{grid-template-columns:1fr}.faq,.sources{grid-column:1}.steps{grid-template-columns:1fr}.intro>p{max-width:650px;margin-inline:auto}}
   @media(max-width:560px){.shell{width:calc(100% - 24px)}.hero{padding-top:24px}.hero-grid{margin-top:24px;gap:27px}.intro h1{font-size:39px}.intro>p{font-size:15px}.trust{display:grid;grid-template-columns:repeat(3,1fr)}.trust span{font-size:8px;padding:7px 4px;justify-content:center}.hero-art{margin-top:12px}.calculator{padding:22px 16px}.calc-head h2{font-size:21px}.cases{grid-template-columns:repeat(2,1fr)}.cases label.active{grid-column:span 2}.fields{grid-template-columns:1fr}.result-head strong{font-size:30px}.result-head>b{font-size:8px}.breakdown,.timeline,.content,.next{padding-block:54px}.breakdown header h2,.next header h2,.timeline header h2{font-size:29px}.row{grid-template-columns:1fr 90px}.timeline-row{grid-template-columns:1fr;gap:29px}.timeline-row:before{display:none}.content{gap:22px}.actions{display:grid}.share{grid-column:1}.sources span{font-size:10px}}

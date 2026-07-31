@@ -11,16 +11,15 @@ import '../styles/calc-flagship.css';
 // Valores de referencia 2026 de esta página (fuente única para SSR y para el
 // script del cliente, que los lee por data-* del root). Son los mismos que ya
 // usaba el simulador: NO se inventan datos previsionales.
-const JUB_MIN = 290_000;      // jubilación mínima
-const BONO = 70_000;          // bono de refuerzo → piso = mínima + bono = $360.000
-const JUB_MAX = 1_950_000;    // tope máximo (≈8× la mínima)
-const JUB_PROM = 620_000;     // jubilación promedio
+const JUB_MIN = 411_989.33;   // Resolución ANSES 186/2026 · julio 2026
+const BONO = 70_000;          // refuerzo extraordinario, no integra el haber
+const JUB_MAX = 2_772_298.06; // Resolución ANSES 186/2026 · julio 2026
+const PBU = 188_466.31;       // Resolución ANSES 186/2026 · julio 2026
 const PUAM_PCT = 0.80;        // PUAM = 80% de la mínima → $232.000
 const PUAM = JUB_MIN * PUAM_PCT;
-const PISO = JUB_MIN + BONO;
+const PISO = JUB_MIN;
 const TASA_ANUAL = 0.015;     // 1,5% por año de aportes (fórmula simplificada)
 const APORTES_REQ = 30;       // régimen general
-const APORTES_REQ_DOCENTE = 25;
 
 const fmtArs = (n: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(n));
 
@@ -28,7 +27,6 @@ const fmtArs = (n: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFrac
 function simular(sexo: string, edad: number, aportes: number, sueldo: number, aumento: number, regimen: string) {
   let edadJub = sexo === 'hombre' ? 65 : 60;
   let aportesReq = APORTES_REQ;
-  if (regimen === 'docente') aportesReq = APORTES_REQ_DOCENTE;
   if (regimen === 'puam') { edadJub = 65; aportesReq = 0; }
   const anosFaltan = Math.max(0, edadJub - edad);
   const aportesAlJubilar = aportes + anosFaltan;
@@ -37,7 +35,7 @@ function simular(sexo: string, edad: number, aportes: number, sueldo: number, au
   let haber: number;
   if (regimen === 'puam') haber = PUAM;
   else if (!cumpleAportes) haber = 0;
-  else haber = Math.max(PISO, Math.min(sueldoJub * TASA_ANUAL * aportesAlJubilar, JUB_MAX));
+  else haber = Math.max(PISO, Math.min(PBU + sueldoJub * TASA_ANUAL * aportesAlJubilar, JUB_MAX));
   const tasaReemplazo = sueldoJub > 0 && haber > 0 ? (haber / sueldoJub) * 100 : 0;
   return { edadJub, aportesReq, anosFaltan, aportesAlJubilar, cumpleAportes, sueldoJub, haber, tasaReemplazo };
 }
@@ -53,10 +51,10 @@ const escenarios = [20, 25, 30, 35, 40].map((a) => ({
   ...simular('mujer', 60, a, INIT.sueldo, 0, 'general'),
 }));
 
-const title = 'Simulador de Jubilación ANSES 2026 — Tu Haber';
-const description = 'Simulador de jubilación ANSES: ingresá edad, años de aportes y sueldo actual → obtené tu haber jubilatorio proyectado, si cumplís requisitos y años que te faltan. Gratis.';
+const title = 'Simulador de jubilación ANSES 2026: edad y haber';
+const description = 'Simulá si llegás a la jubilación ANSES, cuántos años de aportes te faltan y un haber orientativo con PBU y valores oficiales de julio 2026.';
 
-const lastReviewed = '2026-07-24';
+const lastReviewed = '2026-07-31';
 
 const schemaApp = {
   '@type': 'WebApplication',
@@ -86,13 +84,13 @@ const schemaBreadcrumb = {
 };
 
 const faq = [
-  { q: '¿Cuántos años de aportes necesito para jubilarme?', a: 'En el régimen general: <strong>30 años de aportes</strong>. Hay excepciones: moratorias vigentes (plan de pago en cuotas), jubilaciones anticipadas con 25 años y más edad, régimen especial docente (25 años), etc.' },
+  { q: '¿Cuántos años de aportes necesito para jubilarme?', a: 'En el régimen general se requieren <strong>30 años de aportes</strong>. Los regímenes diferenciales y especiales tienen requisitos propios y no se calculan con este simulador.' },
   { q: '¿Qué edad necesito?', a: '<strong>60 años mujer, 65 años hombre</strong>. Con la reforma jubilatoria se igualó en varios países hispanos. En AR sigue esa diferencia por género.' },
-  { q: '¿Cómo se calcula el haber jubilatorio?', a: 'Fórmula simplificada: (Promedio de los mejores 120 aportes actualizados) × 1.5% × años de aportes. Tope máximo: 8 veces jubilación mínima. Tope mínimo: jubilación mínima + bono.' },
-  { q: '¿Qué es la PUAM?', a: 'Pensión Universal Adulto Mayor: para mayores de 65 años (ambos sexos) que <strong>NO tienen 30 años de aportes</strong>. Paga el 80% de la jubilación mínima. No incompatible con empleo formal.' },
+  { q: '¿Cómo se calcula el haber jubilatorio?', a: 'ANSES suma la Prestación Básica Universal (PBU), la Prestación Compensatoria por aportes anteriores a julio de 1994 y la Prestación Adicional por Permanencia por aportes posteriores. PC y PAP consideran remuneraciones actualizadas; esta herramienta solo ofrece una aproximación.' },
+  { q: '¿Qué es la PUAM?', a: 'La Pensión Universal para el Adulto Mayor es una prestación para personas de 65 años o más que no cobran ni tienen derecho a jubilación o pensión. Equivale al 80% del haber mínimo y exige, entre otras condiciones, residencia y evaluación socioeconómica.' },
   { q: '¿Puedo jubilarme antes de los 60/65?', a: 'Jubilación por invalidez, régimen especial (docente, minero, policial), retiro voluntario en empresa privada. Cada caso tiene requisitos específicos.' },
   { q: '¿Cuánto actualiza la jubilación?', a: 'Por <strong>movilidad IPC mensual</strong> desde 2024 (antes por fórmula semestral). Se actualiza en boletín oficial. Bonos adicionales se suman según contexto.' },
-  { q: '¿Si trabajo en negro cuenta?', a: 'No directamente. Pero podés "reconocer" años por ley de moratoria vigente (si está). Pagás un plan en cuotas por esos años no aportados.' },
+  { q: '¿Si trabajo en negro cuenta?', a: 'Un período sin aportes no aparece automáticamente en la historia laboral. Podés reunir pruebas y pedir reconocimiento de servicios; cualquier plan de regularización depende de que esté vigente y de que cumplas sus condiciones.' },
   { q: '¿Qué es el RIPTE?', a: 'Remuneraciones Imponibles Promedio de los Trabajadores Estables. Se usa para actualizar el valor de los aportes viejos al momento de jubilación.' },
   { q: '¿Puedo jubilarme y seguir trabajando?', a: 'Sí, en el régimen general. Pero los aportes que sigás haciendo <strong>no aumentan tu jubilación</strong>. En ciertos regímenes especiales hay incompatibilidad.' },
   { q: '¿Cómo puedo aumentar mi futura jubilación?', a: '1) Seguir aportando más años (+30 años suma). 2) Maximizar sueldo los últimos años (entra en promedio). 3) Aportar a SIPA voluntariamente si tenés períodos en negro. 4) Complementar con ahorro/inversión propia (plazo fijo UVA, FCI, ETFs).' },
@@ -117,7 +115,7 @@ const schema = {
 
   <div class="cf-page sj" data-domain="life"
     data-jub-min={JUB_MIN} data-bono={BONO} data-jub-max={JUB_MAX}
-    data-jub-prom={JUB_PROM} data-puam-pct={PUAM_PCT} data-tasa={TASA_ANUAL}>
+    data-pbu={PBU} data-puam-pct={PUAM_PCT} data-tasa={TASA_ANUAL}>
     <nav class="cf-crumb" aria-label="Breadcrumb">
       <ol>
         <li><a href="/">Inicio</a></li>
@@ -175,7 +173,6 @@ const schema = {
             <div class="cf-field__row"><label class="cf-label" for="sj-regimen">Régimen</label></div>
             <select class="cf-input" id="sj-regimen">
               <option value="general">General (60/65 años, 30 aportes)</option>
-              <option value="docente">Docente (25 años de aportes)</option>
               <option value="puam">PUAM (65+ sin 30 aportes)</option>
             </select>
           </div>
@@ -249,7 +246,7 @@ const schema = {
     <div class="cf-quick">
       <span class="cf-quick__ico" aria-hidden="true">⚡</span>
       <p class="cf-quick__txt" id="sj-quick"><strong>Respuesta rápida.</strong> A los {init.edadJub} años llegarías con {init.aportesAlJubilar} años de aportes y un haber estimado de <strong>{fmtArs(init.haber)}</strong>, el {init.tasaReemplazo.toFixed(1).replace('.', ',')}% de tu sueldo proyectado.</p>
-      <span class="cf-formula">1,5% × años de aportes × sueldo</span>
+      <span class="cf-formula">PBU + 1,5% × aportes × remuneración</span>
     </div>
 
     <!-- Feasibility -->
@@ -270,21 +267,21 @@ const schema = {
       <div class="cf-cards cf-cards--4">
         <div class="cf-minicard cf-minicard--dark">
           <span class="cf-minicard__ico" aria-hidden="true">⬇️</span>
-          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Mínima + bono</p>
-          <div class="cf-minicard__big">{fmtArs(PISO)}</div>
-          <p class="cf-minicard__desc" style="margin-top:0.3rem">Piso legal para quien cumple los requisitos.</p>
+          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Haber mínimo</p>
+          <div class="cf-minicard__big">{fmtArs(JUB_MIN)}</div>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">Julio 2026. El bono extraordinario se muestra aparte.</p>
         </div>
         <div class="cf-minicard">
           <span class="cf-minicard__ico" aria-hidden="true">📊</span>
-          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Jubilación promedio</p>
-          <div class="cf-minicard__big">{fmtArs(JUB_PROM)}</div>
-          <p class="cf-minicard__desc" style="margin-top:0.3rem">Referencia del sistema para ubicar tu proyección.</p>
+          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">PBU</p>
+          <div class="cf-minicard__big">{fmtArs(PBU)}</div>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">Componente básico que se suma al cálculo del haber inicial.</p>
         </div>
         <div class="cf-minicard">
           <span class="cf-minicard__ico" aria-hidden="true">⬆️</span>
           <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Jubilación máxima</p>
           <div class="cf-minicard__big">{fmtArs(JUB_MAX)}</div>
-          <p class="cf-minicard__desc" style="margin-top:0.3rem">Tope legal (≈8× la mínima). Los sueldos altos tienen techo.</p>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">Tope oficial de julio 2026.</p>
         </div>
         <div class="cf-minicard">
           <span class="cf-minicard__ico" aria-hidden="true">🛟</span>
@@ -301,7 +298,7 @@ const schema = {
         <div class="sj-hl">
           <p class="cf-side-eyebrow">Cómo leer el resultado</p>
           <p class="sj-hl__title">La tasa de reemplazo es el número que importa</p>
-          <p class="sj-hl__desc">No mires el haber en pesos: mirá qué porcentaje de tu sueldo vas a cobrar. Con la fórmula simplificada, cada año de aportes suma 1,5 puntos — 30 años son el 45% del sueldo.</p>
+          <p class="sj-hl__desc">No mires solo el haber en pesos: comparalo con tus ingresos y gastos. La estimación suma la PBU y un 1,5% de la remuneración de referencia por cada año aportado.</p>
           <div class="sj-hl__big" id="sj-hl-big">{init.tasaReemplazo.toFixed(1).replace('.', ',')}%</div>
           <p class="sj-hl__desc">Tasa de reemplazo del caso cargado</p>
         </div>
@@ -313,13 +310,13 @@ const schema = {
           </div>
           <p class="sj-note">Comparado contra el tope máximo del sistema</p>
           <div class="cf-brow" style="margin-top:1rem">
-            <span class="cf-brow__lbl">Jubilación promedio</span>
-            <span class="cf-brow__val">{fmtArs(JUB_PROM)}</span>
-            <span class="cf-brow__bar"><span class="sj-bar--alt" style={`width:${Math.round((JUB_PROM / JUB_MAX) * 100)}%`}></span></span>
+            <span class="cf-brow__lbl">Prestación Básica Universal</span>
+            <span class="cf-brow__val">{fmtArs(PBU)}</span>
+            <span class="cf-brow__bar"><span class="sj-bar--alt" style={`width:${Math.round((PBU / JUB_MAX) * 100)}%`}></span></span>
           </div>
-          <p class="sj-note">Referencia del sistema previsional</p>
+          <p class="sj-note">Componente fijo del haber inicial</p>
           <div class="cf-brow" style="margin-top:1rem">
-            <span class="cf-brow__lbl">Mínima + bono (piso)</span>
+            <span class="cf-brow__lbl">Haber mínimo garantizado</span>
             <span class="cf-brow__val">{fmtArs(PISO)}</span>
             <span class="cf-brow__bar"><span class="sj-bar--min" style={`width:${Math.round((PISO / JUB_MAX) * 100)}%`}></span></span>
           </div>
@@ -346,13 +343,13 @@ const schema = {
         <div class="cf-step">
           <div class="cf-step__num">2</div>
           <p class="cf-step__title">Aplicamos la fórmula</p>
-          <p class="cf-step__desc">Proyectamos tu sueldo hasta la edad jubilatoria y aplicamos 1,5% por cada año de aportes.</p>
-          <p class="sj-chip" id="sj-s2">{fmtArs(init.sueldoJub)} × 1,5% × {init.aportesAlJubilar}</p>
+          <p class="cf-step__desc">Proyectamos una remuneración orientativa y sumamos PBU más 1,5% por cada año aportado.</p>
+          <p class="sj-chip" id="sj-s2">{fmtArs(PBU)} + ({fmtArs(init.sueldoJub)} × 1,5% × {init.aportesAlJubilar})</p>
         </div>
         <div class="cf-step">
           <div class="cf-step__num">3</div>
           <p class="cf-step__title">Revisá el resultado</p>
-          <p class="cf-step__desc">Acotamos el haber entre el piso (mínima + bono) y el tope máximo del sistema.</p>
+          <p class="cf-step__desc">Acotamos el haber entre el mínimo y el máximo oficiales. El bono no integra el haber.</p>
           <p class="sj-chip" id="sj-s3">{fmtArs(init.haber)} · {init.tasaReemplazo.toFixed(1).replace('.', ',')}% del sueldo</p>
         </div>
       </div>
@@ -401,11 +398,11 @@ const schema = {
           <p class="cf-eyebrow">Atención</p>
           <h2 class="sj-card__title">Esto es una estimación, no tu haber real</h2>
           <p class="cf-side-desc" role="note">
-            Este simulador usa una <strong>fórmula simplificada</strong> y es <strong>orientativo</strong>. No reemplaza el cálculo oficial de ANSES ni el asesoramiento de un abogado previsional. Los montos, topes y requisitos cambian con cada actualización por movilidad y con las leyes vigentes.
+            Este simulador usa una <strong>fórmula simplificada</strong> y es <strong>orientativo</strong>. No reemplaza el cálculo oficial de ANSES ni el asesoramiento previsional. Los montos, topes y requisitos cambian con la movilidad y la normativa.
           </p>
           <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
             <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
-            <p>Antes de tomar decisiones (renunciar, iniciar el trámite, entrar a una moratoria), verificá tu situación real en <strong>Mi ANSES</strong> o con un profesional matriculado. ANSES calcula con tu historia laboral real: promedio de las mejores 120 remuneraciones actualizadas por RIPTE, sumando PBU + PC + PAP por separado.</p>
+            <p>Antes de tomar decisiones, verificá tu situación en <strong>Mi ANSES</strong> o con un profesional. ANSES calcula con tu historia laboral: últimas 120 remuneraciones computables actualizadas, sumando PBU + PC + PAP.</p>
           </div>
         </div>
         <div class="cf-side-card cf-side-card--dark">
@@ -430,17 +427,17 @@ const schema = {
       <div class="cf-prose">
       <p>La <strong>fórmula de cálculo jubilatorio</strong> del régimen general (ANSES) considera:</p>
       <ul>
-        <li><strong>PBU</strong> (Prestación Básica Universal): monto fijo por año cumplido (~$40k base 2026).</li>
+        <li><strong>PBU</strong> (Prestación Básica Universal): componente fijo de <strong>{fmtArs(PBU)}</strong> en julio de 2026.</li>
         <li><strong>PC</strong> (Prestación Compensatoria): 1.5% × años aportados antes 1994 × mejor promedio 120 aportes actualizados.</li>
         <li><strong>PAP</strong> (Prestación Adicional por Permanencia): 1.5% × años aportados desde 1994 × mejor promedio 120 aportes actualizados.</li>
-        <li><strong>Tope máximo</strong>: 8 veces la jubilación mínima (~$2.3M con bono).</li>
-        <li><strong>Tope mínimo</strong>: jubilación mínima + bono (~$360k).</li>
+        <li><strong>Haber máximo</strong>: <strong>{fmtArs(JUB_MAX)}</strong> en julio de 2026.</li>
+        <li><strong>Haber mínimo</strong>: <strong>{fmtArs(JUB_MIN)}</strong>. El bono extraordinario no forma parte del haber.</li>
       </ul>
       <h3>Fórmula simplificada vs cálculo real de ANSES</h3>
-      <p>Este simulador usa una <strong>fórmula simplificada</strong>: sueldo actualizado por inflación y aumentos, multiplicado por (años de aportes × 1.5%), limitado por tope máximo/mínimo. El cálculo real de ANSES difiere en varios puntos que acá no se capturan:</p>
+      <p>Este simulador usa una <strong>fórmula simplificada</strong>: PBU más una remuneración proyectada multiplicada por los años aportados y 1,5%, limitada por los haberes mínimo y máximo. El cálculo real de ANSES difiere en varios puntos:</p>
       <ul>
-        <li>ANSES toma el <strong>promedio de las mejores 120 remuneraciones</strong> (10 años) actualizadas por el índice RIPTE, no tu sueldo actual proyectado.</li>
-        <li>La PBU es un componente fijo que acá queda subsumido en el porcentaje único del 1,5%.</li>
+        <li>ANSES toma el <strong>promedio de las últimas 120 remuneraciones computables</strong> actualizadas, no tu sueldo actual proyectado.</li>
+        <li>La herramienta suma la PBU vigente, pero no reconstruye tu PC y PAP con la historia salarial completa.</li>
         <li>Los períodos regularizados por <strong>moratoria</strong> computan para el requisito de años, pero pueden descontar cuotas del haber inicial.</li>
         <li>Regímenes especiales (docentes, investigadores, luz y fuerza, policías) tienen porcentajes y edades propias.</li>
       </ul>
@@ -451,18 +448,18 @@ const schema = {
       <p><strong>Ejemplo 1 — Carrera completa, sueldo medio.</strong> Datos de ejemplo: 30 años de aportes · sueldo actualizado al momento de jubilarse $1.500.000.</p>
       <ol>
         <li><strong>Porcentaje acumulado:</strong> 1,5% × 30 años = <strong>45%</strong> del sueldo.</li>
-        <li><strong>Haber base:</strong> 45% × $1.500.000 = <strong>$675.000</strong>.</li>
-        <li><strong>Topes 2026:</strong> queda por encima del mínimo (~$360.000) y por debajo del máximo (~$1.950.000), así que no se ajusta.</li>
+        <li><strong>Componente proporcional:</strong> 45% × $1.500.000 = <strong>$675.000</strong>.</li>
+        <li><strong>Estimación con PBU:</strong> $675.000 + {fmtArs(PBU)} = <strong>{fmtArs(675_000 + PBU)}</strong>, dentro de los límites de julio 2026.</li>
       </ol>
-      <p>Haber estimado ≈ $675.000 — una tasa de reemplazo del 45% del sueldo.</p>
+      <p>Haber estimado ≈ {fmtArs(675_000 + PBU)}. La PBU hace que la tasa final no sea simplemente 45%.</p>
       <p><strong>Ejemplo 2 — Sueldo alto que toca el tope máximo.</strong> Datos de ejemplo: 35 años de aportes · sueldo actualizado $5.000.000.</p>
       <ol>
         <li><strong>Porcentaje acumulado:</strong> 1,5% × 35 años = <strong>52,5%</strong> del sueldo.</li>
-        <li><strong>Haber base:</strong> 52,5% × $5.000.000 = <strong>$2.625.000</strong>.</li>
-        <li><strong>Topes 2026:</strong> $2.625.000 supera el máximo (~$1.950.000), así que el haber se recorta al tope.</li>
+        <li><strong>Componente proporcional:</strong> 52,5% × $5.000.000 = <strong>$2.625.000</strong>.</li>
+        <li><strong>Con PBU y tope:</strong> la suma supera {fmtArs(JUB_MAX)}, así que se limita al máximo oficial.</li>
       </ol>
-      <p>Haber estimado = $1.950.000 (el tope), no el 52,5% del sueldo. Por eso los sueldos muy altos tienen "techo" jubilatorio y su tasa de reemplazo baja.</p>
-      <p>Recordá que ANSES no usa tu sueldo actual, sino el promedio de las mejores 120 remuneraciones actualizadas por RIPTE, y suma PBU + PC + PAP por separado. Estos ejemplos son una aproximación para entender la mecánica, no tu haber exacto.</p>
+      <p>Haber estimado = {fmtArs(JUB_MAX)} (tope de julio de 2026). Por eso los sueldos altos tienen techo jubilatorio.</p>
+      <p>Recordá que ANSES no usa tu sueldo actual: considera remuneraciones computables actualizadas y suma PBU + PC + PAP. Estos ejemplos explican la mecánica; no anticipan tu haber exacto.</p>
       </div>
     </section>
 
@@ -489,11 +486,11 @@ const schema = {
           <h2 class="sj-card__title" style="color:var(--text)">Números que podés defender</h2>
           <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
           <p class="cf-side-desc" style="margin-top:0.7rem">
-            Metodología: fórmula simplificada (1,5% × años de aportes × sueldo proyectado, con topes mínimo/máximo 2026), documentada arriba.
+            Metodología: PBU + (1,5% × años de aportes × remuneración proyectada), con mínimo y máximo oficiales de julio 2026.
             Los valores de referencia se actualizan por movilidad mensual (IPC).
           </p>
           <p class="sj-review-line">
-            Última revisión editorial: <time datetime={lastReviewed}>9 de julio de 2026</time> · Editor responsable: <a href="/autores/martin-rodriguez">Martín Rodríguez</a>.
+            Última revisión editorial: <time datetime={lastReviewed}>31 de julio de 2026</time> · Editor responsable: <a href="/autores/martin-rodriguez">Martín Rodríguez</a>.
           </p>
         </div>
         <div class="cf-side-card cf-side-card--dark">
@@ -572,10 +569,10 @@ const schema = {
     const JUB_MIN = Number(root.getAttribute('data-jub-min'));
     const BONO = Number(root.getAttribute('data-bono'));
     const JUB_MAX = Number(root.getAttribute('data-jub-max'));
-    const JUB_PROM = Number(root.getAttribute('data-jub-prom'));
+    const PBU = Number(root.getAttribute('data-pbu'));
     const PUAM_PCT = Number(root.getAttribute('data-puam-pct'));
     const TASA = Number(root.getAttribute('data-tasa'));
-    const PISO = JUB_MIN + BONO;
+    const PISO = JUB_MIN;
     const PUAM = JUB_MIN * PUAM_PCT;
 
     const $ = (id) => document.getElementById(id);
@@ -596,8 +593,8 @@ const schema = {
     function calcular() { render(); clearStale(); }
     function onEnter(el) { el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); calcular(); } }); }
 
-    // Misma fórmula simplificada que el SSR (frontmatter): 1,5% × años de aportes
-    // × sueldo proyectado, acotado entre el piso (mínima + bono) y el tope máximo.
+    // Misma aproximación que el SSR: PBU + 1,5% × años × remuneración proyectada,
+    // acotada entre los haberes mínimo y máximo. El bono no integra el haber.
     function simular() {
       const sexo = sexoEl.value;
       const edad = Number(edadEl.value) || 0;
@@ -607,7 +604,6 @@ const schema = {
       const regimen = regimenEl.value;
       let edadJub = sexo === 'hombre' ? 65 : 60;
       let aportesReq = 30;
-      if (regimen === 'docente') aportesReq = 25;
       if (regimen === 'puam') { edadJub = 65; aportesReq = 0; }
       const anosFaltan = Math.max(0, edadJub - edad);
       const aportesAlJubilar = aportes + anosFaltan;
@@ -616,7 +612,7 @@ const schema = {
       let haber;
       if (regimen === 'puam') haber = PUAM;
       else if (!cumpleAportes) haber = 0;
-      else haber = Math.max(PISO, Math.min(sueldoJub * TASA * aportesAlJubilar, JUB_MAX));
+      else haber = Math.max(PISO, Math.min(PBU + sueldoJub * TASA * aportesAlJubilar, JUB_MAX));
       const tasaReemplazo = sueldoJub > 0 && haber > 0 ? (haber / sueldoJub) * 100 : 0;
       return { sexo, edad, aportes, sueldo, aumento, regimen, edadJub, aportesReq, anosFaltan,
         aportesAlJubilar, cumpleAportes, sueldoJub, haber, tasaReemplazo };
@@ -640,7 +636,7 @@ const schema = {
         : r.cumpleAportes ? 'Cumple (' + r.aportesReq + ' req.)' : 'Faltan ' + (r.aportesReq - r.aportesAlJubilar) + ' años';
       $('sj-formula').textContent = r.regimen === 'puam'
         ? fmtArs(JUB_MIN) + ' × 80% = ' + fmtArs(PUAM)
-        : fmtArs(r.sueldoJub) + ' × 1,5% × ' + r.aportesAlJubilar + ' años = ' + (tieneHaber ? fmtArs(r.haber) : '—');
+        : fmtArs(PBU) + ' + (' + fmtArs(r.sueldoJub) + ' × 1,5% × ' + r.aportesAlJubilar + ') = ' + (tieneHaber ? fmtArs(r.haber) : '—');
 
       $('sj-deco-val').textContent = tieneHaber ? fmtArs(r.haber) : '—';
       $('sj-deco-tasa').textContent = tieneHaber ? dec(r.tasaReemplazo, 1) + '%' : '—';
@@ -657,7 +653,7 @@ const schema = {
       $('sj-b-haber-bar').style.width = Math.min(100, Math.round((r.haber / JUB_MAX) * 100)) + '%';
 
       $('sj-s1').textContent = r.edad + ' años · ' + r.aportes + ' aportes · ' + fmtArs(r.sueldo);
-      $('sj-s2').textContent = fmtArs(r.sueldoJub) + ' × 1,5% × ' + r.aportesAlJubilar;
+      $('sj-s2').textContent = fmtArs(PBU) + ' + (' + fmtArs(r.sueldoJub) + ' × 1,5% × ' + r.aportesAlJubilar + ')';
       $('sj-s3').textContent = tieneHaber ? fmtArs(r.haber) + ' · ' + dec(r.tasaReemplazo, 1) + '% del sueldo' : 'No cumple requisitos';
 
       // Viabilidad

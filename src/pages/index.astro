@@ -12,8 +12,8 @@ const popular = [
   { href: '/alquiler/aumento-de-alquiler', group: 'Alquiler', title: '¿Cuánto me aumenta el alquiler?', desc: 'ICL, IPC y fecha del contrato.', icon: '⌂', color: 'yellow' },
   { href: '/trabajo/indemnizacion-por-despido', group: 'Trabajo', title: 'Me despiden: ¿cuánto me pagan?', desc: 'Todos los conceptos de la indemnización.', icon: '↗', color: 'blue' },
   { href: '/trabajo/aguinaldo', group: 'Trabajo', title: '¿Cuánto aguinaldo me corresponde?', desc: 'SAC completo o proporcional.', icon: '＋', color: 'coral' },
-  { href: '/fechas/dias-entre-fechas', group: 'Fechas', title: '¿Cuántos días hay entre dos fechas?', desc: 'Corridos, hábiles y feriados.', icon: '◷', color: 'lilac' },
-  { href: '/impuestos/ganancias-cuarta-categoria', group: 'Impuestos', title: '¿Me descuentan Ganancias?', desc: 'Piso, deducciones y retención.', icon: '%', color: 'navy' },
+  { href: '/calculadora-actualizacion-inflacion-ipc', group: 'Plata', title: '¿Cuánto vale hoy este monto?', desc: 'Actualización por IPC entre dos fechas.', icon: '%', color: 'lilac' },
+  { href: '/simulador-jubilacion-anses', group: 'Jubilación', title: '¿Cuándo y con cuánto me jubilo?', desc: 'Edad, aportes y haber orientativo.', icon: '◷', color: 'navy' },
 ];
 
 const moments = [
@@ -111,8 +111,8 @@ const schema = {
 ---
 
 <Layout
-  title="Hacé Cuentas — Respuestas completas para decidir"
-  description="Resolvé preguntas de plata, trabajo, salud y vida cotidiana con cálculos, normativa, fuentes y datos actualizados."
+  title="Calculadoras online para Argentina — Hacé Cuentas"
+  description="Calculadoras gratuitas de sueldo, alquiler, indemnización, jubilación, impuestos, salud y vida cotidiana, con fórmulas explicadas y fuentes vigentes."
   image="/og/index.png"
   audience="AR"
   pageType="home"
@@ -135,7 +135,7 @@ const schema = {
             <input id="home-query" name="q" type="search" placeholder="Ej: me despidieron, ¿cuánto me tienen que pagar?" autocomplete="off" aria-controls="hub-results" aria-expanded="false" />
             <button type="submit">Encontrar respuesta <span>→</span></button>
           </div>
-          <div class="search-results" id="hub-results" hidden></div>
+          <div class="search-results" id="hub-results" role="listbox" aria-label="Resultados de búsqueda" aria-live="polite" hidden></div>
         </form>
 
         <div class="hero-trust">
@@ -243,29 +243,59 @@ const schema = {
       const results = document.getElementById('hub-results');
       if (!form || !input || !results) return;
       const normalize = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-      const render = () => {
+      let fullIndex = null;
+      const loadIndex = async () => {
+        if (fullIndex) return fullIndex;
+        try {
+          const response = await fetch('/api/calcs-index.json');
+          if (!response.ok) throw new Error('index');
+          const data = await response.json();
+          fullIndex = (data.calculators || [])
+            .filter((item) => item.locale === 'es' && (item.audience === 'AR' || item.audience === 'global'))
+            .map((item) => ({ href: new URL(item.url).pathname, label: item.h1 || item.title, group: item.category || 'Calculadoras' }));
+        } catch { fullIndex = []; }
+        return fullIndex;
+      };
+      const render = async () => {
         const query = normalize(input.value).trim();
         if (query.length < 2) {
           results.hidden = true; results.innerHTML = ''; input.setAttribute('aria-expanded', 'false'); return [];
         }
+        const remoteItems = await loadIndex();
+        if (query !== normalize(input.value).trim()) return [];
         const terms = query.split(/\s+/);
-        const matches = searchItems.filter((item) => {
+        const items = [...new Map([...searchItems, ...remoteItems].map((item) => [item.href, item])).values()];
+        const matches = items.filter((item) => {
           const text = normalize(item.label + ' ' + item.group);
           return terms.every((term) => text.includes(term));
         }).slice(0, 6);
-        results.innerHTML = matches.map((item) => `<a href="${item.href}"><span>${item.group}</span><b>${item.label}</b><i>→</i></a>`).join('');
-        results.hidden = matches.length === 0;
+        results.innerHTML = matches.length
+          ? matches.map((item) => `<a role="option" href="${item.href}"><span>${item.group}</span><b>${item.label}</b><i>→</i></a>`).join('')
+          : '<p class="search-empty">No encontramos una coincidencia. Probá con menos palabras.</p>';
+        results.hidden = false;
         input.setAttribute('aria-expanded', matches.length ? 'true' : 'false');
         return matches;
       };
       input.addEventListener('input', render);
       input.addEventListener('focus', render);
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') { results.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+        if (event.key === 'ArrowDown' && !results.hidden) {
+          const first = results.querySelector('a');
+          if (first) { event.preventDefault(); first.focus(); }
+        }
+      });
+      results.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') { results.hidden = true; input.focus(); input.setAttribute('aria-expanded', 'false'); }
+      });
       document.addEventListener('click', (event) => {
         if (!form.contains(event.target)) { results.hidden = true; input.setAttribute('aria-expanded', 'false'); }
       });
-      form.addEventListener('submit', (event) => {
-        const matches = render();
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const matches = await render();
         if (matches.length) { event.preventDefault(); window.location.href = matches[0].href; }
+        else if (input.value.trim()) window.location.href = '/buscar?q=' + encodeURIComponent(input.value.trim());
       });
     })();
   </script>
@@ -298,6 +328,7 @@ const schema = {
   .search-results :global(span) { grid-column:1; color:#8590a0; font-size:10px; text-transform:uppercase; }
   .search-results :global(b) { grid-column:1; }
   .search-results :global(i) { grid-column:2; grid-row:1/3; align-self:center; font-style:normal; }
+  .search-empty { margin:0; padding:12px; color:#68758a; font-size:13px; line-height:1.45; }
   .hero-trust { display:flex; flex-wrap:wrap; gap:18px; margin-top:21px; color:#69768a; font-size:12px; }
   .hero-trust span { display:flex; align-items:center; gap:7px; }
   .hero-trust i { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:#eaf9f3; color:var(--mint); font-style:normal; font-weight:800; }

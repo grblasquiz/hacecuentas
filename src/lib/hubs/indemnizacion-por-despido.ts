@@ -2,9 +2,9 @@ import type { HubData } from './types';
 
 export const hub: HubData = {
   slug: 'trabajo/indemnizacion-por-despido',
-  title: 'Me despiden: ¿cuánto me tienen que pagar? — Calculadora de indemnización 2026',
+  title: 'Calculadora de indemnización por despido Argentina 2026',
   description:
-    'Calculá cuánto te corresponde según tu caso: despido sin causa, por falta de trabajo, en embarazo, de licencia por enfermedad o por accidente laboral. Con la ley 27.802 de 2026 aplicada.',
+    'Calculá tu indemnización por despido y liquidación final en Argentina. Antigüedad, preaviso, integración, aguinaldo y vacaciones, con ley vigente.',
   silo: 'Trabajo',
   siloHref: '/trabajo',
 
@@ -12,7 +12,7 @@ export const hub: HubData = {
   h1: 'Te despidieron. Veamos si la cuenta está bien.',
   lede:
     'Partimos del caso más habitual: despido sin causa. Ya podés ver una estimación y ajustarla con tus datos. Si tu situación es distinta, la cambiás abajo.',
-  stamps: ['Actualizado 27-07-2026', 'Ley 27.802 aplicada', '8 calculadoras adentro'],
+  stamps: ['Actualizado 31-07-2026', 'Ley 27.802 aplicada', 'Fórmula explicada'],
 
   resultLabel: 'Estimación inicial',
 
@@ -27,7 +27,7 @@ export const hub: HubData = {
         answer: 'Si fue sin causa, corresponde indemnización completa.',
         yes: [
           'Indemnización por antigüedad (Art. 245): 1 sueldo por año trabajado',
-          'Preaviso: 15 días, 1 mes o 2 meses según antigüedad',
+          'Preaviso: 1 mes o 2 meses según antigüedad',
           'Integración del mes de despido',
           'SAC proporcional y vacaciones no gozadas',
         ],
@@ -111,7 +111,7 @@ export const hub: HubData = {
           'Más el SAC sobre ese preaviso',
         ],
         warn: ['Si te preavisaron por escrito y cumpliste el plazo trabajando, no hay indemnización sustitutiva'],
-        plazo: '15 días en período de prueba, 1 mes hasta 5 años, 2 meses después.',
+        plazo: 'No corresponde en período de prueba; luego es 1 mes hasta 5 años y 2 meses después.',
       },
       {
         id: 'accidente',
@@ -174,11 +174,11 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué pasa si no me pagan lo que corresponde?',
-      a: 'Tenés que intimar por telegrama laboral (gratuito) dentro de los 2 días hábiles del vencimiento. Si no pagan, el Art. 2 de la ley 25.323 habilita un recargo del 50%.',
+      a: 'No firmes “en conformidad” sin revisar. Conservá telegramas y recibos y consultá rápido: el reclamo laboral prescribe, en general, a los 2 años. El telegrama laboral es gratuito.',
     },
     {
       q: '¿La antigüedad se cuenta desde el ingreso real o desde la registración?',
-      a: 'Desde el ingreso real. Si estuviste en negro parte del tiempo, esos meses cuentan igual para la antigüedad y además habilitan las multas de la ley 24.013.',
+      a: 'Desde el ingreso real, aunque la registración sea posterior. La calculadora usa esa fecha para la antigüedad; las consecuencias de una registración deficiente requieren revisar el caso concreto.',
     },
     {
       q: '¿Cómo se calculan las vacaciones no gozadas?',
@@ -221,7 +221,7 @@ export const hub: HubData = {
     '/calculadora-resarcimiento-accidente',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-07-31',
   audience: 'AR',
 };
 

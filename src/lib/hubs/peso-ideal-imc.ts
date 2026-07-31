@@ -5,8 +5,8 @@ import type { HubData } from './types';
  * Arquetipo: CÁLCULO DOMINANTE (calculadora-imc se lleva casi todo el tráfico),
  * así que NO usa `cases`: la respuesta va en `answer`.
  *
- * Absorbe 4 calculadoras: IMC (OMS), peso ideal (Devine/Robinson/Lorentz),
- * IMC en adultos mayores (ESPEN 2018) y edad metabólica (Mifflin / Katch-McArdle).
+ * Absorbe las URLs históricas de IMC, peso ideal y adultos mayores. La antigua
+ * "edad metabólica" no se expone: no es una métrica clínica estandarizada.
  *
  * NOTAS DE CONTRATO:
  *  - El runtime ya soporta `format: 'unit'` + `unit` + `decimals` (por fila y a
@@ -19,17 +19,17 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'salud/peso-ideal-imc',
-  title: '¿Estoy en mi peso? IMC, rango saludable y peso ideal — 2026',
+  title: 'Calculadora de IMC y peso ideal: tabla OMS y rango saludable',
   description:
-    'Calculá tu IMC con la clasificación de la OMS, el rango de peso saludable para tu altura, tu peso ideal por Devine, Robinson y Lorentz, el ajuste 23–28 si tenés 65 o más y tu edad metabólica estimada.',
+    'Calculá tu IMC, consultá la tabla de la OMS y conocé el rango de peso orientativo para tu altura. Gratis, privado y explicado paso a paso.',
   silo: 'Salud',
   siloHref: '/salud',
 
   eyebrow: 'Guía y estimación de salud',
   h1: '¿Estoy en mi peso? Veamos qué dice tu IMC.',
   lede:
-    'Con tu peso y tu altura sale tu IMC, la categoría de la OMS y el rango de kilos saludable para tu estatura. Si sumás edad y grasa corporal, además ajustamos el rango para adultos mayores y estimamos tu edad metabólica.',
-  stamps: ['Actualizado 27-07-2026', 'Rangos OMS vigentes (sin cambios desde 1997)', '4 calculadoras adentro'],
+    'Con tu peso y tu altura sale tu IMC, la categoría de la OMS y el rango de kilos orientativo para tu estatura. Si agregás cintura, también calculamos la relación cintura/altura.',
+  stamps: ['Revisado 31-07-2026', 'Clasificación OMS para adultos', 'Cálculo privado'],
 
   resultLabel: 'Tu índice de masa corporal',
 
@@ -57,7 +57,7 @@ export const hub: HubData = {
       max: 110,
       step: 1,
       value: 35,
-      help: 'Con 65 o más ajustamos el rango saludable a 23–28 de IMC para proteger frente a la sarcopenia.',
+      help: 'La edad agrega contexto: en personas mayores el IMC debe interpretarse junto con el estado nutricional y la masa muscular.',
     },
     {
       id: 'cintura',
@@ -68,18 +68,7 @@ export const hub: HubData = {
       max: 200,
       step: 1,
       value: 85,
-      help: 'Medí en horizontal a la altura del ombligo, sin apretar. Con esto sale el índice cintura/altura (WHtR).',
-    },
-    {
-      id: 'grasa',
-      label: 'Grasa corporal (opcional)',
-      type: 'number',
-      suffix: '%',
-      min: 0,
-      max: 70,
-      step: 0.1,
-      value: 22,
-      help: 'Si la sabés, la edad metabólica se calcula con Katch-McArdle en vez de Mifflin-St Jeor. Dejá 0 si no la tenés.',
+      help: 'Medí a mitad de camino entre la última costilla y la parte superior de la cadera, al terminar una respiración normal.',
     },
   ],
   fineprint:
@@ -108,16 +97,16 @@ export const hub: HubData = {
     yes: [
       'IMC = peso en kg dividido por la altura en metros al cuadrado (fórmula OMS)',
       'Rango saludable estándar: IMC 18,5 a 24,9 — la calculadora lo traduce a kilos para tu altura',
-      'De 65 años en adelante el rango sube a 23–28 (OMS) y ESPEN 2018 marca 22–27 como saludable',
-      'Peso ideal por Devine, Robinson y Lorentz, más el promedio de las tres',
+      'En mayores de 65 años el resultado requiere contexto clínico: masa muscular, alimentación, enfermedades y evolución del peso',
+      'Peso ideal por Devine, Robinson y Lorentz, mostrado como rango entre las tres fórmulas',
       'Índice cintura/altura (WHtR): por debajo de 0,5 es lo esperable',
-      'Edad metabólica estimada a partir del gasto en reposo',
+      'La categoría es orientativa y no equivale a un diagnóstico individual',
     ],
     warn: [
       'Con mucha masa muscular el IMC sobreestima el riesgo: un atleta puede dar "sobrepeso" con poca grasa',
       'Un IMC normal con cintura sobre el 50% de la altura igual indica grasa abdominal de riesgo',
-      'En adultos mayores, un IMC por debajo de 22 es señal de riesgo nutricional, no de "estar flaco"',
-      'La edad metabólica no es una métrica clínica estandarizada: sirve para seguimiento, no para diagnóstico',
+      'En adultos mayores, una baja de peso involuntaria o la pérdida de fuerza ameritan una evaluación profesional aunque el IMC parezca normal',
+      'Durante el embarazo y antes de los 18 años se necesitan referencias específicas; esta calculadora es sólo para adultos no embarazados',
     ],
     plazo: 'una pérdida sostenible es de 0,5 a 1 kg por semana; más rápido que eso se pierde músculo.',
   },
@@ -141,23 +130,19 @@ export const hub: HubData = {
     },
     {
       q: '¿El IMC sirve en personas mayores de 65 años?',
-      a: 'Con un ajuste. La OMS sugiere ampliar el rango saludable a 23–28 y el consenso ESPEN 2018 marca 22–27 como saludable en mayores de 65: mantener algo más de peso protege frente a la sarcopenia. Por debajo de 22 hay riesgo nutricional.',
+      a: 'Sirve como punto de partida, pero no conviene cambiar automáticamente la categoría con un corte único. En personas mayores importan también la pérdida de peso reciente, la alimentación, la fuerza y la masa muscular. Si hubo una baja involuntaria o fragilidad, consultá a un profesional.',
     },
     {
       q: '¿Por qué un atleta puede tener IMC alto sin estar excedido?',
-      a: 'Porque el músculo pesa más que la grasa y el IMC no distingue una masa de la otra. Un fisicoculturista con 8% de grasa puede dar 29 de IMC. En ese caso conviene mirar porcentaje de grasa corporal o relación cintura-cadera antes de actuar sobre el número.',
+      a: 'Porque, para un mismo volumen, el músculo es más denso que la grasa y el IMC no distingue la composición corporal. Una persona muy musculosa puede tener IMC alto con poca grasa. En ese caso conviene sumar una medida de cintura y una evaluación de composición corporal.',
     },
     {
       q: '¿Para qué sirve la cintura si ya tengo el IMC?',
-      a: 'El índice cintura/altura (WHtR) detecta grasa abdominal, que el IMC no ve. El umbral práctico es 0,5: si tu cintura supera la mitad de tu altura hay riesgo cardiometabólico aumentado aunque el IMC dé normal.',
-    },
-    {
-      q: '¿Qué es la edad metabólica y cómo se calcula acá?',
-      a: 'Es a qué edad correspondería tu gasto energético en reposo. Sin porcentaje de grasa se usa Mifflin-St Jeor y el resultado coincide con tu edad real; con grasa corporal se usa Katch-McArdle, que es más precisa en personas musculosas o con sobrepeso, y ahí el número se despega.',
+      a: 'La relación cintura/altura agrega una aproximación de adiposidad central, que el IMC no capta. NICE recomienda intentar mantener la cintura por debajo de la mitad de la altura; entre 0,5 y 0,59 indica riesgo aumentado y 0,6 o más, riesgo aún mayor. Se interpreta mejor cuando el IMC es menor de 35.',
     },
     {
       q: '¿Cómo bajo el IMC de manera saludable?',
-      a: 'Con un déficit calórico moderado de 300 a 500 kcal por día más actividad combinada: 3 o 4 sesiones de cardio y 2 o 3 de fuerza por semana. La pérdida sostenible es de 0,5 a 1 kg por semana; más rápido implica perder masa muscular y efecto rebote.',
+      a: 'No hace falta perseguir un número aislado. Si necesitás bajar de peso, priorizá cambios graduales que puedas sostener: alimentación variada, actividad física regular, fuerza, descanso y seguimiento profesional si tenés enfermedades, tomás medicación o el cambio de peso es importante.',
     },
     {
       q: '¿Existe una versión del IMC específica para Argentina?',
@@ -179,6 +164,12 @@ export const hub: HubData = {
       name: 'Ministerio de Salud de la Nación — Alimentación saludable, sobrepeso y obesidad',
       url: 'https://www.argentina.gob.ar/salud/alimentacion-saludable',
       publisher: 'Ministerio de Salud, Argentina',
+    },
+    {
+      name: 'NICE — Interpretación de la relación cintura/altura',
+      url: 'https://www.nice.org.uk/guidance/ng246/chapter/Identifying-and-assessing-overweight-obesity-and-central-adiposity',
+      publisher: 'National Institute for Health and Care Excellence',
+      date: '2025',
     },
     {
       name: 'Robinson JD et al. — Determination of ideal body weight (1983)',
@@ -219,7 +210,7 @@ export const hub: HubData = {
     '/calculadora-edad-metabolica',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-07-31',
   audience: 'global',
 };
 
