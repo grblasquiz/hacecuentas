@@ -510,8 +510,8 @@ if [ "$SMOKE" = true ]; then
   # absorberla /en/health/body-weight: el smoke test la vio en 301 y rollbackeó
   # una versión sana. Si vas a podar, revisá ESTA LISTA primero.
   #
-  # /embed/calculadora-imc valida el motor genérico usado por WordPress/oEmbed.
-  for url in / /salud/peso-ideal-imc /trabajo/sueldo-bruto-y-neto /embed/calculadora-imc /en/health/body-weight /es /sitemap.xml /matematica/ecuaciones-y-polinomios /dolar-hoy-mexico; do
+  # Las calculadoras históricas fueron absorbidas por hubs; smokeamos sus destinos vivos.
+  for url in / /salud/peso-ideal-imc /trabajo/aguinaldo /trabajo/sueldo-bruto-y-neto /en/health/body-weight /es /sitemap.xml /matematica/ecuaciones-y-polinomios /dolar-hoy-mexico; do
     STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -A "HC-LocalDeploy/1.0" "https://hacecuentas.com$url" || echo "ERR")
     if [ "$STATUS" = "200" ]; then
       echo "  ✓ $url"
