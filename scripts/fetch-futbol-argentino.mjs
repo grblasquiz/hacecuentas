@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const TZ = 'America/Argentina/Buenos_Aires';
 const OUT = new URL('../src/data/live/futbol-argentino.json', import.meta.url);
@@ -45,6 +45,21 @@ const [first, national] = await Promise.all([
   league('arg.2', startKey, endKey),
 ]);
 const snapshot = { fetchedAt: now.toISOString(), timeZone: TZ, startKey, endKey, first, national };
+if (process.argv.includes('--final-only')) {
+  const finished = (payload) => [...(payload.first?.events || []), ...(payload.national?.events || [])]
+    .filter((event) => event.competitions?.[0]?.status?.type?.completed || event.competitions?.[0]?.status?.type?.state === 'post')
+    .map((event) => `${event.id}:${(event.competitions?.[0]?.competitors || []).map((team) => `${team.id}:${team.score}`).sort().join(',')}`);
+  let previous = null;
+  try { previous = JSON.parse(await readFile(OUT, 'utf8')); } catch {}
+  const oldFinals = new Set(finished(previous || {}));
+  const newFinals = finished(snapshot);
+  const newlyFinished = newFinals.filter((result) => !oldFinals.has(result));
+  if (previous && newlyFinished.length === 0) {
+    console.log('Sin partidos nuevos en estado Final; no se modifica el snapshot.');
+    process.exit(0);
+  }
+  console.log(`${newlyFinished.length} partido(s) nuevo(s) en estado Final.`);
+}
 await mkdir(new URL('../src/data/live/', import.meta.url), { recursive: true });
 await writeFile(OUT, `${JSON.stringify(snapshot, null, 2)}\n`);
 console.log(`Fútbol argentino: ${first.events.length + national.events.length} partidos, ${first.groups.length + national.groups.length} tablas.`);
