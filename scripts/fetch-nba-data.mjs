@@ -41,8 +41,15 @@ async function main() {
       const [athlete, team] = await Promise.all([json(first.athlete.$ref.replace('http://', 'https://')), json(first.team.$ref.replace('http://', 'https://'))]);
       return { label, value: first.displayValue, name: athlete.shortName || athlete.displayName, fullName: athlete.displayName, headshot: athlete.headshot?.href, team: team.displayName, teamAbbr: team.abbreviation };
     }));
+    const next = { weekStart: week.start, weekEnd: week.end, source: 'ESPN NBA weekly scoreboard + standings + season leaders', games: events, standings: table, leaders: leaders.filter(Boolean) };
+    const previous = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : null;
+    const previousComparable = previous ? { weekStart: previous.weekStart, weekEnd: previous.weekEnd, source: previous.source, games: previous.games, standings: previous.standings, leaders: previous.leaders } : null;
+    if (JSON.stringify(previousComparable) === JSON.stringify(next)) {
+      console.log(`[nba] sin cambios reales: ${events.length} partidos, ${table.length} equipos; no se toca el snapshot`);
+      return;
+    }
     mkdirSync(join(process.cwd(), 'src/data/live'), { recursive: true });
-    writeFileSync(OUT, JSON.stringify({ fetchedAt: new Date().toISOString(), weekStart: week.start, weekEnd: week.end, source: 'ESPN NBA weekly scoreboard + standings + season leaders', games: events, standings: table, leaders: leaders.filter(Boolean) }, null, 2));
+    writeFileSync(OUT, JSON.stringify({ fetchedAt: new Date().toISOString(), ...next }, null, 2));
     console.log(`[nba] semana ${week.start} → ${week.end}: ${events.length} partidos, ${table.length} equipos y ${leaders.filter(Boolean).length} líderes`);
   } catch (error) { if (existsSync(OUT)) console.log('[nba] fuente no disponible; se conserva snapshot previo'); else throw error; }
 }

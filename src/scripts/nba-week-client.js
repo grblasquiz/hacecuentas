@@ -48,6 +48,7 @@
     if (!response.ok) throw new Error(String(response.status));
     return response.json();
   };
+  const withDates = (base, dates) => `${base}${base.includes('?') ? '&' : '?'}dates=${dates}`;
   const norm = (event, league = 'NBA') => {
     const competition = event.competitions?.[0] || {};
     const teams = competition.competitors || [];
@@ -95,8 +96,8 @@
     .sort((a, b) => new Date(a.date) - new Date(b.date));
   const fetchWeekSchedule = async () => {
     const [regular, summer] = await Promise.all([
-      fetchJson(`${api}?dates=${week.range}&limit=200`),
-      fetchJson(`${summerApi}?dates=${week.range}&limit=200`),
+      fetchJson(withDates(api, week.range)),
+      fetchJson(withDates(summerApi, week.range)),
     ]);
     const games = dedupe([
       ...(regular.events || []).map((event) => norm(event, 'NBA')),
@@ -202,8 +203,8 @@
     try {
       const days = [...new Set(due.map((game) => dateKey(game.date)))];
       const payloads = await Promise.all(days.flatMap((key) => [
-        fetchJson(`${api}?dates=${key.replaceAll('-', '')}`),
-        fetchJson(`${summerApi}?dates=${key.replaceAll('-', '')}`),
+        fetchJson(withDates(api, key.replaceAll('-', ''))),
+        fetchJson(withDates(summerApi, key.replaceAll('-', ''))),
       ]));
       const finals = payloads.flatMap((payload, index) => (payload.events || []).map((event) => norm(event, index % 2 === 0 ? 'NBA' : 'Summer League'))).filter((game) => game.state === 'post');
       let changed = false;
