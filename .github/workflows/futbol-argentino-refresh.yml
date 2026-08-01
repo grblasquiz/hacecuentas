@@ -16,6 +16,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,6 +25,7 @@ jobs:
       - name: Detectar partidos finalizados
         run: node scripts/fetch-futbol-argentino.mjs --final-only
       - name: Publicar sólo si terminó un partido
+        id: publish
         run: |
           if git diff --quiet -- src/data/live/futbol-argentino.json; then
             echo "No terminó ningún partido"
@@ -34,3 +36,9 @@ jobs:
           git add src/data/live/futbol-argentino.json
           git commit -m "data(futbol): actualizar resultados y posiciones"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Desplegar el nuevo resultado
+        if: steps.publish.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main
