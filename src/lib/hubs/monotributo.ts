@@ -315,9 +315,9 @@ export const hub: HubData = {
 
   relatedPosts: [
     {
-      href: '/blog/recategorizacion-monotributo-julio-2026-guia-completa',
-      title: 'Recategorización de julio 2026, paso a paso',
-      note: 'Cuándo toca, qué mirar y cómo hacerla sin errores.',
+      href: '/recategorizacion-monotributo-julio-2026',
+      title: 'Recategorización 2026: vence el 5 de agosto',
+      note: 'Nueva escala de ARCA, calculadora y trámite paso a paso.',
     },
     {
       href: '/blog/guia-completa-monotributo-2026',

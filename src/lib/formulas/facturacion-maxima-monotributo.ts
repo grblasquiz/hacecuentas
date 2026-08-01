@@ -31,7 +31,7 @@ interface CatInfo {
   cuota: number;
 }
 
-// Tabla ARCA 2026 (vigente 2026-02-01): topes iguales para ambas actividades;
+// Tabla ARCA 2026 (vigente 2026-08-01): topes iguales para ambas actividades;
 // la cuota difiere (acá es informativa, el cálculo usa los topes).
 const CATS: CatInfo[] = CATEGORIAS.map((letra) => ({
   letra,

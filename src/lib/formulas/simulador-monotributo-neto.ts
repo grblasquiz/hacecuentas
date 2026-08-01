@@ -9,7 +9,7 @@
  * siendo monotributista". Enlaza a las calcs dedicadas.
  *
  * Data: importa TODO de src/lib/data/monotributo-2026.ts (fuente única ARCA,
- * vigencia 2026-02-01). Cero números hardcodeados acá.
+ * vigencia 2026-08-01). Cero números hardcodeados acá.
  */
 
 import {
