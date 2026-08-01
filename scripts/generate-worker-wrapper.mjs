@@ -263,8 +263,12 @@ export default {
     // el HTML vía deploy:fast-page. Va antes de Astro porque run_worker_first
     // está activo y Astro no tiene estas rutas en su manifest.
     const fastAsset = FAST_PAGE_ROUTES[url.pathname];
-    const response = fastAsset && (request.method === 'GET' || request.method === 'HEAD')
-      ? await env.ASSETS.fetch(new Request(new URL('/_fast-pages/' + fastAsset, url), request))
+    // Static Assets canoniza archivo.html con un 307 a archivo. Pedimos
+    // directamente la URL limpia para que la ruta pública conserve su URL y
+    // responda 200 en el primer request (también evita falsos 404 en el smoke).
+    const fastAssetPath = fastAsset?.replace(/\.html$/, '');
+    const response = fastAssetPath && (request.method === 'GET' || request.method === 'HEAD')
+      ? await env.ASSETS.fetch(new Request(new URL('/_fast-pages/' + fastAssetPath, url), request))
       : await astroHandler.fetch(request, env, ctx);
 
     // 6) Embed widgets: override de headers para habilitar carga cross-origin.
