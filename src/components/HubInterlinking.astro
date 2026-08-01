@@ -1,5 +1,6 @@
 ---
 import currentTools from '../lib/current-tools-index.json';
+import { PRIORITY_HUB_LINKS } from '../lib/priority-hub-links';
 
 interface Props {
   pageTitle?: string;
@@ -101,13 +102,23 @@ const add = (tool?: (typeof tools)[number]) => {
 };
 if (current) {
   add(parentPath ? byPath.get(parentPath) : undefined);
+  PRIORITY_HUB_LINKS
+    .filter((priority) => {
+      if (priority.path === path) return false;
+      if ('locale' in priority && priority.locale !== current.locale) return false;
+      if ('localeWide' in priority && priority.localeWide) return true;
+      return priority.categories.some((category) => category === current.category);
+    })
+    .forEach((priority) => add(byPath.get(priority.path)));
   localeRing.forEach(add);
   directChildren.slice(0, 3).forEach(add);
   ring.forEach(add);
 } else {
   editorialRelated.forEach(add);
 }
-const related = selected.slice(0, current ? 7 : 4);
+// Los hubs con refuerzo no deben desplazar la malla base de hermanos. Nueve
+// tarjetas sigue siendo un bloque acotado y preserva parent + prioridades + ring.
+const related = selected.slice(0, current ? 9 : 4);
 const lang = current?.locale?.startsWith('pt') ? 'pt' : current?.locale === 'en' ? 'en' : 'es';
 const heading = lang === 'pt'
   ? 'Ferramentas relacionadas'
