@@ -1,0 +1,33 @@
+#!/bin/sh
+# Bloquea force-pushes, borrados y reemplazos de historia sobre main.
+# Incidente 2026-08-01: origin/main fue movido a una línea vieja y el deploy
+# automático reemplazó home, hubs y calculadoras. Git --force ya no puede
+# saltarse esta protección en ningún checkout que use los hooks del repo.
+
+set -e
+
+ZERO=0000000000000000000000000000000000000000
+REQUIRED_RELEASE=425a56e5d74ee0666c7272d5833561da79457559
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || continue
+
+  if [ "$local_sha" = "$ZERO" ]; then
+    echo "✗ pre-push BLOQUEADO: main no se puede borrar." >&2
+    exit 1
+  fi
+
+  if ! git merge-base --is-ancestor "$REQUIRED_RELEASE" "$local_sha"; then
+    echo "✗ pre-push BLOQUEADO: el nuevo main no contiene el release integral $(printf '%s' "$REQUIRED_RELEASE" | cut -c1-10)." >&2
+    echo "  Estás intentando publicar una historia vieja/divergente." >&2
+    exit 1
+  fi
+
+  if [ "$remote_sha" != "$ZERO" ] && ! git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
+    echo "✗ pre-push BLOQUEADO: actualización no fast-forward de main." >&2
+    echo "  No uses --force. Integrá origin/main con merge/rebase." >&2
+    exit 1
+  fi
+done
+
+exit 0
