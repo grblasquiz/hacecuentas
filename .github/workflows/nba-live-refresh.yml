@@ -1,0 +1,41 @@
+name: NBA live refresh
+
+on:
+  schedule:
+    # Mantiene el HTML indexable cerca de los resultados; el navegador usa el
+    # proxy first-party y actualiza con más frecuencia mientras está abierto.
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: content-writers-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch NBA schedule, results, standings and leaders
+        run: node scripts/fetch-nba-data.mjs
+      - name: Commit only real NBA changes
+        run: |
+          if git diff --quiet -- src/data/live/nba.json; then
+            echo 'NBA sin cambios; no-op.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/data/live/nba.json
+          git commit -m "chore(nba): actualizar partidos y resultados $(date -u +%Y-%m-%dT%H:%MZ)"
+          git pull --rebase origin main
+          git push origin HEAD:main

@@ -47,6 +47,20 @@ curl -sL https://hacecuentas.com/<url-tocada> | grep '<string-nueva-del-commit>'
 
 Sin el segundo purge Martin va a ver la versión vieja y pensar que "no deployó". Ya pasó varias veces.
 
+## 4a. Producción sólo desde `main` y sin historias divergentes
+
+El incidente del 1/8/2026 reemplazó home, hubs y calculadoras nuevas porque se
+deployó una rama llamada `main` que venía de una historia vieja. Desde entonces:
+
+- `scripts/deploy-local.sh` **rechaza cualquier branch que no sea `main`**.
+- `HEAD` debe contener el release integral `425a56e5d`.
+- `origin/main` debe ser ancestro de `HEAD`; si Git divergió o el checkout está
+  atrasado, se integra primero y recién después se deploya.
+- El build debe contener canarios de la home nueva, hubs y calculadoras clave.
+
+No saltear estos gates llamando `wrangler deploy` directamente. Para probar una
+rama, usar preview local; para producción, mergear a `main`.
+
 ## 5. GA4 / Google Ads — cero cambios sin aviso
 
 Nunca borrar/renombrar/mover/desactivar tags de GA4 ni Google Ads. Cualquier cambio que toque `gtag`, `dataLayer`, CSP o headers de seguridad → avisar antes de pushear. Datos perdidos = irrecuperables.

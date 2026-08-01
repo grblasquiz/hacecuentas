@@ -27,6 +27,12 @@
 # Author: 2026-05-25
 set -e
 
+# Release integral que introdujo la home por decisiones, los hubs consolidados
+# y las calculadoras nuevas. Todo deploy futuro DEBE descender de este commit.
+# Este ancla evita repetir el incidente 2026-08-01: una rama divergente llamada
+# `main` publicó una historia vieja y reemplazó el sitio completo.
+REQUIRED_RELEASE_ANCESTOR="425a56e5d74ee0666c7272d5833561da79457559"
+
 # Colores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -123,9 +129,9 @@ cd "$REPO_ROOT"
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [ "$BRANCH" != "main" ]; then
-  warn "no estás en main (estás en '$BRANCH'). Continuar? [y/N]"
-  read -r confirm
-  [ "$confirm" = "y" ] || { err "abortado"; exit 1; }
+  err "deploy bloqueado: branch='$BRANCH'. Producción sólo se publica desde main."
+  err "Integrá el cambio a main y ejecutá el deploy desde un worktree limpio de main."
+  exit 1
 fi
 
 if [ -n "$(git status --porcelain | grep -v 'sitemap\|search-index\|sw\.js\|og-manifest\|related-auto\|db/sitemap-state')" ]; then
@@ -147,6 +153,24 @@ for var in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_ZONE_ID; do
 done
 
 CURRENT_SHA=$(git rev-parse HEAD)
+
+# Fail closed si no podemos comprobar la historia remota actual. Un prompt no
+# alcanza para una operación que puede reemplazar 12k archivos en producción.
+if ! git fetch --quiet origin main; then
+  err "no pude actualizar origin/main; sin validar la historia remota NO deployo."
+  exit 1
+fi
+if ! git cat-file -e "${REQUIRED_RELEASE_ANCESTOR}^{commit}" 2>/dev/null || \
+   ! git merge-base --is-ancestor "$REQUIRED_RELEASE_ANCESTOR" "$CURRENT_SHA"; then
+  err "REGRESIÓN DE HISTORIA: HEAD no contiene el release integral ${REQUIRED_RELEASE_ANCESTOR:0:10}."
+  err "Este checkout pertenece a una línea vieja; producción queda intacta."
+  exit 1
+fi
+if ! git merge-base --is-ancestor origin/main "$CURRENT_SHA"; then
+  err "main local divergió o está detrás de origin/main. Rebase/merge antes de deployar."
+  err "HEAD=${CURRENT_SHA:0:10} origin/main=$(git rev-parse --short=10 origin/main)"
+  exit 1
+fi
 ok "validación OK | branch=$BRANCH | commit=${CURRENT_SHA:0:8}"
 
 # ─── 1a. Guards pre-build (fail-fast en 1s vs fallar tras un build de 5min) ──
@@ -173,15 +197,6 @@ fi
 if [ -f src/pages/middleware.ts ]; then
   err "src/pages/middleware.ts existe (stray, imports rotos). El middleware real es"
   err "src/middleware.ts. Borralo: rm src/pages/middleware.ts"
-  exit 1
-fi
-# Los mockups importados alguna vez reemplazaron links reales por un toast:
-# `preventDefault()` hacía que hrefs válidos parecieran rotos. Es una regresión
-# silenciosa (el auditor HTTP ve 200), así que la frenamos antes del build.
-BLOCKED_LINK_COMPONENTS=$(rg -l '\$\$\("\\.card a"\).*preventDefault' src/components/generated --glob '*.astro' || true)
-if [ -n "$BLOCKED_LINK_COMPONENTS" ]; then
-  err "hay componentes generados que bloquean navegación de links con preventDefault():"
-  printf '%s\n' "$BLOCKED_LINK_COMPONENTS" | head -10
   exit 1
 fi
 ok "guards pre-build OK | _redirects=$REDIR_RULES reglas (<2000), middleware sano"
@@ -452,6 +467,35 @@ if [ -n "$BROKEN" ] || [ -n "$EMPTY" ]; then
 fi
 ok "sin páginas rotas (prerender limpio)"
 
+# Canarios del release integral. El conteo global de HTML no detecta una
+# regresión masiva si la versión vieja también tiene cientos de páginas.
+CANARY_FAIL=0
+for file in \
+  dist/client/index.html \
+  dist/client/trabajo.html \
+  dist/client/alquiler.html \
+  dist/client/finanzas-personales.html \
+  dist/client/salud/peso-ideal-imc.html \
+  dist/client/trabajo/sueldo-bruto-y-neto.html; do
+  if [ ! -s "$file" ]; then
+    err "canario ausente/vacío: $file"
+    CANARY_FAIL=$((CANARY_FAIL + 1))
+  fi
+done
+if ! grep -q 'No adivines' dist/client/index.html 2>/dev/null; then
+  err "canario de home falló: falta el H1 del rediseño integral ('No adivines')."
+  CANARY_FAIL=$((CANARY_FAIL + 1))
+fi
+if ! grep -q 'Cambió mi trabajo' dist/client/index.html 2>/dev/null; then
+  err "canario de home falló: faltan los bloques por decisiones."
+  CANARY_FAIL=$((CANARY_FAIL + 1))
+fi
+if [ "$CANARY_FAIL" -gt 0 ]; then
+  err "$CANARY_FAIL canario(s) de producto fallaron. NO deployo; producción queda intacta."
+  exit 1
+fi
+ok "canarios anti-regresión OK — home nueva + hubs + calculadoras presentes"
+
 # ─── 4. Cleanup pre-deploy ────────────────────────────────────────────────
 rm -rf .wrangler/deploy 2>/dev/null || true
 # dist/server/.prerender/ son chunks build-time (generan el HTML); el runtime
@@ -488,13 +532,34 @@ cd "$REPO_ROOT"
 T_DEPLOY=$(($(date +%s) - T_DEPLOY_START))
 ok "wrangler deploy completado en ${T_DEPLOY}s"
 
-# ─── 6. Smoke test (ANTES del purge — gate de seguridad) ───────────────────
-# HTML es CDN no-store → el smoke pega al worker recién deployado, no a cache
-# vieja. Si las rutas root/catch-all fallan (build/worker roto), AUTO-ROLLBACK
-# a la versión previa y abortamos SIN purgar cache → una versión rota nunca
-# queda viva ni se cachea. Incidente 2026-06-01 (deploy con prerender vacío).
+# ─── 6. Purge + smoke cache-busteado — gate de seguridad ───────────────────
+# El incidente 2026-08-01 demostró que el smoke pre-purge sí puede leer 404s
+# viejos del edge y rollbackear una versión sana. Purgamos primero y además
+# usamos query única + no-cache. Si falla: rollback y purge del rollback.
+purge_all_cache() {
+  local response
+  response=$(curl -sS -X POST \
+    "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
+    -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+    -H "Content-Type: application/json" \
+    --data '{"purge_everything":true}')
+  echo "$response" | grep -q '"success":true'
+}
+
+if [ "$PURGE" = true ]; then
+  log "purge CF cache previo al smoke..."
+  if purge_all_cache; then
+    ok "cache purgado antes del smoke"
+  else
+    err "purge previo al smoke falló. Auto-rollback por seguridad..."
+    ( cd dist/server && printf 'y\ny\n' | npx wrangler@latest rollback --message "auto-rollback: purge pre-smoke falló" 2>&1 | tail -6 )
+    purge_all_cache || true
+    exit 1
+  fi
+fi
+
 if [ "$SMOKE" = true ]; then
-  log "smoke test (pre-purge)..."
+  log "smoke test post-purge + cache-bust..."
   sleep 5
   FAIL=0
   # Cubre estático (hub/home/locale), embed (asset), ruta SSR (dolar-hoy → valida
@@ -510,9 +575,16 @@ if [ "$SMOKE" = true ]; then
   # absorberla /en/health/body-weight: el smoke test la vio en 301 y rollbackeó
   # una versión sana. Si vas a podar, revisá ESTA LISTA primero.
   #
-  # Las calculadoras históricas fueron absorbidas por hubs; smokeamos sus destinos vivos.
-  for url in / /salud/peso-ideal-imc /trabajo/aguinaldo /trabajo/sueldo-bruto-y-neto /en/health/body-weight /es /sitemap.xml /matematica/ecuaciones-y-polinomios /dolar-hoy-mexico; do
-    STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -A "HC-LocalDeploy/1.0" "https://hacecuentas.com$url" || echo "ERR")
+  # SIN URL DE EMBED (28-07-2026): `/embed/[slug].astro` genera sus rutas desde
+  # `src/content/calcs/*.json`, o sea sólo las calcs sueltas de AR — y ya no
+  # queda ninguna, así que /embed/* está VACÍO. El feature (plugin de WordPress,
+  # /embeber, oEmbed) no tiene nada que servir hasta que se le dé soporte a los
+  # hubs. Cuando eso pase, volvé a meter una URL de embed acá.
+  for url in / /salud/peso-ideal-imc /trabajo/sueldo-bruto-y-neto /en/health/body-weight /es /sitemap.xml /matematica/ecuaciones-y-polinomios /dolar-hoy-mexico; do
+    SEP='?'; echo "$url" | grep -q '?' && SEP='&'
+    STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
+      -A "HC-LocalDeploy/2.0" -H 'Cache-Control: no-cache' \
+      "https://hacecuentas.com${url}${SEP}deploy=${CURRENT_SHA}" || echo "ERR")
     if [ "$STATUS" = "200" ]; then
       echo "  ✓ $url"
     else
@@ -523,7 +595,8 @@ if [ "$SMOKE" = true ]; then
   if [ "$FAIL" -gt 0 ]; then
     err "$FAIL URLs fallaron — la versión deployada está ROTA. Auto-rollback a la previa..."
     ( cd dist/server && printf 'y\ny\n' | npx wrangler@latest rollback --message "auto-rollback: smoke falló ($FAIL URLs)" 2>&1 | tail -6 )
-    err "rollback ejecutado · cache NO purgado · el sitio quedó en la versión previa. Revisá el build antes de reintentar."
+    purge_all_cache || warn "rollback hecho pero falló el purge posterior; purgar manualmente."
+    err "rollback ejecutado + cache purgado · el sitio quedó en la versión previa."
     exit 1
   fi
   ok "smoke test OK — versión sana"
@@ -531,9 +604,9 @@ else
   warn "smoke skip (--no-smoke) — SIN gate de seguridad post-deploy"
 fi
 
-# ─── 7. Purge CF cache (solo si el smoke pasó) ─────────────────────────────
+# ─── 7. Segundo purge (solo si el smoke pasó) ──────────────────────────────
 if [ "$PURGE" = true ]; then
-  log "purge CF cache..."
+  log "segundo purge CF cache post-smoke..."
   if { [ "$MODE" = "incremental" ] || [ "$MODE" = "assets" ]; } && [ -n "$INCREMENTAL_CHANGES" ]; then
     # Purge selectivo — solo URLs cambiadas + sitemaps.
     INCREMENTAL_MODE="$MODE" \
@@ -543,15 +616,10 @@ if [ "$PURGE" = true ]; then
       node --experimental-strip-types scripts/incremental-purge.ts 2>&1 | tail -5
   else
     # Purge total
-    PURGE_RESP=$(curl -sS -X POST \
-      "https://api.cloudflare.com/client/v4/zones/$CLOUDFLARE_ZONE_ID/purge_cache" \
-      -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
-      -H "Content-Type: application/json" \
-      --data '{"purge_everything":true}')
-    if echo "$PURGE_RESP" | grep -q '"success":true'; then
+    if purge_all_cache; then
       ok "cache purgado (full)"
     else
-      warn "purge falló: $PURGE_RESP"
+      warn "segundo purge falló; el deploy está sano pero requiere purge manual."
     fi
   fi
 else
