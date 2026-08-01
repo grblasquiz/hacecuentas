@@ -227,6 +227,11 @@ const ISOLATED_DATA_DEPENDENCIES: Record<string, {
   'src/data/live/futbol-argentino.json': {
     pages: ['/futbol-argentino-hoy'],
   },
+  ...Object.fromEntries([
+    ['mx','/mx/futbol-mexicano-hoy'],['co','/co/futbol-colombiano-hoy'],['cl','/cl/futbol-chileno-hoy'],['pe','/pe/futbol-peruano-hoy'],
+    ['ec','/ec/futbol-ecuatoriano-hoy'],['ve','/ve/futbol-venezolano-hoy'],['py','/py/futbol-paraguayo-hoy'],['uy','/uy/futbol-uruguayo-hoy'],
+    ['do','/do/futbol-dominicano-hoy'],['es','/es/futbol-espanol-hoy'],['pt','/pt/futebol-brasileiro-hoje'],['pt-pt','/pt-pt/futebol-portugues-hoje'],['en','/en/football-today'],
+  ].map(([id,page]) => [`src/data/live/football/${id}.json`, { pages: [page] }])),
   'src/data/live/nfl-2026.json': {
     pages: ['/en/nfl-2026'],
   },

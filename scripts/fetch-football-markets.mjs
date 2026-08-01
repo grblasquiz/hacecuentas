@@ -1,0 +1,15 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+const markets=[
+ ['mx','America/Mexico_City',['mex.1','mex.2']],['co','America/Bogota',['col.1','col.2']],['cl','America/Santiago',['chi.1','chi.2']],['pe','America/Lima',['per.1','per.2']],['ec','America/Guayaquil',['ecu.1','ecu.2']],['ve','America/Caracas',['ven.1','ven.2']],['py','America/Asuncion',['par.1','par.2']],['uy','America/Montevideo',['uru.1','uru.2']],['do','America/Santo_Domingo',[]],['es','Europe/Madrid',['esp.1','esp.2']],['pt','America/Sao_Paulo',['bra.1','bra.2']],['pt-pt','Europe/Lisbon',['por.1']],['en','Europe/London',['eng.1','eng.2']]
+];
+const terms=['independiente','diablo','diablos','diabo','diabos','demonio','demonios','demon','demons','devil','devils','satan','satanas','lucifer'];
+const clubs=['manchester united','toluca','america de cali','nublense','crawley town','kaiserslautern'];
+const norm=(v='')=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const allowed=v=>{const n=norm(v);return !terms.some(x=>n.includes(x))&&!clubs.some(x=>n.includes(x))};
+const visible=e=>(e.competitions?.[0]?.competitors||[]).every(x=>allowed(x.team?.displayName||'')&&allowed(x.team?.shortDisplayName||''));
+const key=(d,tz)=>new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(d).replaceAll('-','');
+const get=async u=>{const r=await fetch(u,{headers:{'user-agent':'hacecuentas-data-refresh/2.0'}});if(!r.ok)throw new Error(`${r.status} ${u}`);return r.json()};
+const league=async(code,start,end)=>{const b='https://site.api.espn.com/apis';const [s,t]=await Promise.all([get(`${b}/site/v2/sports/soccer/${code}/scoreboard?dates=${start}-${end}&limit=100`),get(`${b}/v2/sports/soccer/${code}/standings?season=${new Date().getFullYear()}`)]);return {events:(s.events||[]).filter(visible),groups:(t.children||[]).map(g=>({...g,standings:{...g.standings,entries:(g.standings?.entries||[]).filter(e=>allowed(e.team?.displayName||'')&&allowed(e.team?.shortDisplayName||''))}}))}};
+const finals=p=>(p.leagues||[]).flatMap(l=>l.events||[]).filter(e=>e.competitions?.[0]?.status?.type?.completed||e.competitions?.[0]?.status?.type?.state==='post').map(e=>`${e.id}:${(e.competitions?.[0]?.competitors||[]).map(t=>`${t.id}:${t.score}`).sort().join(',')}`);
+await mkdir(new URL('../src/data/live/football/',import.meta.url),{recursive:true});
+for(const [id,tz,codes] of markets){const now=new Date(),end=new Date(now);end.setDate(end.getDate()+14);const start=key(now,tz),finish=key(end,tz);const leagues=await Promise.all(codes.map(c=>league(c,start,finish)));const snap={fetchedAt:now.toISOString(),timeZone:tz,startKey:start,endKey:finish,leagues};const out=new URL(`../src/data/live/football/${id}.json`,import.meta.url);let old=null;try{old=JSON.parse(await readFile(out,'utf8'))}catch{}if(process.argv.includes('--final-only')&&old&&!finals(snap).some(x=>!new Set(finals(old)).has(x))){console.log(`${id}: sin nuevos finales`);continue}await writeFile(out,JSON.stringify(snap,null,2)+'\n');console.log(`${id}: actualizado`)}

@@ -189,7 +189,14 @@ const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePa
     { href: '/matematica', label: 'Matemática' },
   ],
 };
-const navItems = COUNTRY_NAVS[pageCountry];
+const footballByCountry: Partial<Record<Country,string>> = {
+  AR:'/futbol-argentino-hoy', MX:'/mx/futbol-mexicano-hoy', CO:'/co/futbol-colombiano-hoy', CL:'/cl/futbol-chileno-hoy',
+  PE:'/pe/futbol-peruano-hoy', EC:'/ec/futbol-ecuatoriano-hoy', VE:'/ve/futbol-venezolano-hoy', PY:'/py/futbol-paraguayo-hoy',
+  UY:'/uy/futbol-uruguayo-hoy', DO:'/do/futbol-dominicano-hoy', ES:'/es/futbol-espanol-hoy', BR:'/pt/futebol-brasileiro-hoje',
+  PT:'/pt-pt/futebol-portugues-hoje', EN:'/en/football-today', GLOBAL:'/futbol-hoy',
+};
+const footballLabel = lang==='en'?'Football today':lang==='pt'?'Futebol hoje':'Fútbol hoy';
+const navItems = [...COUNTRY_NAVS[pageCountry], ...(footballByCountry[pageCountry] ? [{href:footballByCountry[pageCountry]!,label:footballLabel}] : [])];
 
 // Dropdown "Más" (solo AR): el resto de dominios/superficies que salieron de la
 // nav principal. Preserva los links internos que tenía la nav vieja (Decidir,

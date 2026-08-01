@@ -1,0 +1,36 @@
+name: Football markets — refresh after final result
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+concurrency:
+  group: football-markets-refresh
+  cancel-in-progress: false
+permissions:
+  contents: write
+  actions: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Consultar resultados y escribir sólo si apareció un Final nuevo
+        run: |
+          node scripts/fetch-futbol-argentino.mjs --final-only
+          node scripts/fetch-football-markets.mjs --final-only
+      - name: Publicar snapshots modificados
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- src/data/live/futbol-argentino.json src/data/live/football; then
+            echo "No final result changes"
+            exit 0
+          fi
+          git config user.name "hacecuentas-data-bot"
+          git config user.email "bot@hacecuentas.com"
+          git add src/data/live/futbol-argentino.json src/data/live/football
+          git commit -m "data(football): refresh completed matches"
+          git push
+          gh workflow run deploy.yml --ref main

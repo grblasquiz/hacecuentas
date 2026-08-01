@@ -522,6 +522,8 @@ const priorityUrls: Url[] = [
   prio('/formula-1-2026',                    '0.95', 'daily',  true),
   prio('/nba-2026',                          '0.95', 'daily',  true),
   prio('/futbol-argentino-hoy',              '0.95', 'daily',  true),
+  prio('/futbol-hoy',                        '0.95', 'daily',  true),
+  ...['/mx/futbol-mexicano-hoy','/co/futbol-colombiano-hoy','/cl/futbol-chileno-hoy','/pe/futbol-peruano-hoy','/ec/futbol-ecuatoriano-hoy','/ve/futbol-venezolano-hoy','/py/futbol-paraguayo-hoy','/uy/futbol-uruguayo-hoy','/es/futbol-espanol-hoy','/pt/futebol-brasileiro-hoje','/pt-pt/futebol-portugues-hoje','/en/football-today'].map(path => prio(path, '0.9', 'daily', true)),
   prio('/en/nfl-2026',                       '0.9',  'daily',  true),
   prio('/alertas',                           '0.8',  'monthly'),
   prio('/valores-bcra',                      '0.9',  'daily',  true),

@@ -1,0 +1,12 @@
+---
+// @incremental-standalone — matriz internacional de fútbol.
+export const prerender=true;
+import FootballMarketHub from '../components/FootballMarketHub.astro';
+import { footballMarkets } from '../lib/football-markets';
+export function getStaticPaths(){return footballMarkets.map(m=>({params:{footballCountry:m.path.slice(1)},props:{market:m}}))}
+const {market}=Astro.props;
+const modules=import.meta.glob<any>('../data/live/football/*.json',{eager:true});
+const hit=Object.entries(modules).find(([path])=>path.endsWith(`/${market.key}.json`));
+const data=(hit?.[1] as any)?.default||hit?.[1]||{fetchedAt:new Date(0).toISOString(),leagues:[]};
+---
+<FootballMarketHub market={market} data={data}/>

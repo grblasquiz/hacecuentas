@@ -2,9 +2,10 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const TZ = 'America/Argentina/Buenos_Aires';
 const OUT = new URL('../src/data/live/futbol-argentino.json', import.meta.url);
-const BLOCKED = Buffer.from('aW5kZXBlbmRpZW50ZQ==', 'base64').toString('utf8');
 const normalize = (value = '') => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-const visibleName = (name = '') => !normalize(name).includes(BLOCKED);
+const blockedTerms = ['independiente','diablo','diablos','demonio','demonios','demon','demons','devil','devils','satan','satanas','lucifer'];
+const blockedClubs = ['manchester united','toluca','america de cali','nublense','crawley town','kaiserslautern'];
+const visibleName = (name = '') => { const value=normalize(name); return !blockedTerms.some(x=>value.includes(x))&&!blockedClubs.some(x=>value.includes(x)); };
 const dateKey = (value) => new Intl.DateTimeFormat('en-CA', {
   timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
 }).format(new Date(value)).replaceAll('-', '');
