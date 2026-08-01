@@ -521,6 +521,7 @@ const priorityUrls: Url[] = [
   prio('/calculadora-formula-1',             '0.85', 'weekly'),
   prio('/formula-1-2026',                    '0.95', 'daily',  true),
   prio('/nba-2026',                          '0.95', 'daily',  true),
+  prio('/futbol-argentino-hoy',              '0.95', 'daily',  true),
   prio('/en/nfl-2026',                       '0.9',  'daily',  true),
   prio('/alertas',                           '0.8',  'monthly'),
   prio('/valores-bcra',                      '0.9',  'daily',  true),
