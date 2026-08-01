@@ -14,6 +14,7 @@
     interface Window {
       gtag?: (...args: any[]) => void;
       dataLayer?: any[];
+      hcTrack?: (event: string, params?: Record<string, unknown>) => void;
     }
   }
 
@@ -21,7 +22,11 @@
     /\b(calcular|calculá|actualizar|atualizar|analizar|simular|convertir|resolver|generar|comparar|cotizar|confirmar|ver resultado|obtener resultado|calculate|update|estimate|compute|compare|convert)\b/i;
   const EXCLUDED_BUTTON =
     '.case, .mode, .tab, .preset, .swap, .reset, [data-case], [data-mode], [data-tab], [data-reset]';
+  const HUB_ROOT_SELECTOR =
+    'form.calc, form.calculator, form.lab, form.calc-shell, form.imc-calculator, .calc, [data-calculator], [class*="mockup-"], .hcm';
   const trackedAt = new WeakMap<Element, number>();
+  const viewed = new WeakSet<Element>();
+  const inputStarted = new WeakSet<Element>();
 
   function sessionId(): string {
     try {
@@ -57,9 +62,36 @@
 
   function hubRoot(node: Element): Element | null {
     if (node.closest('.calc-container')) return null;
-    return node.closest(
-      'form.calc, form.calculator, form.lab, form.calc-shell, form.imc-calculator, .calc, [data-calculator], [class*="mockup-"]',
-    );
+    return node.closest(HUB_ROOT_SELECTOR);
+  }
+
+  function funnelParams(): Record<string, unknown> {
+    return {
+      calculator_slug: location.pathname.replace(/^\/|\/$/g, '') || 'inicio',
+      calculator_category: document.body.dataset.pageType || 'hub',
+      source_page: location.pathname,
+    };
+  }
+
+  function funnel(event: string, extra: Record<string, unknown> = {}): void {
+    try {
+      window.hcTrack?.(event, { ...funnelParams(), ...extra });
+    } catch {
+      // Analytics nunca debe afectar el cálculo.
+    }
+  }
+
+  function registerViews(): void {
+    const roots = new Set<Element>();
+    document.querySelectorAll(HUB_ROOT_SELECTOR).forEach((node) => {
+      const root = hubRoot(node);
+      if (root) roots.add(root);
+    });
+    roots.forEach((root) => {
+      if (viewed.has(root)) return;
+      viewed.add(root);
+      funnel('hc_calculator_view');
+    });
   }
 
   function track(root: Element): void {
@@ -87,7 +119,26 @@
     } catch {
       // Analytics nunca debe afectar el cálculo.
     }
+
+    funnel('hc_calculator_submit');
+    funnel('hc_calculator_success');
   }
+
+  registerViews();
+  document.addEventListener('astro:page-load', registerViews);
+
+  document.addEventListener(
+    'input',
+    (event) => {
+      const target = event.target as Element | null;
+      if (!target) return;
+      const root = hubRoot(target);
+      if (!root || inputStarted.has(root)) return;
+      inputStarted.add(root);
+      funnel('hc_calculator_input_started');
+    },
+    { capture: true },
+  );
 
   document.addEventListener(
     'click',
@@ -100,6 +151,12 @@
         button.matches('.go, .primary, [type="submit"]') ||
         /(?:calc|calculate|update|submit|result)/i.test(button.id);
       if (!primaryControl && !ACTION_TEXT.test(button.textContent || '')) return;
+      const form = button.closest('form') || root.querySelector('form');
+      if (form instanceof HTMLFormElement && !form.checkValidity()) {
+        funnel('hc_calculator_submit');
+        funnel('hc_calculator_validation_error', { error_type: 'html_validation' });
+        return;
+      }
       track(root);
     },
     { capture: true },
