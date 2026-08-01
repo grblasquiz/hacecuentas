@@ -79,14 +79,6 @@ export default defineConfig({
     })] : []),
   ],
 
-  // Prefetch on hover: acelera navegación entre calcs sin inflar el payload inicial.
-  // "hover" = prefetch cuando el usuario hoverea un link interno (default en Astro v4+).
-  // Para opt-in por link agregar data-astro-prefetch en <a>.
-  prefetch: {
-    prefetchAll: false,
-    defaultStrategy: 'hover',
-  },
-
   // El build no necesita abrir una sesión remota para resolver bindings:
   // Wrangler los inyecta al desplegar. Mantenerlos locales evita que un token
   // válido para deploy pero sin permiso de Remote Dev bloquee la compilación.
@@ -97,6 +89,10 @@ export default defineConfig({
 
   vite: {
     build: {
+      // Compatibilidad con Safari/WebView anteriores: transpilar operadores
+      // modernos también en los runtimes que Astro genera automáticamente.
+      // Evita que un `??=` aborte todo el módulo antes de inicializar la UI.
+      target: 'es2019',
       // Preserva el dist cacheado en builds incrementales. En full build
       // (default) limpia como siempre.
       emptyOutDir: !IS_INCREMENTAL,

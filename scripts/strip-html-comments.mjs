@@ -103,6 +103,7 @@ function stripComments(html) {
 let files = 0;
 let bytes = 0;
 let vanished = 0;
+let compatibilityFixes = 0;
 
 for (const file of walk(DIST_CLIENT)) {
   let html;
@@ -115,7 +116,16 @@ for (const file of walk(DIST_CLIENT)) {
     }
     throw err;
   }
-  const stripped = stripComments(html);
+  let stripped = stripComments(html);
+  // Astro inyecta este shim inline después de la transpilación de Vite. En
+  // Safari/WebView que soportan módulos pero no asignación nullish (`??=`),
+  // el parser aborta el módulo completo. La forma ES2015 es equivalente.
+  const modernProcessShim = 'globalThis.process??={};globalThis.process.env??={}';
+  const compatibleProcessShim = 'globalThis.process||(globalThis.process={});globalThis.process.env||(globalThis.process.env={})';
+  if (stripped.includes(modernProcessShim)) {
+    compatibilityFixes += stripped.split(modernProcessShim).length - 1;
+    stripped = stripped.replaceAll(modernProcessShim, compatibleProcessShim);
+  }
   if (stripped === html) continue;
   try {
     writeFileSync(file, stripped);
@@ -132,5 +142,6 @@ for (const file of walk(DIST_CLIENT)) {
 
 console.log(
   `[strip-html-comments] ${files} HTML limpiados, ${(bytes / 1024).toFixed(0)}KB de comentarios eliminados` +
+    `, ${compatibilityFixes} shims ES2019 normalizados` +
     (vanished ? ` (${vanished} desaparecidos durante el barrido — omitidos)` : ''),
 );

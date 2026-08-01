@@ -3814,7 +3814,10 @@ const formatFreshnessDate = (iso: string): string => {
   // instantáneo (el chunk ya bajó mientras completa los campos) pero el LCP
   // pinta sin competencia.
   let _loaderMapPromise: Promise<typeof import('../lib/formula-loader-map')> | null = null;
-  const loaderMap = () => (_loaderMapPromise ??= import('../lib/formula-loader-map'));
+  const loaderMap = () => {
+    if (!_loaderMapPromise) _loaderMapPromise = import('../lib/formula-loader-map');
+    return _loaderMapPromise;
+  };
   const formulaCache = new Map<string, Function>();
   // A4: hooks opcionales que exporta el MÓDULO de la fórmula (no la función de
   // cómputo). Se cachean por formulaId junto con la función. Ver contrato A4
@@ -4987,11 +4990,16 @@ const formatFreshnessDate = (iso: string): string => {
     // preload agregaba ~93 KiB brotli al critical path aunque no hubiera uso.
     let formulaRef: Function | null = null;
     let formulaReady: Promise<Function | null> | null = null;
-    const getFormulaReady = () => (formulaReady ??= loadFormula(formulaId).then((f) => {
-        formulaRef = f;
-        if (!f) console.error(`Fórmula no encontrada: ${formulaId}`);
-        return f;
-      }));
+    const getFormulaReady = () => {
+      if (!formulaReady) {
+        formulaReady = loadFormula(formulaId).then((f) => {
+          formulaRef = f;
+          if (!f) console.error(`Fórmula no encontrada: ${formulaId}`);
+          return f;
+        });
+      }
+      return formulaReady;
+    };
     form.addEventListener('input', getFormulaReady, { once: true, passive: true });
     form.addEventListener('change', getFormulaReady, { once: true, passive: true });
     const chartWrap = container.querySelector<HTMLElement>('[data-chart-wrap]');
