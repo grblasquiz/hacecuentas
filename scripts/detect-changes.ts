@@ -224,6 +224,9 @@ const ISOLATED_DATA_DEPENDENCIES: Record<string, {
   'src/data/live/formula-1-2026.json': {
     pages: ['/formula-1-2026'],
   },
+  'src/data/live/futbol-argentino.json': {
+    pages: ['/futbol-argentino-hoy'],
+  },
   'src/data/live/nfl-2026.json': {
     pages: ['/en/nfl-2026'],
   },

@@ -1,0 +1,51 @@
+name: Fútbol argentino — resultados y tablas
+
+on:
+  schedule:
+    # Cada 10 minutos: sólo commitea cuando cambia un partido o una tabla.
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: futbol-argentino-refresh
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Actualizar snapshot público
+        run: node scripts/fetch-futbol-argentino.mjs
+      - name: Publicar sólo si cambiaron los datos
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const p = 'src/data/live/futbol-argentino.json';
+          const next = JSON.parse(fs.readFileSync(p, 'utf8'));
+          delete next.fetchedAt;
+          fs.writeFileSync('/tmp/futbol-next.json', JSON.stringify(next));
+          NODE
+          git show HEAD:src/data/live/futbol-argentino.json >/tmp/futbol-prev-raw.json 2>/dev/null || echo '{}' >/tmp/futbol-prev-raw.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const p = JSON.parse(fs.readFileSync('/tmp/futbol-prev-raw.json', 'utf8'));
+          delete p.fetchedAt;
+          fs.writeFileSync('/tmp/futbol-prev.json', JSON.stringify(p));
+          NODE
+          if cmp -s /tmp/futbol-next.json /tmp/futbol-prev.json; then
+            git checkout -- src/data/live/futbol-argentino.json
+            echo "Sin cambios deportivos"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/live/futbol-argentino.json
+          git commit -m "data(futbol): actualizar resultados y posiciones"
+          git push
