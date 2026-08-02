@@ -22,6 +22,8 @@ const activeCalendarWeek = calendarPhase?.entries?.find((entry: any) => Number(e
 const upcoming = games.filter((game: any) => game.state !== 'post' && new Date(game.date) > now).slice(1, 4);
 const internationalGames = games.filter((game: any) => game.seasonType === 2 && game.country !== 'USA');
 const snapshot = JSON.stringify(data).replace(/</g, '\\u003c');
+const gameName=(game:any)=>`${game.away.name} - ${game.home.name}`;
+const gameFragment=(game:any)=>`game-${gameName(game).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}-${game.id}`;
 
 const format = (iso: string, options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-US', { timeZone:ET, ...options }).format(new Date(iso));
 const gameDate = (game: any) => format(game.date, { weekday:'short', month:'short', day:'numeric' });
@@ -123,7 +125,8 @@ const dataset = {
   temporalCoverage:'2026-08-06/2027-02-14', dateModified:data.fetchedAt, url:PAGE_URL,
 };
 const faqSchema = { '@type':'FAQPage', mainEntity:faqs.map((faq) => ({ '@type':'Question', name:faq.q, acceptedAnswer:{ '@type':'Answer', text:faq.a } })) };
-const schema = { '@context':'https://schema.org', '@graph':[breadcrumb,webPage,sportsEvent,dataset,faqSchema] };
+const gameEvents={'@type':'ItemList',name:'2026 NFL games',itemListElement:games.map((game:any,index:number)=>({'@type':'ListItem',position:index+1,item:{'@type':'SportsEvent',name:gameName(game),startDate:game.date,eventStatus:game.state==='post'?'https://schema.org/EventCompleted':'https://schema.org/EventScheduled',homeTeam:{'@type':'SportsTeam',name:game.home.name},awayTeam:{'@type':'SportsTeam',name:game.away.name},location:{'@type':'Place',name:game.venue},url:`${PAGE_URL}#${gameFragment(game)}`}}))};
+const schema = { '@context':'https://schema.org', '@graph':[breadcrumb,webPage,sportsEvent,gameEvents,dataset,faqSchema] };
 
 const staticTeams = (conference: string, division: string) => data.teams.filter((team: any) => team.conference === conference && team.division === division);
 ---
@@ -149,6 +152,7 @@ const staticTeams = (conference: string, division: string) => data.teams.filter(
 
     <section class="kickoff-grid" aria-label="Next NFL games">
       <article class="spotlight" data-featured>
+        <h2 class="match-seo" id={gameFragment(nextGame)}>{gameName(nextGame)}</h2>
         <div class="spotlight-kicker"><span>NEXT KICKOFF</span><b>{nextGame.weekLabel}</b></div>
         <div class="spotlight-teams"><div><img width="48" height="48" src={nextGame.away.logo} alt=""/><strong>{nextGame.away.abbr}</strong><em>—</em></div><i>@</i><div><img width="48" height="48" src={nextGame.home.logo} alt=""/><strong>{nextGame.home.abbr}</strong><em>—</em></div></div>
         <div class="spotlight-details"><b>{nextKickoff}</b><span>{nextGame.broadcasts.join(' · ')} · {nextGame.venue}</span></div>
@@ -162,7 +166,7 @@ const staticTeams = (conference: string, division: string) => data.teams.filter(
       <div class="schedule-shell">
         <div class="schedule-tools"><div class="phase-tabs" data-phase-tabs>{[1,2,3].map((type) => <button type="button" class:list={{active:type === activeType}} aria-pressed={type === activeType}>{type === 1 ? 'Preseason' : type === 2 ? 'Regular season' : 'Playoffs'}</button>)}</div><label>Choose week<select data-week-select>{calendarPhase?.entries?.map((entry: any) => <option value={entry.value} selected={entry.value === activeWeek}>{entry.label} · {entry.detail}</option>)}</select></label></div>
         <div class="week-title" data-week-label><span>{activeCalendarWeek?.label}</span><b>{activeCalendarWeek?.detail}</b></div>
-        <div class="game-list" data-game-list>{initialGames.map((game: any) => <a class="game-card" href={game.href} target="_blank" rel="noopener"><div class="game-meta"><span>{game.state === 'post' ? 'FINAL' : `${gameDate(game)} · ${gameTime(game)} ET`}</span><b>{game.broadcasts.join(' · ') || 'TV TBD'}</b></div><div class="matchup"><div><img width="48" height="48" src={game.away.logo} alt=""/><span><strong>{game.away.shortName}</strong><small>{game.away.record || 'Away'}</small></span><em>{game.state === 'post' ? game.away.score : ''}</em></div><div><img width="48" height="48" src={game.home.logo} alt=""/><span><strong>{game.home.shortName}</strong><small>{game.home.record || 'Home'}</small></span><em>{game.state === 'post' ? game.home.score : ''}</em></div></div><footer><span>{[game.venue,game.city,game.stateCode].filter(Boolean).join(' · ')}</span><b>{game.state === 'post' ? 'Game recap' : 'Matchup details'} →</b></footer></a>)}</div>
+        <div class="game-list" data-game-list>{initialGames.map((game: any) => <a id={gameFragment(game)} class="game-card" href={game.href} target="_blank" rel="noopener"><h3 class="match-seo">{gameName(game)}</h3><div class="game-meta"><span>{game.state === 'post' ? 'FINAL' : `${gameDate(game)} · ${gameTime(game)} ET`}</span><b>{game.broadcasts.join(' · ') || 'TV TBD'}</b></div><div class="matchup"><div><img width="48" height="48" src={game.away.logo} alt=""/><span><strong>{game.away.shortName}</strong><small>{game.away.record || 'Away'}</small></span><em>{game.state === 'post' ? game.away.score : ''}</em></div><div><img width="48" height="48" src={game.home.logo} alt=""/><span><strong>{game.home.shortName}</strong><small>{game.home.record || 'Home'}</small></span><em>{game.state === 'post' ? game.home.score : ''}</em></div></div><footer><span>{[game.venue,game.city,game.stateCode].filter(Boolean).join(' · ')}</span><b>{game.state === 'post' ? 'Game recap' : 'Matchup details'} →</b></footer></a>)}</div>
       </div>
     </section>
 
@@ -212,4 +216,7 @@ const staticTeams = (conference: string, division: string) => data.teams.filter(
 @media(max-width:920px){.hero{grid-template-columns:1fr}.hero-visual{display:none}.kickoff-grid{grid-template-columns:1fr}.standings-grid{grid-template-columns:1fr}.key-dates ol{grid-template-columns:1fr 1fr}.key-dates li:nth-child(2){border-right:1px solid var(--line);border-radius:0 10px 0 0}.key-dates li:nth-child(3){border-radius:0 0 0 10px}.key-dates li:last-child{border-radius:0 0 10px 0}.international>div{grid-template-columns:1fr 1fr}.network{grid-template-columns:1fr}}
 @media(max-width:680px){.nfl>section,.nfl>.crumbs,.nfl>.source{width:calc(100% - 28px)}.hero{min-height:auto;padding:40px 0}.hero h1{font-size:49px}.hero-copy>p{font-size:15px}.hero-actions{align-items:stretch;flex-direction:column}.hero-actions a{text-align:center}.hero dl{gap:12px;justify-content:space-between}.hero dl div{padding-left:8px}.hero dt{font-size:21px}.spotlight,.up-next{padding:18px}.spotlight-teams>div{grid-template-columns:51px 1fr auto;gap:8px}.spotlight-teams img{height:50px;width:50px}.spotlight-teams strong{font-size:20px}.spotlight-teams em{font-size:38px}.section-head{align-items:flex-start;flex-direction:column;gap:14px}.section-head h2{font-size:27px}.timezone,.timezone select{width:100%}.schedule-tools{align-items:stretch;flex-direction:column;gap:10px}.phase-tabs{display:grid;grid-template-columns:repeat(3,1fr)}.phase-tabs button{padding:9px 5px}.schedule-tools>label{align-items:stretch;flex-direction:column}.schedule-tools select{width:100%}.game-list{grid-template-columns:1fr}.game-card:nth-child(odd){border-right:0}.standings-grid{grid-template-columns:1fr}.key-dates ol,.international>div{grid-template-columns:1fr}.key-dates li{border-right:1px solid var(--line);border-radius:0!important}.key-dates li:first-child{border-radius:10px 10px 0 0!important}.key-dates li:last-child{border-radius:0 0 10px 10px!important}.seo-copy{gap:35px;grid-template-columns:1fr;padding-top:38px}.network{padding:20px}.network nav{grid-template-columns:1fr}.network nav a{min-height:105px}.international>div>a{min-height:135px}}
 .game-card:only-child{grid-column:1/-1}.game-card:only-child .matchup{max-width:540px}
+</style>
+<style is:global>
+.nfl .match-seo{color:#fff;font-size:14px;line-height:1.35;margin:0 0 12px;scroll-margin-top:88px}.nfl .game-card>.match-seo{color:#dce8e3;font-size:13px}.nfl .game-card{scroll-margin-top:88px}
 </style>

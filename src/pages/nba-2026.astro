@@ -34,6 +34,8 @@ const westStandings = conferenceTable('West');
 const leaders = data.leaders || [];
 const fetchedLabel = data.fetchedAt ? new Intl.DateTimeFormat('es-AR', { timeZone: AR, day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }).format(new Date(data.fetchedAt)) : 'hoy';
 const weekSnapshot = JSON.stringify({ weekStart, weekEnd, games }).replaceAll('<', '\\u003c');
+const gameName=(game:any)=>`${game.away.name} - ${game.home.name}`;
+const gameFragment=(game:any)=>`partido-${gameName(game).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}-${game.id}`;
 // ── SEO ──────────────────────────────────────────────────────────────────────
 const PAGE_URL = 'https://hacecuentas.com/nba-2026';
 const title = 'NBA hoy: partidos, resultados, posiciones y calendario | Hacé Cuentas';
@@ -116,7 +118,8 @@ const faqSchema = {
   '@type':'FAQPage',
   mainEntity: faqs.map((f) => ({ '@type':'Question', name:f.q, acceptedAnswer:{ '@type':'Answer', text:f.a } })),
 };
-const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEvent, dataset, faqSchema] };
+const gameEvents={'@type':'ItemList',name:'Partidos de la NBA',itemListElement:games.map((game:any,index:number)=>({'@type':'ListItem',position:index+1,item:{'@type':'SportsEvent',name:gameName(game),startDate:game.date,eventStatus:game.state==='post'?'https://schema.org/EventCompleted':'https://schema.org/EventScheduled',homeTeam:{'@type':'SportsTeam',name:game.home.name},awayTeam:{'@type':'SportsTeam',name:game.away.name},url:`${PAGE_URL}#${gameFragment(game)}`}}))};
+const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEvent, gameEvents, dataset, faqSchema] };
 ---
 <Layout title={title} description={description} canonical="/nba-2026" audience="AR" domain="life" pageType="data" schema={schema} keywords={keywords} newsKeywords={newsKeywords} ogTitle={ogTitle} noAds={true}>
   <Header slot="header" />
@@ -136,6 +139,7 @@ const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEv
     <section class="top-grid" aria-label="Partidos destacados">
       <article class="game-hero" data-primary-game>
         {featured ? <>
+          <h2 class="match-seo" id={gameFragment(featured)}>{gameName(featured)}</h2>
           <div class="game-tag"><span>{featured.state === 'post' ? 'ÚLTIMO RESULTADO' : 'PRÓXIMO PARTIDO'}</span><b>{featured.league || 'NBA'} · {featured.state === 'pre' ? `${relativeGameDay(featured.date)}, ${fmtTime(featured.date)}` : featured.detail || featured.status}</b></div>
           <div class="duel">
             <div class="team"><img src={featured.away.logo} alt="" loading="lazy"/><strong>{featured.away.name}</strong><em>{featured.state === 'pre' ? '—' : featured.away.score ?? '—'}</em></div>
@@ -158,7 +162,7 @@ const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEv
         {weekDates.map((key) => { const dayGames = games.filter((game: any) => dateKey(game.date) === key); return <button type="button" role="tab" aria-selected={key === activeDay ? 'true' : 'false'} class:list={{active:key === activeDay}} data-week-day={key}><small>{new Intl.DateTimeFormat('es-AR', { weekday:'short', timeZone:AR }).format(new Date(`${key}T12:00:00Z`)).replace('.', '')}</small><strong>{key.slice(-2)}</strong><em>{dayGames.length} {dayGames.length === 1 ? 'partido' : 'partidos'}</em></button>; })}
       </div>
       <div class="week-panels">
-        {weekDates.map((key) => { const dayGames = games.filter((game: any) => dateKey(game.date) === key); return <section class="week-panel" data-week-panel={key} hidden={key !== activeDay}><header><h3>{fmtDay(`${key}T12:00:00Z`)}</h3><span>{dayGames.length} {dayGames.length === 1 ? 'partido' : 'partidos'}</span></header>{dayGames.length ? dayGames.map((game:any) => <a href={game.href} target="_blank" rel="noopener" class="schedule-row"><span>{game.state === 'post' ? 'FINAL' : fmtTime(game.date)}<small>{game.league || 'NBA'} · {game.state === 'post' ? game.detail || 'Finalizado' : 'Programado'}</small></span><b><img src={game.away.logo} alt=""/>{game.away.name}</b><strong>{game.state === 'pre' ? <i>vs</i> : <>{game.away.score ?? '—'} <i>—</i> {game.home.score ?? '—'}</>}</strong><b><img src={game.home.logo} alt=""/>{game.home.name}</b><em>{game.state === 'pre' ? 'Ver previa' : 'Ver resultado'} ›</em></a>) : <div class="empty-schedule"><strong>Sin partidos en esta fecha.</strong><span>Elegí otro día de la semana.</span></div>}</section>; })}
+        {weekDates.map((key) => { const dayGames = games.filter((game: any) => dateKey(game.date) === key); return <section class="week-panel" data-week-panel={key} hidden={key !== activeDay}><header><h3>{fmtDay(`${key}T12:00:00Z`)}</h3><span>{dayGames.length} {dayGames.length === 1 ? 'partido' : 'partidos'}</span></header>{dayGames.length ? dayGames.map((game:any) => <article class="schedule-game" id={gameFragment(game)}><h3 class="match-seo">{gameName(game)}</h3><a href={game.href} target="_blank" rel="noopener" class="schedule-row"><span>{game.state === 'post' ? 'FINAL' : fmtTime(game.date)}<small>{game.league || 'NBA'} · {game.state === 'post' ? game.detail || 'Finalizado' : 'Programado'}</small></span><b><img src={game.away.logo} alt=""/>{game.away.name}</b><strong>{game.state === 'pre' ? <i>vs</i> : <>{game.away.score ?? '—'} <i>—</i> {game.home.score ?? '—'}</>}</strong><b><img src={game.home.logo} alt=""/>{game.home.name}</b><em>{game.state === 'pre' ? 'Ver previa' : 'Ver resultado'} ›</em></a></article>) : <div class="empty-schedule"><strong>Sin partidos en esta fecha.</strong><span>Elegí otro día de la semana.</span></div>}</section>; })}
       </div>
     </div></section>
     <section class="nba-network" aria-labelledby="nba-network-title"><header><div><span>SEGUÍ HACIENDO CUENTAS</span><h2 id="nba-network-title">Más deporte, sin salir de Hacé Cuentas</h2></div><p>Saltá a otra cobertura o usá una calculadora para llevar los números a tu propio entrenamiento.</p></header><div><a class="featured" href="/deportes"><small>PORTADA</small><strong>Mundial, NBA y F1</strong><span>Ver todos los deportes →</span></a><a href="/formula-1-2026"><small>FÓRMULA 1</small><strong>Próximo GP y campeonato</strong><span>Seguir la temporada →</span></a><a href="/mundial-2026"><small>MUNDIAL 2026</small><strong>Fixture, llave y resultados</strong><span>Entrar al Mundial →</span></a><a href="/calculadora-calorias-quemadas-deporte"><small>CALCULADORA</small><strong>Calorías por actividad deportiva</strong><span>Hacer la cuenta →</span></a></div></section>
@@ -233,4 +237,7 @@ const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEv
 .nba-faq-item summary::after{color:var(--orange);content:'+';font-size:18px;font-weight:900;position:absolute;right:4px;top:13px}
 .nba-faq-item[open] summary::after{content:'–'}
 .nba-faq-item p{color:var(--muted);font-size:13.5px;line-height:1.65;margin:0 0 16px;max-width:75ch}
+</style>
+<style is:global>
+.nba .match-seo{color:#fff!important;font-size:14px;line-height:1.35;margin:0 0 10px;scroll-margin-top:88px}.nba .schedule-game{border-bottom:1px solid var(--line);scroll-margin-top:88px}.nba .schedule-game>.match-seo{background:#0d1827;margin:0;padding:12px 16px 0}.nba .schedule-game .schedule-row{border-bottom:0}
 </style>

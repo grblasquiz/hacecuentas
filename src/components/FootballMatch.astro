@@ -1,9 +1,11 @@
 ---
 const {event,showDay=false,locale,timeZone,liveLabel}=Astro.props;
+import { footballMatchFragment, footballMatchName } from '../lib/football-seo';
 const sides=event.competitions?.[0]?.competitors||[],status=event.competitions?.[0]?.status,state=status?.type?.state;
 const done=status?.type?.completed||state==='post',live=state==='in';
 const hour=(v:string)=>new Intl.DateTimeFormat(locale,{timeZone,hour:'2-digit',minute:'2-digit'}).format(new Date(v));
 const day=(v:string)=>new Intl.DateTimeFormat(locale,{timeZone,weekday:'short',day:'2-digit',month:'short'}).format(new Date(v));
 const label=live?(status.displayClock||liveLabel):done?'Final':showDay?`${day(event.date)} · ${hour(event.date)}`:hour(event.date);
+const matchName=footballMatchName(event);
 ---
-<article class:list={['match',{liveMatch:live}]}><div class="matchTop"><span>{event.league}</span><span class:list={['state',{final:done}]}>{label}</span></div>{sides.map((x:any)=><div class="team"><span class="crest" aria-hidden="true"><span>⚽</span>{x.team?.logo&&<img src={x.team.logo} alt="" width="29" height="29" loading="lazy" onerror="this.remove()"/>}</span><strong>{x.team?.shortDisplayName||x.team?.displayName}</strong><b>{done||live?x.score:'—'}</b></div>)}</article>
+<article id={footballMatchFragment(event)} class:list={['match',{liveMatch:live}]}><h3 class="matchName">{matchName}</h3><div class="matchTop"><span>{event.league}</span><span class:list={['state',{final:done}]}>{label}</span></div>{sides.map((x:any)=><div class="team"><span class="crest" aria-hidden="true"><span>⚽</span>{x.team?.logo&&<img src={x.team.logo} alt="" width="29" height="29" loading="lazy" onerror="this.remove()"/>}</span><strong>{x.team?.shortDisplayName||x.team?.displayName}</strong><b>{done||live?x.score:'—'}</b></div>)}</article>

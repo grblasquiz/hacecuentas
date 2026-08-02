@@ -46,9 +46,11 @@ async function league(code, start, end) {
 }
 
 const now = new Date();
+const start = new Date(now);
+start.setDate(start.getDate() - 3);
 const end = new Date(now);
 end.setDate(end.getDate() + 14);
-const startKey = dateKey(now);
+const startKey = dateKey(start);
 const endKey = dateKey(end);
 const [first, national] = await Promise.all([
   league('arg.1', startKey, endKey),

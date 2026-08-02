@@ -192,6 +192,8 @@ function slugTeams(m: any): string {
   const a = teamLabel(m.team1), b = teamLabel(m.team2);
   return `${a.es} ${b.es}`.toLowerCase();
 }
+const matchTitle=(m:any)=>`${teamLabel(m.team1).es} - ${teamLabel(m.team2).es}`;
+const matchFragment=(m:any)=>`partido-${matchTitle(m).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-')}-${m.num}`;
 function groundShort(g: string | null): string {
   if (!g) return '';
   // "Miami (Miami Gardens)" → "Miami Gardens" ; "New York/New Jersey (East Rutherford)" → "East Rutherford"
@@ -299,7 +301,8 @@ const faqSchema = {
     acceptedAnswer: { '@type': 'Answer', text: f.a },
   })),
 };
-const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, WORLD_CUP_EVENT, dataset, faqSchema] };
+const matchEvents={'@type':'ItemList',name:'Partidos del Mundial 2026',itemListElement:fixture.matches.map((m:any,index:number)=>({'@type':'ListItem',position:index+1,item:{'@type':'SportsEvent',name:matchTitle(m),startDate:kickoffUTC(m.date,m.time)?.toISOString(),eventStatus:m.score?.ft?'https://schema.org/EventCompleted':'https://schema.org/EventScheduled',homeTeam:{'@type':'SportsTeam',name:teamLabel(m.team1).es},awayTeam:{'@type':'SportsTeam',name:teamLabel(m.team2).es},location:{'@type':'Place',name:groundShort(m.ground)},url:`https://hacecuentas.com/fixture-mundial-2026#${matchFragment(m)}`}}))};
+const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, WORLD_CUP_EVENT, matchEvents, dataset, faqSchema] };
 
 // Datos para el script client-side (refresh en vivo + re-render de "hoy").
 const daysData = days.map((d) => ({
@@ -549,12 +552,14 @@ const liveConfig = {
                       const phaseKey = (PHASE_DEFS.find((p) => p.is(m)) || {}).key || '';
                       return (
                         <article
+                          id={matchFragment(m)}
                           class={`fx-mcard${isNext ? ' is-next' : ''}${r ? ' is-played' : ''}`}
                           data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}
                           data-phase={phaseKey} data-teams={`${m.team1 || ''} ${m.team2 || ''}`} data-search={slugTeams(m)}
                         >
                           <div class="fx-mcard-badge">{st && <span class={`fx-st fx-st-${st === 'FINAL' ? 'final' : 'next'}`}>{st}</span>}<span class="fx-mcard-round">{roundLabel(m.round)}</span></div>
                           <div class="fx-mcard-body">
+                            <h4 class="fx-match-seo">{matchTitle(m)}</h4>
                             <div class="fx-mcard-time">
                               <span class="t" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artTime(m.date, m.time)}</span>
                               <span class="g">{groundShort(m.ground)}</span>
@@ -974,3 +979,6 @@ const liveConfig = {
   <script type="application/json" id="fx-live-config" set:html={JSON.stringify(liveConfig)} is:inline></script>
   <script is:inline set:html={fxScript}></script>
 </Layout>
+<style is:global>
+.fx-match-seo{font-size:13px;line-height:1.3;margin:0 0 7px;color:var(--fx-ink,#152033)}.fx-mcard[id^="partido-"]{scroll-margin-top:88px}
+</style>
