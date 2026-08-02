@@ -28,7 +28,7 @@ const matchHtml = (event: any, showDay = false) => {
   const status = event.competitions?.[0]?.status; const state = status?.type?.state;
   const live = state === 'in'; const done = status?.type?.completed || state === 'post';
   const label = live ? `● ${esc(status.displayClock || 'EN VIVO')}` : done ? 'Final' : showDay ? `${fmtDay(event.date)} · ${fmtHour(event.date)}` : fmtHour(event.date);
-  const team = (entry: any) => `<div class="team"><img src="${esc(entry?.team?.logo)}" alt="" width="29" height="29"><strong>${esc(entry?.team?.shortDisplayName || entry?.team?.displayName)}</strong><b>${done || live ? esc(entry?.score) : '—'}</b></div>`;
+  const team = (entry: any) => `<div class="team"><span class="crest" aria-hidden="true"><span>⚽</span>${entry?.team?.logo ? `<img src="${esc(entry.team.logo)}" alt="" width="29" height="29" onerror="this.remove()">` : ''}</span><strong>${esc(entry?.team?.shortDisplayName || entry?.team?.displayName)}</strong><b>${done || live ? esc(entry?.score) : '—'}</b></div>`;
   return `<article class="match ${live ? 'liveMatch' : ''}"><div class="matchTop"><span class="league">${esc(event.league)}</span><span class="state ${live ? 'live' : done ? 'final' : ''}">${label}</span></div>${team(home)}${team(away)}</article>`;
 };
 const stat = (entry: any, name: string) => entry.stats?.find((item: any) => item.name === name)?.displayValue || '0';
@@ -73,6 +73,8 @@ const updatedAt = new Intl.DateTimeFormat('es-AR', { timeZone: TZ, hour:'2-digit
   .footballHub .team{display:grid;grid-template-columns:32px minmax(0,1fr) 28px;align-items:center;gap:9px;padding:8px 0}
   .footballHub .team+.team{border-top:1px solid #eef2f6}
   .footballHub .team img{width:29px;height:29px;object-fit:contain}
+  .footballHub .crest{position:relative;width:29px;height:29px;display:grid;place-items:center;border-radius:50%;background:#eef3f8;color:#8391a3;font-size:14px;overflow:hidden}
+  .footballHub .crest>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff}
   .footballHub .team strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .footballHub .team b{text-align:right;font-size:19px;letter-spacing:-.03em}
   .footballHub .nextGrid .match{background:#fafbfd}

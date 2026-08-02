@@ -10,9 +10,18 @@ const dateKey = (value) => new Intl.DateTimeFormat('en-CA', {
   timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
 }).format(new Date(value)).replaceAll('-', '');
 const json = async (url) => {
-  const response = await fetch(url, { headers: { 'user-agent': 'hacecuentas-data-refresh/1.0' } });
-  if (!response.ok) throw new Error(`${response.status} ${url}`);
-  return response.json();
+  let error;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch(url, { headers: { 'user-agent': 'hacecuentas-data-refresh/2.0' } });
+      if (!response.ok) throw new Error(`${response.status} ${url}`);
+      return response.json();
+    } catch (cause) {
+      error = cause;
+      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+    }
+  }
+  throw error;
 };
 const eventVisible = (event) => (event.competitions?.[0]?.competitors || [])
   .every((entry) => visibleName(entry.team?.displayName));
