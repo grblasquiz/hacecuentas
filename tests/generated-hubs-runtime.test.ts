@@ -44,14 +44,14 @@ function parsePage(path: string) {
 
 describe('hubs generados', () => {
   it('mantiene el inventario completo dentro del test', () => {
-    expect(generatedPages).toHaveLength(35);
+    expect(generatedPages).toHaveLength(32);
     const totalCases = generatedPages
       .map(parsePage)
       .reduce((sum, page) => sum + Object.keys(page.configs).length, 0);
-    expect(totalCases).toBe(160);
+    expect(totalCases).toBe(130);
   });
 
-  it('ejecuta los 160 casos con sus defaults reales sin cero falso ni [object Object]', () => {
+  it('ejecuta los 130 casos con sus defaults reales sin cero falso ni [object Object]', () => {
     const failures: string[] = [];
 
     for (const page of generatedPages.map(parsePage)) {

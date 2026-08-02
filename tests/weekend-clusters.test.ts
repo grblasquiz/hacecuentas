@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { WEEKEND_CLUSTERS } from '../src/lib/weekend-clusters';
+import { ALL_HUBS } from '../src/lib/hubs/registry';
 
 // Universo de slugs vivos (campo `slug`, NO filename).
 const CALCS_DIR = join(process.cwd(), 'src/content/calcs');
@@ -19,10 +20,13 @@ for (const f of readdirSync(CALCS_DIR)) {
 }
 
 const allSlugs = WEEKEND_CLUSTERS.flatMap((c) => [c.master, ...c.members]);
+const replacementSlugs = new Set(
+  ALL_HUBS.flatMap((hub) => (hub.replaces || []).map((path) => path.replace(/^\//, ''))),
+);
 
 describe('WEEKEND_CLUSTERS — integridad', () => {
   it('todo slug del config existe como calc viva', () => {
-    const dead = allSlugs.filter((s) => !liveSlugs.has(s));
+    const dead = allSlugs.filter((s) => !liveSlugs.has(s) && !replacementSlugs.has(s));
     expect(dead, `slugs muertos en weekend-clusters: ${dead.join(', ')}`).toEqual([]);
   });
 

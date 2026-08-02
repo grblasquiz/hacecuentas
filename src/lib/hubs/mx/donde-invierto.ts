@@ -17,7 +17,7 @@ import type { HubData } from '../types';
 
 /** Disclaimer YMYL — copiado textual de src/lib/disclaimers.ts (dominio 'investment'). */
 const DISCLAIMER_INV =
-  'Herramienta educativa, no constituye asesoramiento ni recomendación de inversión. Rentabilidad y capital pueden variar o perderse; verificá costos y riesgos con una entidad o asesor habilitado.';
+  'Herramienta educativa, no constituye asesoramiento ni recomendación de inversión. Rentabilidad y capital pueden variar o perderse; verifica costos y riesgos con una entidad o asesor habilitado.';
 
 /**
  * Parámetros del hub.
@@ -131,9 +131,9 @@ export const hub: HubData = {
           DISCLAIMER_INV,
           'El pagaré bancario está cubierto por el seguro de depósitos hasta un límite por persona y por institución; el Cete es riesgo soberano y no tiene ese tope',
           'El pagaré no se puede retirar antes del vencimiento; el Cete se puede vender en el mercado secundario, aunque con costo y a precio de mercado',
-          'La tasa preferente que ofrecen los bancos suele estar atada a un monto mínimo o a la contratación de otros productos: leé la letra chica antes de comparar',
+          'La tasa preferente que ofrecen los bancos suele estar atada a un monto mínimo o a la contratación de otros productos: lee la letra chica antes de comparar',
         ],
-        plazo: 'el pagaré se renueva automáticamente al vencimiento salvo instrucción en contrario: revisá la tasa de renovación.',
+        plazo: 'el pagaré se renueva automáticamente al vencimiento salvo instrucción en contrario: revisa la tasa de renovación.',
         answer:
           'Al mismo plazo y con la misma retención, gana simplemente el que tenga la tasa más alta: la diferencia relevante es el riesgo y la liquidez.',
       },
@@ -149,7 +149,7 @@ export const hub: HubData = {
         ],
         warn: [
           DISCLAIMER_INV,
-          'Muchas cuentas anuncian una tasa promocional que aplica solo a los primeros meses o hasta cierto saldo: verificá el tope antes de mover el dinero',
+          'Muchas cuentas anuncian una tasa promocional que aplica solo a los primeros meses o hasta cierto saldo: verifica el tope antes de mover el dinero',
           'Una tasa nominal por debajo de la inflación significa que estás perdiendo poder de compra aunque el saldo suba',
           'Las tasas de las cuentas y de las fintech cambian de un mes al otro: las de esta pantalla son referencias editables, no una oferta vigente',
         ],
@@ -180,7 +180,7 @@ export const hub: HubData = {
       {
         id: 'tanda',
         label: 'Entrar a una tanda',
-        hint: 'Cuánto te toca, cuándo cobras y qué dejás de ganar.',
+        hint: 'Cuánto te toca, cuándo cobras y qué dejas de ganar.',
         yes: [
           'Bolsa que cobras en tu turno y cuándo la cobras',
           'Cuánto aportas antes de cobrar y en todo el ciclo',
@@ -195,7 +195,7 @@ export const hub: HubData = {
         ],
         plazo: 'el ciclo dura tantos periodos como participantes tenga la tanda.',
         answer:
-          'Cobrás la bolsa completa en tu turno: temprano funciona como préstamo sin intereses, tarde como ahorro sin rendimiento.',
+          'Cobras la bolsa completa en tu turno: temprano funciona como préstamo sin intereses, tarde como ahorro sin rendimiento.',
       },
       {
         id: 'dolares',
@@ -439,7 +439,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Las comisiones bancarias se comen mi rendimiento?',
-      a: 'Sobre saldos chicos, casi siempre. Una comisión mensual de manejo de cuenta puede representar más que todo el interés que genera un saldo modesto en un año. Por eso la primera decisión de ahorro no es qué tasa buscar sino dejar de pagar comisiones: revisá si tu saldo promedio te exime o si te conviene una cuenta sin comisión.',
+      a: 'Sobre saldos chicos, casi siempre. Una comisión mensual de manejo de cuenta puede representar más que todo el interés que genera un saldo modesto en un año. Por eso la primera decisión de ahorro no es qué tasa buscar sino dejar de pagar comisiones: revisa si tu saldo promedio te exime o si te conviene una cuenta sin comisión.',
     },
     {
       q: '¿Conviene entrar a una tanda?',

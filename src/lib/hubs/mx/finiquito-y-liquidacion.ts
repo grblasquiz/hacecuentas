@@ -19,7 +19,7 @@ import { MEXICO_2026 } from '../../data/mexico-2026';
 
 /** Disclaimer YMYL — copiado textual de src/lib/disclaimers.ts (dominio 'tax'). */
 const DISCLAIMER_TAX =
-  'Estimación informativa basada en los parámetros indicados. Las normas y escalas pueden cambiar; verificá el organismo fiscal aplicable y consultá a un contador para una liquidación definitiva.';
+  'Estimación informativa basada en los parámetros indicados. Las normas y escalas pueden cambiar; verifica el organismo fiscal aplicable y consulta a un contador para una liquidación definitiva.';
 
 /** Tarifa ISR mensual (Art. 96 LISR, Anexo 8 RMF 2026). `hasta: null` = sin techo. */
 export const ISR_MENSUAL: Array<{ desde: number; hasta: number | null; cuota: number; tasa: number }> =

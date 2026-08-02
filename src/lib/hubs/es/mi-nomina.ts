@@ -19,7 +19,7 @@ import { SMI_2026, FUNCIONARIOS_SUBIDA } from '../../data/espana-2026';
 
 /** Disclaimer YMYL — copiado textual de src/lib/disclaimers.ts (dominio fiscal/plata). */
 const DISCLAIMER_FISCAL =
-  'Estimación informativa basada en los parámetros indicados. Las normas y escalas pueden cambiar; verificá el organismo fiscal aplicable y consultá a un contador para una liquidación definitiva.';
+  'Estimación informativa basada en los parámetros indicados. Las normas y escalas pueden cambiar; verifica el organismo fiscal aplicable y consulta a un contador para una liquidación definitiva.';
 
 export const hub: HubData = {
   slug: 'es/trabajo/mi-nomina',

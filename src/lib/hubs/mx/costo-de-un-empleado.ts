@@ -16,7 +16,7 @@ import { MEXICO_2026 } from '../../data/mexico-2026';
 
 /** Disclaimer YMYL — copiado textual de src/lib/disclaimers.ts (dominio 'tax'). */
 const DISCLAIMER_TAX =
-  'Estimación informativa basada en los parámetros indicados. Las normas y escalas pueden cambiar; verificá el organismo fiscal aplicable y consultá a un contador para una liquidación definitiva.';
+  'Estimación informativa basada en los parámetros indicados. Las normas y escalas pueden cambiar; verifica el organismo fiscal aplicable y consulta a un contador para una liquidación definitiva.';
 
 /** UMA 2026 (INEGI, DOF 09-ene-2026). */
 export const UMA_MX = { diaria: MEXICO_2026.uma.diaria, mensual: MEXICO_2026.uma.mensual };

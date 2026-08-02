@@ -17,6 +17,7 @@ import Footer from './Footer.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 import { WEEKEND_CLUSTERS } from '../lib/weekend-clusters';
 import { FINDE_HUBS, type FindeHubDef } from '../lib/fin-de-semana-hubs';
+import { ALL_HUBS } from '../lib/hubs/registry';
 
 interface Props {
   hub: FindeHubDef;
@@ -32,6 +33,12 @@ const canonical = `/fin-de-semana/${hub.slug}`;
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+const replacementHubBySlug = new Map<string, (typeof ALL_HUBS)[number]>();
+for (const currentHub of ALL_HUBS) {
+  for (const replaced of currentHub.replaces || []) {
+    replacementHubBySlug.set(replaced.replace(/^\//, ''), currentHub);
+  }
+}
 const clusterByKey = new Map(WEEKEND_CLUSTERS.map((c) => [c.key, c]));
 
 // Resolver los slugs del hub: clusters (master+members) + extraSlugs, dedup.
@@ -45,25 +52,29 @@ wantSlugs.push(...hub.extraSlugs);
 
 const seen = new Set<string>();
 const tools: Array<{ slug: string; icon: string; name: string; desc: string }> = [];
+const resolveCurrentSlug = (legacySlug: string) => bySlug.get(legacySlug)?.slug || replacementHubBySlug.get(legacySlug)?.slug;
 for (const s of wantSlugs) {
-  if (seen.has(s)) continue;
-  seen.add(s);
   const c = bySlug.get(s);
-  if (!c) {
+  const replacementHub = replacementHubBySlug.get(s);
+  const resolvedSlug = resolveCurrentSlug(s);
+  if (!resolvedSlug) {
     // eslint-disable-next-line no-console
     console.warn(`[finde-hub:${hub.slug}] slug sin resolver (omitido): ${s}`);
     continue;
   }
+  if (seen.has(resolvedSlug)) continue;
+  seen.add(resolvedSlug);
   tools.push({
-    slug: c.slug,
-    icon: c.icon || '🧮',
-    name: c.h1 || c.title?.replace(/\s*\|.*$/, '') || c.slug,
-    desc: c.answerSnippet ? String(c.answerSnippet).split('. ')[0] + '.' : (c.description || ''),
+    slug: resolvedSlug,
+    icon: c?.icon || '🧮',
+    name: c?.h1 || replacementHub?.h1 || c?.title?.replace(/\s*\|.*$/, '') || resolvedSlug,
+    desc: c?.answerSnippet ? String(c.answerSnippet).split('. ')[0] + '.' : (c?.description || replacementHub?.description || ''),
   });
 }
 
 const featured = hub.featuredSlugs
-  .map((s) => tools.find((t) => t.slug === s))
+  .map((s) => resolveCurrentSlug(s))
+  .map((slug) => tools.find((t) => t.slug === slug))
   .filter(Boolean) as typeof tools;
 const featuredSet = new Set(featured.map((t) => t.slug));
 const rest = tools.filter((t) => !featuredSet.has(t.slug));

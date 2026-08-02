@@ -13,7 +13,7 @@ import type { HubData } from '../types';
 
 /** Disclaimer YMYL — textual de src/lib/disclaimers.ts (dominio 'investment'). */
 const DISCLAIMER_INVERSION =
-  'Herramienta educativa, no constituye asesoramiento ni recomendación de inversión. Rentabilidad y capital pueden variar o perderse; verificá costos y riesgos con una entidad o asesor habilitado.';
+  'Herramienta educativa, no constituye asesoramiento ni recomendación de inversión. Rentabilidad y capital pueden variar o perderse; verifica costos y riesgos con una entidad o asesor habilitado.';
 
 export const hub: HubData = {
   slug: 'es/finanzas/donde-pongo-mis-ahorros',

@@ -13,7 +13,7 @@ import type { HubData } from '../types';
 
 /** Disclaimer YMYL — textual de src/lib/disclaimers.ts (dominio 'construction-materials'). */
 const DISCLAIMER_OBRA =
-  'Estimación de materiales y cantidades. Verificá rendimiento, desperdicio y aplicación en la ficha del fabricante o con el profesional a cargo.';
+  'Estimación de materiales y cantidades. Verifica rendimiento, desperdicio y aplicación en la ficha del fabricante o con el profesional a cargo.';
 
 export const hub: HubData = {
   slug: 'es/vivienda/reforma-y-eficiencia',

@@ -1,19 +1,12 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { compute } from '../src/lib/formulas/isr-mexico-2026-tarifa-mensual-empleado';
+import { ISR_MENSUAL } from '../src/lib/hubs/mx/sueldo-neto';
 import {
   MEXICO_2026,
   cuotaImssObreroMensual,
   isrMensual2026,
   subsidioEmpleoMensual2026,
 } from '../src/lib/data/mexico-2026';
-
-const content = JSON.parse(
-  readFileSync(
-    new URL('../src/content/calcs-mx/calculadora-isr-mexico-2026-tarifa-mensual-empleado.json', import.meta.url),
-    'utf8',
-  ),
-);
 
 describe('ISR mensual México 2026', () => {
   it('usa la fuente única oficial para ISR, subsidio e IMSS', () => {
@@ -36,21 +29,14 @@ describe('ISR mensual México 2026', () => {
     expect(eligible.isr_neto).toBe(192.8);
   });
 
-  it('mantiene tabla, ejemplo y respuesta rápida alineados con el motor', () => {
-    expect(content.referenceTables[0].rows).toEqual(
-      MEXICO_2026.isrTarifaMensual.map(([lower, upper, fixed, rate]) => [
-        `$${lower.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        Number.isFinite(upper)
-          ? `$${upper.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-          : 'En adelante',
-        `$${fixed.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `${(rate * 100).toFixed(2)}%`,
-      ]),
+  it('mantiene la tabla del hub alineada con la fuente fiscal única', () => {
+    expect(ISR_MENSUAL).toEqual(
+      MEXICO_2026.isrTarifaMensual.map(([desde, hasta, cuota, tasa]) => ({
+        desde,
+        hasta: Number.isFinite(hasta) ? hasta : null,
+        cuota,
+        tasa,
+      })),
     );
-    expect(content.example.result).toContain('$2,383.65');
-    expect(content.example.result).toContain('$17,104.14');
-    expect(content.answerSnippet).toContain('$2,383.65');
-    expect(content.keyTakeaway).toContain('$17,104.14');
-    expect(JSON.stringify(content)).not.toMatch(/\$1,144|\$2,149\.31|\$3,071\.25/);
   });
 });

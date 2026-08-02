@@ -2,9 +2,9 @@
  * Smoke test masivo: corre TODAS las fórmulas registradas con inputs típicos.
  *
  * Estrategia:
- *  1. Lee todos los JSON de `src/content/calcs/`.
- *  2. Para cada calc con `formulaId` registrado, arma `inputs` desde
- *     `fields[].default` / `fields[].placeholder` (o fallbacks por tipo).
+ *  1. Lee el índice canónico `src/lib/calc-compute-index.json`.
+ *  2. Para cada contrato con fórmula registrada, arma `inputs` desde
+ *     `fields[].def` / opciones (o fallbacks por tipo).
  *  3. Llama `formulas[formulaId](inputs)` y verifica:
  *       - no tira excepción
  *       - el output es un objeto plano (no null/array/primitive)
@@ -17,11 +17,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { formulas } from '../src/lib/formulas/index';
-
-const CALCS_DIR = join(__dirname, '..', 'src', 'content', 'calcs');
+import computeIndex from '../src/lib/calc-compute-index.json';
 
 // ---------------------------------------------------------------------------
 // Slugs con UX especial que requieren inputs interdependientes (ej: dejar uno
@@ -56,10 +53,17 @@ interface CalcField {
   required?: boolean;
 }
 
-interface CalcJson {
-  slug?: string;
-  formulaId?: string;
-  fields?: CalcField[];
+interface ComputeField {
+  id: string;
+  t?: string;
+  def?: any;
+  o?: any[];
+  r?: number;
+}
+
+interface ComputeEntry {
+  f: string;
+  fields?: ComputeField[];
 }
 
 // ---------------------------------------------------------------------------
@@ -79,8 +83,8 @@ function recentPastDate(): Date {
   return new Date(Date.now() - PAST_INPUT_OFFSET_DAYS * 24 * 60 * 60 * 1000);
 }
 
-function pastIso(): string {
-  return recentPastDate().toISOString().slice(0, 10);
+function relativeIso(days: number): string {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 function pastIsoDateTime(): string {
@@ -99,13 +103,30 @@ function buildInputs(fields: CalcField[] | undefined): Record<string, any> {
     // `today` es un sentinel que el frontend convierte a YYYY-MM-DD; el smoke
     // debe reproducir esa conversión en vez de pasarlo literalmente a la fórmula.
     if (f.default !== undefined && f.default !== null && f.default !== '') {
-      inputs[f.id] = (t === 'date' || t === 'datetime-local') && f.default === 'today'
-        ? (t === 'date' ? new Date().toISOString().slice(0, 10) : new Date().toISOString().slice(0, 16))
-        : f.default;
+      if (t === 'number' || t === 'currency') {
+        const match = String(f.default).match(/-?\d+(?:[.,]\d+)?/);
+        const numericDefault = typeof f.default === 'number' ? f.default : Number(match?.[0].replace(',', '.'));
+        if (!Number.isFinite(numericDefault) && !f.required) continue;
+        const normalized = Number.isFinite(numericDefault) ? numericDefault : 1;
+        inputs[f.id] = normalized === 0 && f.required ? 1 : normalized;
+      } else if (t === 'select') {
+        const values = f.options?.map((option) => option.value) ?? [];
+        inputs[f.id] = values.includes(f.default) ? f.default : (values[0] ?? f.default);
+      } else if (t === 'text') {
+        let value = String(f.default).replace(/^\s*(?:ej\.?|e\.g\.?)\s*:?\s*/i, '');
+        value = value.split(/\s+(?:o|or)\s+/i)[0].replace(/\s+[—-].*$/, '').trim();
+        inputs[f.id] = value || '1';
+      } else {
+        const isDateSentinel = (t === 'date' || t === 'datetime-local') &&
+          (f.default === 'today' || /Y{2,4}-M{2}-D{2}/i.test(String(f.default)));
+        inputs[f.id] = isDateSentinel
+          ? (t === 'date' ? relativeIso(60) : new Date().toISOString().slice(0, 16))
+          : f.default;
+      }
       continue;
     }
 
-    if (t === 'number') {
+    if (t === 'number' || t === 'currency') {
       const ph = f.placeholder;
       let n: number | undefined;
       if (typeof ph === 'number' && Number.isFinite(ph)) n = ph;
@@ -144,9 +165,12 @@ function buildInputs(fields: CalcField[] | undefined): Record<string, any> {
     } else if (t === 'boolean' || t === 'checkbox' || t === 'toggle') {
       inputs[f.id] = false;
     } else if (t === 'date') {
+      const id = f.id.toLowerCase();
+      const isFuture = /estimada|finpactada/.test(id);
+      const isEarlier = /inicio|ingreso|vencimiento/.test(id);
       inputs[f.id] = typeof f.placeholder === 'string' && f.placeholder
         ? f.placeholder
-        : pastIso();
+        : relativeIso(isFuture ? 60 : isEarlier ? -120 : -60);
     } else if (t === 'datetime-local') {
       inputs[f.id] = typeof f.placeholder === 'string' && f.placeholder
         ? f.placeholder
@@ -159,11 +183,20 @@ function buildInputs(fields: CalcField[] | undefined): Record<string, any> {
       txt = txt.replace(/^\s*ej\s*[.:]?\s*/i, '');
       const alt = txt.split(/\s+o\s+/)[0];
       if (alt) txt = alt;
-      inputs[f.id] = txt.trim();
+      inputs[f.id] = txt.trim() || '1';
     }
   }
   return inputs;
 }
+
+// Casos cuyos campos son válidos individualmente pero tienen restricciones
+// entre sí. Los valores representan una interacción realista del formulario.
+const INPUT_OVERRIDES: Record<string, Record<string, any>> = {
+  'calculadora-iva-espana-21-10-4': { monto: 100, montoTipo: 'conIva', alicuota: 21 },
+  'calculadora-prima-dominical-dias-festivos-mexico': { domingos: 1 },
+  'compound-interest-calculator-long-term': { capitalInicial: 1000 },
+  'gravitational-potential-energy': { m: 10 },
+};
 
 // ---------------------------------------------------------------------------
 // Validación del output: objeto con al menos un valor "útil".
@@ -184,42 +217,34 @@ function isUsefulOutput(out: any): { ok: boolean; reason?: string } {
 }
 
 // ---------------------------------------------------------------------------
-// Carga sincrónica de todos los JSONs (toplevel, una sola vez).
+// Normaliza el índice compacto a la forma que consume el builder de inputs.
 // ---------------------------------------------------------------------------
-const allCalcFiles = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
-
 interface LoadedCalc {
-  file: string;
   slug: string;
   formulaId: string;
   fields: CalcField[];
 }
 
 const loaded: LoadedCalc[] = [];
-const skipped: Array<{ file: string; reason: string }> = [];
+const skipped: Array<{ slug: string; reason: string }> = [];
 
-for (const file of allCalcFiles) {
-  try {
-    const raw = readFileSync(join(CALCS_DIR, file), 'utf8');
-    const json: CalcJson = JSON.parse(raw);
-    const formulaId = json.formulaId;
-    if (!formulaId) {
-      skipped.push({ file, reason: 'sin formulaId' });
-      continue;
-    }
-    if (!(formulaId in formulas)) {
-      skipped.push({ file, reason: `formulaId "${formulaId}" no registrado en index` });
-      continue;
-    }
-    loaded.push({
-      file,
-      slug: json.slug ?? file.replace(/\.json$/, ''),
-      formulaId,
-      fields: json.fields ?? [],
-    });
-  } catch (err: any) {
-    skipped.push({ file, reason: `JSON parse error: ${err?.message ?? err}` });
+for (const [slug, rawEntry] of Object.entries(computeIndex)) {
+  const entry = rawEntry as ComputeEntry;
+  if (!entry.f || !(entry.f in formulas)) {
+    skipped.push({ slug, reason: `formulaId "${entry.f}" no registrado en index` });
+    continue;
   }
+  loaded.push({
+    slug,
+    formulaId: entry.f,
+    fields: (entry.fields ?? []).map((field) => ({
+      id: field.id,
+      type: field.t,
+      default: field.def,
+      options: field.o?.map((value) => ({ value })),
+      required: field.r === 1,
+    })),
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -233,7 +258,7 @@ describe('smoke test de todas las fórmulas', () => {
     for (const calc of loaded) {
       if (SKIP_SLUGS.has(calc.slug)) continue;
       const fn = formulas[calc.formulaId];
-      const inputs = buildInputs(calc.fields);
+      const inputs = { ...buildInputs(calc.fields), ...(INPUT_OVERRIDES[calc.slug] ?? {}) };
 
       try {
         const out = fn(inputs);
@@ -270,7 +295,7 @@ describe('smoke test de todas las fórmulas', () => {
       console.log(`[smoke] skipped (${skipped.length}):`);
       for (const s of skipped.slice(0, 20)) {
         // eslint-disable-next-line no-console
-        console.log(`  - ${s.file}: ${s.reason}`);
+        console.log(`  - ${s.slug}: ${s.reason}`);
       }
       if (skipped.length > 20) console.log(`  ...y ${skipped.length - 20} más`);
     }

@@ -6,6 +6,7 @@ import Breadcrumbs from '../components/Breadcrumbs.astro';
 import WeekendRecommendations from '../components/WeekendRecommendations.astro';
 import PillarHub from '../components/PillarHub.astro';
 import { WEEKEND_CLUSTERS } from '../lib/weekend-clusters';
+import { ALL_HUBS } from '../lib/hubs/registry';
 
 export const prerender = true;
 
@@ -18,6 +19,18 @@ export const prerender = true;
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+const replacementHubBySlug = new Map<string, (typeof ALL_HUBS)[number]>();
+for (const currentHub of ALL_HUBS) {
+  for (const replaced of currentHub.replaces || []) {
+    replacementHubBySlug.set(replaced.replace(/^\//, ''), currentHub);
+  }
+}
+const resolveTool = (legacySlug: string) => {
+  const legacy = bySlug.get(legacySlug);
+  if (legacy) return legacy;
+  const hub = replacementHubBySlug.get(legacySlug);
+  return hub ? { ...hub, icon: '🧮' } : undefined;
+};
 
 const clusterByKey = new Map(WEEKEND_CLUSTERS.map((c) => [c.key, c]));
 
@@ -66,15 +79,15 @@ const groupDefs: Group[] = [
 const groups = groupDefs.map((g) => {
   const clusters = g.clusters.map((k) => clusterByKey.get(k)!).filter(Boolean);
   const featuredSlug = clusters[0]?.master;
-  const featured = bySlug.get(featuredSlug);
-  const seen = new Set<string>([featuredSlug]);
+  const featured = resolveTool(featuredSlug);
+  const seen = new Set<string>(featured ? [featured.slug] : []);
   const items: any[] = [];
   for (const cl of clusters) {
     for (const s of [cl.master, ...cl.members]) {
-      if (seen.has(s)) continue;
-      seen.add(s);
-      const c = bySlug.get(s);
-      if (c) items.push(c);
+      const c = resolveTool(s);
+      if (!c || seen.has(c.slug)) continue;
+      seen.add(c.slug);
+      items.push(c);
     }
   }
   return { ...g, id: g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'), featured, items: items.slice(0, 10) };

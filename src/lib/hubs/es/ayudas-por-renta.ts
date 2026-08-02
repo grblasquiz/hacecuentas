@@ -16,7 +16,7 @@ import { IPREM_2026, BONO_CULTURAL_2026 } from '../../data/espana-2026';
 
 /** Disclaimer YMYL — textual de src/lib/disclaimers.ts (dominio 'legal'). */
 const DISCLAIMER_LEGAL =
-  'Guía informativa para estimar requisitos, plazos o importes. Confirmá el trámite y la normativa vigente con el organismo oficial; ante efectos jurídicos, consultá a un abogado o escribano.';
+  'Guía informativa para estimar requisitos, plazos o importes. Confirmá el trámite y la normativa vigente con el organismo oficial; ante efectos jurídicos, consulta a un abogado o escribano.';
 
 export const hub: HubData = {
   slug: 'es/familia/ayudas-por-renta',

@@ -18,7 +18,7 @@ const validReviewer = {
 
 describe('isSensitiveCalculator', () => {
   it('calc normal (low risk) → todos los permisos true, isSensitive false', () => {
-    const p = isSensitiveCalculator({ slug: 'calculadora-interes-simple', category: 'finanzas', ymylRisk: 'low' });
+    const p = isSensitiveCalculator({ slug: 'herramienta-fixture-no-podada', category: 'finanzas', ymylRisk: 'low' });
     expect(p.isSensitive).toBe(false);
     expect(p.riskLevel).toBe('low');
     for (const k of PERMISSION_KEYS) expect(p[k], `${k} debería ser true`).toBe(true);

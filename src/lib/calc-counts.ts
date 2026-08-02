@@ -13,6 +13,7 @@
 
 import { canDistributeCalc } from './content-policy';
 import { PRUNING_REDIRECTS } from './pruning-redirects.ts';
+import currentTools from './current-tools-index.json';
 
 // Un único glob eager por colección sirve tanto para contar archivos como para
 // calcular métricas distribuibles. Antes había además un glob lazy por cada
@@ -47,6 +48,17 @@ const VE = Object.keys(veGlob).length;
 const PY = Object.keys(pyGlob).length;
 const UY = Object.keys(uyGlob).length;
 const DO = Object.keys(doGlob).length;
+
+// Desde la migración 2026-07-28 la superficie pública canónica son los hubs,
+// no los directorios content/calcs*. Mientras haya un snapshot de hubs válido,
+// los contadores públicos salen de allí. Los globs legacy se conservan para
+// compatibilidad interna y para no romper herramientas que aún los consultan.
+const HUB_COUNTS = (currentTools as Array<{ locale?: string }>).reduce<Record<string, number>>((acc, tool) => {
+  const locale = tool.locale || 'es';
+  acc[locale] = (acc[locale] || 0) + 1;
+  return acc;
+}, {});
+const HAS_HUB_CATALOG = currentTools.length >= 100;
 
 export const CALC_COUNTS = {
   ar: AR,
@@ -130,7 +142,10 @@ const DIST = {
 const AR_INDEXABLE = DIST.ar;
 const AR_RESTRICTED = CALC_COUNTS.ar - AR_INDEXABLE; // noindex + restringidas + podadas AR
 // Público = suma de distribuibles de TODOS los locales = URLs canónicas del sitemap.
-const PUBLIC_TOTAL = Object.values(DIST).reduce((a, b) => a + b, 0);
+const LEGACY_PUBLIC_TOTAL = Object.values(DIST).reduce((a, b) => a + b, 0);
+const HUB_ROOT_TOTAL = HUB_COUNTS.es || 0;
+const PUBLIC_TOTAL = HAS_HUB_CATALOG ? currentTools.length : LEGACY_PUBLIC_TOTAL;
+const PUBLIC_ROOT_TOTAL = HAS_HUB_CATALOG ? HUB_ROOT_TOTAL : AR_INDEXABLE;
 
 export const CALC_COUNTS_PUBLIC = {
   arIndexable: AR_INDEXABLE,
@@ -141,8 +156,8 @@ export const CALC_COUNTS_PUBLIC = {
 
 // Métricas públicas explícitas: no mezclar herramientas del catálogo raíz con
 // versiones localizadas ni con el total bruto del repositorio.
-export const ROOT_CATALOG_COUNT = AR_INDEXABLE;
-export const LOCALIZED_VERSION_COUNT = PUBLIC_TOTAL - AR_INDEXABLE;
+export const ROOT_CATALOG_COUNT = PUBLIC_ROOT_TOTAL;
+export const LOCALIZED_VERSION_COUNT = PUBLIC_TOTAL - PUBLIC_ROOT_TOTAL;
 export const PUBLIC_URL_COUNT = PUBLIC_TOTAL;
 export const ROOT_CATALOG_EXACT = formatES(ROOT_CATALOG_COUNT);
 export const LOCALIZED_VERSION_EXACT = formatES(LOCALIZED_VERSION_COUNT);
@@ -155,14 +170,16 @@ export const PUBLIC_URL_EXACT = formatES(PUBLIC_URL_COUNT);
 // inconsistencia que el auditor marca (portada vs catálogo). El invariante del
 // auditor es "total público = suma de categorías", y las categorías visibles son
 // las del catálogo ES. PUBLIC_TOTAL queda para métricas internas / sitemap.
-export const TOTAL_DISPLAY = `${formatES(floorTo100(AR_INDEXABLE))}+`;
-export const AR_DISPLAY = `${formatES(floorTo100(AR_INDEXABLE))}+`;
-export const PT_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.pt))}+`;
+export const TOTAL_DISPLAY = `${formatES(floorTo100(PUBLIC_ROOT_TOTAL))}+`;
+export const AR_DISPLAY = `${formatES(floorTo100(PUBLIC_ROOT_TOTAL))}+`;
+export const PT_DISPLAY = `${formatES(floorTo100(HAS_HUB_CATALOG ? (HUB_COUNTS['pt-BR'] || 0) : CALC_COUNTS.pt))}+`;
 // Sin sufijo "+", para frases tipo "Más de {TOTAL_PLAIN} calculadoras".
-export const TOTAL_PLAIN = formatES(floorTo100(AR_INDEXABLE));
+export const TOTAL_PLAIN = formatES(floorTo100(PUBLIC_ROOT_TOTAL));
 
 // Total del catálogo en ESPAÑOL (excluye EN/PT-BR/PT-PT), indexable, formateado
 // en-US — para textos en inglés que refieren al catálogo hispano
 // ("Visit our full site in Spanish with N+ calculators").
-const ES_PUBLIC_TOTAL = PUBLIC_TOTAL - DIST.en - DIST.pt - DIST.ptPt;
+const ES_PUBLIC_TOTAL = HAS_HUB_CATALOG
+  ? PUBLIC_TOTAL - (HUB_COUNTS.en || 0) - (HUB_COUNTS['pt-BR'] || 0) - (HUB_COUNTS['pt-PT'] || 0)
+  : PUBLIC_TOTAL - DIST.en - DIST.pt - DIST.ptPt;
 export const ES_TOTAL_DISPLAY_EN = `${floorTo100(ES_PUBLIC_TOTAL).toLocaleString('en-US')}+`;

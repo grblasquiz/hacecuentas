@@ -16,11 +16,11 @@ import type { HubData } from '../types';
 
 /** Disclaimer YMYL — textual de src/lib/disclaimers.ts (dominio 'family'). */
 const DISCLAIMER_FAMILIA =
-  'Información general. En decisiones de salud, fertilidad, embarazo o crianza, consultá al profesional correspondiente.';
+  'Información general. En decisiones de salud, fertilidad, embarazo o crianza, consulta al profesional correspondiente.';
 
 /** Disclaimer YMYL fiscal — textual de src/lib/disclaimers.ts (dominio 'tax'). */
 const DISCLAIMER_FISCAL =
-  'Estimación informativa basada en los parámetros indicados. Las normas y escalas pueden cambiar; verificá el organismo fiscal aplicable y consultá a un contador para una liquidación definitiva.';
+  'Estimación informativa basada en los parámetros indicados. Las normas y escalas pueden cambiar; verifica el organismo fiscal aplicable y consulta a un contador para una liquidación definitiva.';
 
 export const hub: HubData = {
   slug: 'es/familia/tener-un-hijo',

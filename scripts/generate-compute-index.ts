@@ -151,12 +151,24 @@ for (const k of Object.keys(index).sort()) sorted[k] = index[k];
 // siguen vigentes: no debemos convertir un índice programático sano en `{}`.
 // Si no hay fuentes editoriales nuevas, preservamos el último índice no vacío.
 let finalIndex = sorted;
-if (Object.keys(finalIndex).length === 0 && existsSync(OUT)) {
+if (existsSync(OUT)) {
   try {
     const previous = JSON.parse(readFileSync(OUT, 'utf8')) as Record<string, SlimEntry>;
-    if (previous && Object.keys(previous).length > 0) {
-      finalIndex = previous;
-      console.log(`calc-compute-index.json: migración hub detectada — preservo ${Object.keys(previous).length} herramientas existentes`);
+    // Un contrato preservado cuya fórmula ya no existe respondería 501. La
+    // migración conserva el catálogo, pero sólo mientras el motor siga vivo.
+    const viablePrevious = Object.fromEntries(
+      Object.entries(previous || {}).filter(([, entry]) => existsSync(join(FORMULAS_DIR, `${entry.f}.ts`))),
+    ) as Record<string, SlimEntry>;
+    const previousCount = Object.keys(viablePrevious).length;
+    const nextCount = Object.keys(finalIndex).length;
+    // Tras la migración a hubs pueden quedar unos pocos JSON residuales. El
+    // guard anterior sólo actuaba con cero archivos: un único JSON alcanzó para
+    // reemplazar 3.269 contratos REST/MCP por uno. Si el catálogo histórico es
+    // grande y las fuentes editoriales cayeron más de 80%, preservarlo.
+    const catastrophicMigrationDrop = previousCount >= 1_000 && nextCount < previousCount * 0.2;
+    if (previousCount > 0 && (nextCount === 0 || catastrophicMigrationDrop)) {
+      finalIndex = viablePrevious;
+      console.log(`calc-compute-index.json: migración hub detectada (${nextCount} fuentes) — preservo ${previousCount} herramientas existentes`);
     }
   } catch {
     // El gate de cantidad de abajo deja visible el fallo.

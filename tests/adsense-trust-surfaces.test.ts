@@ -18,17 +18,19 @@ describe('superficies públicas de confianza para AdSense', () => {
   });
 
   it('todos los hubs muestran editor, revisión, fecha, alcance y metodología', () => {
-    const source = read('src/components/hub/DecisionHub.astro');
-    expect(source).toContain('href="/autores/martin-rodriguez" rel="author"');
-    expect(source).toContain('datetime={data.lastReviewed}');
-    expect(source).toContain('Fórmula y fuentes verificadas');
-    expect(source).toContain('No reemplaza asesoramiento profesional');
-    expect(source).toContain('href="/politica-editorial"');
-    expect(source).toContain('href="/metodologia"');
+    for (const file of ['src/components/hub/DecisionHubClassic.astro', 'src/components/hub/HubEditorialSupport.astro']) {
+      const source = read(file);
+      expect(source, file).toContain('href="/autores/martin-rodriguez" rel="author"');
+      expect(source, file).toContain('datetime={data.lastReviewed}');
+      expect(source, file).toContain('Fórmula y fuentes verificadas');
+      expect(source, file).toContain('No reemplaza asesoramiento profesional');
+      expect(source, file).toContain('href="/politica-editorial"');
+      expect(source, file).toContain('href="/metodologia"');
+    }
   });
 
   it('todo el catálogo de hubs tiene el mínimo editorial verificable', () => {
-    expect(ALL_HUBS.length).toBeGreaterThanOrEqual(480);
+    expect(ALL_HUBS.length).toBeGreaterThanOrEqual(475);
     for (const hub of ALL_HUBS) {
       expect(hub.sources.length, `${hub.slug}: necesita al menos una fuente`).toBeGreaterThan(0);
       expect(hub.faq.length, `${hub.slug}: necesita al menos siete FAQ`).toBeGreaterThanOrEqual(7);

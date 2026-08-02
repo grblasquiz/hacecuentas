@@ -105,7 +105,7 @@ export const hub: HubData = {
           DISCLAIMER_FIN,
           'Los créditos viejos denominados en VSM se actualizan con la UMI, no con el salario mínimo: desde 2017 el salario mínimo dejó de arrastrar esas deudas hacia arriba',
           'El descuento vía nómina lo aplica tu patrón y aparece en tu recibo: si cambias de empleo o quedas sin relación laboral tienes que seguir pagando por tu cuenta',
-          'Si en el crédito hay pagos por debajo del interés devengado el saldo puede crecer aunque estés pagando: revisá tu estado de cuenta, no solo la mensualidad',
+          'Si en el crédito hay pagos por debajo del interés devengado el saldo puede crecer aunque estés pagando: revisa tu estado de cuenta, no solo la mensualidad',
         ],
         plazo: 'la mensualidad se descuenta en cada periodo de nómina y se refleja en tu estado de cuenta Infonavit.',
         answer:
@@ -342,7 +342,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Es cierto que mi crédito en VSM sube con el salario mínimo?',
-      a: 'Ya no. Desde 2017 los créditos denominados en veces salario mínimo se actualizan con la Unidad Mixta Infonavit, la UMI, precisamente para desligarlos de los aumentos del salario mínimo. Fue el cambio que evitó que las subidas fuertes del mínimo dispararan esas deudas. Si tu crédito es viejo, revisá en tu estado de cuenta en qué unidad está denominado.',
+      a: 'Ya no. Desde 2017 los créditos denominados en veces salario mínimo se actualizan con la Unidad Mixta Infonavit, la UMI, precisamente para desligarlos de los aumentos del salario mínimo. Fue el cambio que evitó que las subidas fuertes del mínimo dispararan esas deudas. Si tu crédito es viejo, revisa en tu estado de cuenta en qué unidad está denominado.',
     },
     {
       q: '¿Conviene alargar el plazo para bajar la mensualidad?',

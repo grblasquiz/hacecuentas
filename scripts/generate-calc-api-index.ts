@@ -283,12 +283,19 @@ for (const r of DECISION_MANIFEST_LOCALES) {
 // las calculadoras individuales se consolidaron en 611 hubs. El snapshot se
 // genera desde sitemap-hubs.xml + HTML productivo y evita volver a anunciar
 // como herramientas vigentes los miles de slugs históricos que ahora son 301.
-if (out.length === 0) {
+// Después de consolidar las calculadoras en hubs pueden sobrevivir unos pocos
+// JSON legacy y algunas salas de decisión. `out.length === 0` no alcanza como
+// señal: llegamos a publicar un catálogo de 1 elemento teniendo 600 hubs vivos.
+// Cuando el catálogo legacy es claramente parcial, la fuente canónica pasa a
+// ser current-tools-index.json.
+if (out.length < 100) {
   try {
     const currentTools = JSON.parse(
       readFileSync(join(ROOT, 'src', 'lib', 'current-tools-index.json'), 'utf8'),
     );
     if (Array.isArray(currentTools) && currentTools.length > 0) {
+      out.length = 0;
+      slim.length = 0;
       for (const c of currentTools) {
         if (!c?.slug || !c?.url) continue;
         out.push(c as CalcEntry);

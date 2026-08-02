@@ -15,7 +15,7 @@ import { MEXICO_2026 } from '../../data/mexico-2026';
 
 /** Disclaimer YMYL — copiado textual de src/lib/disclaimers.ts (dominio 'labor'). */
 const DISCLAIMER_LABOR =
-  'Cálculo orientativo según los datos y reglas indicados. Convenios, topes y situaciones particulares pueden cambiar el resultado; verificá con RR. HH., el organismo laboral o un profesional.';
+  'Cálculo orientativo según los datos y reglas indicados. Convenios, topes y situaciones particulares pueden cambiar el resultado; verifica con RR. HH., el organismo laboral o un profesional.';
 
 /** UMA 2026 (INEGI, DOF 09-ene-2026). */
 export const UMA_MX = { diaria: MEXICO_2026.uma.diaria, mensual: MEXICO_2026.uma.mensual };

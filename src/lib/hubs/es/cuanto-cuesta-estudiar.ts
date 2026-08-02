@@ -18,7 +18,7 @@ import type { HubData } from '../types';
 
 /** Disclaimer — textual de src/lib/disclaimers.ts (dominio 'math'). */
 const DISCLAIMER_MATE =
-  'Resultado matemático a partir de los datos ingresados. Verificá unidades, supuestos y redondeos antes de un uso técnico.';
+  'Resultado matemático a partir de los datos ingresados. Verifica unidades, supuestos y redondeos antes de un uso técnico.';
 
 export const hub: HubData = {
   slug: 'es/educacion/cuanto-cuesta-estudiar',

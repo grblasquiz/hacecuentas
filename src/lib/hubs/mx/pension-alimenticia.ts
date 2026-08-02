@@ -15,7 +15,7 @@ import { MEXICO_2026 } from '../../data/mexico-2026';
 
 /** Disclaimer YMYL — copiado textual de src/lib/disclaimers.ts (dominio 'legal'). */
 const DISCLAIMER_LEGAL =
-  'Guía informativa para estimar requisitos, plazos o importes. Confirmá el trámite y la normativa vigente con el organismo oficial; ante efectos jurídicos, consultá a un abogado o escribano.';
+  'Guía informativa para estimar requisitos, plazos o importes. Confirmá el trámite y la normativa vigente con el organismo oficial; ante efectos jurídicos, consulta a un abogado o escribano.';
 
 /** UMA 2026 (INEGI, DOF 09-ene-2026). */
 export const UMA_MX = { diaria: MEXICO_2026.uma.diaria, mensual: MEXICO_2026.uma.mensual };

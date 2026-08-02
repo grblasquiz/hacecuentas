@@ -17,11 +17,11 @@ import { INCAPACIDAD_PERMANENTE_2026, IPREM_2026, PENSIONES_2026 } from '../../d
 
 /** Disclaimer YMYL salud — textual de src/lib/disclaimers.ts (dominio 'health'). */
 const DISCLAIMER_SALUD =
-  'Resultado orientativo: no reemplaza diagnóstico, tratamiento ni seguimiento profesional. Consultá con un profesional de la salud matriculado.';
+  'Resultado orientativo: no reemplaza diagnóstico, tratamiento ni seguimiento profesional. Consulta con un profesional de la salud matriculado.';
 
 /** Disclaimer YMYL laboral — textual de src/lib/disclaimers.ts (dominio 'labor'). */
 const DISCLAIMER_LABORAL =
-  'Cálculo orientativo según los datos y reglas indicados. Convenios, topes y situaciones particulares pueden cambiar el resultado; verificá con RR. HH., el organismo laboral o un profesional.';
+  'Cálculo orientativo según los datos y reglas indicados. Convenios, topes y situaciones particulares pueden cambiar el resultado; verifica con RR. HH., el organismo laboral o un profesional.';
 
 export const hub: HubData = {
   slug: 'es/trabajo/no-puedo-trabajar',
