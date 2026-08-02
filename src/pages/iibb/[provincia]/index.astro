@@ -26,6 +26,11 @@ const actividades: any[] = actividadesMod.default || actividadesMod;
 const ibMod = await import('../../../content/argentina/ingresos-brutos.json');
 const iibb: any = ibMod.default || ibMod;
 const provData = iibb.provinceData?.[provincia.slug] || {};
+const generalRateText = String(provData.metrics?.['Alicuota general'] || provData.rate || 'la alícuota de tu actividad');
+const generalRate = Number.parseFloat(generalRateText.replace(',', '.'));
+const exampleBase = 1_000_000;
+const exampleTax = Number.isFinite(generalRate) ? Math.round(exampleBase * generalRate / 100) : null;
+const revenueAgency = String(provData.metrics?.['Organismo recaudador'] || 'el organismo recaudador provincial');
 
 const _iibbBase = `Ingresos Brutos ${provincia.name} 2026 — Alícuotas`;
 const title = _iibbBase.length > 54 ? _iibbBase : `${_iibbBase} | Hacé Cuentas`;
@@ -85,6 +90,18 @@ const schema = {
         <p>{provData.localNotes}</p>
       </aside>
     )}
+
+    <section class="specific-example">
+      <h2>Ejemplo de cálculo y control en {provincia.name}</h2>
+      {provData.specificExample ? (
+        <div set:html={provData.specificExample} />
+      ) : (
+        <>
+          <p>Para una facturación mensual de <strong>$1.000.000</strong> atribuible a {provincia.name}, una alícuota general de <strong>{generalRateText}</strong>{exampleTax !== null ? <> da un impuesto determinado de <strong>${exampleTax.toLocaleString('es-AR')}</strong></> : <> debe aplicarse sobre la base gravada</>}. Después se descuentan retenciones y percepciones informadas para obtener el saldo.</p>
+          <p>El control se hace ante <strong>{revenueAgency}</strong>, en la jurisdicción {provincia.abbr} de la región {provincia.region}. Verificá el código de actividad, el mínimo y el calendario local antes de presentar: no alcanza con trasladar la regla de otra provincia.</p>
+        </>
+      )}
+    </section>
 
     <section>
       <h2>Alícuotas de IIBB en {provincia.name} por actividad</h2>
@@ -186,6 +203,7 @@ const schema = {
   .lead { color: #475569; font-size: 17px; }
   .local-notes { background: #fef3c7; border-radius: 10px; padding: 16px 22px; margin: 18px 0; }
   .local-notes h2 { font-size: 18px; margin: 0 0 6px; color: #92400e; }
+  .specific-example { border-left: 4px solid var(--accent, #3157ff); padding: 4px 0 4px 20px; }
   .otras-prov { margin: 32px 0 0; }
   .prov-links { list-style: none; padding: 0; margin: 14px 0 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px 16px; }
   .prov-links a { color: var(--accent, #3157ff); text-decoration: none; font-size: 15px; }

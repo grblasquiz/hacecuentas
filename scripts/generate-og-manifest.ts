@@ -15,7 +15,9 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const OG_DIR = join(ROOT, 'public', 'og');
+// En worktrees con poco espacio, el banco de imágenes puede vivir fuera del
+// checkout. El resultado es idéntico y evita duplicar 1,7 GB en disco.
+const OG_DIR = process.env.HC_SHARED_OG_DIR || join(ROOT, 'public', 'og');
 const OUT_PATH = join(ROOT, 'src', 'lib', 'og-manifest.json');
 
 const manifest: Record<string, true> = {};

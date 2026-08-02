@@ -39,6 +39,16 @@ const topicAdvice = /impuest|tribut|tax/.test(topic)
         : /hogar|viviend|casa/.test(topic)
           ? 'Separá precio, gastos iniciales y costos periódicos. Para comparar alternativas, usá siempre la misma moneda y el mismo horizonte de tiempo.'
           : 'Definí primero qué dato querés obtener, reuní las variables del caso y compará alternativas con el mismo período y la misma unidad.';
+
+// El índice no debe ser una plantilla genérica repetida en decenas de mercados.
+// Estas síntesis salen del contenido editorial propio de cada hub: pregunta,
+// variables y fuentes. Así cada silo funciona como un mapa de decisión real.
+const decisionMap = hubs.slice(0, 4).map((hub) => ({
+  question: hub.h1,
+  inputs: hub.fields.slice(0, 3).map((field) => field.label),
+  source: hub.sources[0]?.publisher || hub.sources[0]?.name,
+  takeaway: hub.answer?.copy || hub.cases?.intro || hub.lede,
+}));
 ---
 
 <div class="hc-hub">
@@ -88,9 +98,7 @@ const topicAdvice = /impuest|tribut|tax/.test(topic)
               <p class="panel-kicker">Guia da secção</p>
               <h2>Como escolher e interpretar uma ferramenta</h2>
             </div>
-            <p>Comece pela pergunta que mais se aproxima da sua situação. Cada opção leva a um guia específico, com as calculadoras relacionadas, os dados necessários e uma explicação do resultado. Se houver várias alternativas, use o mesmo período, moeda e critérios para poder compará-las corretamente.</p>
-            <p>Antes de decidir, confirme a data de referência, a região aplicável e os pressupostos apresentados. Valores fiscais, laborais, financeiros ou administrativos podem mudar por legislação, limites e características pessoais. Guarde os dados introduzidos para conseguir repetir a conta quando uma variável mudar.</p>
-            <p>Os resultados são estimativas de apoio. A metodologia e as fontes disponíveis aparecem na ferramenta correspondente; consulte-as especialmente quando o cálculo afetar impostos, contratos, benefícios ou compromissos de longo prazo. Para uma decisão formal, valide o resultado com a entidade oficial ou um profissional qualificado.</p>
+            <p>{lede}</p>
           </>
         ) : isEnglish ? (
           <>
@@ -98,9 +106,7 @@ const topicAdvice = /impuest|tribut|tax/.test(topic)
               <p class="panel-kicker">Section guide</p>
               <h2>How to choose and interpret a tool</h2>
             </div>
-            <p>Start with the question that best matches your situation. Each option opens a focused guide with the relevant calculators, the inputs you will need and an explanation of the result. When comparing alternatives, keep the period, currency and assumptions consistent.</p>
-            <p>Check the reference date, applicable location and stated assumptions before acting. Tax, employment, financial and administrative figures may change because of rules, thresholds or personal circumstances. Keep your inputs so you can repeat the calculation when one variable changes.</p>
-            <p>Results are planning estimates. The corresponding tool explains its method and available sources; review them carefully when the calculation affects taxes, contracts, benefits or long-term commitments. For a formal decision, confirm the result with the relevant authority or a qualified professional.</p>
+            <p>{lede}</p>
           </>
         ) : (
           <>
@@ -108,11 +114,21 @@ const topicAdvice = /impuest|tribut|tax/.test(topic)
               <p class="panel-kicker">Guía de la sección</p>
               <h2>Cómo elegir y usar estas herramientas</h2>
             </div>
-            <p>Empezá por la pregunta que más se parezca a tu situación. Cada opción abre una guía específica con las calculadoras relacionadas, los datos que vas a necesitar y una explicación del resultado. Si comparás alternativas, mantené el mismo período, moneda y criterio para que la comparación sea válida.</p>
-            <p>{topicAdvice} Antes de decidir, confirmá también la fecha de referencia y los supuestos que muestra cada herramienta. Guardá los datos ingresados para poder repetir la cuenta si cambia una variable.</p>
-            <p>Los resultados sirven como estimación y apoyo para ordenar una decisión. En la herramienta correspondiente vas a encontrar la metodología y las fuentes disponibles. Cuando el cálculo afecte impuestos, contratos, beneficios o compromisos importantes, contrastá el resultado con el organismo oficial o con un profesional.</p>
+            <p>{lede}</p>
+            <p>{topicAdvice}</p>
           </>
         )}
+
+        <div class="decision-map">
+          {decisionMap.map((item) => (
+            <article>
+              <h3>{item.question}</h3>
+              <p>{item.takeaway}</p>
+              {item.inputs.length > 0 && <p><strong>Datos para la cuenta:</strong> {item.inputs.join(', ')}.</p>}
+              {item.source && <p><strong>Referencia:</strong> {item.source}.</p>}
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   </div>
@@ -133,4 +149,18 @@ const topicAdvice = /impuest|tribut|tax/.test(topic)
     color: var(--hc-muted);
     line-height: 1.7;
   }
+  .hc-hub .decision-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-top: 22px;
+  }
+  .hc-hub .decision-map article {
+    border: 1px solid var(--hc-border);
+    border-radius: 14px;
+    padding: 16px;
+    background: var(--hc-surface);
+  }
+  .hc-hub .decision-map h3 { margin: 0 0 8px; font-size: 1rem; }
+  .hc-hub .decision-map p { margin: 7px 0 0; font-size: .9rem; }
 </style>
