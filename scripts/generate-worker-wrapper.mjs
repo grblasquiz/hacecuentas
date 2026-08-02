@@ -195,8 +195,9 @@ const EMBED_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' blob: h
 const MAIN_CSP = ${JSON.stringify(mainCsp)};
 
 const LIVE_SITEMAPS = new Set([
-  '/sitemap-priority.xml', '/sitemap-core.xml', '/sitemap-blog.xml', '/sitemap-news.xml',
-  '/sitemap-tablas.xml', '/sitemap-hubs.xml', '/sitemap-iibb.xml', '/sitemap-fresh.xml',
+  '/sitemap-priority.xml', '/sitemap-core.xml', '/sitemap-calcs-finanzas.xml',
+  '/sitemap-blog.xml', '/sitemap-news.xml', '/sitemap-tablas.xml', '/sitemap-hubs.xml',
+  '/sitemap-iibb.xml', '/sitemap-fresh.xml', '/sitemap-images.xml',
 ]);
 
 /** Saca %20, segmentos vacíos y segmentos 'null'/'undefined'. Devuelve el path tal cual si ya está sano. */
@@ -229,7 +230,7 @@ export default {
       }
 
       // 2b) Sitemaps retirados → 410. Tras la consolidación en hubs el índice
-      // quedó con 7; los viejos por país/categoría siguen registrados en
+      // quedó con un set corto y explícito; los viejos por país/categoría siguen registrados en
       // GSC/Bing desde antes y los bots los piden igual, comiendo 404.
       if (/^\\/sitemap-[a-z0-9-]+\\.xml$/.test(url.pathname) && !LIVE_SITEMAPS.has(url.pathname)) {
         return new Response(SITEMAP_410_BODY, { status: 410, statusText: 'Gone', headers: SITEMAP_410_HEADERS });

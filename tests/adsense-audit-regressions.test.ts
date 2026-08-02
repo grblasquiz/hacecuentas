@@ -6,8 +6,11 @@ const read = (path: string) => readFileSync(path, 'utf8');
 describe('regresiones detectadas en la auditoría AdSense', () => {
   it('sirve todos los sitemaps que publica el índice', () => {
     const middleware = read('src/middleware.ts');
+    const workerWrapper = read('scripts/generate-worker-wrapper.mjs');
     expect(middleware).toContain("'/sitemap-images.xml'");
     expect(middleware).toContain("'/sitemap-calcs-finanzas.xml'");
+    expect(workerWrapper).toContain("'/sitemap-images.xml'");
+    expect(workerWrapper).toContain("'/sitemap-calcs-finanzas.xml'");
   });
 
   it('no conserva los enlaces internos rotos de fechas ni el país undefined', () => {
