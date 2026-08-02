@@ -28,7 +28,10 @@ const matchHtml = (event: any, showDay = false) => {
   const status = event.competitions?.[0]?.status; const state = status?.type?.state;
   const live = state === 'in'; const done = status?.type?.completed || state === 'post';
   const label = live ? `● ${esc(status.displayClock || 'EN VIVO')}` : done ? 'Final' : showDay ? `${fmtDay(event.date)} · ${fmtHour(event.date)}` : fmtHour(event.date);
-  const team = (entry: any) => `<div class="team"><span class="crest" aria-hidden="true"><span>⚽</span>${entry?.team?.logo ? `<img src="${esc(entry.team.logo)}" alt="" width="29" height="29" onerror="this.remove()">` : ''}</span><strong>${esc(entry?.team?.shortDisplayName || entry?.team?.displayName)}</strong><b>${done || live ? esc(entry?.score) : '—'}</b></div>`;
+  const team = (entry: any) => {
+    const logo = entry?.team?.logo ? '<img src="' + esc(entry.team.logo) + '" alt="" width="29" height="29" onerror="this.remove()">' : '';
+    return `<div class="team"><span class="crest" aria-hidden="true"><span>⚽</span>${logo}</span><strong>${esc(entry?.team?.shortDisplayName || entry?.team?.displayName)}</strong><b>${done || live ? esc(entry?.score) : '—'}</b></div>`;
+  };
   return `<article class="match ${live ? 'liveMatch' : ''}"><div class="matchTop"><span class="league">${esc(event.league)}</span><span class="state ${live ? 'live' : done ? 'final' : ''}">${label}</span></div>${team(home)}${team(away)}</article>`;
 };
 const stat = (entry: any, name: string) => entry.stats?.find((item: any) => item.name === name)?.displayValue || '0';
