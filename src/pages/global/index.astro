@@ -8,11 +8,18 @@ import LocaleHubEditorial from '../../components/LocaleHubEditorial.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
+import currentTools from '../../lib/current-tools-index.json';
 
-// Cargar todas las calcs y filtrar a las que aplican globalmente (no AR-specific)
-const calcModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
-const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
-const calcs = allCalcs.filter((c) => c.audience === 'global');
+// Desde la consolidación en hubs, el catálogo canónico vive en
+// current-tools-index. Esta selección evita volver a contar JSON legacy que
+// hoy redirigen y conserva sólo temas universales, sin normativa de un país.
+const GLOBAL_CATEGORIES = new Set([
+  'salud', 'matematica', 'conversores', 'cocina', 'ciencia', 'tecnologia',
+  'mascotas', 'fechas', 'construccion',
+]);
+const calcs = currentTools.filter(
+  (tool) => tool.locale === 'es' && GLOBAL_CATEGORIES.has(tool.category),
+);
 
 // Agrupar por categoría
 const byCategory: Record<string, any[]> = {};
@@ -39,21 +46,23 @@ const categoryMeta: Record<string, { label: string; desc: string; color: string;
   electronica:     { label: 'Electrónica',    desc: 'Ley de Ohm, resistencias, consumo kWh, circuitos.',      color: '#f59e0b', icon: '⚡' },
   entretenimiento: { label: 'Entretenimiento', desc: 'Gaming, música, fotografía, redes, streaming.',        color: '#ec4899', icon: '🎮' },
   ciencia:         { label: 'Ciencia',        desc: 'Física, química, astronomía, leyes y fórmulas.',         color: '#6366f1', icon: '🔬' },
+  conversores:     { label: 'Conversores',    desc: 'Longitud, peso, temperatura, volumen y tiempo.',          color: '#0d9488', icon: '🔁' },
+  fechas:          { label: 'Fechas',         desc: 'Edad exacta, días entre fechas y cuentas regresivas.',    color: '#d97706', icon: '🗓️' },
   jardineria:      { label: 'Jardinería',     desc: 'Riego, tierra, siembra, compost, huerta.',               color: '#15803d', icon: '🌿' },
   construccion:    { label: 'Construcción',   desc: 'Cemento, ladrillos, pintura, materiales.',               color: '#b45309', icon: '🧱' },
   automotor:       { label: 'Automotor',      desc: 'Consumo, kilometraje, costo por km, mantenimiento.',     color: '#6366f1', icon: '🚗' },
 };
 
-const categoryOrder = ['finanzas','salud','negocios','marketing','vida','deportes','viajes','cocina','mascotas','matematica','educacion','tecnologia','medio-ambiente','electronica','entretenimiento','ciencia','jardineria','construccion','automotor'];
+const categoryOrder = ['salud','matematica','conversores','fechas','cocina','mascotas','tecnologia','ciencia','construccion'];
 
 // Top 6 populares globales (curado)
 const popularSlugs = [
-  'calculadora-imc',
-  'calculadora-interes-compuesto-aporte-mensual',
-  'calculadora-calorias-diarias-tdee',
-  'calculadora-ovulacion-dias-fertiles',
-  'calculadora-edad-exacta',
-  'calculadora-fecha-parto-fum-naegele',
+  'salud/peso-ideal-imc',
+  'salud/calorias-diarias',
+  'matematica/porcentajes',
+  'fechas/edad-exacta',
+  'cocina/tazas-y-gramos',
+  'conversores/longitud',
 ];
 const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
 

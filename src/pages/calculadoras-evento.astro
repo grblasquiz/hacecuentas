@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import PillarHub from '../components/PillarHub.astro';
+import currentTools from '../lib/current-tools-index.json';
 
 export const prerender = true;
 
@@ -10,9 +11,11 @@ export const prerender = true;
 // por invitado que estaban dispersas en cocina/vida/familia sin hub propio.
 // Mismo patrón que /mundial-2026: agrupa + concentra autoridad interna + crea
 // superficie de crawl. Alta intención de FIN DE SEMANA (asado/cumple/juntada).
-const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
-const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
-const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+const bySlug = new Map(
+  currentTools
+    .filter((tool) => tool.locale === 'es')
+    .map((tool) => [tool.slug, tool]),
+);
 
 const groups: Array<{ title: string; icon: string; intro: string; slugs: string[] }> = [
   {
@@ -20,10 +23,9 @@ const groups: Array<{ title: string; icon: string; intro: string; slugs: string[
     icon: '🔥',
     intro: 'El asado del domingo, bien calculado: cuántos kilos de carne, achuras y chorizos por invitado para que no falte ni sobre.',
     slugs: [
-      'calculadora-asado-por-invitado-kg-carne',
-      'calculadora-asado-kg-por-persona-cortes-tira-vacio-pollo',
-      'calculadora-achuras-por-invitado-parrilla',
-      'calculadora-chorizos-por-invitado-asado',
+      'eventos/asado',
+      'eventos/empanadas-y-guarniciones',
+      'cocina/coccion-de-carne',
     ],
   },
   {
@@ -31,18 +33,9 @@ const groups: Array<{ title: string; icon: string; intro: string; slugs: string[
     icon: '🍺',
     intro: 'Cuánta cerveza, fernet, champagne, hielo y bebida sin alcohol comprar según los invitados y la duración de la juntada.',
     slugs: [
-      'calculadora-cerveza-por-invitado-duracion-fiesta',
-      'calculadora-cerveza-invitado-evento',
-      'calculadora-fernet-cola-por-invitado-juntada',
-      'calculadora-fernet-cola-proporciones',
-      'calculadora-champagne-por-invitado-brindis',
-      'calculadora-pisco-por-invitado-previa',
-      'calculadora-negroni-proporciones-invitados',
-      'calculadora-old-fashioned-cantidad-invitados',
-      'calculadora-hielo-por-invitado-fiesta',
-      'calculadora-agua-por-invitado-fiesta',
-      'calculadora-gaseosa-por-invitado-cumple-infantil',
-      'calculadora-jugo-por-invitado-bautismo',
+      'eventos/bebidas',
+      'eventos/tragos',
+      'cocina/cerveza-casera',
     ],
   },
   {
@@ -50,19 +43,9 @@ const groups: Array<{ title: string; icon: string; intro: string; slugs: string[
     icon: '🍕',
     intro: 'Empanadas, pizza, picada, ensaladas, pan y postres: las cantidades por invitado para cualquier evento.',
     slugs: [
-      'calculadora-empanadas-por-invitado-juntada',
-      'calculadora-empanadas-por-persona-evento-asado-cumple',
-      'calculadora-pizza-por-invitado-porciones',
-      'calculadora-fiambre-queso-por-invitado-picada',
-      'calculadora-snacks-por-invitado-juntada',
-      'calculadora-pan-por-invitado-evento',
-      'calculadora-ensalada-por-invitado-evento',
-      'calculadora-bocadillos-por-invitado-evento-coffee-break',
-      'calculadora-canape-por-invitado-coctel',
-      'calculadora-masitas-dulces-por-invitado-casamiento',
-      'calculadora-cupcakes-por-invitado-cumple',
-      'calculadora-helado-litros-por-evento-invitados-tipos',
-      'calculadora-fruta-por-invitado-cumple',
+      'eventos/comida',
+      'cocina/porciones',
+      'cocina/adaptar-una-receta',
     ],
   },
   {
@@ -70,25 +53,17 @@ const groups: Array<{ title: string; icon: string; intro: string; slugs: string[
     icon: '🎉',
     intro: 'Presupuesto por invitado, cotillón, invitaciones, sillas y mesas, meseros y regalos para cumples, 15 y casamientos.',
     slugs: [
-      'calculadora-presupuesto-casamiento-por-invitado',
-      'calculadora-presupuesto-cumple-15-quinceanera',
-      'calculadora-presupuesto-cumple-infantil',
-      'boda-presupuesto-invitados-estimacion',
-      'calculadora-sillas-mesas-invitados',
-      'calculadora-meseros-necesarios-invitados',
-      'calculadora-cotillon-cumple-personas',
-      'calculadora-invitaciones-cumple-numero',
-      'calculadora-regalos-invitado-souvenir',
-      'calculadora-regalo-boda-apropiado-invitado',
+      'eventos/presupuesto',
+      'eventos/logistica',
+      'eventos/casamiento',
     ],
   },
 ];
 
 const resolvedGroups = groups.map((g) => ({ ...g, items: g.slugs.map((s) => bySlug.get(s)).filter(Boolean) }));
-const totalItems = resolvedGroups.reduce((acc, g) => acc + g.items.length, 0);
 
-const title = `Calculadoras para tu asado o evento: ${totalItems} por invitado`;
-const description = `Organizá tu asado, cumpleaños, juntada o casamiento sin que falte ni sobre: ${totalItems} calculadoras de cuánto comprar por invitado — carne, cerveza, empanadas, pizza, hielo, sillas, presupuesto y más. Gratis y sin registro.`;
+const title = 'Calculadoras para tu asado o evento: cantidades y presupuesto';
+const description = 'Organizá tu asado, cumpleaños, juntada o casamiento sin que falte ni sobre: calculá comida, bebida, hielo, mesas, sillas y presupuesto. Gratis y sin registro.';
 const canonical = '/calculadoras-evento';
 
 const allItems = resolvedGroups.flatMap((g) => g.items);
@@ -115,7 +90,7 @@ const hubConfig = {
   breadcrumb: [{ label: 'Inicio', href: '/' }, { label: 'Asado, fiesta y evento' }],
   eyebrow: '🎉 Hub temático',
   titleLines: ['Calculadoras para tu', 'asado, fiesta o evento'],
-  lead: `Más de ${totalItems} calculadoras para organizar tu asado, cumpleaños, juntada o casamiento sin que falte ni sobre: cantidades por invitado. Cargás la gente y listo.`,
+  lead: 'Calculadoras para organizar tu asado, cumpleaños, juntada o casamiento sin que falte ni sobre: cantidades por invitado, logística y presupuesto.',
   trust: ['Cantidades por invitado', 'Gratis y sin registro', 'Cálculo privado'],
   quick: { tag: 'Para tu evento', title: 'Calculadoras de cocina', desc: 'Todo lo que se cocina y se sirve, por persona.', cta: 'Ver cocina →', href: '/categoria/cocina', variant: 'cta' as const },
   needsKicker: 'Elegí por necesidad',

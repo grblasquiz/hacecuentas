@@ -31,12 +31,14 @@ import { GONE_410_URLS } from './lib/gone-410';
 const LIVE_SITEMAPS: ReadonlySet<string> = new Set([
   '/sitemap-priority.xml',
   '/sitemap-core.xml',
+  '/sitemap-calcs-finanzas.xml',
   '/sitemap-blog.xml',
   '/sitemap-news.xml',
   '/sitemap-tablas.xml',
   '/sitemap-hubs.xml',
   '/sitemap-iibb.xml',
   '/sitemap-fresh.xml',
+  '/sitemap-images.xml',
 ]);
 
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -59,8 +61,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // ────── Sitemaps retirados → 410 Gone ──────
-  // Tras la consolidación en hubs el índice quedó con 7 sitemaps
-  // (priority/core/blog/news/tablas/hubs/iibb). Los viejos por país y por
+  // Tras la consolidación en hubs el índice quedó con un set corto y explícito
+  // de sitemaps. Los viejos por país y por
   // categoría siguen registrados en GSC/Bing desde antes, así que los bots los
   // piden igual y comen 404. 410 le dice "removido" y los saca de la cola.
   if (
