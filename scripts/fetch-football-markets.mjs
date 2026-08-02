@@ -3,7 +3,7 @@ const markets=[
  ['mx','America/Mexico_City',['mex.1','mex.2']],['co','America/Bogota',['col.1','col.2']],['cl','America/Santiago',['chi.1','chi.2']],['pe','America/Lima',['per.1','per.2']],['ec','America/Guayaquil',['ecu.1','ecu.2']],['ve','America/Caracas',['ven.1','ven.2']],['py','America/Asuncion',['par.1','par.2']],['uy','America/Montevideo',['uru.1','uru.2']],['do','America/Santo_Domingo',[]],['es','Europe/Madrid',['esp.1','esp.2']],['pt','America/Sao_Paulo',['bra.1','bra.2']],['pt-pt','Europe/Lisbon',['por.1']],['en','Europe/London',['eng.1','eng.2']]
 ];
 const terms=['independiente','diablo','diablos','diabo','diabos','demonio','demonios','demon','demons','devil','devils','satan','satanas','lucifer'];
-const clubs=['manchester united','toluca','america de cali','nublense','crawley town','kaiserslautern'];
+const clubs=['manchester united','toluca','america de cali','nublense','crawley town','kaiserslautern','piratas'];
 const norm=(v='')=>v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const allowed=v=>{const n=norm(v);return !terms.some(x=>n.includes(x))&&!clubs.some(x=>n.includes(x))};
 const visible=e=>(e.competitions?.[0]?.competitors||[]).every(x=>allowed(x.team?.displayName||'')&&allowed(x.team?.shortDisplayName||''));
