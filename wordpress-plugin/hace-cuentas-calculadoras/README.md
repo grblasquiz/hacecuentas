@@ -1,6 +1,6 @@
 # Hacé Cuentas — Calculadoras (plugin de WordPress)
 
-Insertá cualquiera de los **cientos de calculadoras** de [Hacé Cuentas](https://hacecuentas.com)
+Insertá cualquiera de los **cientos de hubs de cálculo** de [Hacé Cuentas](https://hacecuentas.com)
 en tus posts y páginas de WordPress con un bloque o un shortcode. Gratis, sin registro y sin código:
 el visitante obtiene el resultado sin salir de tu sitio.
 
@@ -29,24 +29,25 @@ Plugins → Añadir nuevo → buscá **"Hacé Cuentas"** → Instalar → Activa
 
 ### Shortcode (editor clásico, widgets)
 ```
-[hacecuentas slug="calculadora-monotributo-2026"]
+[hacecuentas slug="impuestos/monotributo"]
 ```
 Con alto inicial opcional:
 ```
-[hacecuentas slug="calculadora-imc" height="700"]
+[hacecuentas slug="salud/peso-ideal-imc" height="700"]
 ```
-El `slug` es la última parte de la URL de la calculadora
-(`https://hacecuentas.com/calculadora-imc` → `calculadora-imc`).
+El atributo `slug` acepta toda la ruta después del dominio
+(`https://hacecuentas.com/salud/peso-ideal-imc` → `salud/peso-ideal-imc`).
+Los shortcodes ya publicados con slugs viejos siguen funcionando por sus 301.
 
 ### Auto-embed pegando la URL
 En el editor de bloques, pegá la URL completa de una calculadora en una línea sola
-(ej: `https://hacecuentas.com/sueldo-en-mano-argentina`) y WordPress la convierte en
+(ej: `https://hacecuentas.com/trabajo/sueldo-bruto-y-neto`) y WordPress la convierte en
 un embed automáticamente (vía oEmbed).
 
 ## Cómo funciona
 
-- La calculadora se muestra en un **iframe liviano** servido desde `hacecuentas.com`.
-- Al calcular, los valores ingresados se envían a Hacé Cuentas sólo para computar y devolver el resultado.
+- La herramienta se muestra en un **iframe liviano** servido desde `hacecuentas.com`.
+- El iframe aísla la parte interactiva del hub canónico: usa la misma fórmula y los mismos datos que la web.
 - El iframe **se autoajusta de alto** según la calculadora.
 - Lo único que el plugin agrega a tu página es un script de ajuste de altura de unos pocos KB.
 - **Enlace a la fuente: opcional y opt-in.** Por defecto el plugin **no inserta ningún enlace** en tu
@@ -55,8 +56,9 @@ un embed automáticamente (vía oEmbed).
 
 ## Privacidad
 
-No se recolectan datos de tus visitantes. El plugin sólo consulta el catálogo público de
-calculadoras (`/api/embed-calcs.json`) para llenar el selector del editor, cacheado 12 h.
+El plugin no guarda los valores ingresados ni crea cuentas. Consulta el catálogo público
+(`/api/embed-calcs.json`) para llenar el selector, cacheado 12 h. El iframe se sirve desde
+Hacé Cuentas y aplica su política de privacidad, analítica y consentimiento.
 
 ## Desarrollo
 

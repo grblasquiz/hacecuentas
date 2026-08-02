@@ -4,13 +4,14 @@
 > en un dominio real. Más la página `wordpress.org/plugins/hacecuentas-calculadoras` (autoridad
 > alta + funnel de instalación). Es el motion de Omni Calculator (~30k dominios de referencia).
 
-## Estado (verificado 2026-06-19, todo LIVE en prod)
+## Estado (revisado 2026-08-01 tras la migración a hubs)
 
 Backend — **listo y deployado**, no falta ingeniería:
 
-- `GET /oembed.json?url=<calc>` → `type:"rich"` con **sólo el iframe** (sin link inyectado → cumple wordpress.org). ⚠️ El cambio a iframe-only está en el working tree, **falta deploy** (prod aún sirve la versión vieja con blockquote).
-- `GET /api/calcs-slim.json` (4145 calcs, 2740 AR) con `Access-Control-Allow-Origin: *`. ✅ live
-- Discovery `<link rel="alternate" type="application/json+oembed">` por-página. ✅ live
+- `GET /oembed.json?url=<hub-o-url-vieja>` → `type:"rich"` con **sólo el iframe**; las URLs viejas se resuelven al hub por el mapa de 301.
+- `GET /api/embed-calcs.json` expone sólo hubs interactivos canónicos, sin índices de silo.
+- `?hc_embed=1` aísla la calculadora del hub real y habilita el iframe cross-origin.
+- Discovery `<link rel="alternate" type="application/json+oembed">` por página.
 - Plugin (`hacecuentas-calculadoras/`): bloque Gutenberg con picker buscable + shortcode
   `[hacecuentas slug="..."]` + auto-resize + registro como oEmbed provider. ✅ código completo
 
@@ -29,12 +30,13 @@ es **reach + 1 listing backlink + adopters opt-in**. El volumen sale del widget 
 
 ## Probar en un WP real (antes de subir a .org)
 
-1. Instalar `hacecuentas-calculadoras-1.0.0.zip` en un WP de prueba
+1. Instalar `hacecuentas-calculadoras-1.1.0.zip` en un WP de prueba
    (Plugins → Añadir nuevo → Subir plugin). Activar.
 2. **Bloque:** nueva entrada → bloque "Calculadora Hacé Cuentas" → elegir una del picker →
    publicar. Confirmar que en el front se ve el iframe + el `<p>` "Calculadora de … por Hacé Cuentas".
-3. **Shortcode:** `[hacecuentas slug="calculadora-imc"]` en el editor clásico.
-4. **Auto-embed:** pegar `https://hacecuentas.com/calculadora-imc` en una línea sola (editor de bloques).
+3. **Shortcode nuevo:** `[hacecuentas slug="salud/peso-ideal-imc"]` en el editor clásico.
+4. **Compatibilidad:** confirmar que `[hacecuentas slug="calculadora-imc"]` llega al mismo hub.
+5. **Auto-embed:** pegar `https://hacecuentas.com/salud/peso-ideal-imc` en una línea sola.
 
 ### Verificar en WP real (lo único que no pude probar sin instancia)
 1. 🔎 Que el bloque y el shortcode rendericen el iframe y se auto-ajuste el alto (sin scroll/hueco).

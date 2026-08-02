@@ -1,9 +1,9 @@
 /**
  * Auto-resize de los iframes embebidos.
  *
- * El iframe (/embed/<slug>) postea su altura real vía postMessage. Escuchamos
- * sólo mensajes del origin de hacecuentas y ajustamos el iframe correspondiente
- * por su slug (data-hc-slug), así varios embeds en la misma página no se pisan.
+ * El hub embebido postea su altura real vía postMessage. Escuchamos sólo
+ * mensajes del origin de hacecuentas e identificamos el iframe por
+ * `event.source`, así funcionan rutas con barras, redirects y embeds repetidos.
  */
 ( function () {
 	'use strict';
@@ -22,10 +22,12 @@
 		if ( e.data.type !== 'hc-embed-height' || typeof e.data.height !== 'number' ) {
 			return;
 		}
-		var sel = '.hacecuentas-embed[data-hc-slug="' + e.data.slug + '"] iframe';
-		var iframe = document.querySelector( sel );
-		if ( iframe ) {
-			iframe.style.height = Math.max( 320, e.data.height + 20 ) + 'px';
+		var frames = document.querySelectorAll( '.hacecuentas-embed iframe' );
+		for ( var i = 0; i < frames.length; i++ ) {
+			if ( frames[ i ].contentWindow === e.source ) {
+				frames[ i ].style.height = Math.max( 320, Math.min( 4000, e.data.height + 20 ) ) + 'px';
+				break;
+			}
 		}
 	} );
 } )();

@@ -157,13 +157,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // sí se respetan, pero estos tres no — verificado 2026-05-04).
   //
   // Política:
-  // - /embed/*: cross-origin permitido (es el feature core)
+  // - /embed/* y hubs con ?hc_embed=1: cross-origin permitido
   // - resto: same-origin para isolation + defense vs Spectre/hotlinking
   // - COEP removido (2026-05-29): cero valor SEO y causa plausible de cortes
   //   intermitentes de GA4 (subrecursos de terceros sin CORP se caían bajo
   //   credentialless). AdSense ya no se usa, así que la razón histórica murió.
   const response = await next();
-  const isEmbed = url.pathname.startsWith('/embed/');
+  const isEmbed = url.pathname.startsWith('/embed/') || url.searchParams.get('hc_embed') === '1';
   response.headers.set('Cross-Origin-Opener-Policy', isEmbed ? 'unsafe-none' : 'same-origin');
   response.headers.set('Cross-Origin-Resource-Policy', isEmbed ? 'cross-origin' : 'same-origin');
   return response;

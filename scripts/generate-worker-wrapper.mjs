@@ -179,8 +179,9 @@ const SITEMAP_410_HEADERS = {
   'X-Robots-Tag': 'noindex',
 };
 
-// Embed widgets: CSP que permite cargar /embed/* en cualquier dominio externo
-// (frame-ancestors *). /embed/* es prerender → ni el middleware (no corre para
+// Embed widgets: CSP que permite cargar /embed/* y los hubs con ?hc_embed=1 en
+// cualquier dominio externo (frame-ancestors *). Los hubs son prerender → ni
+// el middleware (no corre para
 // assets estaticos) ni _headers (CF Workers Static Assets ignora el operador !
 // para borrar el XFO/CSP global heredado) pueden override los headers. El
 // wrapper corre para TODA request → es el unico lugar que gana. Sin esto el
@@ -274,12 +275,14 @@ export default {
     // 6) Embed widgets: override de headers para habilitar carga cross-origin.
     //    Ver nota en EMBED_CSP arriba. Mutamos una copia (los headers de la
     //    Response de ASSETS son inmutables) DESPUES de _headers → ganamos.
-    if (APEX_HOSTS.has(url.hostname) && url.pathname.startsWith('/embed/')) {
+    const isEmbedRequest = url.pathname.startsWith('/embed/') || url.searchParams.get('hc_embed') === '1';
+    if (APEX_HOSTS.has(url.hostname) && isEmbedRequest) {
       const embedRes = new Response(response.body, response);
       embedRes.headers.delete('X-Frame-Options');
       embedRes.headers.set('Content-Security-Policy', EMBED_CSP);
       embedRes.headers.set('Cross-Origin-Opener-Policy', 'unsafe-none');
       embedRes.headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+      embedRes.headers.set('X-Robots-Tag', 'noindex, follow');
       return embedRes;
     }
 

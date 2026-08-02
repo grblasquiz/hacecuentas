@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Hacé Cuentas — Calculadoras
  * Plugin URI:        https://hacecuentas.com/wordpress
- * Description:       Embed interactive Hacé Cuentas calculators (salary, taxes, BMI, loans, VAT and hundreds more) into your posts and pages with a block or a shortcode. Free and no signup.
- * Version:           1.0.2
+ * Description:       Embed interactive Hacé Cuentas calculator hubs (salary, taxes, BMI, loans, VAT and hundreds more) into posts and pages with a block or shortcode. Free and no signup.
+ * Version:           1.1.0
  * Requires at least: 6.5
  * Requires PHP:      7.2
  * Author:            Hacé Cuentas
@@ -20,7 +20,39 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'HACECUENTAS_ORIGIN', 'https://hacecuentas.com' );
-define( 'HACECUENTAS_VERSION', '1.0.2' );
+define( 'HACECUENTAS_VERSION', '1.1.0' );
+
+/**
+ * Normaliza una ruta de Hacé Cuentas y conserva sus segmentos.
+ *
+ * Desde la migración a hubs las herramientas viven en rutas como
+ * `trabajo/aguinaldo`; `sanitize_title()` sobre el valor completo borraría la
+ * barra y produciría una URL inexistente. También aceptamos la URL completa
+ * para hacer más tolerante el shortcode manual.
+ *
+ * @param string $value Ruta, slug histórico o URL completa.
+ * @return string Ruta saneada sin barra inicial, o cadena vacía.
+ */
+function hacecuentas_normalize_path( $value ) {
+	$value = trim( wp_unslash( (string) $value ) );
+	if ( empty( $value ) ) {
+		return '';
+	}
+
+	if ( preg_match( '#^https?://#i', $value ) ) {
+		$parts = wp_parse_url( $value );
+		$host  = isset( $parts['host'] ) ? strtolower( $parts['host'] ) : '';
+		if ( ! in_array( $host, array( 'hacecuentas.com', 'www.hacecuentas.com' ), true ) ) {
+			return '';
+		}
+		$value = isset( $parts['path'] ) ? $parts['path'] : '';
+	} else {
+		$value = preg_split( '/[?#]/', $value )[0];
+	}
+
+	$segments = array_filter( array_map( 'sanitize_title', explode( '/', trim( $value, '/' ) ) ) );
+	return implode( '/', $segments );
+}
 
 /**
  * Devuelve el título de una calc a partir de su slug.
@@ -30,11 +62,11 @@ define( 'HACECUENTAS_VERSION', '1.0.2' );
  * y no una versión fea del slug. Si la API no responde, hace fallback a
  * des-sluguear el slug.
  *
- * @param string $slug Slug saneado de la calc.
+ * @param string $slug Ruta saneada del hub o slug histórico.
  * @return string Título legible.
  */
 function hacecuentas_title_for( $slug ) {
-	$map = get_transient( 'hacecuentas_titles' );
+	$map = get_transient( 'hacecuentas_hub_titles' );
 
 	if ( false === $map ) {
 		$map = array();
@@ -55,30 +87,31 @@ function hacecuentas_title_for( $slug ) {
 		}
 
 		// Cacheamos aunque venga vacío (evita martillar la API si está caída).
-		set_transient( 'hacecuentas_titles', $map, 12 * HOUR_IN_SECONDS );
+		set_transient( 'hacecuentas_hub_titles', $map, 12 * HOUR_IN_SECONDS );
 	}
 
 	if ( isset( $map[ $slug ] ) ) {
 		return $map[ $slug ];
 	}
 
-	return ucfirst( str_replace( '-', ' ', $slug ) );
+	$parts = explode( '/', $slug );
+	return ucfirst( str_replace( '-', ' ', end( $parts ) ) );
 }
 
 /**
- * Renderiza el embed: iframe de la calc + crédito con backlink followable.
+ * Renderiza el embed: iframe del hub + crédito opcional.
  *
  * Usado por el bloque Gutenberg (render_callback) y por el shortcode.
  * El crédito vive FUERA del iframe (en la página anfitriona) → es un link
  * dofollow real, no queda atrapado en el iframe.
  *
- * @param string     $slug   Slug de la calc.
+ * @param string     $slug   Ruta del hub o slug histórico.
  * @param int|string $height Alto inicial del iframe en px (auto-resize después).
  * @param bool       $credit Mostrar el enlace de crédito a la fuente (opt-in, default no).
  * @return string HTML.
  */
 function hacecuentas_render( $slug, $height = 640, $credit = false ) {
-	$slug = sanitize_title( $slug );
+	$slug = hacecuentas_normalize_path( $slug );
 	if ( empty( $slug ) ) {
 		return '';
 	}
@@ -95,10 +128,10 @@ function hacecuentas_render( $slug, $height = 640, $credit = false ) {
 	}
 
 	$origin = HACECUENTAS_ORIGIN;
-	$embed  = esc_url( $origin . '/embed/' . $slug );
+	$embed  = esc_url( $origin . '/' . $slug . '?hc_embed=1' );
 	$title  = hacecuentas_title_for( $slug );
 
-	$out  = '<div class="hacecuentas-embed" data-hc-slug="' . esc_attr( $slug ) . '">';
+	$out  = '<div class="hacecuentas-embed" data-hc-path="' . esc_attr( $slug ) . '">';
 	$out .= '<iframe src="' . $embed . '" width="100%" height="' . $height . '"'
 		. ' style="border:1px solid #e2e8f0;border-radius:12px;width:100%;max-width:720px;display:block;margin:0 auto;background:#fff"'
 		. ' loading="lazy" title="' . esc_attr( $title ) . '" allow="clipboard-write"></iframe>';
@@ -181,7 +214,7 @@ function hacecuentas_render_block( $attrs ) {
 }
 
 /**
- * Shortcode: [hacecuentas slug="calculadora-monotributo-2026" height="640"]
+ * Shortcode: [hacecuentas slug="impuestos/monotributo" height="640"]
  *
  * @param array $atts Atributos.
  * @return string HTML.
@@ -220,6 +253,9 @@ add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'hacecuentas_p
  * Al activar: marca para mostrar el aviso de bienvenida una sola vez.
  */
 function hacecuentas_activate() {
+	// Fuerza catálogo fresco al actualizar desde la versión previa a hubs.
+	delete_transient( 'hacecuentas_titles' );
+	delete_transient( 'hacecuentas_hub_titles' );
 	set_transient( 'hacecuentas_welcome', 1, WEEK_IN_SECONDS );
 }
 register_activation_hook( __FILE__, 'hacecuentas_activate' );
@@ -258,7 +294,10 @@ add_action( 'admin_notices', 'hacecuentas_welcome_notice' );
  * Descartar el aviso de bienvenida (link "Ocultar").
  */
 function hacecuentas_maybe_dismiss() {
-	if ( ! isset( $_GET['hacecuentas_dismiss'] ) || ! current_user_can( 'edit_posts' ) ) {
+	$dismiss = isset( $_GET['hacecuentas_dismiss'] )
+		? sanitize_text_field( wp_unslash( $_GET['hacecuentas_dismiss'] ) )
+		: '';
+	if ( '1' !== $dismiss || ! current_user_can( 'edit_posts' ) ) {
 		return;
 	}
 	check_admin_referer( 'hacecuentas_dismiss' );

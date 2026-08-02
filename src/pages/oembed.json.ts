@@ -1,32 +1,27 @@
 import type { APIRoute } from 'astro';
-import computeIndex from '../lib/calc-compute-index.json';
+import { EMBEDDABLE_BY_PATH } from '../lib/embed-tools';
+import { PRUNING_REDIRECTS } from '../lib/pruning-redirects';
 
 // oEmbed JSON endpoint — https://oembed.com/
 //
 // Dos modos:
 //  1. Sin ?url=  → respuesta genérica type:"link" (back-compat; lo consumen
 //     Pinterest/Discord/Slack para previews al compartir hacecuentas.com).
-//  2. Con ?url=https://hacecuentas.com/<slug-de-calc-AR>  → type:"rich" con el
+//  2. Con ?url=https://hacecuentas.com/<ruta-de-hub>  → type:"rich" con el
 //     iframe embebible. Esto es lo que usa el plugin de WordPress (que registra
-//     hacecuentas como oEmbed provider) y cualquier consumidor de oEmbed (Ghost,
-//     etc.): pegás la URL de una calc y aparece la calculadora embebida.
+//     hacecuentas como oEmbed provider) y cualquier consumidor de oEmbed.
+//     Las URLs viejas de calculadora se resuelven por el mapa de 301 al hub.
 //
 // El html del modo rich es SÓLO el <iframe> (sin enlaces inyectados en la página
 // anfitriona) para cumplir las directrices de wordpress.org, que prohíben insertar
 // links externos en el sitio público sin opt-in del usuario. El crédito/backlink es
-// opt-in: lo agrega el usuario desde el plugin, o vive en el widget self-hosted (/embed.js).
+// opt-in: lo agrega el usuario desde el plugin.
 
 export const prerender = false;
 
 const ORIGIN = 'https://hacecuentas.com';
 
-// slug -> título para las calculadoras en español que tienen /embed/<slug>.
-const AR_TITLES = new Map<string, string>();
-for (const [slug, calc] of Object.entries(computeIndex as Record<string, { h?: string; loc?: string }>)) {
-  if (calc.loc === 'es' && calc.h) AR_TITLES.set(slug, calc.h);
-}
-
-function slugFromUrl(raw: string): string | null {
+function pathFromUrl(raw: string): string | null {
   let u: URL;
   try {
     u = new URL(raw);
@@ -34,11 +29,25 @@ function slugFromUrl(raw: string): string | null {
     return null;
   }
   if (u.hostname.replace(/^www\./, '') !== 'hacecuentas.com') return null;
-  const segs = u.pathname.replace(/\.html$/, '').split('/').filter(Boolean);
-  if (segs.length !== 1) return null; // sólo calcs en la raíz: /<slug>
-  const slug = segs[0];
-  if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(slug)) return null;
-  return slug;
+  const clean = u.pathname
+    .replace(/\.html$/, '')
+    .replace(/\/{2,}/g, '/')
+    .replace(/\/$/, '') || '/';
+  if (!/^\/(?:[a-z0-9-]+\/)*[a-z0-9-]+$/.test(clean)) return null;
+  return clean;
+}
+
+/** Resuelve tanto un hub actual como una URL vieja que hoy hace 301 al hub. */
+function resolveHubPath(path: string): string | null {
+  let current = path;
+  const seen = new Set<string>();
+  for (let i = 0; i < 10 && !seen.has(current); i += 1) {
+    if (EMBEDDABLE_BY_PATH.has(current)) return current;
+    seen.add(current);
+    current = PRUNING_REDIRECTS[current];
+    if (!current) return null;
+  }
+  return null;
 }
 
 function escHtml(s: string): string {
@@ -81,23 +90,22 @@ export const GET: APIRoute = ({ url }) => {
   }
 
   const target = url.searchParams.get('url');
-  const slug = target ? slugFromUrl(target) : null;
-  const title = slug ? AR_TITLES.get(slug) : undefined;
+  const requestedPath = target ? pathFromUrl(target) : null;
+  const hubPath = requestedPath ? resolveHubPath(requestedPath) : null;
+  const tool = hubPath ? EMBEDDABLE_BY_PATH.get(hubPath) : undefined;
 
-  // Sin url válida o slug desconocido → fallback genérico (back-compat).
-  if (!slug || !title) return json(GENERIC);
+  // Sin URL válida o ruta desconocida → fallback genérico (back-compat).
+  if (!hubPath || !tool) return json(GENERIC);
 
-  const maxwidth = Math.min(
-    parseInt(url.searchParams.get('maxwidth') || '720', 10) || 720,
-    720,
-  );
-  const height = 640;
-  const embedUrl = `${ORIGIN}/embed/${slug}`;
-  const t = escHtml(title);
+  const requestedWidth = parseInt(url.searchParams.get('maxwidth') || '720', 10) || 720;
+  const maxwidth = Math.max(320, Math.min(requestedWidth, 720));
+  const height = 760;
+  const embedUrl = `${ORIGIN}${hubPath}?hc_embed=1`;
+  const t = escHtml(tool.title);
 
   // Sólo el iframe — sin enlaces inyectados en la página anfitriona (cumple
-  // wordpress.org). El crédito vive dentro del iframe (página propia) y, en el
-  // plugin, como opción explícita del usuario.
+  // wordpress.org). En el plugin, el crédito queda como opción explícita del
+  // usuario y se renderiza fuera del iframe.
   const html =
     `<iframe src="${embedUrl}" width="${maxwidth}" height="${height}" ` +
     `style="border:1px solid #e2e8f0;border-radius:12px;max-width:100%;width:${maxwidth}px;height:${height}px;background:#fff" ` +
@@ -106,7 +114,7 @@ export const GET: APIRoute = ({ url }) => {
   return json({
     version: '1.0',
     type: 'rich',
-    title,
+    title: tool.title,
     html,
     width: maxwidth,
     height,

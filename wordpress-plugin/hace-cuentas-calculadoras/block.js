@@ -13,20 +13,28 @@
 
 	var ORIGIN = 'https://hacecuentas.com';
 
-	// Populares curadas y verificadas embebibles. Un clic las inserta sin
-	// buscar ni conocer el slug. Cubren contadores / finanzas / RRHH / salud / mate.
+	// Hubs populares curados. Conservan las mismas intenciones que los accesos
+	// de la versión anterior, pero apuntan a las rutas canónicas vigentes.
 	var POPULAR = [
-		{ slug: 'sueldo-en-mano-argentina', label: 'Sueldo en mano' },
-		{ slug: 'calculadora-monotributo-2026', label: 'Monotributo 2026' },
-		{ slug: 'calculadora-aguinaldo-sac', label: 'Aguinaldo (SAC)' },
-		{ slug: 'calculadora-indemnizacion-despido', label: 'Indemnización' },
-		{ slug: 'calculadora-impuesto-ganancias-sueldo', label: 'Ganancias' },
-		{ slug: 'calculadora-cuota-prestamo', label: 'Cuota de préstamo' },
-		{ slug: 'calculadora-interes-compuesto', label: 'Interés compuesto' },
-		{ slug: 'calculadora-plazo-fijo', label: 'Plazo fijo' },
-		{ slug: 'calculadora-imc', label: 'IMC' },
-		{ slug: 'calculadora-porcentajes', label: 'Porcentajes' },
+		{ slug: 'trabajo/sueldo-bruto-y-neto', label: 'Sueldo en mano' },
+		{ slug: 'impuestos/monotributo', label: 'Monotributo 2026' },
+		{ slug: 'trabajo/aguinaldo', label: 'Aguinaldo (SAC)' },
+		{ slug: 'trabajo/indemnizacion-por-despido', label: 'Indemnización' },
+		{ slug: 'impuestos/ganancias-cuarta-categoria', label: 'Ganancias' },
+		{ slug: 'finanzas-personales/prestamo', label: 'Cuota de préstamo' },
+		{ slug: 'inversiones/interes-compuesto', label: 'Interés compuesto' },
+		{ slug: 'inversiones/plazo-fijo', label: 'Plazo fijo' },
+		{ slug: 'salud/peso-ideal-imc', label: 'IMC' },
+		{ slug: 'matematica/porcentajes', label: 'Porcentajes' },
 	];
+
+	function hubUrl( path ) {
+		var clean = String( path || '' )
+			.replace( /^https?:\/\/(?:www\.)?hacecuentas\.com\//i, '' )
+			.split( /[?#]/ )[ 0 ]
+			.replace( /^\/+|\/+$/g, '' );
+		return ORIGIN + '/' + clean + '?hc_embed=1';
+	}
 
 	// Chips de populares: insertar al toque.
 	function Popular( props ) {
@@ -75,9 +83,9 @@
 			} );
 		}
 		return el( c.TextControl, {
-			label: __( 'Slug de la calculadora', 'hacecuentas-calculadoras' ),
+			label: __( 'Ruta del hub', 'hacecuentas-calculadoras' ),
 			help: __(
-				'No pudimos cargar la lista. Pegá el slug a mano (ej: calculadora-imc).',
+				'No pudimos cargar la lista. Pegá la ruta a mano (ej: salud/peso-ideal-imc).',
 				'hacecuentas-calculadoras'
 			),
 			value: props.slug,
@@ -264,7 +272,7 @@
 					)
 				),
 				el( 'iframe', {
-					src: ORIGIN + '/embed/' + slug,
+					src: hubUrl( slug ),
 					title: currentLabel,
 					loading: 'lazy',
 					style: {

@@ -4,7 +4,7 @@ Tags: calculator, embed, shortcode, finance, block
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.0.2
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,14 +12,14 @@ Embed interactive calculators (salary, taxes, BMI, loans, VAT and hundreds more)
 
 == Description ==
 
-**Hacé Cuentas — Calculadoras** lets you embed hundreds of calculators from [hacecuentas.com](https://hacecuentas.com) directly into your WordPress site, without touching code. The calculators are aimed at a Spanish-speaking (mainly Argentine) audience and cover finance, taxes, payroll, health and everyday math.
+**Hacé Cuentas — Calculadoras** lets you embed hundreds of calculator hubs from [hacecuentas.com](https://hacecuentas.com) directly into your WordPress site, without touching code. The tools cover Argentina, Latin America, Spain, Brazil, Portugal and English-speaking markets across finance, taxes, payroll, health and everyday math.
 
 It is ideal for accounting firms, personal-finance blogs, HR consultancies, real-estate sites, health/fitness sites and media outlets: you add an interactive tool your readers use **without leaving your page**.
 
 = Features =
 
 * **Gutenberg block** with one-click buttons for the most-used calculators, a searchable catalog, and a live preview inside the editor.
-* **Shortcode** `[hacecuentas slug="calculadora-monotributo-2026"]` for the classic editor or widgets.
+* **Shortcode** `[hacecuentas slug="impuestos/monotributo"]` for the classic editor or widgets. Shortcodes saved with old calculator slugs keep working through permanent redirects.
 * **Auto-embed by URL**: paste a calculator link in the block editor and it turns into an embed automatically (via oEmbed).
 * **Responsive**: the embed adapts to your content width and adjusts its height automatically.
 * **Optional source link**: if you want, you can enable a credit link back to Hacé Cuentas below the calculator. Off by default — you decide.
@@ -45,8 +45,8 @@ This plugin connects to **hacecuentas.com**, a service operated by the plugin au
 1. **Calculator catalog API** — `https://hacecuentas.com/api/embed-calcs.json`
    The plugin requests this public JSON (server-side, from your WordPress install) to map a calculator slug to its human-readable title, so the block picker and the optional credit link show the real calculator name. The request is made the first time a calculator is rendered and the result is cached for 12 hours. **No user or visitor data is sent** — it is a plain read of the public catalog.
 
-2. **Calculator embed and compute API** — `https://hacecuentas.com/embed/<slug>` and `https://hacecuentas.com/api/calc/<slug>/compute`
-   When a calculator is shown, the visitor's browser loads the iframe from hacecuentas.com. On submission, the entered calculator values are sent to hacecuentas.com solely to compute and return the result. The plugin does not create an account or add tracking.
+2. **Calculator hub embed** — `https://hacecuentas.com/<hub-path>?hc_embed=1`
+   When a calculator is shown, the visitor's browser loads an iframe from hacecuentas.com. The iframe isolates the interactive part of the same canonical hub used on Hacé Cuentas, so formulas and current data do not diverge. The plugin does not create an account. Standard Hacé Cuentas analytics and consent rules may apply inside the iframe; values entered into calculator fields are not stored by this plugin.
 
 By using this plugin you rely on the hacecuentas.com service. Please review its terms and privacy policy:
 
@@ -63,17 +63,17 @@ By using this plugin you rely on the hacecuentas.com service. Please review its 
 
 Paste this into your content (classic editor, text widgets, etc.):
 
-`[hacecuentas slug="calculadora-monotributo-2026"]`
+`[hacecuentas slug="impuestos/monotributo"]`
 
 You can set the initial height:
 
-`[hacecuentas slug="calculadora-imc" height="700"]`
+`[hacecuentas slug="salud/peso-ideal-imc" height="700"]`
 
-The `slug` is the last part of the calculator URL. For example, for `https://hacecuentas.com/calculadora-imc` the slug is `calculadora-imc`.
+The `slug` accepts the path after `hacecuentas.com`. For example, for `https://hacecuentas.com/salud/peso-ideal-imc` use `salud/peso-ideal-imc`. Full Hacé Cuentas URLs and old calculator slugs are also accepted for backwards compatibility.
 
 = Auto-embed by pasting the URL =
 
-In the block editor, paste the full URL of a calculator (for example `https://hacecuentas.com/sueldo-en-mano-argentina`) on its own line and WordPress turns it into an embed automatically.
+In the block editor, paste the full URL of a calculator hub (for example `https://hacecuentas.com/trabajo/sueldo-bruto-y-neto`) on its own line and WordPress turns it into an embed automatically.
 
 == Frequently Asked Questions ==
 
@@ -87,7 +87,7 @@ No. The calculator is shown inside a lightweight iframe. The only script the plu
 
 = Is any visitor data sent anywhere? =
 
-The values entered in the calculator are sent to hacecuentas.com when the visitor requests a result, solely to perform that calculation. The plugin itself does not create accounts or add tracking. See "External services" for details.
+The plugin itself does not store calculator inputs or create accounts. The iframe is served by hacecuentas.com and follows its privacy, analytics and consent rules. See "External services" for details.
 
 = Does the plugin add links to my site without permission? =
 
@@ -95,7 +95,7 @@ No. By default only the calculator is shown. If you want, you can enable a credi
 
 = How do I find a calculator's slug? =
 
-It is the last part of the URL. In `https://hacecuentas.com/calculadora-aguinaldo-sac`, the slug is `calculadora-aguinaldo-sac`. The Gutenberg block also includes a search box with all of them.
+Use the path after the domain. In `https://hacecuentas.com/trabajo/aguinaldo`, the value is `trabajo/aguinaldo`. The Gutenberg block includes a searchable catalog, and old single-slug calculator URLs remain compatible.
 
 = Is the embed responsive? =
 
@@ -116,6 +116,12 @@ It clears the temporary cache the plugin creates. No residual data is left behin
 
 == Changelog ==
 
+= 1.1.0 =
+* Migrated the picker, block, shortcode and oEmbed integration to the canonical calculator hubs.
+* Kept previously saved calculator slugs working through their permanent redirects.
+* Restored responsive height updates for redirected and repeated embeds.
+* Refreshed the cached catalog automatically after upgrading.
+
 = 1.0.2 =
 * Restored the calculator picker and embedded widgets after the Hacé Cuentas catalog migration.
 * Updated the catalog endpoint and removed obsolete links.
@@ -127,6 +133,9 @@ It clears the temporary cache the plugin creates. No residual data is left behin
 * Initial release: Gutenberg block, shortcode and oEmbed auto-embed.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Required after the calculator-to-hub migration. Restores the full catalog and keeps existing embeds compatible.
 
 = 1.0.2 =
 Restores the calculator picker and embedded widgets.

@@ -1,0 +1,137 @@
+<!--
+  Modo iframe para los hubs canónicos.
+
+  Las calculadoras sueltas fueron reemplazadas por hubs con diseños distintos.
+  En vez de mantener una segunda implementación de cada fórmula, aislamos el
+  panel interactivo del hub real cuando la URL lleva `?hc_embed=1`. Así el
+  plugin de WordPress siempre usa la misma lógica y los mismos datos que la web.
+-->
+<script is:inline>
+  (function () {
+    if (document.documentElement.getAttribute('data-hc-embed') !== '1') return;
+
+    function hasControls(node) {
+      return !!node.querySelector('input, select, textarea') && !!node.querySelector('button');
+    }
+
+    function findTarget() {
+      var classic = document.querySelector('#main .hc-hub .journey');
+      if (classic && hasControls(classic)) return classic;
+
+      var selectors = [
+        '#main section.calculator',
+        '#main form.calc',
+        '#main form[class*="calc"]',
+        '#main .calc-grid',
+        '#main .calculator',
+        '#main .calc'
+      ];
+      var candidates = [];
+      selectors.forEach(function (selector, priority) {
+        document.querySelectorAll(selector).forEach(function (node) {
+          if (!hasControls(node) || candidates.some(function (item) { return item.node === node; })) return;
+          var inputs = node.querySelectorAll('input, select, textarea').length;
+          var buttons = node.querySelectorAll('button').length;
+          var score = (selectors.length - priority) * 100 + inputs * 5 + buttons;
+          if (node.tagName === 'FORM') score += 250;
+          if (node.classList.contains('calculator')) score += 220;
+          candidates.push({ node: node, score: score });
+        });
+      });
+      candidates.sort(function (a, b) { return b.score - a.score; });
+      if (candidates.length) return candidates[0].node;
+
+      // Los hubs generados renderizan su UI dentro de uno de estos wrappers.
+      // Algunos mockups usan botones/campos visuales (divs) en vez de inputs,
+      // y los `approved-mockup-page` completan el contenido con su script
+      // inline; exigir un <form> los dejaba fuera del modo embed.
+      var approved = document.querySelector('#main .approved-mockup-page');
+      if (approved) return approved;
+
+      var fallback = document.querySelector('#main [class*="mockup-"]');
+      if (fallback) return fallback;
+
+      var experiences = document.querySelectorAll('#main [class*="experience"]');
+      for (var i = 0; i < experiences.length; i += 1) {
+        if (experiences[i].querySelector('input, select, textarea, button')) return experiences[i];
+      }
+      return null;
+    }
+
+    function hideSiblings(target) {
+      var node = target;
+      node.setAttribute('data-hc-embed-target', '1');
+      while (node && node.id !== 'main') {
+        var parent = node.parentElement;
+        if (!parent) break;
+        parent.setAttribute('data-hc-embed-keep', '1');
+        Array.prototype.forEach.call(parent.children, function (child) {
+          if (child === node || child.tagName === 'SCRIPT' || child.tagName === 'STYLE') return;
+          child.setAttribute('data-hc-embed-hidden', '1');
+        });
+        node = parent;
+      }
+    }
+
+    function postHeight() {
+      if (window.parent === window) return;
+      var target = document.querySelector('[data-hc-embed-target="1"]');
+      var height = target
+        ? Math.ceil(target.getBoundingClientRect().height + 32)
+        : Math.ceil(document.documentElement.scrollHeight);
+      window.parent.postMessage({
+        type: 'hc-embed-height',
+        path: window.location.pathname,
+        height: Math.max(320, Math.min(4000, height))
+      }, '*');
+    }
+
+    var target = findTarget();
+    if (!target) return;
+    hideSiblings(target);
+    document.body.setAttribute('data-hc-embed-ready', '1');
+    postHeight();
+
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(postHeight).observe(target);
+    }
+    window.addEventListener('load', postHeight);
+  })();
+</script>
+
+<style is:global>
+  html[data-hc-embed="1"],
+  html[data-hc-embed="1"] body {
+    min-height: 0 !important;
+    background: #fff !important;
+  }
+  html[data-hc-embed="1"] body {
+    margin: 0 !important;
+    overflow-x: hidden !important;
+  }
+  html[data-hc-embed="1"] body > :not(main):not(script):not(style) {
+    display: none !important;
+  }
+  html[data-hc-embed="1"] #main {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  html[data-hc-embed="1"] [data-hc-embed-hidden="1"] {
+    display: none !important;
+  }
+  html[data-hc-embed="1"] [data-hc-embed-keep="1"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  html[data-hc-embed="1"] [data-hc-embed-target="1"] {
+    width: min(100%, 760px) !important;
+    max-width: 760px !important;
+    margin: 0 auto !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+</style>

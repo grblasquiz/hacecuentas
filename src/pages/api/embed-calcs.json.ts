@@ -1,19 +1,21 @@
 import type { APIRoute } from 'astro';
-import computeIndex from '../../lib/calc-compute-index.json';
+import { EMBEDDABLE_TOOLS } from '../../lib/embed-tools';
 
 export const prerender = false;
 
 export const GET: APIRoute = () => {
-  const calculators = Object.entries(computeIndex)
-    .filter(([, entry]: [string, any]) => entry.loc === 'es')
-    .map(([slug, entry]: [string, any]) => ({ s: slug, t: entry.h || slug }))
+  const calculators = EMBEDDABLE_TOOLS
+    .map((tool) => ({
+      s: tool.slug,
+      t: tool.locale === 'es' ? tool.title : `${tool.title} · ${tool.locale}`,
+      l: tool.locale,
+    }))
     .sort((a, b) => a.t.localeCompare(b.t, 'es'));
 
   return new Response(JSON.stringify(calculators), {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600',
-      'CDN-Cache-Control': 'no-store',
+      'Cache-Control': 'public, max-age=3600, s-maxage=86400',
       'Access-Control-Allow-Origin': '*',
     },
   });
