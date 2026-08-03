@@ -266,3 +266,69 @@ export const WORLD_CUP_EVENT = {
   }),
   performer: WORLD_CUP_PERFORMERS,
 };
+
+const WORLD_CUP_VENUES: Record<string, { locality: string; country: string }> = {
+  'Atlanta': { locality: 'Atlanta', country: 'US' },
+  'Boston (Foxborough)': { locality: 'Foxborough', country: 'US' },
+  'Dallas (Arlington)': { locality: 'Arlington', country: 'US' },
+  'Guadalajara (Zapopan)': { locality: 'Zapopan', country: 'MX' },
+  'Houston': { locality: 'Houston', country: 'US' },
+  'Kansas City': { locality: 'Kansas City', country: 'US' },
+  'Los Angeles (Inglewood)': { locality: 'Inglewood', country: 'US' },
+  'Mexico City': { locality: 'Ciudad de México', country: 'MX' },
+  'Miami (Miami Gardens)': { locality: 'Miami Gardens', country: 'US' },
+  'Monterrey (Guadalupe)': { locality: 'Guadalupe', country: 'MX' },
+  'New York/New Jersey (East Rutherford)': { locality: 'East Rutherford', country: 'US' },
+  'Philadelphia': { locality: 'Filadelfia', country: 'US' },
+  'San Francisco Bay Area (Santa Clara)': { locality: 'Santa Clara', country: 'US' },
+  'Seattle': { locality: 'Seattle', country: 'US' },
+  'Toronto': { locality: 'Toronto', country: 'CA' },
+  'Vancouver': { locality: 'Vancouver', country: 'CA' },
+};
+
+/** Schema completo de un partido individual, no sólo del torneo padre. */
+export function worldCupMatchEvent(match: RawMatch, url: string): Record<string, unknown> {
+  const home = teamLabel(match.team1).es;
+  const away = teamLabel(match.team2).es;
+  const start = kickoffUTC(match.date, match.time);
+  const end = start ? new Date(start.getTime() + 3 * 60 * 60 * 1000) : null;
+  const venue = match.ground ? WORLD_CUP_VENUES[match.ground] : undefined;
+  const performers = [
+    { '@type': 'SportsTeam', name: home },
+    { '@type': 'SportsTeam', name: away },
+  ];
+
+  return {
+    '@type': 'SportsEvent',
+    name: `${home} - ${away}`,
+    description: `Partido ${home} vs. ${away} de la Copa Mundial de la FIFA 2026.`,
+    startDate: start?.toISOString(),
+    endDate: end?.toISOString(),
+    eventStatus: match.score?.ft
+      ? 'https://schema.org/EventCompleted'
+      : 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    image: ['https://hacecuentas.com/og-default.png'],
+    homeTeam: performers[0],
+    awayTeam: performers[1],
+    performer: performers,
+    location: {
+      '@type': 'Place',
+      name: venue?.locality || match.ground || 'Sede del Mundial 2026',
+      address: {
+        '@type': 'PostalAddress',
+        ...(venue?.locality ? { addressLocality: venue.locality } : {}),
+        ...(venue?.country ? { addressCountry: venue.country } : {}),
+      },
+    },
+    organizer: { '@type': 'Organization', name: 'FIFA', url: 'https://www.fifa.com' },
+    offers: eventTicketOffer({
+      url: 'https://www.fifa.com/en/tickets',
+      price: 60,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/SoldOut',
+      validFrom: '2025-09-10',
+    }),
+    url,
+  };
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { WORLD_CUP_EVENT } from '../src/lib/data/mundial-2026';
+import { fixture, WORLD_CUP_EVENT, worldCupMatchEvent } from '../src/lib/data/mundial-2026';
 import { eventTicketOffer } from '../src/lib/offer-schema';
 
 describe('event ticket structured data', () => {
@@ -24,5 +24,21 @@ describe('event ticket structured data', () => {
       availability: 'https://schema.org/SoldOut',
       validFrom: '2025-09-10',
     });
+  });
+
+  it('enriches every World Cup match with all recommended Event fields', () => {
+    for (const match of fixture.matches) {
+      const event = worldCupMatchEvent(match, `https://hacecuentas.com/fixture-mundial-2026#partido-${match.num}`);
+      expect(event).toMatchObject({
+        '@type': 'SportsEvent',
+        description: expect.any(String),
+        image: expect.any(Array),
+        performer: expect.any(Array),
+        organizer: { '@type': 'Organization', name: 'FIFA' },
+        location: { '@type': 'Place', address: { '@type': 'PostalAddress' } },
+        offers: { '@type': 'Offer', price: 60, priceCurrency: 'USD' },
+        endDate: expect.any(String),
+      });
+    }
   });
 });

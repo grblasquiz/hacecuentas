@@ -23,6 +23,7 @@ import {
   kickoffUTC,
   result,
   WORLD_CUP_EVENT,
+  worldCupMatchEvent,
 } from '../lib/data/mundial-2026.ts';
 
 // Calcs de fútbol para el funnel (se resuelven del catálogo para tomar título/icono).
@@ -301,7 +302,7 @@ const faqSchema = {
     acceptedAnswer: { '@type': 'Answer', text: f.a },
   })),
 };
-const matchEvents={'@type':'ItemList',name:'Partidos del Mundial 2026',itemListElement:fixture.matches.map((m:any,index:number)=>({'@type':'ListItem',position:index+1,item:{'@type':'SportsEvent',name:matchTitle(m),startDate:kickoffUTC(m.date,m.time)?.toISOString(),eventStatus:m.score?.ft?'https://schema.org/EventCompleted':'https://schema.org/EventScheduled',homeTeam:{'@type':'SportsTeam',name:teamLabel(m.team1).es},awayTeam:{'@type':'SportsTeam',name:teamLabel(m.team2).es},location:{'@type':'Place',name:groundShort(m.ground)},url:`https://hacecuentas.com/fixture-mundial-2026#${matchFragment(m)}`}}))};
+const matchEvents={'@type':'ItemList',name:'Partidos del Mundial 2026',itemListElement:fixture.matches.map((m:any,index:number)=>({'@type':'ListItem',position:index+1,item:worldCupMatchEvent(m,`https://hacecuentas.com/fixture-mundial-2026#${matchFragment(m)}`)}))};
 const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, WORLD_CUP_EVENT, matchEvents, dataset, faqSchema] };
 
 // Datos para el script client-side (refresh en vivo + re-render de "hoy").
