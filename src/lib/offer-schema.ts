@@ -31,21 +31,27 @@ export function freeOfferSchema(
 // tickets del evento, que NO vendemos: enlazamos la venta oficial. Search Console
 // marcaba "Falta offers" en cada nodo SportsEvent; con esto el campo queda
 // presente y válido. Incluimos url + availability + validFrom (recomendados por
-// Google). NO ponemos price/lowPrice/highPrice a propósito: no fijamos ni
-// inventamos el valor de la entrada (varía por evento, categoría y fecha) y un
-// precio inventado sería markup engañoso. Al ser un Offer simple (no
-// AggregateOffer) tampoco aplica la advertencia de highPrice/lowPrice.
+// Google). Cuando existe un precio mínimo oficial, el caller también debe pasar
+// `price`: Google lo recomienda para Event y no debemos inventarlo cuando la
+// fuente oficial no lo publica.
 export function eventTicketOffer(
-  opts: { url: string; priceCurrency?: string; validFrom?: string },
+  opts: {
+    url: string;
+    price?: number | string;
+    priceCurrency?: string;
+    availability?: string;
+    validFrom?: string;
+  },
 ): Record<string, unknown> {
   const offer: Record<string, unknown> = {
     '@type': 'Offer',
     url: opts.url,
-    availability: 'https://schema.org/InStock',
+    availability: opts.availability || 'https://schema.org/InStock',
     // validFrom: fecha desde la que el offer es válido. El deploy re-buildea a
     // diario, así que la ventana se renueva sola (mismo criterio que freeOfferSchema).
     validFrom: opts.validFrom || new Date().toISOString().slice(0, 10),
   };
+  if (opts.price !== undefined) offer.price = opts.price;
   if (opts.priceCurrency) offer.priceCurrency = opts.priceCurrency;
   return offer;
 }

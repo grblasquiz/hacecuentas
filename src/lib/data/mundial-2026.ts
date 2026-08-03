@@ -244,7 +244,7 @@ export const WORLD_CUP_EVENT = {
     'La Copa Mundial de la FIFA 2026 es la 23.ª edición del Mundial de fútbol masculino: la primera con 48 selecciones y 104 partidos, disputada en Estados Unidos, México y Canadá del 11 de junio al 19 de julio de 2026.',
   startDate: '2026-06-11',
   endDate: '2026-07-19',
-  eventStatus: 'https://schema.org/EventScheduled',
+  eventStatus: 'https://schema.org/EventCompleted',
   eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
   sport: 'Football',
   image: ['https://hacecuentas.com/og-default.png'],
@@ -254,10 +254,15 @@ export const WORLD_CUP_EVENT = {
     { '@type': 'Place', name: 'Canadá', address: { '@type': 'PostalAddress', addressCountry: 'CA' } },
   ],
   organizer: { '@type': 'Organization', name: 'FIFA', url: 'https://www.fifa.com' },
-  // Antes era un AggregateOffer con lowPrice: '60' pero sin highPrice ni validFrom,
-  // así que Search Console marcaba ambos como "falta campo (en offers)". Sin un
-  // highPrice verificable (no inventamos precios), pasamos a un Offer simple con
-  // la venta oficial + validFrom: limpia las dos advertencias sin markup dudoso.
-  offers: eventTicketOffer({ url: 'https://www.fifa.com/en/tickets', priceCurrency: 'USD' }),
+  // FIFA publicó oficialmente un precio mínimo de USD 60 para los 104 partidos.
+  // El torneo ya terminó, por lo que la oferta queda histórica y agotada.
+  // Fuente: https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/fifa-world-cup-2026-new-ticket-pricing-tier
+  offers: eventTicketOffer({
+    url: 'https://www.fifa.com/en/tickets',
+    price: 60,
+    priceCurrency: 'USD',
+    availability: 'https://schema.org/SoldOut',
+    validFrom: '2025-09-10',
+  }),
   performer: WORLD_CUP_PERFORMERS,
 };
