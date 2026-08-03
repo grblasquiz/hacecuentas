@@ -2,16 +2,19 @@
 export const prerender = true;
 
 import Layout from '../../layouts/Layout.astro';
-import AccidenteLaboralExperience from '../../components/AccidenteLaboralExperience.astro';
-import { hub } from '../../lib/hubs/accidente-laboral';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import InstitutionalMockupExperience from '../../components/InstitutionalMockupExperience.astro';
+import { JOURNEYS } from '../../lib/institutional-journeys';
 
-const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const data = JOURNEYS.accidente;
+const canonical = `https://hacecuentas.com/${data.slug}`;
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': 'FAQPage',
-      mainEntity: hub.faq.map((f) => ({
+      mainEntity: data.faq.map((f) => ({
         '@type': 'Question',
         name: f.q,
         acceptedAnswer: { '@type': 'Answer', text: f.a },
@@ -21,8 +24,8 @@ const schema = {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
-        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
-        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+        { '@type': 'ListItem', position: 2, name: data.silo, item: `https://hacecuentas.com${data.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: data.h1, item: canonical },
       ],
     },
     {
@@ -38,6 +41,8 @@ const schema = {
 };
 ---
 
-<Layout title={hub.title} description={hub.description} canonical={CANONICAL} schema={schema} audience="AR" lang="es" ogType="article" articleSection={hub.silo}>
-  <AccidenteLaboralExperience data={hub} />
+<Layout title={data.title} description={data.description} canonical={canonical} schema={schema} audience="AR" lang="es" ogType="article" articleSection={data.silo} pageType="hub">
+  <Header />
+  <InstitutionalMockupExperience data={data} kind="accidente" />
+  <Footer />
 </Layout>
