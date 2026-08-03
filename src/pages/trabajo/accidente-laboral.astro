@@ -1,0 +1,47 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AccidenteLaboralExperience from '../../components/AccidenteLaboralExperience.astro';
+import { hub } from '../../lib/hubs/accidente-laboral';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+    {
+      '@type': 'HowTo',
+      name: 'Qué hacer después de un accidente laboral',
+      step: [
+        { '@type': 'HowToStep', position: 1, name: 'Avisá y dejá constancia' },
+        { '@type': 'HowToStep', position: 2, name: 'Pedí el número de siniestro' },
+        { '@type': 'HowToStep', position: 3, name: 'Guardá estudios y certificados' },
+      ],
+    },
+  ],
+};
+---
+
+<Layout title={hub.title} description={hub.description} canonical={CANONICAL} schema={schema} audience="AR" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header />
+  <AccidenteLaboralExperience data={hub} />
+  <Footer />
+</Layout>
