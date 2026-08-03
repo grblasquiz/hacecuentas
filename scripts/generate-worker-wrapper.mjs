@@ -229,6 +229,12 @@ export default {
         return Response.redirect(\`https://hacecuentas.com\${target}\${url.search}\`, 308);
       }
 
+      // El sitemap PT quedó consolidado en sitemap.xml. Este redirect conserva
+      // el endpoint histórico para bots y auditores sin duplicar sus URLs.
+      if (url.pathname === '/sitemap-pt.xml') {
+        return Response.redirect('https://hacecuentas.com/sitemap.xml', 301);
+      }
+
       // 2b) Sitemaps retirados → 410. Tras la consolidación en hubs el índice
       // quedó con un set corto y explícito; los viejos por país/categoría siguen registrados en
       // GSC/Bing desde antes y los bots los piden igual, comiendo 404.
