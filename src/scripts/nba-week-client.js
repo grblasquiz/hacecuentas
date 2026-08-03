@@ -127,7 +127,7 @@
   const shortWeekday = (key) => new Intl.DateTimeFormat('es-AR', { timeZone: AR, weekday: 'short' }).format(new Date(`${key}T12:00:00Z`)).replace('.', '');
   const gameUrl = (game) => `<a href="${esc(game.href)}" target="_blank" rel="noopener">`;
   const gameMoment = (game) => game.state === 'post' ? 'FINAL' : Date.now() >= new Date(game.date).getTime() ? 'EN CURSO' : time(game.date);
-  const renderRow = (game) => `${gameUrl(game)}<span class="schedule-row"><span>${gameMoment(game)}<small>${esc(game.league)} · ${game.state === 'post' ? esc(game.detail || 'Finalizado') : Date.now() >= new Date(game.date).getTime() ? 'Resultado al finalizar' : 'Programado'}</small></span><b><img src="${esc(game.away.logo)}" alt=""/>${esc(game.away.name)}</b><strong>${game.state === 'post' ? `${esc(game.away.score)} <i>—</i> ${esc(game.home.score)}` : '<i>vs</i>'}</strong><b><img src="${esc(game.home.logo)}" alt=""/>${esc(game.home.name)}</b><em>${game.state === 'post' ? 'Ver resultado' : 'Ver previa'} ›</em></span></a>`;
+  const renderRow = (game) => `${gameUrl(game)}<span class="schedule-row"><span>${gameMoment(game)}<small>${esc(game.league)} · ${game.state === 'post' ? esc(game.detail || 'Finalizado') : Date.now() >= new Date(game.date).getTime() ? 'Resultado al finalizar' : 'Programado'}</small></span><b><img src="${esc(game.away.logo)}" alt="Logo del equipo de la NBA"/>${esc(game.away.name)}</b><strong>${game.state === 'post' ? `${esc(game.away.score)} <i>—</i> ${esc(game.home.score)}` : '<i>vs</i>'}</strong><b><img src="${esc(game.home.logo)}" alt="Logo del equipo de la NBA"/>${esc(game.home.name)}</b><em>${game.state === 'post' ? 'Ver resultado' : 'Ver previa'} ›</em></span></a>`;
 
   const renderWeek = (games) => {
     const calendar = root.querySelector('[data-schedule]');
@@ -163,11 +163,11 @@
     root.querySelector('[data-status]').textContent = 'SEMANA ACTUALIZADA';
     if (featured) {
       const final = featured.state === 'post';
-      root.querySelector('[data-primary-game]').innerHTML = `<div class="game-tag"><span>${final ? 'ÚLTIMO RESULTADO' : 'PRÓXIMO PARTIDO'}</span><b>${esc(featured.league)} · ${final ? esc(featured.detail || 'Final') : `${relativeDay(featured.date)}, ${time(featured.date)}`}</b></div><div class="duel"><div class="team"><img src="${esc(featured.away.logo)}" alt=""/><strong>${esc(featured.away.name)}</strong><em>${final ? esc(featured.away.score) : '—'}</em></div><div class="middle"><span>${time(featured.date)}</span><b>${final ? 'FINAL' : 'VS'}</b></div><div class="team"><img src="${esc(featured.home.logo)}" alt=""/><strong>${esc(featured.home.name)}</strong><em>${final ? esc(featured.home.score) : '—'}</em></div></div>${gameUrl(featured)}<span class="orange-button">${final ? 'Ver resultado' : 'Ver previa'} <b>›</b></span></a>`;
+      root.querySelector('[data-primary-game]').innerHTML = `<div class="game-tag"><span>${final ? 'ÚLTIMO RESULTADO' : 'PRÓXIMO PARTIDO'}</span><b>${esc(featured.league)} · ${final ? esc(featured.detail || 'Final') : `${relativeDay(featured.date)}, ${time(featured.date)}`}</b></div><div class="duel"><div class="team"><img src="${esc(featured.away.logo)}" alt="Logo del equipo de la NBA"/><strong>${esc(featured.away.name)}</strong><em>${final ? esc(featured.away.score) : '—'}</em></div><div class="middle"><span>${time(featured.date)}</span><b>${final ? 'FINAL' : 'VS'}</b></div><div class="team"><img src="${esc(featured.home.logo)}" alt="Logo del equipo de la NBA"/><strong>${esc(featured.home.name)}</strong><em>${final ? esc(featured.home.score) : '—'}</em></div></div>${gameUrl(featured)}<span class="orange-button">${final ? 'Ver resultado' : 'Ver previa'} <b>›</b></span></a>`;
     }
     const next = root.querySelector('[data-upcoming]');
     next.innerHTML = upcoming.length
-      ? upcoming.map((game) => `${gameUrl(game)}<span class="next-row"><b>${relativeDay(game.date)}<small>${time(game.date)}</small></b><span><img src="${esc(game.away.logo)}" alt=""/>${esc(game.away.abbr)} <small>vs</small> <img src="${esc(game.home.logo)}" alt=""/>${esc(game.home.abbr)}</span><i>›</i></span></a>`).join('')
+      ? upcoming.map((game) => `${gameUrl(game)}<span class="next-row"><b>${relativeDay(game.date)}<small>${time(game.date)}</small></b><span><img src="${esc(game.away.logo)}" alt="Logo del equipo de la NBA"/>${esc(game.away.abbr)} <small>vs</small> <img src="${esc(game.home.logo)}" alt="Logo del equipo de la NBA"/>${esc(game.home.abbr)}</span><i>›</i></span></a>`).join('')
       : '<p class="muted">No quedan partidos programados esta semana.</p>';
     renderWeek(games);
   };
@@ -187,7 +187,7 @@
       };
     }).sort((a, b) => a.rank - b.rank).slice(0, 8);
     const table = root.querySelector('[data-standings]');
-    if (table && entries.length) table.innerHTML = entries.map((team) => `<a href="https://www.espn.com/nba/team/_/name/${esc(team.abbr.toLowerCase())}" target="_blank" rel="noopener" class="standing"><b>${esc(team.rank)}</b><span><img src="${esc(team.logo)}" alt=""/>${esc(team.team)}</span><em>${Number(team.wins) + Number(team.losses)}</em><em>${esc(team.wins)}</em><em>${esc(team.pct)}</em></a>`).join('');
+    if (table && entries.length) table.innerHTML = entries.map((team) => `<a href="https://www.espn.com/nba/team/_/name/${esc(team.abbr.toLowerCase())}" target="_blank" rel="noopener" class="standing"><b>${esc(team.rank)}</b><span><img src="${esc(team.logo)}" alt="Logo del equipo de la NBA"/>${esc(team.team)}</span><em>${Number(team.wins) + Number(team.losses)}</em><em>${esc(team.wins)}</em><em>${esc(team.pct)}</em></a>`).join('');
   };
 
   const planResultCheck = () => {
