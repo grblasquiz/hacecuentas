@@ -75,9 +75,9 @@ const routes = selected.slice(0, 3).map((tool, index) => ({ tool, prompt: intent
 const nextSteps = routes.length > 1 ? [...routes.slice(1), routes[0]].slice(0, 3) : routes;
 
 const COPY = {
-  es: { eyebrow: 'Elegí tu situación', routeTitle: '¿Qué querés resolver?', nextEyebrow: 'Tu próximo paso', nextTitle: 'Seguí con la decisión', nextIntro: 'Usá el resultado que acabás de obtener para avanzar con una cuenta relacionada.', trust: 'Datos y metodología', checked: 'Fórmula y fuentes verificadas', editor: 'Responsable: Martín Rodríguez, fundador y editor', reviewed: 'Última actualización', method: 'Ver fuentes y metodología', share: 'Guardar o compartir este resultado', shareHelp: 'El enlace conserva tus datos en el navegador y no crea una página indexable.', copy: 'Copiar enlace', copied: 'Enlace copiado', native: 'Compartir', privacy: 'No guardamos estos datos en el servidor.' },
-  en: { eyebrow: 'Choose your situation', routeTitle: 'What do you want to solve?', nextEyebrow: 'Your next step', nextTitle: 'Continue your decision', nextIntro: 'Use the result you just obtained to continue with a related calculation.', trust: 'Data and methodology', checked: 'Formula and sources checked', editor: 'Responsible editor: Martín Rodríguez', reviewed: 'Last updated', method: 'View sources and methodology', share: 'Save or share this result', shareHelp: 'The link keeps your inputs in the browser and does not create an indexable page.', copy: 'Copy link', copied: 'Link copied', native: 'Share', privacy: 'We do not store these inputs on the server.' },
-  pt: { eyebrow: 'Escolha sua situação', routeTitle: 'O que você quer resolver?', nextEyebrow: 'Próximo passo', nextTitle: 'Continue sua decisão', nextIntro: 'Use o resultado que acabou de obter para avançar com um cálculo relacionado.', trust: 'Dados e metodologia', checked: 'Fórmula e fontes verificadas', editor: 'Editor responsável: Martín Rodríguez', reviewed: 'Última atualização', method: 'Ver fontes e metodologia', share: 'Salvar ou compartilhar este resultado', shareHelp: 'O link mantém seus dados no navegador e não cria uma página indexável.', copy: 'Copiar link', copied: 'Link copiado', native: 'Compartilhar', privacy: 'Não armazenamos esses dados no servidor.' },
+  es: { eyebrow: 'Elegí tu situación', routeTitle: '¿Qué querés resolver?', nextEyebrow: 'Tu próximo paso', nextTitle: 'Seguí con la decisión', nextIntro: 'Usá el resultado que acabás de obtener para avanzar con una cuenta relacionada.', trust: 'Datos y metodología', checked: 'Fórmula y fuentes verificadas', editor: 'Responsable: Martín Rodríguez, fundador y editor', reviewed: 'Última actualización', method: 'Ver fuentes y metodología', share: 'Guardar o compartir este resultado', shareHelp: 'El enlace conserva tus datos en el navegador y no crea una página indexable.', copy: 'Copiar enlace', copied: 'Enlace copiado', native: 'Compartir', print: 'Descargar / imprimir', privacy: 'No guardamos estos datos en el servidor.' },
+  en: { eyebrow: 'Choose your situation', routeTitle: 'What do you want to solve?', nextEyebrow: 'Your next step', nextTitle: 'Continue your decision', nextIntro: 'Use the result you just obtained to continue with a related calculation.', trust: 'Data and methodology', checked: 'Formula and sources checked', editor: 'Responsible editor: Martín Rodríguez', reviewed: 'Last updated', method: 'View sources and methodology', share: 'Save or share this result', shareHelp: 'The link keeps your inputs in the browser and does not create an indexable page.', copy: 'Copy link', copied: 'Link copied', native: 'Share', print: 'Download / print', privacy: 'We do not store these inputs on the server.' },
+  pt: { eyebrow: 'Escolha sua situação', routeTitle: 'O que você quer resolver?', nextEyebrow: 'Próximo passo', nextTitle: 'Continue sua decisão', nextIntro: 'Use o resultado que acabou de obter para avançar com um cálculo relacionado.', trust: 'Dados e metodologia', checked: 'Fórmula e fontes verificadas', editor: 'Editor responsável: Martín Rodríguez', reviewed: 'Última atualização', method: 'Ver fontes e metodologia', share: 'Salvar ou compartilhar este resultado', shareHelp: 'O link mantém seus dados no navegador e não cria uma página indexável.', copy: 'Copiar link', copied: 'Link copiado', native: 'Compartilhar', print: 'Baixar / imprimir', privacy: 'Não armazenamos esses dados no servidor.' },
 }[language];
 ---
 
@@ -113,6 +113,7 @@ const COPY = {
       <div>
         <button type="button" data-hc-copy-share>{COPY.copy}</button>
         <button type="button" data-hc-native-share>{COPY.native}</button>
+        <button type="button" data-hc-print-result>{COPY.print}</button>
       </div>
       <small>🔒 {COPY.privacy}</small>
       <p class="hc-share-result__status" data-hc-share-status role="status" aria-live="polite"></p>
@@ -262,6 +263,12 @@ const COPY = {
       window.hcTrack?.('hc_result_share', { calculator_slug: location.pathname.replace(/^\/+|\/+$/g, ''), share_method: 'native' });
     } catch {}
   });
+  document.querySelector('[data-hc-print-result]')?.addEventListener('click', () => {
+    document.documentElement.classList.add('hc-printing-result');
+    window.hcTrack?.('hc_result_download', { calculator_slug: location.pathname.replace(/^\/+|\/+$/g, ''), download_method: 'print' });
+    window.print();
+    window.setTimeout(() => document.documentElement.classList.remove('hc-printing-result'), 500);
+  });
   document.querySelectorAll('[data-hc-next-link]').forEach((link) => link.addEventListener('click', () => window.hcTrack?.('hc_next_step_click', { calculator_slug: location.pathname.replace(/^\/+|\/+$/g, ''), destination: link.getAttribute('href') || '' })));
   document.querySelectorAll('[data-hc-route-link]').forEach((link) => link.addEventListener('click', () => window.hcTrack?.('hc_decision_route_click', { calculator_slug: location.pathname.replace(/^\/+|\/+$/g, ''), destination: link.getAttribute('href') || '' })));
 </script>
@@ -291,4 +298,11 @@ const COPY = {
   .hc-trust-card__icon{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:#257a4b;color:#fff;font-size:1.1rem;font-weight:900}
   .hc-trust-card h2{margin-bottom:.45rem}.hc-trust-card p{margin:.2rem 0;font-size:.9rem}.hc-trust-card a{display:inline-block;margin-top:.55rem;color:#174b7a;font-weight:750}
   @media(max-width:760px){.hc-decision-routes__grid,.hc-post-result-system{grid-template-columns:1fr}.hc-decision-routes,.hc-post-result-system,.hc-trust-card{width:min(100% - 1rem,1120px)}.hc-decision-routes__grid a{min-height:0}.hc-share-result div{flex-direction:column}.hc-share-result button{width:100%}}
+  @media print {
+    .hc-printing-result body > * { display:none!important; }
+    .hc-printing-result body > main { display:block!important; }
+    .hc-printing-result header,.hc-printing-result footer,.hc-printing-result [data-hc-decision-routes],.hc-printing-result [data-hub-engagement] { display:none!important; }
+    .hc-printing-result [data-hc-post-result-system],.hc-printing-result [data-hc-trust-card] { display:block!important; width:100%!important; box-shadow:none!important; }
+    .hc-printing-result [data-hc-print-result],.hc-printing-result .hc-share-result div { display:none!important; }
+  }
 </style>

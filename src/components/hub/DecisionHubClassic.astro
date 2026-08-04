@@ -134,6 +134,7 @@ type ChromeStrings = {
   actualiza: string; boton: string; comoSeForma: string; total: string;
   composicion: string; sinDatos: string; respuesta: string; queCorresponde: string;
   entra: string; ojo: string; plazo: string; faq: string; fuentes: string;
+  advanced: string; advancedClose: string;
 };
 const CHROME: Record<string, ChromeStrings> = {
   /* Argentina: el default cuando el hub no declara `locale`. Único con voseo. */
@@ -145,6 +146,7 @@ const CHROME: Record<string, ChromeStrings> = {
     respuesta: 'Respuesta rápida', queCorresponde: 'Qué te corresponde',
     entra: 'Entra en el cálculo', ojo: 'Ojo con esto', plazo: 'Plazo:',
     faq: 'Preguntas frecuentes', fuentes: 'Fuentes',
+    advanced: 'Afinar con más datos', advancedClose: 'Ver sólo lo esencial',
   },
   'es-neutro': {
     home: 'Inicio', migas: 'Migas', tuCaso: 'Tu caso', otroCaso: 'Mi caso es otro',
@@ -154,6 +156,7 @@ const CHROME: Record<string, ChromeStrings> = {
     respuesta: 'Respuesta rápida', queCorresponde: 'Qué te corresponde',
     entra: 'Entra en el cálculo', ojo: 'Ojo con esto', plazo: 'Plazo:',
     faq: 'Preguntas frecuentes', fuentes: 'Fuentes',
+    advanced: 'Ajustar con más datos', advancedClose: 'Ver sólo lo esencial',
   },
   en: {
     home: 'Home', migas: 'Breadcrumb', tuCaso: 'Your situation', otroCaso: "That's not my case",
@@ -163,6 +166,7 @@ const CHROME: Record<string, ChromeStrings> = {
     respuesta: 'Quick answer', queCorresponde: 'What applies to you',
     entra: "What's included", ojo: 'Watch out for this', plazo: 'Deadline:',
     faq: 'Frequently asked questions', fuentes: 'Sources',
+    advanced: 'Fine-tune with more details', advancedClose: 'Show essentials only',
   },
   pt: {
     home: 'Início', migas: 'Navegação', tuCaso: 'O seu caso', otroCaso: 'Meu caso é outro',
@@ -172,6 +176,7 @@ const CHROME: Record<string, ChromeStrings> = {
     respuesta: 'Resposta rápida', queCorresponde: 'O que se aplica a você',
     entra: 'Entra no cálculo', ojo: 'Atenção a isto', plazo: 'Prazo:',
     faq: 'Perguntas frequentes', fuentes: 'Fontes',
+    advanced: 'Ajustar com mais dados', advancedClose: 'Mostrar só o essencial',
   },
 };
 CHROME['pt-pt'] = { ...CHROME.pt, actualiza: 'Atualiza à medida que preenche os seus dados', queCorresponde: 'O que lhe corresponde' };
@@ -230,6 +235,11 @@ const HOME = data.locale ? `/${data.locale}` : '/';
 const cases = data.cases?.items ?? [];
 const defaultCase = cases[0];
 const otherCases = cases.slice(1);
+// En formularios largos, cuatro datos alcanzan para una primera respuesta.
+// El resto conserva sus defaults y sigue entrando al cálculo, pero deja de
+// competir visualmente con la acción principal hasta que el usuario lo abre.
+const progressiveFields = data.fields.length > 6;
+const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
 ---
 
 <div class="hc-hub">
@@ -289,7 +299,7 @@ const otherCases = cases.slice(1);
             <summary>{T.otroCaso}</summary>
             <div class="picker" role="tablist" aria-label={data.cases.title} id="picker">
               {otherCases.map((c) => (
-                <button class="opt" type="button" role="tab" data-case={c.id} aria-selected="false">
+                <button id={`caso-${c.id}`} class="opt" type="button" role="tab" data-case={c.id} aria-selected="false">
                   <b>{c.label}</b><span>{c.hint}</span>
                 </button>
               ))}
@@ -306,8 +316,8 @@ const otherCases = cases.slice(1);
         </div>
         <span id="calc-name" hidden>{defaultCase?.label ?? data.h1}</span>
         <div class="fields">
-          {data.fields.map((f) => (
-            <div class="f">
+          {data.fields.map((f, index) => (
+            <div class:list={["f", { "is-advanced-field": index >= essentialFieldCount }]} hidden={index >= essentialFieldCount}>
               <label for={f.id}>{f.label}</label>
               <div class="f-in">
                 {f.prefix && <span class="pre">{f.prefix}</span>}
@@ -338,6 +348,17 @@ const otherCases = cases.slice(1);
             </div>
           ))}
         </div>
+        {progressiveFields && (
+          <button
+            class="advanced-fields-toggle"
+            type="button"
+            aria-expanded="false"
+            data-open-label={T.advanced}
+            data-close-label={T.advancedClose}
+          >
+            <span aria-hidden="true">＋</span><span data-advanced-label>{T.advanced}</span>
+          </button>
+        )}
         <div class="calc-go"><button class="btn" id="go" type="button">{T.boton}</button></div>
         <p class="fineprint">{data.fineprint}</p>
       </section>
@@ -687,6 +708,17 @@ const otherCases = cases.slice(1);
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
         block: 'start',
       });
+    });
+
+    const advancedToggle = document.querySelector('.advanced-fields-toggle');
+    advancedToggle?.addEventListener('click', () => {
+      const open = advancedToggle.getAttribute('aria-expanded') !== 'true';
+      advancedToggle.setAttribute('aria-expanded', String(open));
+      document.querySelectorAll('.is-advanced-field').forEach((field) => { field.hidden = !open; });
+      const label = advancedToggle.querySelector('[data-advanced-label]');
+      if (label) label.textContent = open ? advancedToggle.dataset.closeLabel : advancedToggle.dataset.openLabel;
+      const icon = advancedToggle.querySelector('span');
+      if (icon) icon.textContent = open ? '−' : '＋';
     });
 
     document.querySelectorAll('[data-field]').forEach((el) => el.addEventListener('input', run));
