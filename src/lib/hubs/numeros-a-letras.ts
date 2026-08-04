@@ -28,7 +28,7 @@ export const hub: HubData = {
   siloHref: '/conversores',
 
   eyebrow: 'Conversor de números',
-  h1: 'Pasar números a letras, romanos y binario',
+  h1: 'Conversor de números a letras',
   lede:
     'Escribí lo que tengas —un número, un texto en letras o un romano— y elegí a qué lo querés pasar. La rama por defecto es la que casi todos buscan: cómo se escribe un importe en un cheque o un pagaré, con los centavos incluidos.',
   stamps: ['Actualizado 27-07-2026', 'Reglas de la RAE · escala larga', '4 conversores adentro'],
