@@ -21,9 +21,9 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'conversores/numeros-a-letras',
-  title: 'Pasar números a letras, romanos y binario — conversor 2026',
+  title: 'Números a letras: conversor para cheques y pagarés',
   description:
-    'Escribí un número en letras para un cheque o un pagaré con el formato legal ("SON PESOS ... CON 50/100"), pasá de letras a número, convertí a números romanos y a binario, octal o hexadecimal. Con centavos, reglas de la RAE y desglose paso a paso.',
+    'Convertí números a letras para cheques y pagarés, con centavos y formato listo para copiar. También admite letras a número, romanos y binario.',
   silo: 'Conversores',
   siloHref: '/conversores',
 

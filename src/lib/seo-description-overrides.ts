@@ -31,7 +31,7 @@ export const SEO_DESCRIPTION_OVERRIDES: Record<string, string> = {
   "/construccion/ladrillos": "Calculá cuántos ladrillos, bloques o adoquines… Encontrá herramientas, ejemplos y fuentes para resolver cuántos ladrillos necesito? calculadora por m² de pared.",
   "/construccion/pintura": "Calculá cuántos litros de pintura necesitás y, sobre… Encontrá herramientas, ejemplos y fuentes para resolver cuántos litros de pintura necesito? calculadora de latas.",
   "/conversores": "Convertí longitud, peso, volumen, temperatura, tiempo, monedas, medidas de cocina, talles y formatos con equivalencias explicadas.",
-  "/conversores/numeros-a-letras": "Escribí un número en letras para un cheque o un pagaré… Encontrá herramientas, ejemplos y fuentes para resolver pasar números a letras, romanos y binario.",
+  "/conversores/numeros-a-letras": "Convertí números a letras para cheques y pagarés, con centavos y formato listo para copiar. También admite letras a número, romanos y binario.",
   "/cuando-juega-ecuador-mundial-2026": "La página que buscás no existe. Explorá nuestras calculadoras online… Encontrá herramientas, ejemplos y fuentes para resolver página no encontrada (404).",
   "/datos-topes-sipa-2026": "Base imponible máxima de aportes personales en… Encontrá herramientas, ejemplos y fuentes para resolver topes sipa 2026: base imponible máxima de aportes.",
   "/embarazo/dias-fertiles": "Calculá tu ventana fértil y el día de ovulación según tu ciclo, tengas… Encontrá herramientas, ejemplos y fuentes para resolver cuáles son mis días fértiles.",
