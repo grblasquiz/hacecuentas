@@ -34,6 +34,29 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, '..');
 const DIST_SERVER = join(REPO_ROOT, 'dist', 'server');
 
+// El índice puede sumar sitemaps cuando revive una categoría o locale. El
+// Worker devuelve 410 a cualquier sitemap no permitido, así que una lista
+// desactualizada rompe el descubrimiento aunque /sitemap.xml lo referencie.
+// Validamos las dos capas antes de generar/deployar el wrapper.
+const liveSitemaps = [
+  '/sitemap-priority.xml', '/sitemap-core.xml', '/sitemap-calcs-finanzas.xml',
+  '/sitemap-calcs-entretenimiento.xml', '/sitemap-en.xml',
+  '/sitemap-blog.xml', '/sitemap-news.xml', '/sitemap-tablas.xml', '/sitemap-hubs.xml',
+  '/sitemap-iibb.xml', '/sitemap-fresh.xml', '/sitemap-images.xml',
+];
+const sitemapIndexSource = readFileSync(join(REPO_ROOT, 'public', 'sitemap.xml'), 'utf8');
+const indexedSitemaps = [...sitemapIndexSource.matchAll(/<loc>https:\/\/hacecuentas\.com(\/sitemap-[^<]+\.xml)<\/loc>/g)]
+  .map((match) => match[1]);
+const middlewareSource = readFileSync(join(REPO_ROOT, 'src', 'middleware.ts'), 'utf8');
+const missingInWrapper = indexedSitemaps.filter((path) => !liveSitemaps.includes(path));
+const missingInMiddleware = indexedSitemaps.filter((path) => !middlewareSource.includes(`'${path}'`));
+if (missingInWrapper.length || missingInMiddleware.length) {
+  throw new Error(
+    `Sitemaps indexados sin allowlist: wrapper=[${missingInWrapper.join(', ')}] ` +
+    `middleware=[${missingInMiddleware.join(', ')}]`,
+  );
+}
+
 // Fast pages: HTMLs autónomos que se suben como assets sin ejecutar Astro.
 // El manifest conserva el mapping URL pública → archivo dentro de
 // public/_fast-pages/. Se inyecta en el wrapper para que run_worker_first no
@@ -194,11 +217,7 @@ const EMBED_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' blob: h
 // no cubre respuestas SSR.
 const MAIN_CSP = ${JSON.stringify(mainCsp)};
 
-const LIVE_SITEMAPS = new Set([
-  '/sitemap-priority.xml', '/sitemap-core.xml', '/sitemap-calcs-finanzas.xml',
-  '/sitemap-blog.xml', '/sitemap-news.xml', '/sitemap-tablas.xml', '/sitemap-hubs.xml',
-  '/sitemap-iibb.xml', '/sitemap-fresh.xml', '/sitemap-images.xml',
-]);
+const LIVE_SITEMAPS = new Set(${JSON.stringify(liveSitemaps)});
 
 /** Saca %20, segmentos vacíos y segmentos 'null'/'undefined'. Devuelve el path tal cual si ya está sano. */
 function sanitizePath(pathname) {
