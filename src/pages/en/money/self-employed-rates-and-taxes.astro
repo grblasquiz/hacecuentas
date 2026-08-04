@@ -4,12 +4,15 @@ import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import RegimeJourney from '../../../components/RegimeJourney.astro';
 import { hub, SS_RATE, MEDICARE_RATE, SE_MULTIPLIER, SE_FILING_THRESHOLD, QBI_RATE, BILLABLE_DAY_HOURS, MONTHLY_WORK_HOURS } from '../../../lib/hubs/en/self-employed-rates-and-taxes';
 const canonical = `https://hacecuentas.com/${hub.slug}`;
 const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
 ---
 <Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="US" lang="en" ogType="article" articleSection={hub.silo}>
-  <Header /><DecisionHub data={hub} /><Footer />
+  <Header /><DecisionHub data={hub} />
+  <RegimeJourney country="United States" regime="Self-employment" headline="From gross revenue to a tax reserve you can actually use." intro="There is no monotributo-style flat regime. This path separates business profit, Schedule SE, income tax and quarterly payments." steps={['Estimate net business profit','Calculate SE and income tax','Set a quarterly reserve']} links={[{href:'/en/money/self-employed-rates-and-taxes',label:'Estimate self-employed tax',note:'Federal, state and take-home'},{href:'/en/money/paycheck-and-taxes',label:'Compare with a paycheck',note:'Employee withholding and net pay'},{href:'/en/money/index',label:'Plan the rest',note:'Budget, debt and retirement tools'}]} locale="en" tone="ocean" />
+  <Footer />
 </Layout>
 <script is:inline define:vars={{ SS_RATE, MEDICARE_RATE, SE_MULTIPLIER, SE_FILING_THRESHOLD, QBI_RATE, BILLABLE_DAY_HOURS, MONTHLY_WORK_HOURS }}>
   (function () {
@@ -57,3 +60,22 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
     });
   })();
 </script>
+
+<style is:global>
+  @media (max-width: 760px) {
+    .approved-mockup-page .desk .wrap.grid {
+      width: 100% !important;
+      max-width: 100% !important;
+      padding-inline: 16px !important;
+      box-sizing: border-box;
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .approved-mockup-page .desk .card,
+    .approved-mockup-page .desk input,
+    .approved-mockup-page .desk select {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+  }
+</style>
