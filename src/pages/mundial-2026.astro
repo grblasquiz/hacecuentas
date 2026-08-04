@@ -3,284 +3,147 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import SportsLiveNav from '../components/SportsLiveNav.astro';
-import WeekendPackCapture from '../components/WeekendPackCapture.astro';
-import { WORLD_CUP_EVENT } from '../lib/data/mundial-2026.ts';
+import { fixture, teamLabel, WORLD_CUP_EVENT } from '../lib/data/mundial-2026.ts';
 
 export const prerender = true;
 
-const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
-const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
-const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
-
-const groups: Array<{ title: string; icon: string; intro: string; slugs: string[] }> = [
-  {
-    title: 'Clasificación y formato 48 selecciones',
-    icon: '🏆',
-    intro: 'El Mundial 2026 estrena formato 48 selecciones y 12 grupos. Estas calculadoras te explican el reglamento nuevo, los puntos que necesita tu selección y cómo se ordenan los mejores terceros.',
-    slugs: [
-      'calculadora-mundial-2026-puntos-clasificar-octavos',
-      'calculadora-mundial-2026-cupos-confederacion',
-      'calculadora-mundial-2026-grupo-muerte-detector',
-      'posiciones-mundial-2026',
-      'calculadora-mundial-2026-fixture-octavos-posicion-grupo',
-      'calculadora-mundial-2026-puntaje-historico-fase-grupos',
-    ],
-  },
-  {
-    title: 'Probabilidades y predicciones',
-    icon: '📊',
-    intro: 'Calculá las chances reales de tu selección de pasar la fase de grupos, llegar a la final o ganar el Mundial — basado en ranking FIFA, sorteo, histórico y ELO.',
-    slugs: [
-      'calculadora-mundial-2026-predictor-campeon-ranking',
-      'calculadora-mundial-2026-probabilidad-clasificacion-ranking-fifa',
-      'calculadora-mundial-2026-probabilidad-bicampeon',
-      'campeon-mundial-2026',
-      'calculadora-mundial-2026-predictor-campeon-ranking',
-      'campeon-mundial-2026',
-    ],
-  },
-  {
-    title: 'Reglas del juego',
-    icon: '⚽',
-    intro: 'Amarillas, suspensiones, prórroga, tiempo añadido y todo lo que define un partido del Mundial.',
-    slugs: [
-      'calculadora-mundial-2026-tarjetas-suspension',
-      'fixture-mundial-2026',
-      'campeon-mundial-2026',
-      'calculadora-tiempo-anadido-promedio-mundial-2026-liga',
-    ],
-  },
-  {
-    title: 'Plata, premios y bonus',
-    icon: '💰',
-    intro: 'Cuánto reparte FIFA por cada fase, cuánto cobra cada jugador, cuánto vale un viaje completo y cuántos dólares se mueven en derechos de TV.',
-    slugs: [
-      'calculadora-premios-mundial-2026-seleccion-por-fase',
-      'calculadora-mundial-2026-bonus-jugador-fase',
-      'calculadora-derechos-tv-mundial-2026-argentina-espana-mexico-brasil',
-      'calculadora-mundial-2026-presupuesto-hincha-total',
-    ],
-  },
-  {
-    title: 'Viaje, entradas y experiencia',
-    icon: '✈️',
-    intro: 'Si vas al Mundial, estas calcs te ayudan a presupuestar todo: vuelos, entradas, estadios, comida en la cancha y horarios de partidos.',
-    slugs: [
-      'calculadora-mundial-2026-estadios-comparador',
-      'calculadora-premios-mundial-2026-seleccion-por-fase',
-      'calculadora-mundial-2026-estadios-comparador',
-      'calculadora-mundial-2026-estadios-comparador',
-      'calculadora-mundial-2026-horario-partido-zona-horaria',
-      'fixture-mundial-2026',
-      'calculadora-mundial-2026-partidos-faltantes-seleccion',
-    ],
-  },
-  {
-    title: 'Fan, prode y fantasy',
-    icon: '🎯',
-    intro: 'Si lo vivís de hincha o lo apostás con amigos, estas son las calculadoras para vos.',
-    slugs: [
-      'campeon-mundial-2026',
-      'goleadores-mundial-2026',
-      'calculadora-mundial-2026-dream-team-once-combinaciones',
-      'calculadora-mundial-2026-horas-tv-cronograma-fan',
-      'calculadora-mundial-2026-estadios-comparador',
-    ],
-  },
-  {
-    title: 'Jugadores, goleadores y récords',
-    icon: '⭐',
-    intro: 'Messi, el botín de oro, los récords históricos y cuántos goles te imaginás que vas a ver.',
-    slugs: [
-      'calculadora-mundial-2026-record-messi-goles-minutos',
-      'calculadora-mundial-2026-botin-oro-goleador-estimador',
-      'calculadora-top-10-goleadores-historico-mundial-fifa',
-      'cuanto-falta-mundial-fifa-2026-2030',
-    ],
-  },
-];
-
-// Resolver y filtrar
-const resolvedGroups = groups.map((g) => ({
-  ...g,
-  items: g.slugs.map((s) => bySlug.get(s)).filter(Boolean),
-}));
-const totalItems = resolvedGroups.reduce((acc, g) => acc + g.items.length, 0);
-
-const title = `Mundial 2026: ${totalItems}+ calculadoras de probabilidades y premios`;
-const description = `Todas las calculadoras y tablas del Mundial 2026 en un solo lugar: campeón, goleadores, resultados, formato de 48 selecciones, premios y récords. El torneo terminó el 19 de julio de 2026.`;
 const canonical = '/mundial-2026';
+const final = fixture.matches.find((match) => match.round === 'Final');
+const thirdPlace = fixture.matches.find((match) => match.round === 'Match for third place');
 
-// ItemList schema con todas las calcs
-const allItems = resolvedGroups.flatMap((g) => g.items);
-const itemListSchema = {
+function decisiveScore(match: typeof final): [number, number] | null {
+  if (!match?.score?.ft) return null;
+  return match.score.et || match.score.ft;
+}
+
+function winnerName(match: typeof final): string {
+  if (!match) return 'España';
+  const score = decisiveScore(match);
+  if (!score) return teamLabel(match.team1).es;
+  return teamLabel(score[0] > score[1] ? match.team1 : match.team2).es;
+}
+
+function loserName(match: typeof final): string {
+  if (!match) return 'Argentina';
+  const score = decisiveScore(match);
+  if (!score) return teamLabel(match.team2).es;
+  return teamLabel(score[0] > score[1] ? match.team2 : match.team1).es;
+}
+
+function scoreText(match: typeof final): string {
+  const score = decisiveScore(match);
+  if (!match || !score) return 'resultado final';
+  return `${teamLabel(match.team1).es} ${score[0]}–${score[1]} ${teamLabel(match.team2).es}`;
+}
+
+const champion = winnerName(final);
+const runnerUp = loserName(final);
+const third = winnerName(thirdPlace);
+const fourth = loserName(thirdPlace);
+const title = `Quién ganó el Mundial 2026: ${champion} campeón`;
+const description = `${champion} ganó el Mundial 2026 tras vencer a ${runnerUp} en la final. Resultado, podio, cuadro y los 104 partidos del torneo.`;
+
+const schema = {
   '@context': 'https://schema.org',
-  '@type': 'ItemList',
-  name: 'Calculadoras Mundial 2026',
-  description,
-  numberOfItems: allItems.length,
-  itemListElement: allItems.map((c: any, i: number) => ({
-    '@type': 'ListItem',
-    position: i + 1,
-    url: `https://hacecuentas.com/${c.slug}`,
-    name: c.h1,
-  })),
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `https://hacecuentas.com${canonical}#webpage`,
+      url: `https://hacecuentas.com${canonical}`,
+      name: title,
+      description,
+      inLanguage: 'es',
+      dateModified: fixture.fetchedAt,
+      about: WORLD_CUP_EVENT,
+    },
+    {
+      '@type': 'SportsEvent',
+      name: 'Final del Mundial 2026',
+      startDate: final?.date,
+      location: { '@type': 'Place', name: final?.ground || 'New York/New Jersey' },
+      homeTeam: { '@type': 'SportsTeam', name: final ? teamLabel(final.team1).es : 'España' },
+      awayTeam: { '@type': 'SportsTeam', name: final ? teamLabel(final.team2).es : 'Argentina' },
+      description: scoreText(final),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Mundial 2026', item: `https://hacecuentas.com${canonical}` },
+      ],
+    },
+  ],
 };
-
-// CollectionPage schema
-const collectionSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: 'Calculadoras Mundial 2026',
-  description,
-  url: `https://hacecuentas.com${canonical}`,
-  inLanguage: 'es-AR',
-  about: WORLD_CUP_EVENT,
-  isPartOf: { '@type': 'WebSite', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
-};
-
-const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, collectionSchema] };
-
-
 ---
 
 <Layout title={title} description={description} canonical={canonical} audience="global" schema={schema} domain="life">
   <Header />
   <SportsLiveNav />
-  <main class="article-main">
-    <article class="hub-page">
-      <header class="hub-header">
-        <div class="hub-eyebrow">⚽ Hub temático</div>
-        <h1>Mundial 2026 — Todas las calculadoras</h1>
-        <p class="lede">
-          Más de <strong>{totalItems} calculadoras</strong> sobre el Mundial 2026 — el primero con
-          <strong>48 selecciones</strong>, <strong>104 partidos</strong> y tres sedes (USA, México, Canadá).
-          El torneo se jugó del 11 de junio al 19 de julio de 2026: acá queda todo el archivo,
-          con el campeón, los goleadores y los resultados completos.
-        </p>
-        <div class="hub-meta">
-          <span class="meta-item">🏁 <strong>Torneo finalizado</strong> (19 jul 2026)</span>
-          <span class="meta-item">📅 <strong>11 jun – 19 jul 2026</strong></span>
-          <span class="meta-item">🌎 <strong>3 países</strong>, 16 estadios</span>
-          <span class="meta-item">🏆 <strong>48 selecciones</strong>, 104 partidos</span>
-        </div>
-      </header>
+  <main class="wc-page">
+    <nav class="wc-crumb" aria-label="Ruta de navegación"><a href="/">Inicio</a><span>›</span><span>Mundial 2026</span></nav>
 
-      <WeekendPackCapture source="hub-mundial" />
-
-      <a class="hub-fixture-cta" href="/fixture-mundial-2026">
-        <span class="hfc-icon" aria-hidden="true">📅</span>
-        <span class="hfc-body">
-          <strong>Todos los resultados del Mundial 2026 →</strong>
-          <span>Los 104 partidos con sus marcadores finales, fecha por fecha.</span>
-        </span>
-      </a>
-
-      <div class="hub-live" role="list" aria-label="Así terminó el Mundial 2026">
-        <a role="listitem" href="/campeon-mundial-2026">🏆 España campeón del Mundial 2026: final y palmarés</a>
-        <a role="listitem" href="/goleadores-mundial-2026">⚽ Goleadores del Mundial 2026: tabla final</a>
-        <a role="listitem" href="/balon-de-oro-mundial-2026">🏅 Balón de Oro y Bota de Oro</a>
-        <a role="listitem" href="/llave-mundial-2026">🗂️ Cómo quedó la llave</a>
-        <a role="listitem" href="/posiciones-mundial-2026">🏆 Así quedaron los grupos</a>
+    <header class="wc-hero">
+      <p class="wc-kicker">🏆 Torneo finalizado · 19 de julio de 2026</p>
+      <h1>{champion} ganó el Mundial 2026</h1>
+      <p class="wc-lead"><strong>{champion} es campeón del mundo.</strong> Venció a {runnerUp} en la final disputada en Nueva York/Nueva Jersey. Acá podés consultar el resultado, el podio y los 104 partidos.</p>
+      <div class="wc-final" aria-label="Resultado de la final del Mundial 2026">
+        <div><span>{final ? teamLabel(final.team1).flag : '🇪🇸'}</span><strong>{final ? teamLabel(final.team1).es : champion}</strong></div>
+        <p><b>{decisiveScore(final)?.[0] ?? 1} – {decisiveScore(final)?.[1] ?? 0}</b><small>Final · tras alargue</small></p>
+        <div><span>{final ? teamLabel(final.team2).flag : '🇦🇷'}</span><strong>{final ? teamLabel(final.team2).es : runnerUp}</strong></div>
       </div>
+      <a class="wc-primary" href="/fixture-mundial-2026">Ver los 104 resultados del Mundial 2026 →</a>
+    </header>
 
-      <nav class="hub-toc" aria-label="Índice del hub">
-        <strong>Saltar a:</strong>
-        <ul>
-          {resolvedGroups.map((g) => (
-            <li>
-              <a href={`#${g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
-                {g.icon} {g.title}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+    <section class="wc-section" aria-labelledby="podio-title">
+      <p class="wc-eyebrow">Clasificación final</p>
+      <h2 id="podio-title">Podio del Mundial 2026</h2>
+      <div class="wc-podium">
+        <article class="wc-place wc-place--first"><span>1</span><div><b>🥇 {champion}</b><small>Campeón</small></div></article>
+        <article class="wc-place"><span>2</span><div><b>🥈 {runnerUp}</b><small>Subcampeón</small></div></article>
+        <article class="wc-place"><span>3</span><div><b>🥉 {third}</b><small>Tercer puesto · venció {thirdPlace ? scoreText(thirdPlace) : fourth}</small></div></article>
+        <article class="wc-place"><span>4</span><div><b>{fourth}</b><small>Cuarto puesto</small></div></article>
+      </div>
+    </section>
 
-      {resolvedGroups.map((g) => {
-        const id = g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        return (
-          <section class="hub-group" id={id}>
-            <h2><span class="group-icon" aria-hidden="true">{g.icon}</span> {g.title}</h2>
-            <p class="group-intro">{g.intro}</p>
-            <ul class="hub-list">
-              {g.items.map((c: any) => (
-                <li class="hub-item">
-                  <a href={`/${c.slug}`} class="hub-link">
-                    <span class="hub-icon" aria-hidden="true">{c.icon || '⚽'}</span>
-                    <div class="hub-body">
-                      <strong>{c.h1}</strong>
-                      <p>{c.description}</p>
-                    </div>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        );
-      })}
+    <section class="wc-section" aria-labelledby="resumen-title">
+      <p class="wc-eyebrow">Resumen del torneo</p>
+      <h2 id="resumen-title">Mundial 2026 en números</h2>
+      <div class="wc-stats">
+        <article><b>48</b><span>selecciones</span></article>
+        <article><b>104</b><span>partidos jugados</span></article>
+        <article><b>12</b><span>grupos</span></article>
+        <article><b>3</b><span>países sede</span></article>
+      </div>
+      <p>Fue el primer Mundial con 48 selecciones y se disputó en Estados Unidos, México y Canadá entre el 11 de junio y el 19 de julio. España eliminó a Francia en semifinales; Argentina venció a Inglaterra y llegó a la final.</p>
+    </section>
 
-      <aside class="hub-cta">
-        <h2>¿No encontrás lo que buscás?</h2>
-        <p>
-          Estamos sumando calcs nuevas cada semana. Pedí la tuya en{' '}
-          <a href="mailto:ideas@hacecuentas.com?subject=Calculadora Mundial 2026">ideas@hacecuentas.com</a>{' '}
-          o seguí explorando{' '}
-          <a href="/categoria/deportes">todas las calculadoras de deportes →</a>.
-        </p>
-      </aside>
-    </article>
+    <section class="wc-section" aria-labelledby="archivo-title">
+      <p class="wc-eyebrow">Archivo completo</p>
+      <h2 id="archivo-title">Resultados, goleadores y recorrido</h2>
+      <div class="wc-links">
+        <a href="/fixture-mundial-2026"><b>📅 Fixture y resultados completos</b><span>Los 104 partidos, fecha por fecha, con grupos y cruces.</span></a>
+        <a href="/goleadores-mundial-2026"><b>⚽ Tabla final de goleadores</b><span>Goles, partidos y posiciones definitivas.</span></a>
+        <a href="/fixture-mundial-2026"><b>🗂️ Cuadro y fases eliminatorias</b><span>Dieciseisavos, octavos, cuartos, semifinales y final.</span></a>
+        <a href="/fixture-mundial-2026"><b>📊 Posiciones de los 12 grupos</b><span>Cómo terminó cada grupo del nuevo formato de 48 equipos.</span></a>
+      </div>
+    </section>
+
+    <aside class="wc-note"><strong>Fuente y actualización</strong><p>Resultados consolidados desde el fixture completo del torneo. Última actualización del archivo: {new Date(fixture.fetchedAt).toLocaleDateString('es-AR')}.</p></aside>
   </main>
   <Footer />
 </Layout>
 
 <style>
-  .hub-page { max-width: 980px; margin: 0 auto; padding: 1rem 1rem 3rem; }
-  .hub-header { text-align: center; padding: 1.5rem 0 2rem; border-bottom: 1px solid var(--border, #e2e8f0); margin-bottom: 2rem; }
-  .hub-eyebrow { display: inline-block; background: var(--accent-soft, #eef4ff); color: var(--accent-strong, #1e40af); padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
-  .hub-header h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); margin: 0.25rem 0 0.75rem; line-height: 1.15; }
-  .lede { font-size: 1.05rem; color: var(--text-2, #475569); max-width: 760px; margin: 0 auto 1.25rem; line-height: 1.55; }
-  .hub-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: center; font-size: 0.875rem; color: var(--text-2, #475569); }
-  .hub-meta strong { color: var(--text, #1e293b); }
-  .meta-item { white-space: nowrap; }
-
-  .hub-fixture-cta { display: flex; align-items: center; gap: 0.9rem; background: var(--accent-soft, #eef4ff); border: 1px solid var(--accent, #2c5cdc); border-radius: 0.75rem; padding: 1rem 1.25rem; margin: 0 0 1.5rem; text-decoration: none; color: inherit; transition: transform 0.15s; }
-  .hub-fixture-cta:hover { transform: translateY(-1px); }
-  .hub-live { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1.5rem; }
-  .hub-live a { display: inline-flex; align-items: center; gap: 0.35rem; background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0); border-radius: 999px; padding: 0.5rem 0.9rem; font-size: 0.9rem; font-weight: 600; color: inherit; text-decoration: none; transition: border-color 0.15s, transform 0.15s; }
-  .hub-live a:hover { border-color: var(--accent, #2c5cdc); transform: translateY(-1px); }
-  .hfc-icon { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
-  .hfc-body { display: flex; flex-direction: column; }
-  .hfc-body strong { color: var(--accent-strong, #1e40af); font-size: 1.02rem; }
-  .hfc-body span { color: var(--text-2, #475569); font-size: 0.9rem; margin-top: 0.15rem; }
-
-  .hub-toc { background: var(--surface-2, #f8fafc); padding: 1rem 1.25rem; border-radius: 0.75rem; margin: 0 0 2rem; font-size: 0.9rem; }
-  .hub-toc strong { display: block; margin-bottom: 0.5rem; color: var(--text-2, #475569); }
-  .hub-toc ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; }
-  .hub-toc a { color: var(--accent, #2c5cdc); text-decoration: none; font-weight: 500; }
-  .hub-toc a:hover { text-decoration: underline; }
-
-  .hub-group { margin: 2.5rem 0; scroll-margin-top: 1rem; }
-  .hub-group h2 { font-size: 1.4rem; margin: 0 0 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
-  .group-icon { font-size: 1.5rem; line-height: 1; }
-  .group-intro { color: var(--text-2, #475569); margin: 0 0 1rem; font-size: 0.975rem; line-height: 1.5; }
-
-  .hub-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
-  .hub-item { margin: 0; }
-  .hub-link { display: flex; gap: 0.75rem; padding: 0.875rem; border: 1px solid var(--border, #e2e8f0); border-radius: 0.5rem; text-decoration: none; color: inherit; transition: border-color 0.15s, transform 0.15s; height: 100%; box-sizing: border-box; }
-  .hub-link:hover { border-color: var(--accent, #2c5cdc); transform: translateY(-1px); }
-  .hub-icon { font-size: 1.4rem; line-height: 1.2; flex-shrink: 0; }
-  .hub-body { display: flex; flex-direction: column; min-width: 0; }
-  .hub-body strong { color: var(--text, #1e293b); font-size: 0.975rem; line-height: 1.3; }
-  .hub-body p { margin: 0.25rem 0 0; color: var(--text-2, #64748b); font-size: 0.85rem; line-height: 1.4; }
-
-  .hub-cta { margin-top: 3rem; padding: 1.5rem; background: var(--surface-2, #f8fafc); border-radius: 0.75rem; text-align: center; }
-  .hub-cta h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
-  .hub-cta p { margin: 0; color: var(--text-2, #475569); }
-  .hub-cta a { color: var(--accent, #2c5cdc); font-weight: 500; }
-
-  @media (max-width: 640px) {
-    .hub-list { grid-template-columns: 1fr; }
-    .hub-meta { gap: 0.4rem 0.75rem; }
-  }
+  .wc-page{max-width:960px;margin:0 auto;padding:1rem 1.1rem 4rem;color:var(--text,#172033)}
+  .wc-crumb{display:flex;gap:.55rem;align-items:center;font-size:.88rem;color:var(--text-subtle,#667085);margin:.3rem 0 1.2rem}.wc-crumb a{color:inherit}
+  .wc-hero{padding:clamp(1.5rem,4vw,3rem);border-radius:24px;background:linear-gradient(145deg,#11395e,#174b7a);color:#fff;text-align:center;box-shadow:0 18px 44px #0b294326}
+  .wc-kicker,.wc-eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:.78rem;font-weight:800}.wc-kicker{color:#bce3ff;margin:0 0 .7rem}.wc-hero h1{font-size:clamp(2rem,6vw,3.5rem);line-height:1.04;margin:0}.wc-lead{max-width:710px;margin:1rem auto 1.5rem;line-height:1.6;color:#e6f2fb}
+  .wc-final{max-width:620px;margin:0 auto 1.4rem;padding:1.15rem;display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:center;background:#ffffff12;border:1px solid #ffffff38;border-radius:18px}.wc-final div{display:flex;align-items:center;justify-content:center;gap:.55rem;font-size:1.1rem}.wc-final div span{font-size:2rem}.wc-final p{margin:0}.wc-final p b{display:block;font-size:2rem}.wc-final p small{display:block;color:#bce3ff;margin-top:.15rem}
+  .wc-primary{display:inline-flex;padding:.82rem 1.15rem;border-radius:999px;background:#fff;color:#11395e;text-decoration:none;font-weight:800}
+  .wc-section{padding:2.25rem 0;border-bottom:1px solid var(--border,#e4e7ec)}.wc-section h2{font-size:clamp(1.45rem,3vw,2rem);margin:.3rem 0 1.1rem}.wc-eyebrow{color:#174b7a;margin:0}.wc-section>p:last-child{line-height:1.65;color:var(--text-subtle,#526071)}
+  .wc-podium{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}.wc-place{display:flex;gap:.85rem;align-items:center;padding:1rem;border:1px solid var(--border,#e4e7ec);border-radius:14px;background:var(--surface,#fff)}.wc-place>span{width:2.15rem;height:2.15rem;display:grid;place-items:center;border-radius:50%;background:#edf4fa;color:#174b7a;font-weight:900}.wc-place div{display:grid;gap:.2rem}.wc-place small{color:var(--text-subtle,#667085)}.wc-place--first{border-color:#e2b431;background:#fff9df}
+  .wc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}.wc-stats article{padding:1.2rem;text-align:center;border-radius:14px;background:#edf4fa}.wc-stats b{display:block;font-size:1.8rem;color:#174b7a}.wc-stats span{font-size:.85rem;color:#526071}
+  .wc-links{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}.wc-links a{display:grid;gap:.35rem;padding:1rem;border:1px solid var(--border,#e4e7ec);border-radius:14px;color:inherit;text-decoration:none}.wc-links a:hover{border-color:#174b7a}.wc-links span{color:var(--text-subtle,#667085);line-height:1.4}
+  .wc-note{margin-top:2rem;padding:1rem 1.15rem;border-radius:14px;background:#f7f8fa}.wc-note p{margin:.35rem 0 0;color:var(--text-subtle,#667085)}
+  @media(max-width:640px){.wc-final{grid-template-columns:1fr;gap:.45rem}.wc-final p{order:-1}.wc-podium,.wc-links{grid-template-columns:1fr}.wc-stats{grid-template-columns:repeat(2,1fr)}}
 </style>
