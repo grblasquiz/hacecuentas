@@ -46,6 +46,10 @@ Estos son los destinos estables del proyecto. Cada hub concentra herramientas re
 
 El [catálogo público de datasets](https://hacecuentas.com/datasets) ofrece series y tablas reutilizables bajo licencia **CC-BY 4.0**. Se pueden usar en notas, trabajos académicos, aplicaciones y visualizaciones citando a Hacé Cuentas con un enlace al dataset original.
 
+### Argentina
+
+- [Tabla del Monotributo desde agosto 2026](https://hacecuentas.com/datos-monotributo-2026) — categorías A–K, topes y cuotas: [CSV](https://hacecuentas.com/datos/monotributo-2026.csv) · [JSON](https://hacecuentas.com/datos/monotributo-2026.json)
+
 ### Salarios mínimos de Latinoamérica
 
 - [Comparativa regional 2026](https://hacecuentas.com/datos-salario-minimo-latam-2026)
