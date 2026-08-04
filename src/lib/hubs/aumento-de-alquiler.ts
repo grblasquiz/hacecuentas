@@ -17,7 +17,7 @@ export const hub: HubData = {
   h1: '¿Cuánto me van a aumentar el alquiler?',
   lede:
     'Partimos del caso más habitual: contrato con ajuste por ICL del BCRA. Poné tu alquiler y las dos fechas y mirá la cuota nueva. Si tu contrato ajusta por otro índice, lo cambiás abajo.',
-  stamps: ['Actualizado 31-07-2026', 'ICL del BCRA e IPC del INDEC oficiales', 'Fórmula explicada'],
+  stamps: ['Revisado 04-08-2026', 'ICL del BCRA e IPC del INDEC oficiales', 'Fórmula explicada'],
 
   resultLabel: 'Tu alquiler nuevo',
 
@@ -289,7 +289,7 @@ export const hub: HubData = {
     '/calculadora-contrato-alquiler-2-anios-vs-3-anios',
   ],
 
-  lastReviewed: '2026-07-31',
+  lastReviewed: '2026-08-04',
   audience: 'AR',
 };
 

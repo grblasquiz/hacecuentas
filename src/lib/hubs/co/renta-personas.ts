@@ -72,7 +72,7 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
   slug: 'co/impuestos/renta-personas',
-  title: 'Declaración de renta persona natural Colombia: ¿me toca y cuánto pago?',
+  title: 'Declaración de renta Colombia 2026: topes, fecha y cálculo',
   description:
     'Verificá si estás obligado a declarar renta en Colombia, cuándo vence según tu cédula y cuánto te toca pagar: topes del art. 592, límite del 40% del art. 336 y tabla del art. 241 del Estatuto Tributario.',
   silo: 'Impuestos',
@@ -80,7 +80,7 @@ export const hub: HubData = {
   locale: 'co',
 
   eyebrow: 'Colombia · DIAN · persona natural',
-  h1: 'Declaración de renta: si te toca, cuándo vence y cuánto pagás.',
+  h1: 'Declaración de renta Colombia 2026: si te toca, cuándo vence y cuánto pagás.',
   lede:
     'Una sola cuenta responde las tres preguntas. Con tus ingresos del año, tus aportes y beneficios, la calculadora depura la base, la pasa por la tabla del art. 241 y la cruza con los topes del art. 592 y el calendario de la DIAN.',
   stamps: [
@@ -352,5 +352,5 @@ export const hub: HubData = {
     '/co/calculadora-cripto-colombia-impuestos-renta-trader-2026',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-04',
 };

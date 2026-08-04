@@ -158,7 +158,7 @@ export const hub: HubData = {
     '/calculadora-dias-juntos-pareja',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-04',
   audience: 'AR',
 };
 

@@ -5,13 +5,19 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import DiasEntreFechasHubExperience from '../../components/generated/DiasEntreFechasHubExperience.astro';
 import RecoveredHubIntro from '../../components/RecoveredHubIntro.astro';
+import TopPagesBoost from '../../components/TopPagesBoost.astro';
 import { hub } from '../../lib/hubs/dias-entre-fechas';
 const canonical='https://hacecuentas.com/fechas/dias-entre-fechas';
-const schema={'@context':'https://schema.org','@type':'WebApplication',name:hub.title,url:canonical,operatingSystem:'Web'};
+const schema={'@context':'https://schema.org','@graph':[
+  {'@type':'WebApplication',name:hub.title,url:canonical,applicationCategory:'UtilitiesApplication',operatingSystem:'Web',offers:{'@type':'Offer',price:'0',priceCurrency:'ARS'},dateModified:'2026-08-04'},
+  {'@type':'FAQPage',mainEntity:hub.faq.map(item=>({'@type':'Question',name:item.q,acceptedAnswer:{'@type':'Answer',text:item.a}}))},
+  {'@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Inicio',item:'https://hacecuentas.com/'},{'@type':'ListItem',position:2,name:'Fechas',item:'https://hacecuentas.com/fechas'},{'@type':'ListItem',position:3,name:'Días entre dos fechas',item:canonical}]}
+]};
 ---
 <Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} lang="es">
   <Header />
   <DiasEntreFechasHubExperience />
+  <TopPagesBoost variant="dates" />
   <RecoveredHubIntro eyebrow="Fechas" h1="Calcular días entre dos fechas" lede="Encontrá la diferencia entre fechas y resolvé cálculos de calendario sin hacer cuentas a mano." note="Esta herramienta muestra días corridos, hábiles, semanas y horas; también descuenta los feriados argentinos de 2026." links={[{href:'/fechas/cuenta-regresiva',title:'Cuenta regresiva',description:'Calculá cuánto falta para una fecha.'},{href:'/fechas/edad-exacta',title:'Edad exacta',description:'Obtené años, meses y días cumplidos.'},{href:'/fechas/feriados',title:'Feriados 2026',description:'Consultá feriados y fines de semana largos.'}]} />
   <Footer />
 </Layout>

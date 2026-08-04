@@ -1,0 +1,114 @@
+---
+type Variant = 'salary-co' | 'retirement' | 'severance' | 'dates' | 'salary-mx' | 'renta-co' | 'rent';
+interface Props { variant: Variant }
+const { variant } = Astro.props;
+---
+
+<section class="tpb" data-top-boost={variant} aria-labelledby={`tpb-${variant}`}>
+  <div class="tpb__shell">
+    {variant === 'salary-co' && <>
+      <header><span>Calculadora laboral rápida</span><h2 id="tpb-salary-co">Del salario mínimo al costo real</h2><p>Elegí cuántos mínimos y calculá salario, auxilio, descuentos del trabajador y prestaciones mensuales.</p></header>
+      <div class="tpb__tool" data-tool="salary-co">
+        <label>Cantidad de salarios mínimos<input id="tpb-co-multiples" type="number" min="0.25" max="10" step="0.25" value="1" /></label>
+        <label>Días trabajados en el mes<input id="tpb-co-days" type="number" min="1" max="30" value="30" /></label>
+        <label class="tpb__check"><input id="tpb-co-transport" type="checkbox" checked /> Incluir auxilio de transporte si corresponde</label>
+        <div class="tpb__results"><span>Devengado bruto<strong id="tpb-co-gross">—</strong></span><span>Neto orientativo<strong id="tpb-co-net">—</strong></span><span>Prestaciones provisionadas<strong id="tpb-co-benefits">—</strong></span><span>Valor hora desde 15/7<strong id="tpb-co-hour">—</strong></span></div>
+        <p class="tpb__note">Neto orientativo: descuenta 4% de salud y 4% de pensión sobre el salario. No incluye retención, libranzas ni aportes especiales.</p>
+      </div>
+    </>}
+
+    {variant === 'retirement' && <>
+      <header><span>Plan previsional</span><h2 id="tpb-retirement">Tu fecha posible y los aportes que faltan</h2><p>Usá fecha de nacimiento y aportes completos. La cuenta contempla la compensación general de un año de servicio por cada dos años de edad excedente.</p></header>
+      <div class="tpb__tool" data-tool="retirement">
+        <label>Fecha de nacimiento<input id="tpb-ret-birth" type="date" value="1966-08-04" /></label>
+        <label>Sexo registral<select id="tpb-ret-sex"><option value="f">Mujer</option><option value="m">Varón</option></select></label>
+        <label>Años de aportes comprobados<input id="tpb-ret-years" type="number" min="0" max="50" step="0.1" value="25" /></label>
+        <label>Años reconocidos por tareas de cuidado<input id="tpb-ret-care" type="number" min="0" max="10" step="1" value="0" /></label>
+        <div class="tpb__results"><span>Edad ordinaria<strong id="tpb-ret-age">—</strong></span><span>Fecha orientativa<strong id="tpb-ret-date">—</strong></span><span>Aportes faltantes<strong id="tpb-ret-missing">—</strong></span><span>Meses por completar<strong id="tpb-ret-months">—</strong></span></div>
+        <p class="tpb__note">No aplica automáticamente regímenes especiales, cajas provinciales ni moratorias. Confirmá tu Historia Laboral en Mi ANSES.</p>
+      </div>
+    </>}
+
+    {variant === 'severance' && <>
+      <header><span>Control de la propuesta</span><h2 id="tpb-severance">Compará lo calculado con lo que te ofrecieron</h2><p>Una diferencia no prueba por sí sola que la liquidación esté mal, pero te muestra cuándo conviene revisar rubro por rubro.</p></header>
+      <div class="tpb__tool" data-tool="severance">
+        <label>Total estimado por la calculadora<input id="tpb-sev-estimate" type="number" min="0" step="1000" value="5000000" /></label>
+        <label>Total ofrecido por el empleador<input id="tpb-sev-offer" type="number" min="0" step="1000" value="4200000" /></label>
+        <div class="tpb__results"><span>Diferencia en pesos<strong id="tpb-sev-diff">—</strong></span><span>Diferencia porcentual<strong id="tpb-sev-pct">—</strong></span><span>Lectura inicial<strong id="tpb-sev-status">—</strong></span></div>
+        <p class="tpb__note">Compará además fecha de ingreso, mejor remuneración normal y habitual, antigüedad, preaviso, integración, SAC y vacaciones. Revisión legal actualizada al 31/07/2026.</p>
+      </div>
+    </>}
+
+    {variant === 'dates' && <>
+      <header><span>Sumar o restar plazos</span><h2 id="tpb-dates">¿En qué fecha cae un plazo?</h2><p>Además de medir una diferencia, podés calcular una fecha futura o pasada y obtener una URL para compartirla.</p></header>
+      <div class="tpb__tool" data-tool="dates">
+        <label>Fecha base<input id="tpb-date-base" type="date" value="2026-08-04" /></label>
+        <label>Operación<select id="tpb-date-operation"><option value="1">Sumar</option><option value="-1">Restar</option></select></label>
+        <label>Cantidad de días<input id="tpb-date-days" type="number" min="0" max="10000" value="30" /></label>
+        <label>Tipo<select id="tpb-date-kind"><option value="calendar">Días corridos</option><option value="business">Días hábiles (lunes a viernes)</option></select></label>
+        <div class="tpb__results"><span>Fecha resultante<strong id="tpb-date-result">—</strong></span><span>Día de la semana<strong id="tpb-date-weekday">—</strong></span></div>
+        <button class="tpb__button" id="tpb-date-copy" type="button">Copiar resultado</button>
+        <p class="tpb__note">Los días hábiles excluyen sábados y domingos, pero no feriados nacionales, provinciales ni judiciales.</p>
+      </div>
+    </>}
+
+    {variant === 'salary-mx' && <>
+      <header><span>Dato oficial vs. escenario</span><h2 id="tpb-salary-mx">Qué sabemos al 4 de agosto de 2026</h2><p>CONASAMI todavía no publicó el salario mínimo 2027. La base vigente es $315.04 diarios en el área general y $440.87 en la frontera norte.</p></header>
+      <div class="tpb__facts">
+        <article><small>ESTADO</small><strong>Sin cifra oficial 2027</strong><p>Cualquier monto es una simulación hasta que exista resolución.</p></article>
+        <article><small>PRÓXIMA FECHA CLAVE</small><strong>Diciembre de 2026</strong><p>Período habitual de resolución y publicación.</p></article>
+        <article><small>UMA 2026</small><strong>$117.31 diarios</strong><p>$3,566.22 mensuales; no reemplaza el salario mínimo.</p></article>
+      </div>
+      <p class="tpb__source">Fuentes: CONASAMI e INEGI. Última revisión editorial: 04/08/2026.</p>
+    </>}
+
+    {variant === 'renta-co' && <>
+      <header><span>Checklist de obligación</span><h2 id="tpb-renta-co">Revisá los cinco topes antes de calcular el impuesto</h2><p>Para el año gravable 2025 basta cumplir una sola condición. Declarar no significa necesariamente pagar.</p></header>
+      <div class="tpb__tool" data-tool="renta-co">
+        <label>Ingresos brutos 2025<input data-renta-limit="69719000" data-renta-inclusive type="number" value="0" /></label>
+        <label>Patrimonio bruto al 31/12/2025<input data-renta-limit="224096000" type="number" value="0" /></label>
+        <label>Consumos con tarjeta<input data-renta-limit="69719000" type="number" value="0" /></label>
+        <label>Compras y consumos totales<input data-renta-limit="69719000" type="number" value="0" /></label>
+        <label>Consignaciones, depósitos e inversiones<input data-renta-limit="69719000" type="number" value="0" /></label>
+        <label class="tpb__check"><input id="tpb-renta-vat" type="checkbox" /> Era responsable de IVA al 31/12/2025</label>
+        <div class="tpb__verdict" id="tpb-renta-verdict">Completá tus valores para revisar la obligación.</div>
+        <p class="tpb__note">Vencimientos 2026: del 12 de agosto al 26 de octubre, según los dos últimos dígitos del NIT.</p>
+      </div>
+    </>}
+
+    {variant === 'rent' && <>
+      <header><span>Comparador de escenarios</span><h2 id="tpb-rent">Cuánto pagarías con distintos aumentos</h2><p>Esta comparación sirve para entender magnitudes. El único método aplicable es el que corresponde a tu contrato.</p></header>
+      <div class="tpb__tool" data-tool="rent">
+        <label>Alquiler actual<input id="tpb-rent-current" type="number" min="0" step="1000" value="500000" /></label>
+        <label>Aumento ICL informado (%)<input id="tpb-rent-icl" type="number" min="0" step="0.1" value="40" /></label>
+        <label>Aumento IPC acumulado (%)<input id="tpb-rent-ipc" type="number" min="0" step="0.1" value="25" /></label>
+        <label>Aumento pactado (%)<input id="tpb-rent-fixed" type="number" min="0" step="0.1" value="30" /></label>
+        <div class="tpb__results"><span>Con ICL<strong id="tpb-rent-icl-result">—</strong></span><span>Con IPC<strong id="tpb-rent-ipc-result">—</strong></span><span>Con porcentaje pactado<strong id="tpb-rent-fixed-result">—</strong></span></div>
+        <p class="tpb__note">No uses el escenario más barato: verificá fecha de firma, índice y frecuencia escritos en el contrato.</p>
+      </div>
+    </>}
+  </div>
+</section>
+
+<script>
+  const money = (value: number, currency = 'ARS', locale = 'es-AR') => new Intl.NumberFormat(locale, { style: 'currency', currency, maximumFractionDigits: 0 }).format(value);
+  document.querySelectorAll<HTMLElement>('[data-top-boost]').forEach((root) => {
+    const q = <T extends Element>(selector: string) => root.querySelector<T>(selector);
+    const variant = root.dataset.topBoost;
+    if (variant === 'salary-co') {
+      const update = () => { const m=Number(q<HTMLInputElement>('#tpb-co-multiples')?.value||0), d=Number(q<HTMLInputElement>('#tpb-co-days')?.value||0), salary=1750905*m*d/30, eligible=m<=2&&!!q<HTMLInputElement>('#tpb-co-transport')?.checked, transport=eligible?249095*d/30:0, net=salary*.92+transport, benefits=salary*(.0833+.0833+.01+.0417); q('#tpb-co-gross')!.textContent=money(salary+transport,'COP','es-CO'); q('#tpb-co-net')!.textContent=money(net,'COP','es-CO'); q('#tpb-co-benefits')!.textContent=money(benefits,'COP','es-CO'); q('#tpb-co-hour')!.textContent=money(1750905/210,'COP','es-CO'); };
+      root.querySelectorAll('input').forEach(el=>el.addEventListener('input',update)); update();
+    }
+    if (variant === 'retirement') {
+      const update=()=>{const birth=new Date(`${q<HTMLInputElement>('#tpb-ret-birth')?.value}T12:00:00`), sex=q<HTMLSelectElement>('#tpb-ret-sex')?.value, target=sex==='f'?60:65, years=Number(q<HTMLInputElement>('#tpb-ret-years')?.value||0)+Number(q<HTMLInputElement>('#tpb-ret-care')?.value||0), date=new Date(birth); date.setFullYear(date.getFullYear()+target); const today=new Date(), excess=Math.max(0,(today.getTime()-date.getTime())/31557600000), missing=Math.max(0,30-years-excess/2); q('#tpb-ret-age')!.textContent=`${target} años`; q('#tpb-ret-date')!.textContent=date.toLocaleDateString('es-AR',{month:'long',year:'numeric'}); q('#tpb-ret-missing')!.textContent=missing?`${missing.toFixed(1).replace('.',',')} años`:'Requisito cubierto'; q('#tpb-ret-months')!.textContent=missing?`${Math.ceil(missing*12)} meses`:'0 meses';}; root.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',update));update();
+    }
+    if (variant === 'severance') { const update=()=>{const e=Number(q<HTMLInputElement>('#tpb-sev-estimate')?.value||0),o=Number(q<HTMLInputElement>('#tpb-sev-offer')?.value||0),d=e-o,p=e?d/e*100:0;q('#tpb-sev-diff')!.textContent=money(d);q('#tpb-sev-pct')!.textContent=`${p.toFixed(1).replace('.',',')}%`;q('#tpb-sev-status')!.textContent=Math.abs(p)<3?'Muy cercanos':d>0?'Oferta inferior':'Oferta superior';};root.querySelectorAll('input').forEach(el=>el.addEventListener('input',update));update(); }
+    if (variant === 'dates') { const update=()=>{let d=new Date(`${q<HTMLInputElement>('#tpb-date-base')?.value}T12:00:00`),left=Number(q<HTMLInputElement>('#tpb-date-days')?.value||0),dir=Number(q<HTMLSelectElement>('#tpb-date-operation')?.value||1),business=q<HTMLSelectElement>('#tpb-date-kind')?.value==='business';while(left>0){d.setDate(d.getDate()+dir);if(!business||(d.getDay()!==0&&d.getDay()!==6))left--;}q('#tpb-date-result')!.textContent=d.toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});q('#tpb-date-weekday')!.textContent=d.toLocaleDateString('es-AR',{weekday:'long'});};root.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',update));q<HTMLButtonElement>('#tpb-date-copy')?.addEventListener('click',async()=>{await navigator.clipboard.writeText(`${q('#tpb-date-result')?.textContent} (${q('#tpb-date-weekday')?.textContent})`);q<HTMLButtonElement>('#tpb-date-copy')!.textContent='✓ Resultado copiado';});update(); }
+    if (variant === 'renta-co') { const update=()=>{const exceeded=[...root.querySelectorAll<HTMLInputElement>('[data-renta-limit]')].filter(el=>el.hasAttribute('data-renta-inclusive')?Number(el.value)>=Number(el.dataset.rentaLimit):Number(el.value)>Number(el.dataset.rentaLimit)).length,vat=q<HTMLInputElement>('#tpb-renta-vat')?.checked;const out=q('#tpb-renta-verdict')!;out.textContent=exceeded||vat?`Debés declarar: ${exceeded} tope${exceeded===1?'':'s'} superado${exceeded===1?'':'s'}${vat?' y responsabilidad de IVA':''}.`:'Con estos datos no superás los topes informados.';out.toggleAttribute('data-alert',!!(exceeded||vat));};root.querySelectorAll('input').forEach(el=>el.addEventListener('input',update));update(); }
+    if (variant === 'rent') { const update=()=>{const base=Number(q<HTMLInputElement>('#tpb-rent-current')?.value||0);(['icl','ipc','fixed'] as const).forEach(key=>q(`#tpb-rent-${key}-result`)!.textContent=money(base*(1+Number(q<HTMLInputElement>(`#tpb-rent-${key}`)?.value||0)/100)));};root.querySelectorAll('input').forEach(el=>el.addEventListener('input',update));update(); }
+  });
+</script>
+
+<style>
+  .tpb{padding:clamp(2.5rem,5vw,4.5rem) 1.25rem;background:var(--bg-soft,#f5f7f9);color:var(--text,#14243b)}.tpb__shell{max-width:1120px;margin:auto}.tpb header{max-width:760px;margin-bottom:1.4rem}.tpb header>span{font-size:.72rem;font-weight:850;letter-spacing:.09em;text-transform:uppercase;color:var(--accent,#176d5d)}.tpb h2{font-size:clamp(1.7rem,3vw,2.6rem);line-height:1.08;margin:.45rem 0}.tpb header p{color:var(--text-muted,#5f6d7c);line-height:1.65}.tpb__tool{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;padding:clamp(1rem,3vw,1.6rem);border:1px solid var(--border,#dfe5ea);border-radius:18px;background:var(--bg-card,#fff);box-shadow:0 16px 40px rgba(20,36,59,.06)}.tpb label{display:grid;gap:.4rem;font-size:.78rem;font-weight:750}.tpb input,.tpb select{width:100%;min-height:45px;padding:.7rem .8rem;border:1px solid var(--border,#ccd5dd);border-radius:10px;background:var(--bg,#fff);color:inherit;font:inherit}.tpb__check{grid-template-columns:auto 1fr;align-items:center}.tpb__check input{width:18px;min-height:18px}.tpb__results{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:.75rem}.tpb__results span{padding:1rem;border-radius:12px;background:var(--bg-soft,#f5f7f9);font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted,#667486)}.tpb__results strong{display:block;margin-top:.4rem;font-size:1.1rem;letter-spacing:0;text-transform:none;color:var(--text,#14243b)}.tpb__note,.tpb__source{grid-column:1/-1;margin:0;color:var(--text-muted,#667486);font-size:.76rem;line-height:1.55}.tpb__button{justify-self:start;padding:.75rem 1rem;border:0;border-radius:10px;background:var(--accent,#176d5d);color:white;font-weight:800;cursor:pointer}.tpb__facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}.tpb__facts article{padding:1.25rem;border:1px solid var(--border,#dfe5ea);border-radius:16px;background:var(--bg-card,#fff)}.tpb__facts small{color:var(--text-muted,#667486);font-weight:850}.tpb__facts strong{display:block;margin:.5rem 0;font-size:1.25rem}.tpb__facts p{margin:0;color:var(--text-muted,#667486);line-height:1.5}.tpb__verdict{grid-column:1/-1;padding:1rem;border-radius:12px;background:#e7f6ef;color:#176a52;font-weight:850}.tpb__verdict[data-alert]{background:#fff0df;color:#8a4c0d}@media(max-width:700px){.tpb__tool,.tpb__facts{grid-template-columns:1fr}.tpb__results{grid-template-columns:1fr 1fr}}@media(max-width:430px){.tpb__results{grid-template-columns:1fr}}
+</style>

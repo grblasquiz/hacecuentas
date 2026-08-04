@@ -9,10 +9,10 @@ export const hub: HubData = {
   siloHref: '/trabajo',
 
   eyebrow: 'Guía y estimación laboral',
-  h1: 'Te despidieron. Veamos si la cuenta está bien.',
+  h1: 'Calculadora de indemnización por despido 2026',
   lede:
     'Partimos del caso más habitual: despido sin causa. Ya podés ver una estimación y ajustarla con tus datos. Si tu situación es distinta, la cambiás abajo.',
-  stamps: ['Actualizado 31-07-2026', 'Ley 27.802 aplicada', 'Fórmula explicada'],
+  stamps: ['Revisado 04-08-2026', 'Ley 27.802 aplicada', 'Fórmula explicada'],
 
   resultLabel: 'Estimación inicial',
 
@@ -221,7 +221,7 @@ export const hub: HubData = {
     '/calculadora-resarcimiento-accidente',
   ],
 
-  lastReviewed: '2026-07-31',
+  lastReviewed: '2026-08-04',
   audience: 'AR',
 };
 
