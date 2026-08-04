@@ -351,6 +351,6 @@ export const hub: HubData = {
     '/calculadora-impuesto-bienes-personales-2026-cripto-cedears',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-04',
   audience: 'AR',
 };

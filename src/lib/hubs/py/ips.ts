@@ -285,5 +285,5 @@ export const hub: HubData = {
     '/py/calculadora-subsidio-maternidad-ips-paraguay',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-04',
 };

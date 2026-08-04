@@ -336,6 +336,6 @@ export const hub: HubData = {
     '/trabajo/sueldo-neto-mexico',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-04',
   locale: 'mx',
 };

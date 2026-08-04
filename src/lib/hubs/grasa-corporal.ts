@@ -374,7 +374,7 @@ export const hub: HubData = {
     '/calculadora-indice-cintura-estatura',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-04',
   audience: 'global',
 };
 
