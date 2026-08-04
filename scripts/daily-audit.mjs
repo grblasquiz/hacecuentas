@@ -176,7 +176,12 @@ async function seoCheck(url) {
 
     const title = extractTag(html, 'title');
     const desc = extractMeta(html, 'description');
-    const h1s = [...html.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/gi)].map(m => m[1].replace(/<[^>]+>/g, '').trim());
+    // Ignorar strings/plantillas HTML embebidas en scripts: no son headings
+    // del DOM y producían falsos positivos en los hubs con mockup interactivo.
+    const renderableHtml = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<template[\s\S]*?<\/template>/gi, '');
+    const h1s = [...renderableHtml.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/gi)].map(m => m[1].replace(/<[^>]+>/g, '').trim());
     const canonical = extractCanonical(html);
     const robots = extractMeta(html, 'robots');
     const ogTitle = extractMeta(html, 'og:title');
@@ -193,6 +198,9 @@ async function seoCheck(url) {
     if (!desc) issues.push({ severity: 'high', msg: 'meta description vacío' });
     else if (desc.length < 80) issues.push({ severity: 'low', msg: `desc corto (${desc.length} chars)` });
     else if (desc.length > 180) issues.push({ severity: 'low', msg: `desc largo (${desc.length} chars)` });
+    if (desc && /Herramienta clara, gratuita y actualizada\.?$/i.test(desc)) {
+      issues.push({ severity: 'medium', msg: 'meta description genérica, sin intención ni beneficio específico' });
+    }
 
     if (h1s.length === 0) issues.push({ severity: 'high', msg: 'sin H1' });
     else if (h1s.length > 1) issues.push({ severity: 'medium', msg: `múltiples H1 (${h1s.length})` });

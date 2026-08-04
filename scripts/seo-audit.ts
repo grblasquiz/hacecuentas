@@ -154,7 +154,13 @@ function analyze(url: string, html: string, statusCode: number): Row {
   const canonicalIsSelf = canonical === `${ORIGIN}${url === '/' ? '/' : url}` || canonical === `${ORIGIN}${url}`;
   const noindex = /noindex/i.test(robotsMeta);
 
-  const h1s = [...html.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/gi)].map((m) => stripTags(m[1]));
+  // Los mockups interactivos incluyen plantillas HTML dentro de <script>
+  // (por ejemplo `<h1>${p.t}</h1>`). Contarlas como DOM real generaba falsos
+  // positivos de doble H1. Auditamos sólo markup renderizable.
+  const renderableHtml = html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<template[\s\S]*?<\/template>/gi, '');
+  const h1s = [...renderableHtml.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/gi)].map((m) => stripTags(m[1]));
   const h1 = h1s[0] || '';
 
   // Contenido principal: <main> si existe, si no el body completo
@@ -196,6 +202,11 @@ function analyze(url: string, html: string, statusCode: number): Row {
   const isCalc = !isHub && (sitemapFile ? /^sitemap-calcs-/.test(sitemapFile) : /^\/(calculadora|conversor|simulador)/.test(url));
 
   const actions: string[] = [];
+  if (!title) actions.push('missing_title');
+  if (!metaDesc) actions.push('missing_description');
+  if (/Herramienta clara, gratuita y actualizada\.?$/i.test(metaDesc)) actions.push('generic_description');
+  if (h1s.length === 0) actions.push('missing_h1');
+  if (h1s.length > 1) actions.push('multiple_h1');
   if (!canonicalIsSelf) {
     // canonicalSlug deliberado (apunta a otra página del sitio) ≠ canonical roto
     const deliberate = /^https:\/\/hacecuentas\.com\//.test(canonical);
