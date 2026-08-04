@@ -84,14 +84,14 @@ const ESTADOS = Object.keys(MEXICO_2026.isnPorEstado);
 
 export const hub: HubData = {
   slug: 'mx/trabajo/costo-de-un-empleado',
-  title: 'Costo de un empleado en México: IMSS, INFONAVIT, ISN y prestaciones',
+  title: 'Factor de integración 2026: SDI y costo patronal en México',
   description:
-    'Calcula lo que de verdad cuesta un trabajador en nómina: cuotas patronales del IMSS con la tabla CEAV 2026, 5% de INFONAVIT, impuesto sobre nóminas de tu estado, provisión de aguinaldo y prima vacacional, salario diario integrado y prima de riesgo de trabajo.',
+    'Calcula el factor de integración 2026, salario diario integrado (SDI) y costo patronal con IMSS, INFONAVIT, ISN y prestaciones en México.',
   silo: 'Trabajo',
   siloHref: '/mx/trabajo',
 
-  eyebrow: 'México · costo patronal',
-  h1: '¿Cuánto me cuesta realmente tener a alguien en nómina?',
+  eyebrow: 'México · SDI y costo patronal 2026',
+  h1: 'Factor de integración 2026 y costo patronal en México',
   lede:
     'El sueldo bruto es apenas una parte. Encima van las cuotas patronales del IMSS, el 5% del INFONAVIT, el impuesto sobre nóminas de tu estado y la provisión de aguinaldo y prima vacacional. Elige tu caso y pon el sueldo: te desglosamos peso por peso.',
   stamps: [
@@ -302,7 +302,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué es el salario base de cotización y por qué no es igual al sueldo?',
-      a: 'El salario base de cotización, o SBC, es el salario diario multiplicado por el factor de integración, que suma al año los días de aguinaldo y la prima vacacional. Con el mínimo de ley (15 días de aguinaldo y 12 de vacaciones con 25% de prima) el factor arranca en 1,0452. Sobre el SBC, no sobre el sueldo nominal, se calculan casi todas las cuotas del IMSS y del INFONAVIT.',
+      a: 'El salario base de cotización, o SBC, es el salario diario multiplicado por el factor de integración, que suma al año los días de aguinaldo y la prima vacacional. Con el mínimo de ley (15 días de aguinaldo y 12 de vacaciones con 25% de prima) el factor arranca en 1,0493. Sobre el SBC, no sobre el sueldo nominal, se calculan casi todas las cuotas del IMSS y del INFONAVIT.',
     },
     {
       q: '¿Cómo se calcula el factor de integración?',
