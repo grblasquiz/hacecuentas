@@ -1,0 +1,49 @@
+---
+interface Props {
+  currentPath: string;
+}
+
+const { currentPath } = Astro.props;
+const calendars = [
+  { href: '/feriados-2026', label: 'Todos los países', flag: '🌎', detail: 'Comparativa regional' },
+  { href: '/fechas/feriados', label: 'Argentina', flag: '🇦🇷', detail: 'Feriados y fines de semana largos' },
+  { href: '/feriados-colombia-2026', label: 'Colombia', flag: '🇨🇴', detail: 'Festivos y puentes' },
+  { href: '/feriados-chile-2026', label: 'Chile', flag: '🇨🇱', detail: 'Feriados irrenunciables' },
+  { href: '/feriados-peru-2026', label: 'Perú', flag: '🇵🇪', detail: 'Feriados y días no laborables' },
+  { href: '/feriados-mexico-2026', label: 'México', flag: '🇲🇽', detail: 'Descansos obligatorios' },
+  { href: '/feriados-ecuador-2026', label: 'Ecuador', flag: '🇪🇨', detail: 'Feriados nacionales' },
+].filter((calendar) => calendar.href !== currentPath);
+---
+
+<nav class="holiday-network" aria-labelledby="holiday-network-title">
+  <div class="holiday-network__inner">
+    <p class="holiday-network__eyebrow">Calendarios 2026 de Latinoamérica</p>
+    <h2 id="holiday-network-title">Feriados y festivos por país</h2>
+    <p class="holiday-network__intro">Consultá el calendario oficial de otro país o compará las fechas de toda la región.</p>
+    <ul>
+      {calendars.map((calendar) => (
+        <li>
+          <a href={calendar.href}>
+            <span class="holiday-network__flag" aria-hidden="true">{calendar.flag}</span>
+            <span><strong>{calendar.label}</strong><small>{calendar.detail}</small></span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</nav>
+
+<style>
+  .holiday-network { padding: 3.5rem 1rem; background: #f6f8fb; color: #15213d; }
+  .holiday-network__inner { width: min(100%, 1080px); margin: 0 auto; }
+  .holiday-network__eyebrow { margin: 0 0 .45rem; color: #245edc; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .holiday-network h2 { margin: 0; font-size: clamp(1.65rem, 4vw, 2.25rem); letter-spacing: -.03em; }
+  .holiday-network__intro { margin: .65rem 0 1.5rem; color: #58657a; line-height: 1.55; }
+  .holiday-network ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .75rem; margin: 0; padding: 0; list-style: none; }
+  .holiday-network a { display: flex; gap: .8rem; align-items: center; min-height: 76px; padding: .85rem 1rem; color: inherit; text-decoration: none; background: #fff; border: 1px solid #dfe5ee; border-radius: 14px; transition: border-color .15s ease, transform .15s ease; }
+  .holiday-network a:hover { border-color: #245edc; transform: translateY(-1px); }
+  .holiday-network__flag { font-size: 1.55rem; }
+  .holiday-network strong, .holiday-network small { display: block; }
+  .holiday-network strong { font-size: .98rem; }
+  .holiday-network small { margin-top: .18rem; color: #667287; font-size: .78rem; line-height: 1.3; }
+</style>
