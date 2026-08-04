@@ -46,9 +46,9 @@ const cuotaMaxBienes = CUOTA_BIENES.K;
 const ratioServBienesK = CUOTA_SERVICIOS.K / CUOTA_BIENES.K;
 const facturacionMensualMaxA = TOPES.A / 12;
 
-const title = 'Monotributo agosto 2026: categorías, topes y cuotas';
+const title = 'Monotributo agosto 2026: tabla, topes y cuotas A–K';
 const description =
-  'Escala del monotributo desde agosto 2026: topes de facturación, cuotas de servicios y bienes, impuesto integrado, SIPA y obra social. Datos oficiales ARCA.';
+  'Consultá la tabla oficial del Monotributo desde agosto 2026: topes anuales y mensuales, cuotas para servicios y bienes, y calculadora de categoría.';
 
 const PAGE_URL = 'https://hacecuentas.com/datos-monotributo-2026';
 
@@ -71,7 +71,7 @@ const faq = [
   },
   {
     q: '¿Cuándo es la recategorización del monotributo 2026?',
-    a: `La recategorización se realiza en febrero y agosto. El trámite del segundo semestre puede hacerse hasta el 5 de agosto de 2026, evaluando los últimos 12 meses. Si mantenés la categoría o tenés menos de 6 meses de actividad, no corresponde recategorizarte.`,
+    a: `La recategorización se realiza en febrero y agosto. El trámite del segundo semestre puede hacerse hasta el 5 de agosto de 2026, evaluando los últimos 12 meses. Si mantenés la categoría o tenés menos de 6 meses de actividad, no corresponde hacer el trámite.`,
   },
   {
     q: '¿Qué pasa si me excedo del tope de facturación de mi categoría?',
@@ -264,6 +264,42 @@ const schema = {
           <div class="cf-stat__sub">Categoría K · servicios</div>
         </div>
       </div>
+
+      <section class="mo-quick" id="calcular-categoria" aria-labelledby="mo-quick-title">
+        <div class="mo-quick__intro">
+          <p class="cf-eyebrow">Calculadora rápida</p>
+          <h2 class="cf-section__title" id="mo-quick-title">¿Qué categoría te corresponde?</h2>
+          <p>Ingresá tu facturación bruta. La estimación usa la escala oficial vigente desde agosto y después te muestra cuánto margen te queda.</p>
+        </div>
+        <form class="mo-quick__form" id="mono-quick-form">
+          <label class="mo-field">
+            <span>Facturación bruta</span>
+            <span class="mo-money"><b aria-hidden="true">$</b><input id="mono-income" name="ingresos" inputmode="decimal" autocomplete="off" placeholder="Ej.: 2.000.000" required /></span>
+          </label>
+          <label class="mo-field">
+            <span>Período</span>
+            <select id="mono-period" name="periodo">
+              <option value="monthly">Por mes</option>
+              <option value="annual">Últimos 12 meses</option>
+            </select>
+          </label>
+          <label class="mo-field">
+            <span>Actividad</span>
+            <select id="mono-activity" name="actividad">
+              <option value="servicios">Servicios</option>
+              <option value="bienes">Venta de bienes</option>
+            </select>
+          </label>
+          <button class="mo-quick__button" type="submit">Calcular categoría</button>
+        </form>
+        <div class="mo-result" id="mono-result" aria-live="polite" hidden>
+          <div><span class="mo-result__label">Categoría estimada</span><strong class="mo-result__cat" id="mono-result-cat">A</strong></div>
+          <div><span class="mo-result__label">Cuota mensual</span><strong id="mono-result-fee">—</strong></div>
+          <div><span class="mo-result__label">Margen hasta el tope</span><strong id="mono-result-margin">—</strong></div>
+          <p class="mo-result__note" id="mono-result-note"></p>
+        </div>
+        <p class="mo-quick__help">La categoría definitiva también depende, cuando corresponda, de superficie, energía, alquileres y precio unitario. La herramienta no reemplaza la verificación en ARCA.</p>
+      </section>
 
       <!-- Escala visual -->
       <section class="cf-section">
@@ -562,6 +598,63 @@ const schema = {
   <Footer slot="footer" />
 </Layout>
 
+<script>
+  import { CATEGORIAS, TOPES, CUOTA_SERVICIOS, CUOTA_BIENES } from '../lib/data/monotributo-2026';
+
+  const form = document.querySelector<HTMLFormElement>('#mono-quick-form');
+  const income = document.querySelector<HTMLInputElement>('#mono-income');
+  const period = document.querySelector<HTMLSelectElement>('#mono-period');
+  const activity = document.querySelector<HTMLSelectElement>('#mono-activity');
+  const result = document.querySelector<HTMLElement>('#mono-result');
+  const resultCat = document.querySelector<HTMLElement>('#mono-result-cat');
+  const resultFee = document.querySelector<HTMLElement>('#mono-result-fee');
+  const resultMargin = document.querySelector<HTMLElement>('#mono-result-margin');
+  const resultNote = document.querySelector<HTMLElement>('#mono-result-note');
+  const ars = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+
+  const parseMoney = (value: string) => Number(value.replace(/[^0-9]/g, ''));
+  income?.addEventListener('input', () => {
+    const value = parseMoney(income.value);
+    income.value = value ? value.toLocaleString('es-AR') : '';
+  });
+
+  form?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!income || !period || !activity || !result || !resultCat || !resultFee || !resultMargin || !resultNote) return;
+    const entered = parseMoney(income.value);
+    if (!entered) {
+      income.setCustomValidity('Ingresá una facturación mayor a cero.');
+      income.reportValidity();
+      return;
+    }
+    income.setCustomValidity('');
+    const annual = period.value === 'monthly' ? entered * 12 : entered;
+    // El formulario trabaja en pesos enteros, mientras ARCA publica topes con centavos.
+    // Aceptamos el peso redondeado que ve el usuario para no excluir el límite oficial.
+    const cat = CATEGORIAS.find((key) => annual <= Math.ceil(TOPES[key]));
+    result.hidden = false;
+    if (!cat) {
+      resultCat.textContent = 'Fuera del régimen';
+      resultFee.textContent = 'Revisar Régimen General';
+      resultMargin.textContent = ars.format(annual - TOPES.K) + ' sobre la K';
+      resultNote.textContent = 'La facturación supera el máximo de la categoría K. Verificá la exclusión y el pase a Responsable Inscripto con ARCA o un profesional.';
+      result.dataset.state = 'danger';
+      return;
+    }
+    const fee = activity.value === 'bienes' ? CUOTA_BIENES[cat] : CUOTA_SERVICIOS[cat];
+    const displayedCap = Math.ceil(TOPES[cat]);
+    const margin = Math.max(0, displayedCap - annual);
+    const marginPct = (margin / displayedCap) * 100;
+    resultCat.textContent = cat;
+    resultFee.textContent = ars.format(fee);
+    resultMargin.textContent = ars.format(margin);
+    resultNote.textContent = marginPct <= 10
+      ? `Estás a ${marginPct.toLocaleString('es-AR', { maximumFractionDigits: 1 })}% del tope de la categoría ${cat}. Seguí de cerca la facturación acumulada.`
+      : `Tu facturación anualizada representa ${((annual / displayedCap) * 100).toLocaleString('es-AR', { maximumFractionDigits: 1 })}% del tope de la categoría ${cat}.`;
+    result.dataset.state = marginPct <= 10 ? 'warning' : 'ok';
+  });
+</script>
+
 <style>
   .datos-page {
     max-width: 900px;
@@ -702,6 +795,29 @@ const schema = {
 </style>
 
 <style>
+  .mo .mo-quick { margin: 1.25rem 0; padding: 1.35rem; border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border)); border-radius: var(--radius-lg); background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 7%, var(--bg-card)), var(--bg-card)); }
+  .mo .mo-quick__intro p:last-child { max-width: 68ch; margin: 0.45rem 0 0; color: var(--text-muted); line-height: 1.55; }
+  .mo .mo-quick__form { display: grid; gap: 0.8rem; margin-top: 1.15rem; }
+  .mo .mo-field { display: grid; gap: 0.35rem; color: var(--text); font-size: 0.76rem; font-weight: 800; }
+  .mo .mo-field input, .mo .mo-field select { width: 100%; min-height: 46px; padding: 0.72rem 0.8rem; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); color: var(--text); font: inherit; font-size: 0.9rem; }
+  .mo .mo-field input:focus-visible, .mo .mo-field select:focus-visible, .mo .mo-quick__button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent); outline-offset: 2px; }
+  .mo .mo-money { position: relative; display: block; }
+  .mo .mo-money b { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
+  .mo .mo-money input { padding-left: 1.75rem; }
+  .mo .mo-quick__button { align-self: end; min-height: 46px; padding: 0.72rem 1rem; border: 0; border-radius: var(--radius-sm); background: var(--accent); color: #fff; font-weight: 800; cursor: pointer; }
+  .mo .mo-quick__button:hover { background: var(--accent-strong); }
+  .mo .mo-result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-top: 1rem; padding: 1rem; border-radius: var(--radius); background: var(--bg-card); border: 1px solid var(--border); }
+  .mo .mo-result[data-state="warning"] { border-color: #f59e0b; background: color-mix(in srgb, #f59e0b 7%, var(--bg-card)); }
+  .mo .mo-result[data-state="danger"] { border-color: #dc2626; background: color-mix(in srgb, #dc2626 6%, var(--bg-card)); }
+  .mo .mo-result > div { display: grid; gap: 0.2rem; }
+  .mo .mo-result__label { color: var(--text-subtle); font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+  .mo .mo-result strong { color: var(--text); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .mo .mo-result__cat { color: var(--accent) !important; font-size: 1.65rem !important; }
+  .mo .mo-result__note { grid-column: 1 / -1; margin: 0; padding-top: 0.75rem; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.78rem; line-height: 1.5; }
+  .mo .mo-quick__help { margin: 0.8rem 0 0; color: var(--text-subtle); font-size: 0.7rem; line-height: 1.5; }
+  @media (min-width: 760px) { .mo .mo-quick__form { grid-template-columns: 1.6fr 1fr 1fr auto; } }
+  @media (max-width: 620px) { .mo .mo-result { grid-template-columns: 1fr; } .mo .mo-result__note { grid-column: 1; } }
+
   .mo .mo-updated { font-size: 0.75rem; color: var(--text-subtle); margin: 1rem 0 0; }
   .mo .mo-effective { margin: 0 0 1.25rem; }
   .mo .mo-table-note { margin: 0.75rem 0 0; color: var(--text-subtle); font-size: 0.78rem; line-height: 1.55; }

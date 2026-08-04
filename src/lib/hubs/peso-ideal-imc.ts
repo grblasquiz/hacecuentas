@@ -21,7 +21,7 @@ export const hub: HubData = {
   slug: 'salud/peso-ideal-imc',
   title: 'Calculadora de IMC y peso ideal: tabla OMS y rango saludable',
   description:
-    'Calculá tu IMC, consultá la tabla de la OMS y conocé el rango de peso orientativo para tu altura. Gratis, privado y explicado paso a paso.',
+    'Calculá tu IMC y peso ideal según tu altura. Incluye tabla OMS, rango saludable, cintura/altura y comparación de fórmulas. Gratis y privado.',
   silo: 'Salud',
   siloHref: '/salud',
 
@@ -29,7 +29,7 @@ export const hub: HubData = {
   h1: '¿Estoy en mi peso? Veamos qué dice tu IMC.',
   lede:
     'Con tu peso y tu altura sale tu IMC, la categoría de la OMS y el rango de kilos orientativo para tu estatura. Si agregás cintura, también calculamos la relación cintura/altura.',
-  stamps: ['Revisado 31-07-2026', 'Clasificación OMS para adultos', 'Cálculo privado'],
+  stamps: ['Revisado 03-08-2026', 'Clasificación OMS para adultos', 'Cálculo privado'],
 
   resultLabel: 'Tu índice de masa corporal',
 
@@ -196,10 +196,10 @@ export const hub: HubData = {
       date: '2019',
     },
     {
-      name: 'Mifflin MD et al. — A new predictive equation for resting energy expenditure',
-      url: 'https://pubmed.ncbi.nlm.nih.gov/2305711/',
-      publisher: 'PubMed',
-      date: '1990',
+      name: 'Gómez-Ambrosi et al. — CUN-BAE: estimación de grasa corporal en adultos',
+      url: 'https://pubmed.ncbi.nlm.nih.gov/22179957/',
+      publisher: 'Diabetes Care · PubMed',
+      date: '2012',
     },
   ],
 
@@ -210,7 +210,7 @@ export const hub: HubData = {
     '/calculadora-edad-metabolica',
   ],
 
-  lastReviewed: '2026-07-31',
+  lastReviewed: '2026-08-03',
   audience: 'global',
 };
 

@@ -89,7 +89,7 @@ export function categoriaPorIngresos(anual: number): Cat | null {
 export const META = {
   vigencia: '2026-08-01',
   fuente: 'ARCA',
-  fuenteUrl: 'https://ftp.afip.gob.ar/monotributo/categorias.asp',
+  fuenteUrl: 'https://arca.gob.ar/monotributo/categorias.asp',
   recategorizacion: 'semestral (febrero y agosto)',
 } as const;
 

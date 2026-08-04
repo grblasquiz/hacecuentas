@@ -7,6 +7,15 @@ import Footer from '../../components/Footer.astro';
 import PreferredSourceCta from '../../components/PreferredSourceCta.astro';
 import { filterByIncremental } from '../../lib/incremental';
 import { ALL_HUBS, allSilos } from '../../lib/hubs/registry';
+import {
+  CATEGORIAS as MONO_CATEGORIAS,
+  TOPES as MONO_TOPES,
+  CUOTA_SERVICIOS as MONO_CUOTA_SERVICIOS,
+  CUOTA_BIENES as MONO_CUOTA_BIENES,
+  PARAMS_FISICOS as MONO_PARAMS_FISICOS,
+  PRECIO_UNITARIO_MAX_BIENES as MONO_PRECIO_UNITARIO,
+  fmtARS as monoFmtARS,
+} from '../../lib/data/monotributo-2026';
 
 export async function getStaticPaths() {
   const posts = import.meta.glob<any>('../../content/blog/*.json', { eager: true });
@@ -17,7 +26,30 @@ export async function getStaticPaths() {
   }));
 }
 
-const { post } = Astro.props;
+const { post: rawPost } = Astro.props;
+
+// La guía nació antes de publicarse la escala definitiva de agosto. Para evitar
+// que vuelva a competir con datos proyectados, reemplazamos el bloque fiscal
+// completo desde la misma fuente única que usan la página-dato y las calcs.
+const currentMonoTable = `<h3>Tabla de categorías vigente desde agosto 2026</h3><table><thead><tr><th>Categoría</th><th>Tope anual</th><th>Cuota servicios</th><th>Cuota venta</th></tr></thead><tbody>${MONO_CATEGORIAS.map((cat) => `<tr><td>${cat}</td><td>${monoFmtARS(MONO_TOPES[cat])}</td><td>${monoFmtARS(MONO_CUOTA_SERVICIOS[cat])}</td><td>${monoFmtARS(MONO_CUOTA_BIENES[cat])}</td></tr>`).join('')}</tbody></table><p><small>Valores oficiales ARCA desde el 1 de agosto de 2026. Servicios y venta de bienes llegan hasta la categoría K; comparten topes de ingresos y tienen cuotas diferentes.</small></p><h3>Otros parámetros vigentes</h3><ul><li>Superficie máxima del régimen: ${MONO_PARAMS_FISICOS.K.superficie} m².</li><li>Energía eléctrica anual máxima: ${MONO_PARAMS_FISICOS.K.energia.toLocaleString('es-AR')} kWh.</li><li>Alquileres devengados anuales máximos: ${monoFmtARS(MONO_PARAMS_FISICOS.K.alquiler)}.</li><li>Precio unitario máximo para venta de cosas muebles: ${monoFmtARS(MONO_PRECIO_UNITARIO)}.</li></ul>`;
+
+const post = rawPost.slug === 'guia-completa-monotributo-2026'
+  ? {
+      ...rawPost,
+      description: `Monotributo 2026 actualizado: 11 categorías de la A a la K, tope máximo ${monoFmtARS(MONO_TOPES.K)}, cuotas oficiales, inscripción y recategorización.`,
+      answerSnippet: `El Monotributo vigente desde agosto 2026 tiene 11 categorías, de la A a la K. El tope máximo es ${monoFmtARS(MONO_TOPES.K)} y la recategorización se realiza en febrero y agosto.`,
+      content: (rawPost.content || '')
+        .replace(/<p><em>Aclaración importante:<\/em>[\s\S]*?<\/p>/, `<p><em>Actualización:</em> valores oficiales de ARCA con aplicación desde el 1 de agosto de 2026. Última revisión: 31 de julio de 2026.</p>`)
+        .replace(/<h3>Tabla de categorías \(valores proyectados 2026\)<\/h3>[\s\S]*?<p>Como ves, la cuota tiene <strong>tres componentes<\/strong>:/, `${currentMonoTable}<p>La cuota tiene <strong>tres componentes</strong>:`)
+        .replace(/tope máximo proyectado de ~\$82 millones anuales/g, `tope máximo de ${monoFmtARS(MONO_TOPES.K)} anuales`)
+        .replace(/Las categorías <strong>I, J y K son solo para venta de cosas muebles<\/strong>\./g, 'Las categorías <strong>I, J y K admiten servicios y venta de cosas muebles</strong>, con cuotas diferentes según la actividad.')
+        .replace(/en <strong>enero y julio<\/strong>/g, 'en <strong>febrero y agosto</strong>')
+        .replace(/Del 1 al 20 de enero de 2026/g, 'Hasta el 5 de febrero de 2026')
+        .replace(/Del 1 al 20 de julio de 2026/g, 'Hasta el 5 de agosto de 2026')
+        .replace(/ventana de julio/g, 'ventana de agosto')
+        .replace(/recategorización de julio 2026/g, 'recategorización de agosto 2026'),
+    }
+  : rawPost;
 
 const siteUrl = 'https://hacecuentas.com';
 

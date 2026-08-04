@@ -27,7 +27,25 @@ export async function getStaticPaths() {
   });
 }
 
-const { comparacion, otras = [] } = Astro.props;
+const { comparacion: rawComparacion, otras = [] } = Astro.props;
+
+// Las comparativas fiscales históricas tenían topes previos a agosto 2026.
+// Normalizamos todas sus superficies visibles y el schema mientras migramos
+// los textos largos a datos estructurados compartidos.
+const normalizeMonotributo2026 = (value: string) => value
+  .replace(/~?\$68\.000\.000/g, '$126.610.839')
+  .replace(/~?\$82\.000\.000/g, '$126.610.839')
+  .replace(/~?\$68 millones/g, '$126,6 millones')
+  .replace(/~?\$82 millones/g, '$126,6 millones')
+  .replace(/categoría H \(~?\$68\.000\.000 anuales\)/g, 'categoría K ($126.610.839 anuales)')
+  .replace(/semestral \(enero y julio\)/g, 'semestral (febrero y agosto)');
+const normalizeDeep = (value: any): any => {
+  if (typeof value === 'string') return normalizeMonotributo2026(value);
+  if (Array.isArray(value)) return value.map(normalizeDeep);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeDeep(item)]));
+  return value;
+};
+const comparacion = rawComparacion.slug?.includes('monotributo') ? normalizeDeep(rawComparacion) : rawComparacion;
 
 const siteUrl = 'https://hacecuentas.com';
 

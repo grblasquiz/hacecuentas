@@ -21,6 +21,7 @@ const schema = {
   '@graph': [
     {
       '@type': 'WebApplication',
+      '@id': `${CANONICAL}#calculator`,
       name: hub.title,
       url: CANONICAL,
       description: hub.description,
@@ -33,6 +34,31 @@ const schema = {
       about: { '@type': 'Thing', name: 'Índice de masa corporal' },
       publisher: { '@id': 'https://hacecuentas.com/#organization' },
       author: { '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person' },
+      featureList: [
+        'Cálculo de índice de masa corporal',
+        'Rango de peso saludable según altura',
+        'Comparación Devine, Robinson y Lorentz',
+        'Relación cintura-altura',
+        'Estimación de grasa corporal CUN-BAE',
+      ],
+      isBasedOn: hub.sources.map((source) => source.url),
+    },
+    {
+      '@type': 'MedicalWebPage',
+      '@id': `${CANONICAL}#webpage`,
+      url: CANONICAL,
+      name: hub.title,
+      description: hub.description,
+      dateModified: hub.lastReviewed,
+      lastReviewed: hub.lastReviewed,
+      inLanguage: 'es',
+      mainEntity: { '@id': `${CANONICAL}#calculator` },
+      about: [
+        { '@type': 'MedicalCondition', name: 'Sobrepeso y obesidad' },
+        { '@type': 'Thing', name: 'Índice de masa corporal' },
+      ],
+      author: { '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person' },
+      publisher: { '@id': 'https://hacecuentas.com/#organization' },
     },
     {
       '@type': 'FAQPage',
