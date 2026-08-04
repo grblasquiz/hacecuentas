@@ -3,12 +3,13 @@ import CookieConsent from '../components/CookieConsent.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
 import ProfileStore from '../components/ProfileStore.astro';
 import HubInterlinking from '../components/HubInterlinking.astro';
-import { ADSENSE_SERVING_ENABLED, isAdsenseApprovedPath, isAdsenseExcludedPath } from '../lib/adsense';
+import { isAdsenseApprovedPath, isAdsenseExcludedPath } from '../lib/adsense';
 import { HC_ALLOWED_PARAMS } from '../lib/analytics';
 import HubCalculationTracking from '../components/HubCalculationTracking.astro';
 import HubEngagementTools from '../components/HubEngagementTools.astro';
 import AccessibilityBaseline from '../components/AccessibilityBaseline.astro';
 import HubEmbedMode from '../components/HubEmbedMode.astro';
+import SitewideHubDecisionLayer from '../components/SitewideHubDecisionLayer.astro';
 import { compactSeoTitle } from '../lib/seo-title';
 import { compactSeoDescription } from '../lib/seo-description';
 import { seoDescriptionFor } from '../lib/seo-description-overrides';
@@ -727,25 +728,9 @@ const globalSchema = {
          siguen entrando por calculator_used en GA4 e importación a Google Ads. -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
 
-    <!-- AdSense re-alta 2026-06-09 (ca-pub-6276944768601561), versión performance-safe.
-         Medido con Lighthouse: el tag <script async> directo en head tira el score
-         mobile de 93 a 66 (LCP 2,9s → 8,1s) porque sus ~280KB+5 requests compiten
-         con el LCP en red lenta — ESTE fue el motivo del retiro anterior.
-         Arquitectura actual:
-           1. Verificación de sitio: meta tag (abajo) + línea en ads.txt. Ambos son
-              métodos oficiales de verificación → NO hace falta el script para la review.
-           2. El script se inyecta DESPUÉS de window.load + idle → la página pinta
-              primero, AdSense baja después. CLS=0 (sin unidades hasta la aprobación).
-         Si tras la aprobación los anuncios tardan en aparecer, bajar el delay,
-         pero NUNCA volver al tag estático en head sin re-medir Lighthouse. -->
+    <!-- AdSense: código oficial en el head global para verificación y anuncios automáticos. -->
     <meta name="google-adsense-account" content="ca-pub-6276944768601561" />
-    {/* Loader crudo de adsbygoogle, diferido a window.load + idle. Se activa sólo
-        cuando ADSENSE_SERVING_ENABLED (requiere CMP certificada por Google, ver
-        src/lib/adsense.ts) y la página no está excluida. La verificación de cuenta
-        (meta de arriba + línea en ads.txt) se mantiene SIEMPRE. */}
-    {ADSENSE_SERVING_ENABLED && !effectiveNoAds && (
-      <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){setTimeout(f,1500)})(function(){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';document.head.appendChild(s);});});`} />
-    )}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561" crossorigin="anonymous"></script>
 
     <!-- Microsoft Clarity (signal positiva para Bing/Copilot rankings) -->
     <!-- Se activa solo si está seteada la env var PUBLIC_MS_CLARITY_ID en build. -->
@@ -819,6 +804,7 @@ const globalSchema = {
     <slot name="header" />
     <main id="main" tabindex="-1">
       <slot />
+      <SitewideHubDecisionLayer pageTitle={title} modified={articleModifiedTime} noindex={noindex} />
       <HubInterlinking pageTitle={title} noindex={noindex} />
     </main>
     <slot name="footer" />

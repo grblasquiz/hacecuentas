@@ -1,0 +1,41 @@
+---
+import type { InstitutionalJourney } from '../lib/institutional-journeys';
+interface Props { data: InstitutionalJourney }
+const { data } = Astro.props;
+const sourceMap = Object.fromEntries(data.sources.map((source, index) => [`source-${index}`, source.href]));
+---
+<main class="ij" style={`--ij-accent:${data.accent}`} data-institutional-journey data-source-map={JSON.stringify(sourceMap)}>
+  <nav class="ij-crumb" aria-label="Migas de pan"><a href="/">Inicio</a><span>›</span><a href={data.siloHref}>{data.silo}</a><span>›</span><span>Recorrido</span></nav>
+  <header class="ij-hero">
+    <p class="ij-eyebrow">{data.eyebrow}</p><h1>{data.h1}</h1><p>{data.lede}</p>
+    <div class="ij-stamps"><span>Fuentes oficiales</span><span>Revisado agosto 2026</span><span>Sin registro</span></div>
+  </header>
+  <section class="ij-decision" aria-labelledby="ij-question">
+    <div class="ij-picker"><p class="ij-kicker">Empezá por tu situación</p><h2 id="ij-question">{data.question}</h2>
+      <div class="ij-options">{data.options.map((option, index) => <button type="button" class:list={['ij-option', { active: index === 0 }]} data-option={option.id} aria-pressed={index === 0 ? 'true' : 'false'}><span>{String(index + 1).padStart(2, '0')}</span>{option.label}</button>)}</div>
+    </div>
+    <article class="ij-result" aria-live="polite"><p class="ij-kicker">Tu próximo paso</p><h2 data-result-title>{data.options[0].result}</h2><ol data-result-actions>{data.options[0].actions.map((action) => <li>{action}</li>)}</ol><p class="ij-result-note">Abrí las fuentes oficiales del caso antes de iniciar el trámite.</p></article>
+  </section>
+  <section class="ij-tools"><p class="ij-kicker">Hacé las cuentas</p><h2>Herramientas que completan esta decisión</h2><div class="ij-grid">{data.related.map((item) => <a class="ij-tool" href={item.href}><h3>{item.title}</h3><p>{item.copy}</p><span>Abrir herramienta →</span></a>)}</div></section>
+  <section class="ij-sources"><div><p class="ij-kicker">Ventanillas correctas</p><h2>Fuentes institucionales</h2><p>Estos enlaces van directamente al organismo que define la regla o gestiona el trámite.</p></div><ul>{data.sources.map((source) => <li><a href={source.href} rel="noopener noreferrer" target="_blank"><strong>{source.label}</strong><span>{source.publisher} ↗</span></a></li>)}</ul></section>
+  <section class="ij-faq"><p class="ij-kicker">Antes de avanzar</p><h2>Preguntas frecuentes</h2>{data.faq.map((item) => <details><summary>{item.q}</summary><p>{item.a}</p></details>)}</section>
+  <aside class="ij-note"><strong>Importante</strong><p>{data.note}</p></aside>
+</main>
+<script is:inline define:vars={{ options: data.options }}>
+(() => {
+  const root = document.querySelector('[data-institutional-journey]');
+  if (!root) return;
+  const title = root.querySelector('[data-result-title]');
+  const actions = root.querySelector('[data-result-actions]');
+  root.querySelectorAll('[data-option]').forEach((button) => button.addEventListener('click', () => {
+    const option = options.find((item) => item.id === button.dataset.option); if (!option) return;
+    root.querySelectorAll('[data-option]').forEach((item) => { item.classList.toggle('active', item === button); item.setAttribute('aria-pressed', item === button ? 'true' : 'false'); });
+    title.textContent = option.result; actions.replaceChildren(...option.actions.map((copy) => { const li = document.createElement('li'); li.textContent = copy; return li; }));
+    window.hcTrack?.('hc_institutional_journey', { journey: location.pathname, case: option.id });
+  }));
+})();
+</script>
+<style>
+  .ij{background:#f7f8f6;color:#17202a;min-height:100vh;padding:24px max(20px,calc((100vw - 1160px)/2)) 72px}.ij a{color:inherit}.ij-crumb{display:flex;gap:9px;align-items:center;font-size:.82rem;color:#667085;margin:4px 0 32px}.ij-crumb a{text-decoration:none}.ij-hero{max-width:850px;margin-bottom:38px}.ij-eyebrow,.ij-kicker{text-transform:uppercase;letter-spacing:.11em;font-size:.72rem;font-weight:850;color:var(--ij-accent);margin:0 0 10px}.ij h1{font-size:clamp(2.35rem,6vw,4.8rem);line-height:.96;letter-spacing:-.055em;margin:0 0 20px;max-width:900px}.ij-hero>p:not(.ij-eyebrow){font-size:clamp(1.05rem,2vw,1.28rem);line-height:1.6;color:#475467;max-width:760px}.ij-stamps{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.ij-stamps span{border:1px solid #d6d9d3;background:#fff;border-radius:999px;padding:8px 12px;font-size:.78rem;font-weight:750}.ij-decision{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;align-items:stretch}.ij-picker,.ij-result,.ij-tools,.ij-sources,.ij-faq,.ij-note{background:#fff;border:1px solid #dedfd9;border-radius:22px;padding:clamp(22px,4vw,38px)}.ij h2{font-size:clamp(1.55rem,3vw,2.4rem);letter-spacing:-.035em;line-height:1.05;margin:0 0 24px}.ij-options{display:grid;gap:9px}.ij-option{width:100%;border:1px solid #d8dcd6;background:#fff;border-radius:13px;padding:15px;text-align:left;font:inherit;font-weight:780;display:flex;gap:12px;align-items:center;cursor:pointer}.ij-option span{font-size:.7rem;color:#98a2b3}.ij-option:hover,.ij-option.active{border-color:var(--ij-accent);box-shadow:inset 4px 0 var(--ij-accent);background:#fafafa}.ij-result{background:#17202a;color:white;display:flex;flex-direction:column}.ij-result .ij-kicker{color:#d8e8e2}.ij-result h2{font-size:clamp(1.6rem,3vw,2.5rem)}.ij-result ol{margin:4px 0 20px;padding-left:22px;display:grid;gap:14px;line-height:1.45}.ij-result-note{margin-top:auto;color:#cbd5e1;font-size:.85rem}.ij-tools,.ij-sources,.ij-faq{margin-top:20px}.ij-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.ij-tool{border:1px solid #dfe2dc;border-radius:15px;padding:20px;text-decoration:none;transition:.18s}.ij-tool:hover{transform:translateY(-2px);border-color:var(--ij-accent)}.ij-tool h3{margin:0 0 8px;font-size:1.08rem}.ij-tool p{color:#667085;line-height:1.5;font-size:.9rem}.ij-tool span{color:var(--ij-accent);font-weight:800;font-size:.84rem}.ij-sources{display:grid;grid-template-columns:.8fr 1.2fr;gap:28px}.ij-sources>div>p:last-child{color:#667085;line-height:1.55}.ij-sources ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}.ij-sources li a{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #e5e7e2;padding:13px 0;text-decoration:none}.ij-sources li span{color:#667085;font-size:.82rem;white-space:nowrap}.ij-faq details{border-top:1px solid #e2e4df;padding:17px 0}.ij-faq summary{font-weight:800;cursor:pointer}.ij-faq details p{color:#56616d;line-height:1.65;max-width:850px}.ij-note{margin-top:20px;border-left:5px solid var(--ij-accent);display:flex;gap:18px;align-items:flex-start}.ij-note p{margin:0;color:#56616d;line-height:1.55}@media(max-width:760px){.ij{padding-top:16px}.ij-decision,.ij-sources{grid-template-columns:1fr}.ij-grid{grid-template-columns:1fr}.ij h1{font-size:2.65rem}.ij-result{min-height:360px}.ij-sources li a{flex-direction:column;gap:5px}.ij-note{display:block}.ij-note strong{display:block;margin-bottom:8px}}
+  .ij .ij-result h2{color:#fff}
+</style>

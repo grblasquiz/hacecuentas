@@ -40,13 +40,13 @@ const commonFaq = (topic: string) => [
 export const JOURNEYS: Record<string, InstitutionalJourney> = {
   accidente: {
     slug: "trabajo/accidente-laboral",
-    title: "Accidente laboral: qué hacer, cómo denunciarlo y cuándo reclamar",
+    title: "Accidente laboral: qué hacer, qué cobra la ART y cuándo reclamar",
     description:
       "Recorrido paso a paso ante un accidente laboral: denuncia, ART, sueldo durante la baja, incapacidad, Comisión Médica e indemnización orientativa.",
     silo: "Trabajo",
     siloHref: "/trabajo",
     eyebrow: "SRT · ART · recorrido laboral",
-    h1: "Accidente laboral: qué hacer y cómo denunciarlo",
+    h1: "Tuve un accidente laboral: ¿qué hago ahora?",
     lede: "Elegí en qué momento del caso estás. Te mostramos el próximo paso, qué documentación guardar y qué herramienta usar para estimar lo económico.",
     accent: "#b54708",
     question: "¿En qué situación estás?",
@@ -746,6 +746,119 @@ export const JOURNEYS: Record<string, InstitutionalJourney> = {
       },
     ],
     note: "Las escalas salariales y los importes de aportes cambian. Usá el calculador de Hacé Cuentas y confirmá siempre el valor vigente en ARCA.",
+  },
+  separacion: {
+    slug: "familia/separacion-con-hijos",
+    title:
+      "Separación con hijos: cuota alimentaria, gastos y presupuesto de dos hogares",
+    description:
+      "Ordená una separación con hijos: alimentos, gastos ordinarios y extraordinarios, vivienda, reparto proporcional y presupuesto de dos hogares.",
+    silo: "Familia",
+    siloHref: "/familia",
+    eyebrow: "Familia · organización económica",
+    h1: "Nos separamos y tenemos hijos: ¿cómo ordenamos las cuentas?",
+    lede: "Transformá una discusión abstracta en una lista compartida de necesidades, ingresos, tiempos de cuidado y gastos.",
+    accent: "#be123c",
+    question: "¿Cuál es el problema principal hoy?",
+    options: [
+      {
+        id: "monto",
+        label: "Necesitamos estimar la cuota",
+        result:
+          "Empezá por el costo real de crianza y la capacidad proporcional de cada hogar, no por un porcentaje aislado.",
+        actions: [
+          "Listá gastos ordinarios mensuales del hijo.",
+          "Separá gastos extraordinarios y su mecanismo de aprobación.",
+          "Compará ingresos y tiempo efectivo de cuidado.",
+        ],
+        links: [],
+      },
+      {
+        id: "vivienda",
+        label: "No sabemos cómo repartir vivienda y servicios",
+        result:
+          "La vivienda del hijo integra la organización económica, pero hay que evitar contar dos veces el mismo gasto.",
+        actions: [
+          "Definí dónde vive y cuánto tiempo pasa en cada hogar.",
+          "Asigná vivienda, servicios y traslados relacionados.",
+          "Separá gastos del adulto de gastos atribuibles al hijo.",
+        ],
+        links: [],
+      },
+      {
+        id: "incumplimiento",
+        label: "Hay atrasos o incumplimiento",
+        result:
+          "Documentá pagos, gastos y comunicaciones; no compenses unilateralmente conceptos sin asesoramiento.",
+        actions: [
+          "Armá un registro cronológico.",
+          "Conservá comprobantes y acuerdos.",
+          "Buscá orientación jurídica local cuanto antes.",
+        ],
+        links: [],
+      },
+      {
+        id: "acuerdo",
+        label: "Queremos dejar un acuerdo claro",
+        result:
+          "Un buen acuerdo define monto, actualización, fecha, medio de pago y tratamiento de extraordinarios.",
+        actions: [
+          "Fijá una fórmula de actualización verificable.",
+          "Definí cobertura de salud, educación y actividades.",
+          "Establecé cómo se aprueban y pagan gastos no habituales.",
+        ],
+        links: [],
+      },
+    ],
+    related: [
+      {
+        href: "/familia/cuota-alimentaria",
+        title: "Estimar cuota alimentaria",
+        copy: "Calculá una referencia con gastos e ingresos.",
+      },
+      {
+        href: "/finanzas-personales/gastos-del-mes",
+        title: "Armar cada presupuesto",
+        copy: "Medí cuánto necesita cada hogar para funcionar.",
+      },
+      {
+        href: "/familia/costo-de-un-bebe",
+        title: "Costo de crianza inicial",
+        copy: "Desglosá los rubros cuando hay niños pequeños.",
+      },
+    ],
+    sources: [
+      {
+        href: "https://www.argentina.gob.ar/justicia/derechofacil/leysimple/alimentos",
+        label: "Alimentos — Derecho Fácil",
+        publisher: "Argentina.gob.ar",
+      },
+      {
+        href: "https://www.indec.gob.ar/indec/web/Nivel4-Tema-4-43-173",
+        label: "Canasta de crianza",
+        publisher: "INDEC",
+      },
+    ],
+    faq: [
+      ...commonFaq("Justicia"),
+      {
+        q: "¿La cuota es siempre un porcentaje del sueldo?",
+        a: "No existe un porcentaje universal. Se consideran las necesidades del hijo y las posibilidades económicas de quienes tienen obligación alimentaria.",
+      },
+      {
+        q: "¿El cuidado cotidiano cuenta como aporte?",
+        a: "Sí. Las tareas de cuidado tienen valor económico y forman parte de la contribución, aunque el acuerdo también deba resolver los pagos monetarios.",
+      },
+      {
+        q: "¿Qué son gastos extraordinarios?",
+        a: "Son gastos no habituales o imprevisibles. Conviene definir por escrito qué entra, cómo se aprueba y en qué proporción se paga.",
+      },
+      {
+        q: "¿Sirve la Canasta de Crianza del INDEC?",
+        a: "Es una referencia pública útil para estimar bienes, servicios y costo del cuidado, pero no reemplaza el análisis particular ni una resolución judicial.",
+      },
+    ],
+    note: "La cuota alimentaria y los acuerdos familiares son asuntos jurídicos sensibles. La herramienta ayuda a ordenar números, pero no sustituye mediación ni asesoramiento legal.",
   },
   fallecimiento: {
     slug: "familia/fallecimiento-y-tramites",

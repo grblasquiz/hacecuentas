@@ -1307,6 +1307,26 @@ const decisionHubUrls: Url[] = (() => {
       if (!prev || lastmod > prev) silos.set(siloHref, lastmod);
     }
   }
+  // Recorridos institucionales: comparten un único archivo de datos y una
+  // plantilla, pero son hubs editoriales canónicos dentro de los silos activos.
+  // El snapshot de herramientas se alimenta de este sitemap, así que deben
+  // entrar acá aunque no exporten un `hub` individual por archivo.
+  const journeysFile = join(ROOT, 'src', 'lib', 'institutional-journeys.ts');
+  if (existsSync(journeysFile)) {
+    const raw = readFileSync(journeysFile, 'utf8');
+    const blocks = raw.split(/\n\s{2}[a-z]+:\s*\{/).slice(1);
+    for (const block of blocks) {
+      const slug = block.match(/\bslug:\s*'([^']+)'/)?.[1];
+      const siloHref = block.match(/\bsiloHref:\s*'([^']+)'/)?.[1];
+      if (!slug || !slug.includes('/')) continue;
+      const lastmod = '2026-08-03';
+      urls.push({ loc: `${site}/${slug}`, priority: '0.9', changefreq: 'weekly', lastmod });
+      if (siloHref) {
+        const prev = silos.get(siloHref);
+        if (!prev || lastmod > prev) silos.set(siloHref, lastmod);
+      }
+    }
+  }
   // Página de silo: lastmod = el hub más fresco que contiene.
   for (const [href, lastmod] of silos) {
     urls.push({ loc: `${site}${href}`, priority: '0.8', changefreq: 'weekly', lastmod });

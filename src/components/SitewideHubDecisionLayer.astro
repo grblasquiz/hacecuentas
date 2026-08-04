@@ -1,0 +1,294 @@
+---
+/**
+ * Capa sitewide para los hubs actuales.
+ *
+ * Cuatro funciones en un único contrato global:
+ *  1. rutas de decisión (preguntas, no catálogo),
+ *  2. próximos pasos contextuales después del resultado,
+ *  3. resultados compartibles mediante fragmento (nunca crea URLs indexables),
+ *  4. ficha visible de confianza y metodología.
+ *
+ * El HTML se renderiza en build para conservar enlaces rastreables. El runtime
+ * únicamente ubica cada bloque junto a la calculadora y revela las acciones
+ * post-resultado. Así cubre hubs clásicos, experiencias y mockups aprobados.
+ */
+import currentTools from '../lib/current-tools-index.json';
+
+interface Props {
+  pageTitle?: string;
+  modified?: string;
+  noindex?: boolean;
+}
+
+const { pageTitle = '', modified, noindex = false } = Astro.props;
+const clean = (value: string) => {
+  try {
+    const pathname = new URL(value, 'https://hacecuentas.com').pathname;
+    return pathname === '/' ? '/' : pathname.replace(/\.html$/, '').replace(/\/$/, '');
+  } catch { return ''; }
+};
+const path = clean(Astro.url.pathname);
+const tools = currentTools.map((tool) => ({ ...tool, path: clean(tool.url || `/${tool.slug}`) }));
+const current = tools.find((tool) => tool.path === path);
+const locale = current?.locale || 'es';
+const language = locale === 'en' ? 'en' : locale.startsWith('pt') ? 'pt' : 'es';
+const isHub = Boolean(current && !noindex);
+
+const normalized = (value: string) => value
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/\p{Diacritic}/gu, '');
+const haystack = normalized(`${current?.title || ''} ${current?.h1 || ''} ${current?.description || ''} ${current?.category || ''} ${path}`);
+
+type Intent = { match: RegExp; prompts: string[]; target: RegExp[] };
+const INTENTS: Intent[] = [
+  { match: /sueldo|salario|trabajo|aguinaldo|laboral|emplead/, prompts: ['¿Querés saber cuánto cobrás?', '¿Necesitás liquidar un pago?', '¿Estás por contratar?'], target: [/sueldo-bruto-y-neto|sueldo-neto/, /liquidacion|aguinaldo|horas-extra/, /costo.*empleado|costo.*contratar/] },
+  { match: /alquiler|vivienda|hipotec|inmueble/, prompts: ['¿Querés saber cuánto necesitás?', '¿Vas a firmar o ajustar?', '¿Querés comparar alternativas?'], target: [/credito-hipotecario|entrar-a-un-alquiler|gastos-de-escritura/, /aumento-de-alquiler|comprar-vivienda/, /alquilar.*comprar|credito|presupuesto/] },
+  { match: /impuesto|ganancia|monotrib|renta|iva|tribut/, prompts: ['¿Querés calcular cuánto pagás?', '¿Necesitás revisar deducciones?', '¿Querés elegir un régimen?'], target: [/ganancias|renta|impuesto/, /deducciones|retencion/, /monotributo|regimen|iva/] },
+  { match: /prestamo|credito|deuda|interes|inversion|plazo-fijo|cedear/, prompts: ['¿Querés conocer la cuota?', '¿Necesitás comparar rendimientos?', '¿Querés ordenar tus deudas?'], target: [/prestamo|credito/, /plazo-fijo|interes-compuesto|cedear|billetera/, /salir-de-deudas|deuda/] },
+  { match: /auto|combustible|nafta|patente|vehiculo|uber/, prompts: ['¿Querés calcular el costo real?', '¿Estás por comprar o vender?', '¿Querés comparar con otra opción?'], target: [/costo-anual|consumo|nafta-y-peajes/, /comprar.*vender|tramites|patente/, /auto-o-uber|compar/] },
+  { match: /salud|imc|caloria|peso|embarazo|bebe|mascota/, prompts: ['¿Querés interpretar una medida?', '¿Necesitás hacer seguimiento?', '¿Querés calcular el próximo paso?'], target: [/imc|peso-ideal|analisis|crecimiento/, /tracker|seguimiento|semanas|habitos/, /calorias|fecha|cuanto/] },
+  { match: /construccion|hogar|pintura|piso|ladrillo|material/, prompts: ['¿Querés calcular materiales?', '¿Necesitás estimar el presupuesto?', '¿Querés comparar opciones?'], target: [/pintura|pisos|ladrillos|hormigon|material/, /costo-por-m2|costo-de-construir|presupuesto/, /compar|aislacion|climatizacion/] },
+  { match: /viaje|milla|equipaje|aeropuerto|vuelo/, prompts: ['¿Querés calcular el costo?', '¿Necesitás organizar el viaje?', '¿Querés comparar alternativas?'], target: [/costo|presupuesto|millas/, /equipaje|aeropuerto|hora-mundial|antes-de-volar/, /valen.*millas|compar/] },
+  { match: /cocina|evento|comida|bebida|receta/, prompts: ['¿Querés calcular cantidades?', '¿Necesitás adaptar una receta?', '¿Estás armando un evento?'], target: [/porciones|comida|bebida|asado/, /adaptar|tazas-y-gramos|temperatura/, /evento|juntada|fiesta/] },
+];
+const fallbackIntent: Intent = {
+  match: /.*/,
+  prompts: language === 'en' ? ['What do you need to calculate?', 'Do you want to compare options?', 'What should you do next?'] : language === 'pt' ? ['O que você precisa calcular?', 'Quer comparar opções?', 'Qual é o próximo passo?'] : ['¿Qué necesitás calcular?', '¿Querés comparar alternativas?', '¿Cuál es el próximo paso?'],
+  target: [/.*/, /compar|versus|vs/, /.*/],
+};
+const intent = INTENTS.find((item) => item.match.test(haystack)) || fallbackIntent;
+const cluster = current ? tools.filter((tool) => tool.locale === current.locale && tool.category === current.category && tool.path !== path) : [];
+// Algunas salas son la única URL de su categoría. En ese caso ampliamos al
+// mercado, pero conservamos los patrones de intención: ningún hub queda sin
+// ruta ni cae en una relación de otro idioma/país.
+const candidatePool = cluster.length > 0
+  ? cluster
+  : current ? tools.filter((tool) => tool.locale === current.locale && tool.path !== path) : [];
+const selected: typeof candidatePool = [];
+const add = (tool?: (typeof cluster)[number]) => {
+  if (tool && tool.path !== path && !selected.some((item) => item.path === tool.path)) selected.push(tool);
+};
+intent.target.forEach((pattern) => add(candidatePool.find((tool) => pattern.test(normalized(`${tool.path} ${tool.title} ${tool.h1}`)))));
+candidatePool.forEach((tool) => { if (selected.length < 3) add(tool); });
+const routes = selected.slice(0, 3).map((tool, index) => ({ tool, prompt: intent.prompts[index] || intent.prompts.at(-1)! }));
+const nextSteps = routes.length > 1 ? [...routes.slice(1), routes[0]].slice(0, 3) : routes;
+
+const COPY = {
+  es: { eyebrow: 'Elegí tu situación', routeTitle: '¿Qué querés resolver?', nextEyebrow: 'Tu próximo paso', nextTitle: 'Seguí con la decisión', nextIntro: 'Usá el resultado que acabás de obtener para avanzar con una cuenta relacionada.', trust: 'Datos y metodología', checked: 'Fórmula y fuentes verificadas', editor: 'Responsable: Martín Rodríguez, fundador y editor', reviewed: 'Última actualización', method: 'Ver fuentes y metodología', share: 'Guardar o compartir este resultado', shareHelp: 'El enlace conserva tus datos en el navegador y no crea una página indexable.', copy: 'Copiar enlace', copied: 'Enlace copiado', native: 'Compartir', privacy: 'No guardamos estos datos en el servidor.' },
+  en: { eyebrow: 'Choose your situation', routeTitle: 'What do you want to solve?', nextEyebrow: 'Your next step', nextTitle: 'Continue your decision', nextIntro: 'Use the result you just obtained to continue with a related calculation.', trust: 'Data and methodology', checked: 'Formula and sources checked', editor: 'Responsible editor: Martín Rodríguez', reviewed: 'Last updated', method: 'View sources and methodology', share: 'Save or share this result', shareHelp: 'The link keeps your inputs in the browser and does not create an indexable page.', copy: 'Copy link', copied: 'Link copied', native: 'Share', privacy: 'We do not store these inputs on the server.' },
+  pt: { eyebrow: 'Escolha sua situação', routeTitle: 'O que você quer resolver?', nextEyebrow: 'Próximo passo', nextTitle: 'Continue sua decisão', nextIntro: 'Use o resultado que acabou de obter para avançar com um cálculo relacionado.', trust: 'Dados e metodologia', checked: 'Fórmula e fontes verificadas', editor: 'Editor responsável: Martín Rodríguez', reviewed: 'Última atualização', method: 'Ver fontes e metodologia', share: 'Salvar ou compartilhar este resultado', shareHelp: 'O link mantém seus dados no navegador e não cria uma página indexável.', copy: 'Copiar link', copied: 'Link copiado', native: 'Compartilhar', privacy: 'Não armazenamos esses dados no servidor.' },
+}[language];
+---
+
+{isHub && routes.length > 0 && (
+  <section class="hc-decision-routes" data-hc-decision-routes aria-labelledby="hc-decision-routes-title">
+    <p class="hc-system-eyebrow">{COPY.eyebrow}</p>
+    <h2 id="hc-decision-routes-title">{COPY.routeTitle}</h2>
+    <div class="hc-decision-routes__grid">
+      {routes.map(({ tool, prompt }) => (
+        <a href={tool.path} data-hc-route-link>
+          <span>{prompt}</span>
+          <strong>{tool.h1 || tool.title}</strong>
+          <span aria-hidden="true">→</span>
+        </a>
+      ))}
+    </div>
+  </section>
+)}
+
+{isHub && (
+  <section class="hc-post-result-system" data-hc-post-result-system hidden data-nosnippet>
+    <div class="hc-post-result-system__next">
+      <p class="hc-system-eyebrow">{COPY.nextEyebrow}</p>
+      <h2>{COPY.nextTitle}</h2>
+      <p>{COPY.nextIntro}</p>
+      <div class="hc-post-result-system__links">
+        {nextSteps.map(({ tool }) => <a href={tool.path} data-hc-next-link><strong>{tool.h1 || tool.title}</strong><span aria-hidden="true">→</span></a>)}
+      </div>
+    </div>
+    <div class="hc-share-result" data-hc-share-result>
+      <h2>{COPY.share}</h2>
+      <p>{COPY.shareHelp}</p>
+      <div>
+        <button type="button" data-hc-copy-share>{COPY.copy}</button>
+        <button type="button" data-hc-native-share>{COPY.native}</button>
+      </div>
+      <small>🔒 {COPY.privacy}</small>
+      <p class="hc-share-result__status" data-hc-share-status role="status" aria-live="polite"></p>
+    </div>
+  </section>
+)}
+
+{isHub && (
+  <aside class="hc-trust-card" data-hc-trust-card aria-labelledby="hc-trust-title">
+    <div class="hc-trust-card__icon" aria-hidden="true">✓</div>
+    <div>
+      <h2 id="hc-trust-title">{COPY.trust}</h2>
+      <p><strong>{COPY.checked}</strong></p>
+      <p>{COPY.editor}</p>
+      <p data-hc-reviewed-row hidden={!modified}>{COPY.reviewed}: <time data-hc-reviewed datetime={modified}>{modified?.slice(0, 10)}</time></p>
+      <a href="/metodologia" data-hc-method-link>{COPY.method} →</a>
+    </div>
+  </aside>
+)}
+
+<script is:inline define:vars={{ pageTitle, shareCopy: COPY.copied }}>
+  const ROOTS = 'form.calc, form.calculator, form.lab, form.calc-shell, form.imc-calculator, [data-calculator], .hc-hub .journey, .hcm, [class*="Experience"]';
+  const SENSITIVE = /(?:name|nombre|apellido|email|mail|phone|telefono|dni|cuit|cuil|document|address|direccion|password|token|card|tarjeta|account|cuenta|iban|cbu|cvu)/i;
+  const post = document.querySelector('[data-hc-post-result-system]');
+  const routes = document.querySelector('[data-hc-decision-routes]');
+  const trust = document.querySelector('[data-hc-trust-card]');
+
+  function root() {
+    return document.querySelector(ROOTS);
+  }
+  function place() {
+    const calc = root();
+    if (!calc) return;
+    const heading = document.querySelector('h1');
+    if (routes && heading) {
+      const host = heading.closest('header, section, .hero, .decision-hero') || heading;
+      host.insertAdjacentElement('afterend', routes);
+    }
+    if (post) calc.insertAdjacentElement('afterend', post);
+    if (trust) (post || calc).insertAdjacentElement('afterend', trust);
+    const trustTime = trust?.querySelector('[data-hc-reviewed]');
+    const trustRow = trust?.querySelector('[data-hc-reviewed-row]');
+    if (trustTime && !trustTime.getAttribute('datetime')) {
+      const sourceTime = Array.from(document.querySelectorAll('time[datetime]')).find((time) => !time.closest('[data-hc-trust-card]'));
+      const date = sourceTime?.getAttribute('datetime');
+      if (date) {
+        trustTime.setAttribute('datetime', date);
+        trustTime.textContent = date.slice(0, 10);
+        if (trustRow) trustRow.hidden = false;
+      }
+    }
+    const method = trust?.querySelector('[data-hc-method-link]');
+    const sources = document.querySelector('[id*="source" i], .sources, [class*="sources" i]');
+    if (method && sources) {
+      if (!sources.id) sources.id = 'fuentes-y-metodologia';
+      method.setAttribute('href', `#${sources.id}`);
+    }
+  }
+
+  function safeFields() {
+    const calc = root();
+    if (!calc) return [];
+    return Array.from(calc.querySelectorAll('input, select, textarea')).filter((field) => {
+      if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) return false;
+      const key = field.name || field.id;
+      if (!key || SENSITIVE.test(key) || field.disabled) return false;
+      if (field instanceof HTMLInputElement && ['password', 'email', 'tel', 'file', 'hidden'].includes(field.type)) return false;
+      return true;
+    }).slice(0, 16);
+  }
+
+  function state() {
+    const values = {};
+    safeFields().forEach((field) => {
+      const key = field.name || field.id;
+      if (field instanceof HTMLInputElement && (field.type === 'checkbox' || field.type === 'radio')) {
+        if (field.checked) values[key] = field.value || '1';
+      } else if (String(field.value).length <= 80) values[key] = field.value;
+    });
+    return values;
+  }
+
+  function encode(values) {
+    const bytes = new TextEncoder().encode(JSON.stringify(values));
+    let binary = '';
+    bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+    return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+  }
+  function decode(value) {
+    try {
+      const padded = value.replaceAll('-', '+').replaceAll('_', '/') + '==='.slice((value.length + 3) % 4);
+      const binary = atob(padded);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    } catch { return null; }
+  }
+  function shareUrl() {
+    const encoded = encode(state());
+    return `${location.origin}${location.pathname}${encoded && encoded !== 'e30' ? `#resultado=${encoded}` : ''}`;
+  }
+  function restore() {
+    const match = location.hash.match(/^#resultado=([A-Za-z0-9_-]{1,3000})$/);
+    if (!match) return;
+    const values = decode(match[1]);
+    if (!values || typeof values !== 'object') return;
+    safeFields().forEach((field) => {
+      const key = field.name || field.id;
+      if (!Object.prototype.hasOwnProperty.call(values, key)) return;
+      const value = String(values[key]).slice(0, 80);
+      if (field instanceof HTMLInputElement && (field.type === 'checkbox' || field.type === 'radio')) field.checked = field.value === value;
+      else field.value = value;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    document.title = `${pageTitle} — resultado guardado`;
+    document.querySelector('meta[name="description"]')?.setAttribute('content', 'Resultado guardado para continuar, comparar o compartir en Hacé Cuentas.');
+  }
+  function reveal() {
+    if (post) post.hidden = false;
+  }
+  function calculatedControl(target) {
+    const button = target.closest?.('button, [role="button"]');
+    if (!button || !button.closest(ROOTS)) return false;
+    return button.matches('[type="submit"], .go, .primary') || /calcul|actualiz|simul|compar|result|compute|convert/i.test(`${button.id} ${button.textContent}`);
+  }
+
+  place();
+  restore();
+  if (location.hash.startsWith('#resultado=')) reveal();
+  document.addEventListener('hc-calc-result', reveal, true);
+  document.addEventListener('submit', (event) => { if (event.target?.closest?.(ROOTS)) setTimeout(reveal, 0); }, true);
+  document.addEventListener('click', (event) => { if (calculatedControl(event.target)) setTimeout(reveal, 0); }, true);
+
+  document.querySelector('[data-hc-copy-share]')?.addEventListener('click', async (event) => {
+    const url = shareUrl();
+    try { await navigator.clipboard.writeText(url); } catch { window.prompt('Copiar enlace', url); }
+    const status = document.querySelector('[data-hc-share-status]');
+    if (status) status.textContent = shareCopy;
+    window.hcTrack?.('hc_result_share', { calculator_slug: location.pathname.replace(/^\/+|\/+$/g, ''), share_method: 'copy' });
+    event.currentTarget.textContent = shareCopy;
+  });
+  const native = document.querySelector('[data-hc-native-share]');
+  if (native && !navigator.share) native.hidden = true;
+  native?.addEventListener('click', async () => {
+    try {
+      await navigator.share({ title: pageTitle, text: document.querySelector('h1')?.textContent || pageTitle, url: shareUrl() });
+      window.hcTrack?.('hc_result_share', { calculator_slug: location.pathname.replace(/^\/+|\/+$/g, ''), share_method: 'native' });
+    } catch {}
+  });
+  document.querySelectorAll('[data-hc-next-link]').forEach((link) => link.addEventListener('click', () => window.hcTrack?.('hc_next_step_click', { calculator_slug: location.pathname.replace(/^\/+|\/+$/g, ''), destination: link.getAttribute('href') || '' })));
+  document.querySelectorAll('[data-hc-route-link]').forEach((link) => link.addEventListener('click', () => window.hcTrack?.('hc_decision_route_click', { calculator_slug: location.pathname.replace(/^\/+|\/+$/g, ''), destination: link.getAttribute('href') || '' })));
+</script>
+
+<style>
+  .hc-decision-routes,.hc-post-result-system,.hc-trust-card{width:min(1120px,calc(100% - 2rem));margin:1.5rem auto;color:#172033;font-family:Inter,system-ui,sans-serif}
+  .hc-system-eyebrow{margin:0 0 .35rem!important;color:#315f86!important;font-size:.72rem!important;font-weight:800!important;letter-spacing:.1em;text-transform:uppercase}
+  .hc-decision-routes{padding:1.25rem;border:1px solid #dfe5e8;border-radius:18px;background:#f7fafb}
+  .hc-decision-routes h2,.hc-post-result-system h2,.hc-trust-card h2{margin:0 0 .85rem;font-size:clamp(1.25rem,2.4vw,1.7rem);color:#172033}
+  .hc-decision-routes__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem}
+  .hc-decision-routes__grid a{display:grid;grid-template-columns:1fr auto;gap:.35rem .75rem;min-height:96px;padding:1rem;border:1px solid #dce4e8;border-radius:14px;background:#fff;color:#172033;text-decoration:none;transition:.15s ease}
+  .hc-decision-routes__grid a:hover{border-color:#315f86;transform:translateY(-1px)}
+  .hc-decision-routes__grid a>span:first-child{grid-column:1/-1;color:#5a6878;font-size:.82rem}
+  .hc-decision-routes__grid strong{font-size:.95rem;line-height:1.35}
+  .hc-post-result-system{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);gap:1rem}
+  .hc-post-result-system[hidden]{display:none}
+  .hc-post-result-system__next,.hc-share-result,.hc-trust-card{padding:1.25rem;border:1px solid #dce4e8;border-radius:18px;background:#fff;box-shadow:0 8px 28px rgba(25,45,64,.06)}
+  .hc-post-result-system__next>p:not(.hc-system-eyebrow),.hc-share-result p,.hc-trust-card p{color:#526174;line-height:1.55}
+  .hc-post-result-system__links{display:grid;gap:.55rem;margin-top:1rem}
+  .hc-post-result-system__links a{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem .9rem;border-radius:11px;background:#edf5f8;color:#174b7a;text-decoration:none}
+  .hc-share-result div{display:flex;gap:.6rem;margin:.9rem 0}
+  .hc-share-result button{min-height:44px;padding:.65rem .9rem;border:1px solid #174b7a;border-radius:10px;background:#174b7a;color:#fff;font:inherit;font-weight:750;cursor:pointer}
+  .hc-share-result button+button{background:#fff;color:#174b7a}
+  .hc-share-result small{display:block;color:#5c6a79;line-height:1.45}
+  .hc-share-result__status{min-height:1.2em;margin:.5rem 0 0!important;font-weight:700}
+  .hc-trust-card{display:flex;gap:1rem;background:#f6faf7;border-color:#cfe0d3}
+  .hc-trust-card__icon{display:grid;place-items:center;flex:0 0 36px;height:36px;border-radius:50%;background:#257a4b;color:#fff;font-size:1.1rem;font-weight:900}
+  .hc-trust-card h2{margin-bottom:.45rem}.hc-trust-card p{margin:.2rem 0;font-size:.9rem}.hc-trust-card a{display:inline-block;margin-top:.55rem;color:#174b7a;font-weight:750}
+  @media(max-width:760px){.hc-decision-routes__grid,.hc-post-result-system{grid-template-columns:1fr}.hc-decision-routes,.hc-post-result-system,.hc-trust-card{width:min(100% - 1rem,1120px)}.hc-decision-routes__grid a{min-height:0}.hc-share-result div{flex-direction:column}.hc-share-result button{width:100%}}
+</style>
