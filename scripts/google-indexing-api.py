@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Google Indexing API — push URLs directo al indexer de Google.
+Google Indexing API — sólo para contenido elegible según Google.
 
-Nota sobre política: oficialmente Google dice que la Indexing API es para
-JobPosting + BroadcastEvent. En la práctica funciona para cualquier URL y
-es el método más efectivo para destrabar "Descubierta: actualmente sin
-indexar". Esto lo usa medio internet hace 3 años sin problemas.
+La API está limitada oficialmente a páginas con `JobPosting` o
+`BroadcastEvent` dentro de `VideoObject`. No debe usarse para calculadoras,
+landings editoriales ni sitemaps generales. Para esas URLs se usan sitemap,
+internal linking y la API read-only de URL Inspection.
 
-Quota: 200 URLs/día por proyecto GCP. Con 2.490 URLs pendientes = 13 días
-para limpiar toda la cola, o priorizar las 200 más valiosas por día.
+Este script queda disponible para un futuro tipo de contenido elegible, pero
+requiere `GOOGLE_INDEXING_ELIGIBLE_CONTENT=1` como confirmación explícita.
 
 Setup (una sola vez):
   1. Habilitar "Web Search Indexing API" en console.cloud.google.com
@@ -28,6 +28,7 @@ Variables de entorno:
   GOOGLE_INDEXING_CREDS  path al JSON (default: ~/.config/gcp/hacecuentas-indexing.json)
   GOOGLE_INDEXING_LIMIT  límite por corrida (default: 200)
   GOOGLE_INDEXING_HOST   dominio (default: https://hacecuentas.com)
+  GOOGLE_INDEXING_ELIGIBLE_CONTENT=1  confirma que las URLs cumplen la política
 """
 import json
 import os
@@ -121,6 +122,13 @@ def publish_url(service, url: str, action: str = 'URL_UPDATED') -> tuple[bool, s
 
 
 def main():
+    if os.environ.get('GOOGLE_INDEXING_ELIGIBLE_CONTENT') != '1':
+        sys.stderr.write(
+            'REFUSED: Google Indexing API sólo admite JobPosting o BroadcastEvent '
+            'dentro de VideoObject. Para páginas comunes usá sitemap + URL Inspection.\n'
+        )
+        sys.exit(2)
+
     args = sys.argv[1:]
     action = 'URL_UPDATED'
     urls: list[str] = []
@@ -151,6 +159,20 @@ def main():
     # Si hay un cambio real importante, mejor forzar con --from-file que ignorar el dedupe.
     st = load_state()
     now = time.time()
+    daily_cutoff = now - 24 * 3600
+    sent_last_24h = sum(
+        1
+        for key, sent_at in st.get('sent', {}).items()
+        if key.startswith(f'{action}:') and sent_at >= daily_cutoff
+    )
+    remaining_daily = max(0, DAILY_LIMIT - sent_last_24h)
+    if remaining_daily == 0:
+        print(
+            f'Quota diaria ya reservada por el state: {sent_last_24h}/{DAILY_LIMIT} '
+            'URLs en las últimas 24h. Skip.'
+        )
+        return
+
     recent_cutoff = now - 7 * 24 * 3600  # 7 días
     unique, skip_recent = [], 0
     seen = set()
@@ -166,10 +188,15 @@ def main():
     if skip_recent:
         print(f"Saltando {skip_recent} URLs enviadas hace <7 días (mismo action).")
 
-    # Aplicar límite diario
-    if len(unique) > DAILY_LIMIT:
-        print(f"Hay {len(unique)} URLs elegibles. Limitando a {DAILY_LIMIT}/día (quota Google).")
-        unique = unique[:DAILY_LIMIT]
+    # El workflow llama este script dos veces (priority queue + sitemap). El
+    # presupuesto debe compartirse entre ambas invocaciones, no reiniciarse en
+    # 200 cada vez. El state persistido permite reservar sólo el remanente real.
+    if len(unique) > remaining_daily:
+        print(
+            f"Hay {len(unique)} URLs elegibles. Ya se enviaron {sent_last_24h}; "
+            f"limitando esta fase a {remaining_daily} (quota diaria {DAILY_LIMIT})."
+        )
+        unique = unique[:remaining_daily]
 
     print(f"Pusheando {len(unique)} URLs a Google Indexing API (action={action})...")
     service = get_service()

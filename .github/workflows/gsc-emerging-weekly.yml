@@ -1,8 +1,8 @@
 name: GSC emerging queries (weekly)
 
-# Detecta queries emergentes en GSC: keywords que crecen en impressions
-# pero están en pos 11-50 (out-of-page-1, alcanzables). Output en un issue
-# semanal para priorizar contenido nuevo o expandir calcs existentes.
+# Detecta queries emergentes y audita cobertura real de las URLs prioritarias
+# con la API read-only de URL Inspection. Reemplaza al push diario por Indexing
+# API, que Google limita oficialmente a JobPosting/BroadcastEvent.
 
 on:
   schedule:
@@ -16,7 +16,7 @@ permissions:
 jobs:
   emerging-queries:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -37,6 +37,24 @@ jobs:
         run: |
           python3 scripts/gsc-emerging-queries.py --days 28 --top 50 --json /tmp/emerging.json | tee /tmp/emerging.txt
 
+      - name: Audit priority URL coverage (read-only)
+        run: |
+          python3 scripts/gsc-coverage-audit.py --top 65 --concurrency 4
+          cp scripts/gsc-coverage-report.json /tmp/gsc-coverage.json
+          python3 - <<'PY' > /tmp/gsc-coverage.txt
+          import json
+          from collections import Counter
+
+          data = json.load(open('/tmp/gsc-coverage.json'))
+          states = Counter(r.get('coverage_state', 'Sin estado') for r in data['not_indexed'])
+          total = data['total']
+          indexed = data['indexed_count']
+          print(f'Indexadas: {indexed}/{total} ({indexed / total * 100:.1f}%)')
+          print(f'No indexadas: {data["not_indexed_count"]}/{total}')
+          for state, count in states.most_common():
+              print(f'- {state}: {count}')
+          PY
+
       - name: Open issue with report
         if: success()
         env:
@@ -44,8 +62,14 @@ jobs:
         run: |
           TITLE="📈 GSC queries emergentes — semana $(date -u +'%Y-W%V')"
           BODY=$(cat <<EOF
-          Reporte semanal de queries con tracción creciente en GSC, posición 11-50 (alcanzables a top 10 con contenido).
+          Reporte semanal de queries con tracción creciente y cobertura real de las URLs prioritarias.
 
+          **Cobertura URL Inspection (top 65):**
+          \`\`\`
+          $(cat /tmp/gsc-coverage.txt)
+          \`\`\`
+
+          **Queries emergentes (posición 11-50):**
           \`\`\`
           $(cat /tmp/emerging.txt)
           \`\`\`
@@ -63,6 +87,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: emerging-queries
-          path: /tmp/emerging.json
+          name: gsc-growth-and-coverage
+          path: |
+            /tmp/emerging.json
+            /tmp/gsc-coverage.json
+            /tmp/gsc-coverage.txt
           retention-days: 30
