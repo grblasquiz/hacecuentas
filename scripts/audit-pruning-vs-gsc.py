@@ -2,17 +2,17 @@
 """
 Audit src/lib/pruning-redirects.ts vs GSC Search Analytics.
 
-Encuentra URLs pruneadas (zombies) que aun reciben impressions de Google
-pero pierden el trafico porque redirigen a categorias genericas o calcs no
-relacionadas. Esas son candidatas a desprunear.
+Encuentra URLs pruneadas (zombies) que aun reciben impressions de Google.
+Esas senales se usan para mejorar el target canonico: una URL retirada nunca
+se revive ni se elimina de pruning-redirects.ts.
 
 Estrategia post Core Update Abril 2026:
   - El pruning fue agresivo: ~376 URLs redirigidas, 238 de ellas a /categoria/*.
   - Algunas zombies siguen indexadas y reciben impressions sin convertir.
-  - Recuperarlas = recovery rapido sin esperar al algoritmo.
+  - Sus queries son insumo para mejorar el hub o pagina canonica de destino.
 
 Output:
-  - docs/pruning-audit-<YYYY-MM-DD>.md  : tabla con top candidatas a desprunear
+  - docs/pruning-audit-<YYYY-MM-DD>.md  : tabla con senales para los targets
   - scripts/pruning-audit-<YYYY-MM-DD>.json : data cruda
 
 Ejemplo:
@@ -24,7 +24,7 @@ Filter logic:
   - Target URL del redirect: si tambien rankea bien para la query original,
     la consolidacion funciono. Si no, es perdida pura.
   - Verdict:
-    * DESPRUNE   → impresiones altas, target sin trafico relevante
+    * TARGET_SIGNAL → impresiones altas; optimizar el target, sin revivir URL
     * KEEP       → target captura el trafico de la consolidada
     * REVIEW     → caso ambiguo, decision manual
 
@@ -142,7 +142,7 @@ def query_page_stats(s, page_url: str, start: str, end: str) -> dict:
 #                       (/es,/mx,/co,/cl,...) o calc publicada hace <6m. "0
 #                       impresiones" no implica zombie si no tuvo tiempo de
 #                       indexarse. NO se emite a gone-410.ts.
-#   * DESPRUNE        → URL tiene impressions o ranking real, vale recuperarla.
+#   * TARGET_SIGNAL   → URL retirada conserva senales; mejorar el target.
 #   * REVIEW          → caso ambiguo, decision manual.
 #   * KEEP            → target absorbio el trafico bien, no tocar.
 #   * SKIP_LOW        → bajo threshold, no analizar.
@@ -162,11 +162,11 @@ def verdict(zombie_stats: dict, target_stats: dict, threshold_impr: int) -> str:
         return "SKIP_LOW"
 
     if z_clicks <= 5 and t_clicks <= 5:
-        return "DESPRUNE"
+        return "TARGET_SIGNAL"
     if t_clicks > z_clicks * 3:
         return "KEEP"
     if z_impr >= threshold_impr * 3 and z_clicks <= 10:
-        return "DESPRUNE"
+        return "TARGET_SIGNAL"
     return "REVIEW"
 
 
@@ -185,15 +185,15 @@ def fmt_row(item: dict) -> str:
 def write_markdown(items: list[dict], out: Path, start: str, end: str, threshold: int) -> None:
     gone = [i for i in items if i["verdict"] == "GONE_410"]
     protected = [i for i in items if i["verdict"] == "PROTECTED_YOUNG"]
-    desprune = [i for i in items if i["verdict"] == "DESPRUNE"]
+    target_signals = [i for i in items if i["verdict"] == "TARGET_SIGNAL"]
     review = [i for i in items if i["verdict"] == "REVIEW"]
     keep = [i for i in items if i["verdict"] == "KEEP"]
 
-    desprune.sort(key=lambda x: x["zombie_stats"]["impressions"], reverse=True)
+    target_signals.sort(key=lambda x: x["zombie_stats"]["impressions"], reverse=True)
     review.sort(key=lambda x: x["zombie_stats"]["impressions"], reverse=True)
     gone.sort(key=lambda x: x["from"])
 
-    total_recovered_impr = sum(i["zombie_stats"]["impressions"] for i in desprune)
+    total_signal_impr = sum(i["zombie_stats"]["impressions"] for i in target_signals)
 
     lines = [
         f"# Pruning audit vs GSC — {datetime.now(datetime_tz.utc).date().isoformat()}",
@@ -203,7 +203,7 @@ def write_markdown(items: list[dict], out: Path, start: str, end: str, threshold
         "",
         f"- **GONE_410**: {len(gone)} URLs (0 impr + 0 clicks, candidatas a 410 Gone para fast desindex)",
         f"- **PROTECTED_YOUNG**: {len(protected)} URLs excluidas del 410 (locale joven /es,/mx,/co,/cl o calc <6m — NO se emiten a gone-410.ts)",
-        f"- **DESPRUNE recomendado**: {len(desprune)} URLs (≈ **{total_recovered_impr} impressions/periodo recuperables**)",
+        f"- **TARGET_SIGNAL**: {len(target_signals)} URLs (≈ **{total_signal_impr} impresiones/periodo para optimizar sus targets**)",
         f"- **REVIEW manual**: {len(review)} URLs",
         f"- **KEEP** (target funciona): {len(keep)} URLs",
         "",
@@ -234,26 +234,25 @@ def write_markdown(items: list[dict], out: Path, start: str, end: str, threshold
             lines.append(f"| `{i['from']}` | {i.get('guard_reason', '')} |")
     lines.extend([
         "",
-        "## DESPRUNE — orden por impressions desc",
+        "## TARGET_SIGNAL — optimizar el destino, nunca revivir la URL",
         "",
         "| Zombie | Target | Z.Impr | Z.Clicks | Z.CTR | Z.Pos | T.Impr | T.Clicks | Verdict |",
         "|--------|--------|-------:|---------:|------:|------:|-------:|---------:|---------|",
     ])
-    lines.extend(fmt_row(i) for i in desprune)
+    lines.extend(fmt_row(i) for i in target_signals)
     lines.extend(["", "## REVIEW — decision manual", ""])
     lines.append("| Zombie | Target | Z.Impr | Z.Clicks | Z.CTR | Z.Pos | T.Impr | T.Clicks | Verdict |")
     lines.append("|--------|--------|-------:|---------:|------:|------:|-------:|---------:|---------|")
     lines.extend(fmt_row(i) for i in review)
     lines.extend([
         "",
-        "## Como aplicar el desprune",
+        "## Como usar las senales historicas",
         "",
-        "1. Editar `src/lib/pruning-redirects.ts` y eliminar las entradas marcadas DESPRUNE.",
-        "2. Restaurar el JSON original de la calc si fue eliminado (revisar git history).",
-        "3. Si la calc nunca existio, hay que generarla (formula + JSON + assets OG).",
-        "4. Build local: `npm run build` para regenerar `dist/client/*.html`.",
-        "5. Deploy normal + ritual CF cache: `bash scripts/cf-purge-cache.sh` x2.",
-        "6. Verificar con curl que devuelven 200 OK con title del CTR rescue.",
+        "1. Mantener la entrada en `src/lib/pruning-redirects.ts`.",
+        "2. Analizar las queries historicas de la URL retirada.",
+        "3. Mejorar title, copy, enlaces o cobertura del hub/pagina canonica de destino.",
+        "4. Verificar que la URL retirada siga redirigiendo y no vuelva a responder 200.",
+        "5. Regla permanente: ninguna calculadora podada se revive.",
         "",
         "## Como aplicar el GONE_410",
         "",
@@ -412,12 +411,12 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    desprune_count = sum(1 for i in items if i["verdict"] == "DESPRUNE")
+    target_signal_count = sum(1 for i in items if i["verdict"] == "TARGET_SIGNAL")
     gone_count = sum(1 for i in items if i["verdict"] == "GONE_410")
     protected_count = sum(1 for i in items if i["verdict"] == "PROTECTED_YOUNG")
     print(f"\nResultados:", file=sys.stderr)
     print(f"  GONE_410: {gone_count}", file=sys.stderr)
-    print(f"  DESPRUNE: {desprune_count}", file=sys.stderr)
+    print(f"  TARGET_SIGNAL: {target_signal_count}", file=sys.stderr)
     print(f"  REVIEW  : {sum(1 for i in items if i['verdict'] == 'REVIEW')}", file=sys.stderr)
     print(f"  KEEP    : {sum(1 for i in items if i['verdict'] == 'KEEP')}", file=sys.stderr)
     if guard is not None:
