@@ -62,15 +62,15 @@ const usd = (n: number) =>
 
 export const hub: HubData = {
   slug: 'ec/finanzas-personales/creditos-y-ahorro',
-  title: 'Créditos y ahorro en Ecuador: cuánto pagas de verdad y cuánto ganas',
+  title: 'Préstamo quirografario IESS y créditos Ecuador: cuota real',
   description:
-    'Calcula la cuota real de un crédito hipotecario del BIESS, un quirografario del IESS, un consumo en banca privada, un vehicular o la deuda de tu tarjeta, y compáralo con lo que rinde una póliza a plazo fijo. Sistema francés y alemán, tasa nominal contra tasa efectiva y el costo total del crédito.',
+    'Calcula la cuota de un préstamo quirografario del IESS o crédito BIESS en Ecuador. Compara tasa, plazo, intereses y costo total antes de pedirlo.',
   silo: 'Finanzas personales',
   siloHref: '/ec/finanzas-personales',
   locale: 'ec',
 
   eyebrow: 'Ecuador · dolarizado · BIESS, IESS, banca privada y BCE',
-  h1: '¿Cuánto te cuesta de verdad ese crédito, y cuánto ganas si en vez de pedirlo ahorras?',
+  h1: 'Préstamo quirografario IESS y otros créditos: ¿cuánto pagas de verdad?',
   lede:
     'La cuota que te dicen en la ventanilla no es el costo del crédito: el costo es todo lo que devuelves de más. Aquí ves la cuota, los intereses totales y cuánto encarece el crédito lo que estás comprando, con la convención de tasa que usa cada entidad. Y del otro lado, lo que rinde el mismo dinero en una póliza a plazo fijo.',
   stamps: [
