@@ -72,6 +72,19 @@ def get_page_stats() -> list:
         return []
 
 
+def aggregate_stats(rows: list, key: str = "Query") -> list:
+    """Bing devuelve una fila por fecha; consolida por query o URL."""
+    grouped = {}
+    for row in rows:
+        value = row.get(key, "")
+        if not value:
+            continue
+        item = grouped.setdefault(value, {key: value, "Impressions": 0, "Clicks": 0})
+        item["Impressions"] += row.get("Impressions", 0) or 0
+        item["Clicks"] += row.get("Clicks", 0) or 0
+    return list(grouped.values())
+
+
 def get_quota() -> dict:
     try:
         resp = call("GetUrlSubmissionQuota")
@@ -88,8 +101,9 @@ def main():
     out_file = OUT_DIR / f"{iso_year}-W{iso_week:02d}.md"
 
     print(f"[bing-pulse] semana {iso_year}-W{iso_week:02d}", file=sys.stderr)
-    queries = get_query_stats()
-    pages = get_page_stats()
+    queries = aggregate_stats(get_query_stats())
+    # GetPageStats usa el campo Query para contener la URL (tipo QueryStats).
+    pages = aggregate_stats(get_page_stats())
     quota = get_quota()
 
     # Bing API devuelve datos del último mes, no slice semanal puro.
@@ -152,7 +166,7 @@ def main():
         "|---|---:|---:|",
     ]
     for p in pages[:10]:
-        page = p.get("Page", "") or "(no URL reported)"
+        page = p.get("Query", "") or "(no URL reported)"
         if len(page) > 70: page = page[:70] + "..."
         lines.append(f"| {page} | {p.get('Impressions',0)} | {p.get('Clicks',0)} |")
 
