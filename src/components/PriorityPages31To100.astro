@@ -1,0 +1,41 @@
+---
+import { priorityBoostFor } from '../lib/priority-pages-31-100';
+
+const boost = priorityBoostFor(Astro.url.pathname);
+const schema = boost ? {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: boost.title,
+  numberOfItems: boost.links.length,
+  itemListElement: boost.links.map(([href, name], index) => ({
+    '@type': 'ListItem', position: index + 1, name, url: new URL(href, 'https://hacecuentas.com').href,
+  })),
+} : null;
+---
+{boost && (
+  <section class="p31" data-priority-31-100 aria-labelledby="p31-title">
+    <div class="p31-in">
+      <header>
+        <span>{boost.eyebrow}</span>
+        <h2 id="p31-title">{boost.title}</h2>
+        <p>{boost.description}</p>
+      </header>
+      <div class="p31-grid">
+        {boost.links.map(([href, title, description]) => (
+          <a href={href}>
+            <strong>{title}</strong>
+            <small>{description}</small>
+            <b aria-hidden="true">→</b>
+          </a>
+        ))}
+      </div>
+    </div>
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+  </section>
+)}
+
+<style>
+  .p31{padding:48px 20px;background:var(--bg-soft,#f4f7fa);border-top:1px solid var(--border,#dce4ea)}
+  .p31-in{max-width:1120px;margin:auto}.p31 header{max-width:790px}.p31 header span{font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent,#176d87);font-weight:850}.p31 h2{margin:8px 0 10px;color:var(--text,#17364d);font-size:clamp(1.65rem,3.2vw,2.5rem);letter-spacing:-.04em;line-height:1.08}.p31 header p{margin:0;color:var(--text-muted,#607080);font-size:1.02rem;line-height:1.62}.p31-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}.p31-grid a{position:relative;display:grid;gap:7px;min-height:124px;padding:18px 46px 18px 18px;border:1px solid var(--border,#d8e2e8);border-radius:15px;background:var(--surface,#fff);color:var(--text,#17364d);text-decoration:none;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}.p31-grid a:hover{transform:translateY(-2px);border-color:var(--accent,#176d87);box-shadow:0 13px 30px #174b7a12}.p31-grid strong{font-size:1rem}.p31-grid small{color:var(--text-muted,#607080);font-size:.88rem;line-height:1.45}.p31-grid b{position:absolute;right:18px;top:18px;color:var(--accent,#176d87);font-size:1.25rem}
+  @media(max-width:760px){.p31{padding:34px 14px}.p31-grid{grid-template-columns:1fr}.p31-grid a{min-height:auto}}
+</style>
