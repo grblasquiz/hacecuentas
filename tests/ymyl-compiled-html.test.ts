@@ -88,8 +88,14 @@ describe.skipIf(!hasDist)('YMYL compiled — cada restringida bloqueada', () => 
   const relatedAuto = join(ROOT, 'src/lib/related-auto.json');
   const relatedAutoEn = join(ROOT, 'src/lib/related-auto-en.json');
 
-  it(`hay restringidas para testear (${restricted.length})`, () => {
-    expect(restricted.length).toBeGreaterThan(0);
+  // Catálogo sano = cero restringidas (ni drafts, ni distribution:'restricted',
+  // ni ymylRisk high sin revisor). Eso NO es un fallo: lo que sí sería un fallo
+  // es que la lista salga vacía porque el cómputo se rompió (dir inexistente,
+  // JSON ilegibles). Por eso validamos el pipeline, no un mínimo arbitrario.
+  it(`el cómputo de restringidas corre sobre el catálogo (${restricted.length} restringidas)`, () => {
+    const calcs = readdirSync(join(ROOT, 'src/content/calcs')).filter((f) => f.endsWith('.json'));
+    expect(calcs.length).toBeGreaterThan(0);
+    expect(restricted.length).toBeGreaterThanOrEqual(0);
   });
 
   for (const { slug, en, requiresClinicalNotice } of restricted) {

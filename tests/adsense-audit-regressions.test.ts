@@ -43,7 +43,13 @@ describe('regresiones detectadas en la auditoría AdSense', () => {
   it('mantiene autoría visible y palabras separadas en el título móvil de IMC', () => {
     const imc = read('src/components/ImcExperience.astro');
     expect(imc).toContain('<AuthorByline');
-    expect(imc).toContain('tu IMC y <br />conocé tu rango <br />saludable');
+    // El H1 puede reescribirse (SEO); lo que no puede volver a romperse es que
+    // los saltos peguen palabras. Chequeamos el patrón, no el copy exacto.
+    const h1 = imc.match(/<h1>([\s\S]*?)<\/h1>/)?.[1] ?? '';
+    expect(h1).not.toBe('');
+    expect(h1).toContain('<br />');
+    // Con el <br /> colapsado (móvil) tiene que quedar un espacio a algún lado.
+    expect(h1).not.toMatch(/\S<br \/>\S/);
   });
 
   it('deja las páginas de resultados deportivos sin anuncios y con fuente visible', () => {
