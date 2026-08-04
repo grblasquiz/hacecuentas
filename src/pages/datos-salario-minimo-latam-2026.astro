@@ -1,14 +1,99 @@
 ---
+// @incremental-standalone
 export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import SalarioMinimoLatamExperience from '../components/generated/SalarioMinimoLatamExperience.astro';
 const canonical='https://hacecuentas.com/datos-salario-minimo-latam-2026';
-const schema={'@context':'https://schema.org','@type':'WebApplication',name:"Salario mínimo en Latinoamérica 2026",url:canonical,operatingSystem:'Web'};
+const countries = [
+  { country: 'Costa Rica', value: '₡367.108', basis: 'Mensual · ocupación no calificada', detail: '' },
+  { country: 'Uruguay', value: '$24.572', basis: 'Mensual', detail: '' },
+  { country: 'Chile', value: '$539.000', basis: 'Mensual · 18 a 65 años', detail: '/cl/datos-sueldo-chile-2026' },
+  { country: 'Colombia', value: '$1.750.905', basis: 'Mensual · sin auxilio', detail: '/co/datos-salario-minimo-colombia-2026' },
+  { country: 'Ecuador', value: 'US$482', basis: 'Mensual', detail: '/datos-salario-basico-ecuador-2026' },
+  { country: 'México', value: '$315,04 diarios', basis: 'Diaria · zona general', detail: '/mx/datos-salario-minimo-mexico-2026' },
+  { country: 'Bolivia', value: 'Bs 2.750', basis: 'Mensual', detail: '' },
+  { country: 'Paraguay', value: '₲2.899.048', basis: 'Mensual', detail: '' },
+  { country: 'Perú', value: 'S/1.130', basis: 'Mensual · RMV', detail: '/pe/datos-sueldo-minimo-peru-2026' },
+  { country: 'Brasil', value: 'R$1.621', basis: 'Mensual', detail: '/pt/dados-salario-minimo-brasil-2026' },
+  { country: 'Argentina', value: '$376.600', basis: 'Mensual · vigente desde agosto', detail: '' },
+];
+const schema={
+  '@context':'https://schema.org',
+  '@graph': [
+    {
+      '@type':'Dataset',
+      name:'Salario mínimo 2026 por país en Latinoamérica',
+      description:'Tabla comparativa de salarios mínimos legales de 11 países de Latinoamérica, con base de cálculo y vigencia.',
+      url:canonical,
+      dateModified:'2026-08-04',
+      temporalCoverage:'2026',
+      spatialCoverage:'Latinoamérica',
+      creator:{'@type':'Organization',name:'Hacé Cuentas',url:'https://hacecuentas.com'},
+    },
+    {
+      '@type':'ItemList',
+      name:'Salarios mínimos de Latinoamérica 2026',
+      numberOfItems:countries.length,
+      itemListElement:countries.map((item, index) => ({
+        '@type':'ListItem',
+        position:index + 1,
+        name:`${item.country}: ${item.value}`,
+        ...(item.detail ? {url:`https://hacecuentas.com${item.detail}`} : {}),
+      })),
+    },
+  ],
+};
 ---
-<Layout title="Salario mínimo en Latinoamérica 2026 | Hacé Cuentas" description="Compará los salarios mínimos vigentes en Latinoamérica durante 2026. Argentina actualizada a $376.600 desde agosto." canonical={canonical} schema={schema} lang="es">
+<Layout title="Salario mínimo 2026 por país: tabla de Latinoamérica | Hacé Cuentas" description="Tabla del salario mínimo 2026 en 11 países de Latinoamérica: México $315,04 diarios, Colombia $1.750.905, Perú S/1.130 y más valores vigentes." canonical={canonical} schema={schema} lang="es">
   <Header />
   <SalarioMinimoLatamExperience />
+  <section class="crawlable-summary" aria-labelledby="tabla-salario-minimo-2026">
+    <div class="summary-wrap">
+      <p class="summary-kicker">Referencia rápida · actualizada el 4 de agosto de 2026</p>
+      <h2 id="tabla-salario-minimo-2026">Tabla del salario mínimo 2026 por país</h2>
+      <p>
+        Estos son los <strong>salarios mínimos legales vigentes en 2026</strong> expresados en moneda local.
+        La base no es idéntica entre países: México fija un valor diario, mientras que la mayoría publica un
+        monto mensual. Abrí cada ficha para consultar la norma, la vigencia y los complementos aplicables.
+      </p>
+      <div class="summary-table-wrap" role="region" aria-label="Salarios mínimos 2026 de Latinoamérica" tabindex="0">
+        <table>
+          <thead><tr><th scope="col">País</th><th scope="col">Salario mínimo 2026</th><th scope="col">Base legal</th></tr></thead>
+          <tbody>
+            {countries.map((item) => (
+              <tr>
+                <th scope="row">
+                  {item.detail ? <a href={item.detail}>{item.country}</a> : item.country}
+                </th>
+                <td>{item.value}</td>
+                <td>{item.basis}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="summary-note">
+        La conversión a dólares de la herramienta es orientativa y no representa poder de compra ni salario neto.
+      </p>
+    </div>
+  </section>
   <Footer />
 </Layout>
+
+<style>
+  .crawlable-summary { padding: 4.5rem 1rem; background: #fff; color: #15213d; }
+  .summary-wrap { width: min(100%, 1080px); margin: 0 auto; }
+  .summary-kicker { margin: 0 0 .6rem; color: #245edc; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .crawlable-summary h2 { margin: 0 0 .75rem; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -.035em; }
+  .crawlable-summary p { max-width: 820px; color: #526075; line-height: 1.65; }
+  .summary-table-wrap { margin-top: 1.6rem; overflow-x: auto; border: 1px solid #dfe5e5; border-radius: 16px; }
+  .crawlable-summary table { width: 100%; min-width: 640px; border-collapse: collapse; }
+  .crawlable-summary th, .crawlable-summary td { padding: .9rem 1rem; border-bottom: 1px solid #e9eeee; text-align: left; }
+  .crawlable-summary thead th { background: #f7faf9; color: #68758a; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+  .crawlable-summary tbody th { font-weight: 800; }
+  .crawlable-summary tbody tr:last-child > * { border-bottom: 0; }
+  .crawlable-summary a { color: #245edc; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  .summary-note { margin: 1rem 0 0; font-size: .88rem; }
+</style>
