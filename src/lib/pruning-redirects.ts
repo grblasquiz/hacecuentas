@@ -4464,7 +4464,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/en/conversion-ppm-mg-l-quimica-agua': '/en/math/unit-converter',
   '/en/conversion-torque-nm-lb-ft-kgm': '/en/cars/tires-brakes-and-specs',
   '/en/cornell-notes-chapter-study-time': '/en/memorization-spaced-repetition-anki-cards-dia',
-  '/en/costo-servidor-cloud-aws-ec2-mensual': '/en/aws-ec2-monthly-cost-calculator',
+  '/en/costo-servidor-cloud-aws-ec2-mensual': '/en/cloud-aws-gcp-azure-ec2-monthly-on-demand',
   '/en/cpr-bls-chest-compressions-rate': '/en/health/emergency-first-aid',
   '/en/creatine-loading-maintenance': '/en/health/supplements-and-daily-intake',
   '/en/credit-card-minimum-payment': '/en/money/get-out-of-debt',
@@ -6270,4 +6270,9 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/viajes/2': '/categoria/viajes',
   '/volumen-piramide-base-altura': '/matematica/volumen-de-cuerpos',
   '/volumen-prisma-rectangular-caja': '/matematica/volumen-de-cuerpos',
+  '/calculadora-playlist-duracion-canciones': '/eventos/logistica',
+  '/en/adolescent-final-height-prediction': '/en/screen-time-recommendations-by-age',
+  '/en/aws-ec2-monthly-cost-calculator': '/en/tech/cloud-and-ai-costs',
+  '/en/pnl-futures-long-short-perpetual': '/en/aguinaldo-calculator-argentina',
+  '/en/sushi-per-person-calculator': '/en/cooking/how-much-food-per-guest',
 };
