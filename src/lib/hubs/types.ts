@@ -104,7 +104,11 @@ export interface HubData {
   siloHref: string;
 
   eyebrow: string;
-  /** H1: la pregunta o la situación, en la voz del usuario. */
+  /**
+   * Pregunta rectora del hub, en la voz del usuario. Es obligatoria porque el
+   * componente la presenta en grande bajo la leyenda "Este hub responde".
+   * Todo hub nuevo hereda esa estructura automáticamente.
+   */
   h1: string;
   lede: string;
   /** Sellos bajo el lede: fecha, norma aplicada, cantidad de calcs. */

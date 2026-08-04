@@ -14,6 +14,7 @@ import { compactSeoTitle } from '../lib/seo-title';
 import { compactSeoDescription } from '../lib/seo-description';
 import { seoDescriptionFor } from '../lib/seo-description-overrides';
 import { isSelfCanonicalUrl } from '../lib/hreflang';
+import currentTools from '../lib/current-tools-index.json';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
 // Antes (5 weights estáticos): 5 woff2 × ~17 KB = ~85 KB de Inter.
@@ -84,6 +85,25 @@ const {
   pageType,
   noAds = false,
 } = Astro.props;
+
+// La mayoría de los hubs históricos no declaraba pageType aunque ya figure en
+// el catálogo canónico. Lo inferimos por ruta para que las reglas estructurales
+// de hub (incluida la pregunta rectora) alcancen los 600 actuales y cualquier
+// alta futura apenas entra al índice, sin depender de que cada página recuerde
+// pasar una prop adicional.
+const currentPath = Astro.url.pathname === '/'
+  ? '/'
+  : Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '');
+const isRegisteredHub = currentTools.some((tool) => {
+  const raw = tool.url || `/${tool.slug}`;
+  try {
+    const path = new URL(raw, Astro.site || Astro.url.origin).pathname;
+    return path.replace(/\.html$/, '').replace(/\/$/, '') === currentPath;
+  } catch {
+    return false;
+  }
+});
+const effectivePageType = pageType ?? (isRegisteredHub ? 'hub' : undefined);
 
 // Defensivo: keywords/newsKeywords deben ser string[]. Si una página los pasa
 // como string (ej. keywords="a, b, c") el `.slice().join()` de abajo tiraría
@@ -763,7 +783,7 @@ const globalSchema = {
       })();
     </script>
   </head>
-  <body data-domain={domain} data-page-type={pageType}>
+  <body data-domain={domain} data-page-type={effectivePageType}>
     <!-- Skip-link (WCAG 2.4.1): primer elemento focuseable. Solo si la página NO trae
          su propio Header (que ya incluye un skip-link i18n) → evita el duplicado. -->
     {!Astro.slots.has('header') && <a href="#main" class="skip-link">Saltar al contenido</a>}
@@ -1097,6 +1117,27 @@ const globalSchema = {
         letter-spacing: -0.035em;
       }
       body[data-page-type="room"] h1 { font-weight: 850; }
+
+      /*
+       * Pregunta rectora de producto: todo hub explica de entrada qué pregunta
+       * responde. Al vivir en Layout y depender de pageType="hub", cubre las
+       * plantillas clásicas, los mockups aprobados, las experiencias a medida y
+       * cualquier hub futuro sin obligar a duplicar markup en cada componente.
+       */
+      body[data-page-type="hub"] h1::before {
+        content: "Este hub responde";
+        display: block;
+        margin: 0 0 10px;
+        color: currentColor;
+        opacity: .62;
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 850;
+        line-height: 1.2;
+        letter-spacing: .11em;
+        text-transform: uppercase;
+      }
+      html[lang="en"] body[data-page-type="hub"] h1::before { content: "This hub answers"; }
 
       /* Dark mode — data-theme="dark" en <html> */
       html[data-theme="dark"] {
