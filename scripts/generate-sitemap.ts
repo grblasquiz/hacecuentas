@@ -624,6 +624,9 @@ const priorityUrls: Url[] = [
   prio('/feriados-chile-2026',               '0.85', 'weekly'),
   prio('/feriados-peru-2026',                '0.85', 'weekly'),
   prio('/feriados-ecuador-2026',             '0.85', 'weekly'),
+  // Mayor oportunidad Bing viva: 89.702 impresiones, posición 3,8 y CTR 1,3%.
+  // Se envía el canonical informativo; nunca los aliases de calculadoras podadas.
+  prio('/co/datos-salario-minimo-colombia-2026', '0.95', 'weekly'),
   prio('/argentina/cordoba/calculadora-ingresos-brutos-provincial', '0.85', 'monthly'),
   prio('/co/calculadora-tarifa-taxi-bogota-2026-unidades-recargos', '0.85', 'monthly'),
   prio('/tabla/tabla-escalas-ganancias-2026', '0.85', 'monthly'),
