@@ -12,9 +12,9 @@ try {
   datasetsIndex = mod.default || mod;
 } catch {}
 
-const title = 'Datasets públicos AR — Inflación, dólar, UVA, tasas BCRA';
+const title = 'Datasets públicos económicos: Argentina y Latinoamérica';
 const description =
-  'Datasets descargables CSV + JSON con datos económicos argentinos: inflación mensual histórica (INDEC desde 1943), cotización del dólar oficial y blue, UVA, tasas BCRA. Licencia CC-BY 4.0 — uso libre con atribución.';
+  'Datasets económicos en CSV y JSON: inflación, dólar, UVA y tasas de Argentina, más salarios mínimos de Latinoamérica. Licencia CC-BY 4.0.';
 
 const datasetMeta: Record<string, { name: string; description: string; tags: string[] }> = {
   'inflacion-argentina-historica-mensual': {
@@ -68,16 +68,32 @@ const datasetSchemas = datasetsIndex.datasets.map((d: any) => {
   };
 });
 
+const peruSalaryDataset = {
+  '@type': 'Dataset',
+  '@id': 'https://hacecuentas.com/datasets#sueldo-minimo-peru-2026',
+  name: 'Sueldo mínimo de Perú 2026 (RMV)',
+  description: 'Remuneración Mínima Vital, UIT, ONP, AFP, asignación familiar, gratificaciones y CTS vigentes en Perú en 2026.',
+  url: 'https://hacecuentas.com/pe/datos-sueldo-minimo-peru-2026',
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  keywords: ['Perú', 'sueldo mínimo', 'RMV', 'UIT', 'ONP', 'AFP'],
+  isAccessibleForFree: true,
+  distribution: [
+    { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: 'https://hacecuentas.com/datos/sueldo-minimo-peru-2026.csv' },
+    { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: 'https://hacecuentas.com/datos/sueldo-minimo-peru-2026.json' },
+  ],
+};
+
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': 'DataCatalog',
-      name: 'Hacé Cuentas — Datasets públicos AR',
+      name: 'Hacé Cuentas — Datasets públicos económicos de Argentina y Latinoamérica',
       description,
       url: 'https://hacecuentas.com/datasets',
       license: 'https://creativecommons.org/licenses/by/4.0/',
-      dataset: datasetSchemas,
+      dataset: [...datasetSchemas, peruSalaryDataset],
     },
   ],
 };
@@ -95,11 +111,12 @@ const schema = {
   <main class="article-main">
     <article class="page-content datasets-page">
       <header class="article-header">
-        <h1>Datasets públicos de Argentina</h1>
+        <h1>Datasets públicos económicos de Argentina y Latinoamérica</h1>
         <p class="lede">
-          Descargá datasets económicos argentinos en CSV y JSON. Inflación INDEC desde 1943,
-          cotización del dólar, UVA, tasas BCRA. <strong>Licencia CC-BY 4.0</strong>: uso libre
-          con atribución a <a href="https://hacecuentas.com">hacecuentas.com</a>.
+          Descargá datos económicos en CSV y JSON. Incluyen inflación INDEC desde 1943,
+          cotización del dólar, UVA y tasas BCRA de Argentina, además de referencias laborales
+          verificadas de Latinoamérica. <strong>Licencia CC-BY 4.0</strong>: uso libre con
+          atribución a <a href="https://hacecuentas.com">hacecuentas.com</a>.
         </p>
       </header>
 
@@ -138,6 +155,12 @@ const schema = {
           <li><a href="/datos-topes-sipa-2026">Topes SIPA 2026</a> — base imponible máxima de aportes</li>
           <li><a href="/datos-aguinaldo-2026">Aguinaldo (SAC) 2026</a> — fechas legales, fórmula y ejemplos</li>
           <li><a href="/datos-salario-minimo-latam-2026">Salario mínimo LATAM 2026</a> — 11 países con norma y vigencia</li>
+          <li>
+            <a href="/pe/datos-sueldo-minimo-peru-2026">Sueldo mínimo Perú 2026 (RMV)</a>
+            {' '}— S/ 1.130, UIT y descuentos; descargar
+            {' '}<a href="/datos/sueldo-minimo-peru-2026.csv" download>CSV</a>
+            {' '}o <a href="/datos/sueldo-minimo-peru-2026.json" download>JSON</a>
+          </li>
           <li><a href="/pt/dados-inss-irrf-2026">Dados INSS e IRRF 2026 (Brasil)</a> — tabelas com o redutor da reforma</li>
         </ul>
       </section>
