@@ -1,4 +1,5 @@
 ---
+// @incremental-standalone — landing fiscal aislada; habilita deploy incremental.
 export const prerender = true;
 
 import Layout from '../layouts/Layout.astro';
@@ -43,7 +44,7 @@ const schema = {
       description,
       inLanguage: 'es-AR',
       datePublished: '2026-04-16',
-      dateModified: '2026-08-01',
+      dateModified: '2026-08-04',
     },
     {
       '@type': 'BreadcrumbList',
@@ -65,7 +66,7 @@ const schema = {
   <Header slot="header" />
 
   <main class="mono-page">
-    <div class="deadline-strip"><span aria-hidden="true"></span><strong>La recategorización vence el miércoles 5 de agosto.</strong><em>Quedan 4 días.</em></div>
+    <div class="deadline-strip"><span aria-hidden="true"></span><strong>La recategorización vence el miércoles 5 de agosto.</strong><em id="deadline-status">Vence mañana.</em></div>
 
     <section class="mono-hero">
       <div class="page-shell">
@@ -116,7 +117,7 @@ const schema = {
         <article><span>3</span><h3>Entrá a ARCA</h3><p>Portal Monotributo → Recategorizarme. El sistema muestra la facturación anual.</p></article>
         <article><span>4</span><h3>Confirmá y guardá</h3><p>Descargá la credencial y verificá el importe antes del pago del 20/8.</p></article>
       </div>
-      <div class="arca-cta"><div><strong>¿Ya sabés qué categoría te corresponde?</strong><span>Hacé el trámite antes del miércoles 5 de agosto.</span></div><a href="https://www.arca.gob.ar/monotributo/ayuda/recategorizacion.asp" target="_blank" rel="noopener">Ir al portal de ARCA ↗</a></div>
+      <div class="arca-cta"><div><strong>¿Ya sabés qué categoría te corresponde?</strong><span id="deadline-cta">Hacé el trámite hasta el miércoles 5 de agosto inclusive.</span></div><a href="https://www.arca.gob.ar/monotributo/ayuda/recategorizacion.asp" target="_blank" rel="noopener">Ir al portal de ARCA ↗</a></div>
     </div></section>
 
     <section class="page-section page-shell info-grid">
@@ -140,6 +141,25 @@ const schema = {
 </Layout>
 
 <script define:vars={{ categorias }}>
+  const deadlineStatus = document.getElementById('deadline-status');
+  const deadlineCta = document.getElementById('deadline-cta');
+  if (deadlineStatus && deadlineCta) {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date()).split('-').map(Number);
+    const todayUtc = Date.UTC(parts[0], parts[1] - 1, parts[2]);
+    const deadlineUtc = Date.UTC(2026, 7, 5);
+    const days = Math.round((deadlineUtc - todayUtc) / 86400000);
+    if (days === 1) deadlineStatus.textContent = 'Vence mañana.';
+    else if (days === 0) deadlineStatus.textContent = 'Vence hoy.';
+    else if (days > 1) deadlineStatus.textContent = `Quedan ${days} días.`;
+    else {
+      deadlineStatus.textContent = 'El plazo venció el 5 de agosto.';
+      deadlineCta.textContent = 'Consultá en ARCA las opciones disponibles fuera de término.';
+    }
+  }
+
   const root = document.getElementById('category-calc');
   if (root) {
     const money = (value) => '$' + Math.round(value).toLocaleString('es-AR');
