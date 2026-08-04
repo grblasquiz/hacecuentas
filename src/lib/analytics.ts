@@ -72,6 +72,8 @@ export const HC_EVENTS = [
   'hc_push_dismiss',
   'hc_push_denied',
   'hc_push_unsubscribe',
+  // Datos abiertos: click en una descarga first-party CSV/JSON bajo /datos/.
+  'hc_dataset_download',
 ] as const;
 
 export type HcEvent = (typeof HC_EVENTS)[number];
@@ -94,6 +96,8 @@ export const HC_ALLOWED_PARAMS = [
   'logged_in',
   'source_page',
   'target_slug',
+  'dataset_file',
+  'file_extension',
   // Tipo de la primera acción post-resultado (scroll|next_step|decision_room|save).
   // Categórico, no identificatorio.
   'interaction_type',
@@ -132,6 +136,33 @@ export function sanitizeAnalyticsParams(params: Record<string, unknown> = {}): H
 /** ¿Es un nombre de evento válido del catálogo? */
 export function isHcEvent(name: string): name is HcEvent {
   return EVENTS.has(name);
+}
+
+/**
+ * Devuelve parámetros seguros sólo para descargas de datasets first-party.
+ * No conserva query strings, hashes ni URLs completas: únicamente el basename
+ * del archivo y su extensión, más el pathname de la página de origen.
+ */
+export function getDatasetDownloadParams(
+  href: string,
+  sourcePage: string,
+  origin = 'https://hacecuentas.com',
+): HcEventParams | null {
+  try {
+    const url = new URL(href, origin);
+    if (url.origin !== new URL(origin).origin) return null;
+    if (!url.pathname.startsWith('/datos/')) return null;
+    const filename = url.pathname.split('/').pop() || '';
+    const extension = filename.toLowerCase().match(/\.(csv|json)$/)?.[1];
+    if (!extension) return null;
+    return sanitizeAnalyticsParams({
+      dataset_file: filename,
+      file_extension: extension,
+      source_page: sourcePage.split(/[?#]/, 1)[0],
+    });
+  } catch {
+    return null;
+  }
 }
 
 type GtagFn = (...args: unknown[]) => void;

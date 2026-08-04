@@ -1,0 +1,21 @@
+---
+// Sin markup: listener global delegado para los datasets first-party.
+---
+
+<script>
+  import { getDatasetDownloadParams, hcTrack } from '../lib/analytics';
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const anchor = target.closest('a[href]');
+    if (!(anchor instanceof HTMLAnchorElement)) return;
+
+    const params = getDatasetDownloadParams(
+      anchor.href,
+      window.location.pathname,
+      window.location.origin,
+    );
+    if (params) hcTrack('hc_dataset_download', params);
+  });
+</script>

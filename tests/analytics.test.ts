@@ -4,6 +4,7 @@ import {
   HC_ALLOWED_PARAMS,
   sanitizeAnalyticsParams,
   isHcEvent,
+  getDatasetDownloadParams,
   hcTrack,
 } from '../src/lib/analytics';
 
@@ -23,6 +24,7 @@ describe('catálogo de eventos', () => {
       'hc_feedback_positive', 'hc_feedback_negative', 'hc_recent_calculator_opened',
       'hc_push_view', 'hc_push_subscribe', 'hc_push_dismiss', 'hc_push_denied',
       'hc_push_unsubscribe',
+      'hc_dataset_download',
     ];
     expect([...HC_EVENTS].sort()).toEqual([...spec].sort());
   });
@@ -80,7 +82,7 @@ describe('sanitizeAnalyticsParams — garantía anti-PII', () => {
     expect([...HC_ALLOWED_PARAMS]).toEqual([
       'calculator_slug', 'calculator_category', 'country', 'input_mode', 'search_term',
       'result_position', 'error_field', 'error_type', 'device_type', 'logged_in', 'source_page',
-      'target_slug', 'interaction_type',
+      'target_slug', 'dataset_file', 'file_extension', 'interaction_type',
     ]);
   });
 
@@ -93,6 +95,30 @@ describe('sanitizeAnalyticsParams — garantía anti-PII', () => {
     expect((out.search_term as string).length).toBe(120);
     expect('calculator_slug' in out).toBe(false);
     expect('result_position' in out).toBe(false);
+  });
+});
+
+describe('dataset downloads — medición first-party', () => {
+  it('acepta sólo CSV/JSON bajo /datos y elimina query/hash', () => {
+    expect(getDatasetDownloadParams(
+      '/datos/monotributo-2026.csv?email=no-debe-salir#x',
+      '/datos-monotributo-2026?campaign=sensible',
+    )).toEqual({
+      dataset_file: 'monotributo-2026.csv',
+      file_extension: 'csv',
+      source_page: '/datos-monotributo-2026',
+    });
+    expect(JSON.stringify(getDatasetDownloadParams(
+      '/datos/salario-minimo-mexico-2026.JSON?token=secreto',
+      '/datasets',
+    ))).not.toContain('secreto');
+  });
+
+  it('rechaza archivos externos, otras rutas y otras extensiones', () => {
+    expect(getDatasetDownloadParams('https://example.com/datos/a.csv', '/datasets')).toBeNull();
+    expect(getDatasetDownloadParams('/documentos/a.csv', '/datasets')).toBeNull();
+    expect(getDatasetDownloadParams('/datos/a.pdf', '/datasets')).toBeNull();
+    expect(getDatasetDownloadParams('javascript:alert(1)', '/datasets')).toBeNull();
   });
 });
 
