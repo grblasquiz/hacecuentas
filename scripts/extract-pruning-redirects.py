@@ -73,13 +73,10 @@ def main() -> int:
             u = nxt
         return u
 
-    # DESACTIVADO 2026-07-27. El aplanado es correcto (dos 301 seguidos diluyen
-    # link equity y Bing corta antes), pero destapa un problema preexistente:
-    # las 16 páginas de /comparar/ están fuera del sitemap desde antes de esta
-    # poda, y al resolver al destino FINAL el gate audit-redirect-graph las ve
-    # como "destino inválido" y frena el build. Reactivar cuando /comparar/
-    # vuelva al sitemap (hoy canDistributeCalc las excluye a todas).
-    APLANAR_CADENAS = False
+    # Activado 2026-08-04: la deuda de /comparar/ que impedía aplanar ya quedó
+    # resuelta (audit-redirect-graph informa 0 destinos inválidos). Mantener
+    # siempre activo: cada tanda nueva debe apuntar directo al destino final.
+    APLANAR_CADENAS = True
     aplanadas = 0
     if APLANAR_CADENAS:
         for k in list(redirects):

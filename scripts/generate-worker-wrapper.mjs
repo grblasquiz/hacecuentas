@@ -40,6 +40,7 @@ const DIST_SERVER = join(REPO_ROOT, 'dist', 'server');
 // Validamos las dos capas antes de generar/deployar el wrapper.
 const liveSitemaps = [
   '/sitemap-priority.xml', '/sitemap-core.xml', '/sitemap-calcs-finanzas.xml',
+  '/sitemap-calcs-construccion.xml', '/sitemap-co.xml', '/sitemap-pe.xml', '/sitemap-ec.xml',
   '/sitemap-calcs-entretenimiento.xml', '/sitemap-en.xml',
   '/sitemap-blog.xml', '/sitemap-news.xml', '/sitemap-tablas.xml', '/sitemap-hubs.xml',
   '/sitemap-iibb.xml', '/sitemap-fresh.xml', '/sitemap-images.xml',

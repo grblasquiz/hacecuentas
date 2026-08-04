@@ -1,0 +1,388 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MundialFinalLive from '../components/MundialFinalLive.astro';
+import WeekendPackCapture from '../components/WeekendPackCapture.astro';
+import { fixture, LIVE_FIXTURE_URL, teamLabel, artDayLabel, artTime, kickoffUTC } from '../lib/data/mundial-2026';
+import { topScorers } from '../lib/mundial-live';
+import type { RawMatch } from '../lib/data/mundial-2026';
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/campeon-mundial-2026`;
+
+const matches = fixture.matches;
+const final = matches.find((m) => /^final$/i.test((m.round || '').trim())) || null;
+const tercero = matches.find((m) => /third/i.test(m.round || '')) || null;
+
+// Ganador considerando penales > alargue > 90'
+function winnerName(m: RawMatch | null): string | null {
+  if (!m || !m.score || !m.score.ft) return null;
+  const s: any = m.score;
+  const [a, b] = s.p || s.et || s.ft;
+  if (a === b) return null;
+  return a > b ? m.team1 : m.team2;
+}
+const campeonName = winnerName(final);
+const campeon = campeonName ? teamLabel(campeonName) : null;
+const subcampeonName = campeonName && final ? (campeonName === final.team1 ? final.team2 : final.team1) : null;
+const subcampeon = subcampeonName ? teamLabel(subcampeonName) : null;
+// Marcador decisivo: penales > alargue > 90' (la final 2026 se definió en el alargue).
+const finalPair: [number, number] | null = final?.score?.ft ? (((final.score as any).p || (final.score as any).et || final.score.ft) as [number, number]) : null;
+const finalSuffix = final?.score ? ((final.score as any).p ? ' (pen.)' : (final.score as any).et ? ' (pr.)' : '') : '';
+const finalScore = finalPair ? `${finalPair[0]}-${finalPair[1]}${finalSuffix}` : null;
+const finalKickoff = final ? kickoffUTC(final.date, final.time) : null;
+
+const t1 = final ? teamLabel(final.team1) : null;
+const t2 = final ? teamLabel(final.team2) : null;
+const finalistasDefinidos = !!(t1 && t2 && !t1.tbd && !t2.tbd);
+
+const goleadores = topScorers(matches, 5);
+const botin = goleadores[0] || null;
+
+const title = campeon
+  ? `${campeon.es} campeón del Mundial 2026 — resultado de la final y palmarés | Hacé Cuentas`
+  : '¿Quién ganó el Mundial 2026? Final, campeón y palmarés | Hacé Cuentas';
+const description = campeon
+  ? `${campeon.es} es el campeón del Mundial 2026: le ganó la final a ${subcampeon?.es} (${finalScore}). Resultado, botín de oro y la tabla histórica de campeones del mundo.`
+  : 'La final del Mundial 2026 se jugó el domingo 19 de julio en el MetLife Stadium (Nueva York/Nueva Jersey). Quién ganó, el resultado de la final, el botín de oro y todos los campeones de la historia.';
+
+const updated = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fixture.fetchedAt));
+
+// Palmarés histórico (evergreen, crawleable)
+const palmares = [
+  { anio: 2022, campeon: '🇦🇷 Argentina', sub: 'Francia', res: '3-3 (4-2 pen.)', sede: 'Qatar' },
+  { anio: 2018, campeon: '🇫🇷 Francia', sub: 'Croacia', res: '4-2', sede: 'Rusia' },
+  { anio: 2014, campeon: '🇩🇪 Alemania', sub: 'Argentina', res: '1-0 (pr.)', sede: 'Brasil' },
+  { anio: 2010, campeon: '🇪🇸 España', sub: 'Países Bajos', res: '1-0 (pr.)', sede: 'Sudáfrica' },
+  { anio: 2006, campeon: '🇮🇹 Italia', sub: 'Francia', res: '1-1 (5-3 pen.)', sede: 'Alemania' },
+  { anio: 2002, campeon: '🇧🇷 Brasil', sub: 'Alemania', res: '2-0', sede: 'Corea y Japón' },
+  { anio: 1998, campeon: '🇫🇷 Francia', sub: 'Brasil', res: '3-0', sede: 'Francia' },
+  { anio: 1994, campeon: '🇧🇷 Brasil', sub: 'Italia', res: '0-0 (3-2 pen.)', sede: 'Estados Unidos' },
+  { anio: 1990, campeon: '🇩🇪 Alemania (RFA)', sub: 'Argentina', res: '1-0', sede: 'Italia' },
+  { anio: 1986, campeon: '🇦🇷 Argentina', sub: 'Alemania (RFA)', res: '3-2', sede: 'México' },
+  { anio: 1982, campeon: '🇮🇹 Italia', sub: 'Alemania (RFA)', res: '3-1', sede: 'España' },
+  { anio: 1978, campeon: '🇦🇷 Argentina', sub: 'Países Bajos', res: '3-1 (pr.)', sede: 'Argentina' },
+  { anio: 1974, campeon: '🇩🇪 Alemania (RFA)', sub: 'Países Bajos', res: '2-1', sede: 'Alemania (RFA)' },
+  { anio: 1970, campeon: '🇧🇷 Brasil', sub: 'Italia', res: '4-1', sede: 'México' },
+  { anio: 1966, campeon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra', sub: 'Alemania (RFA)', res: '4-2 (pr.)', sede: 'Inglaterra' },
+  { anio: 1962, campeon: '🇧🇷 Brasil', sub: 'Checoslovaquia', res: '3-1', sede: 'Chile' },
+  { anio: 1958, campeon: '🇧🇷 Brasil', sub: 'Suecia', res: '5-2', sede: 'Suecia' },
+  { anio: 1954, campeon: '🇩🇪 Alemania (RFA)', sub: 'Hungría', res: '3-2', sede: 'Suiza' },
+  { anio: 1950, campeon: '🇺🇾 Uruguay', sub: 'Brasil', res: '2-1', sede: 'Brasil' },
+  { anio: 1938, campeon: '🇮🇹 Italia', sub: 'Hungría', res: '4-2', sede: 'Francia' },
+  { anio: 1934, campeon: '🇮🇹 Italia', sub: 'Checoslovaquia', res: '2-1 (pr.)', sede: 'Italia' },
+  { anio: 1930, campeon: '🇺🇾 Uruguay', sub: 'Argentina', res: '4-2', sede: 'Uruguay' },
+];
+const titulosPorPais = [
+  { pais: '🇧🇷 Brasil', titulos: 5, anios: '1958, 1962, 1970, 1994, 2002' },
+  { pais: '🇩🇪 Alemania', titulos: 4, anios: '1954, 1974, 1990, 2014' },
+  { pais: '🇮🇹 Italia', titulos: 4, anios: '1934, 1938, 1982, 2006' },
+  { pais: '🇦🇷 Argentina', titulos: 3, anios: '1978, 1986, 2022' },
+  { pais: '🇺🇾 Uruguay', titulos: 2, anios: '1930, 1950' },
+  { pais: '🇫🇷 Francia', titulos: 2, anios: '1998, 2018' },
+  { pais: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra', titulos: 1, anios: '1966' },
+  { pais: '🇪🇸 España', titulos: 1, anios: '2010' },
+];
+
+const faq = [
+  {
+    q: '¿Quién ganó el Mundial 2026?',
+    a: campeon
+      ? `${campeon.es} ganó el Mundial 2026: venció a ${subcampeon?.es} en la final (${finalScore}) jugada el 19 de julio en el MetLife Stadium de Nueva York/Nueva Jersey.`
+      : 'La final del Mundial 2026 se jugó el domingo 19 de julio a las 16:00 (hora argentina) en el MetLife Stadium de Nueva York/Nueva Jersey. El resultado figura arriba, tomado del feed oficial del torneo.',
+  },
+  { q: '¿Cuándo y dónde fue la final del Mundial 2026?', a: 'Se jugó el domingo 19 de julio de 2026 a las 16:00 hora argentina (15:00 hora local), en el MetLife Stadium de East Rutherford, Nueva York/Nueva Jersey, Estados Unidos.' },
+  { q: '¿Qué país tiene más mundiales ganados?', a: 'Brasil es el máximo campeón con 5 títulos (1958, 1962, 1970, 1994 y 2002). Lo siguen Alemania e Italia con 4 cada uno, y Argentina con 3 (1978, 1986 y 2022).' },
+  { q: '¿Cuántos mundiales tiene Argentina?', a: 'Argentina tiene 3 títulos mundiales: 1978 (local), 1986 (México) y 2022 (Qatar). Además fue subcampeona en 1930, 1990 y 2014.' },
+  { q: '¿Quién ganó el Mundial anterior?', a: 'Argentina ganó el Mundial de Qatar 2022: empató 3-3 con Francia en la final y se impuso 4-2 en los penales, con Lionel Messi como figura del torneo.' },
+  {
+    q: '¿Quién salió tercero en el Mundial 2026?',
+    a: tercero?.score?.ft
+      ? `${teamLabel(winnerName(tercero) || '').es} se quedó con el tercer puesto: le ganó ${Math.max(...tercero.score.ft)}-${Math.min(...tercero.score.ft)} a ${teamLabel(winnerName(tercero) === tercero.team1 ? tercero.team2 : tercero.team1).es} el 18 de julio en Miami.`
+      : 'El partido por el tercer puesto se jugó el sábado 18 de julio de 2026 en Miami, entre los perdedores de las dos semifinales.',
+  },
+  {
+    q: '¿Quién fue el botín de oro del Mundial 2026?',
+    a: botin
+      ? `El máximo goleador del torneo fue ${botin.name} (${botin.flag} ${botin.es}) con ${botin.goles} goles.`
+      : 'El botín de oro se otorga al máximo goleador del torneo. Mirá la tabla completa de goleadores.',
+  },
+];
+
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Mundial 2026', item: `${SITE}/mundial-2026` },
+    { '@type': 'ListItem', position: 3, name: 'Campeón del Mundial 2026', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+
+const liveConfig = {
+  url: LIVE_FIXTURE_URL,
+  finalNum: final?.num ?? null,
+  kickoff: finalKickoff ? finalKickoff.toISOString() : null,
+};
+
+// Config del motor EN VIVO (ESPN) — la final se actualiza al minuto client-side
+// (ver public/mundial-live-espn.js). Solo los finalistas reales (Spain/Argentina).
+const finalistNames = [final?.team1, final?.team2].filter((n): n is string => !!n && !teamLabel(n).tbd);
+const espnCfg = {
+  date: (final?.date || '2026-07-19').replace(/-/g, ''),
+  finalTeams: finalistNames,
+  teams: Object.fromEntries(finalistNames.map((n) => [n, { es: teamLabel(n).es, flag: teamLabel(n).flag }])),
+  pollMs: 60000,
+};
+---
+
+<Layout title={title} description={description} canonical="/campeon-mundial-2026" schema={schema} audience="AR" domain="life">
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/">Inicio</a> › <a href="/mundial-2026">Mundial 2026</a> › <span>Campeón</span></nav>
+    <h1>🏆 ¿Quién ganó el Mundial 2026?</h1>
+    <p class="lede">
+      {campeon
+        ? `${campeon.flag} ${campeon.es} es el campeón del mundo: le ganó la final a ${subcampeon?.es} ${finalScore}.`
+        : 'La final se jugó el domingo 19 de julio en el MetLife Stadium (Nueva York/Nueva Jersey). Acá está el resultado de la final, el botín de oro y el palmarés histórico.'}
+    </p>
+    <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Datos: <a href="https://github.com/openfootball/worldcup.json" rel="noopener" target="_blank">openfootball</a></p>
+
+    <MundialFinalLive
+      cfg={espnCfg}
+      team1={t1 && !t1.tbd ? { es: t1.es, flag: t1.flag } : null}
+      team2={t2 && !t2.tbd ? { es: t2.es, flag: t2.flag } : null}
+      kickoffLabel={final?.date ? `${artDayLabel(final.date, final.time)} · ${artTime(final.date, final.time)} · MetLife Stadium` : ''}
+      champion={campeon && final && finalPair ? { es: campeon.es, flag: campeon.flag, homeName: teamLabel(final.team1).es, homeScore: finalPair[0], awayName: teamLabel(final.team2).es, awayScore: finalPair[1], pens: !!(final.score as any)?.p } : null}
+    />
+
+    <WeekendPackCapture source="campeon" />
+
+    {tercero && (
+      <section class="tercero">
+        <h2>Partido por el tercer puesto</h2>
+        <p>
+          {teamLabel(tercero.team1).tbd ? 'Perdedor semifinal 1' : `${teamLabel(tercero.team1).flag} ${teamLabel(tercero.team1).es}`}
+          {' vs '}
+          {teamLabel(tercero.team2).tbd ? 'perdedor semifinal 2' : `${teamLabel(tercero.team2).flag} ${teamLabel(tercero.team2).es}`}
+          {tercero.score?.ft ? ` — ${tercero.score.ft[0]}-${tercero.score.ft[1]}` : tercero.date ? ` — ${artDayLabel(tercero.date, tercero.time)} · ${artTime(tercero.date, tercero.time)} (Miami)` : ''}
+        </p>
+      </section>
+    )}
+
+    <section class="premios" data-espn-mvp-root>
+      <h2>🏅 Balón de Oro y Bota de Oro del Mundial 2026</h2>
+      <div class="premios-grid">
+        <div class="premio">
+          <span class="premio-label">Balón de Oro · mejor jugador</span>
+          <span class="premio-value" data-espn-mvp>Ver el detalle del premio</span>
+        </div>
+        <div class="premio">
+          <span class="premio-label">Bota de Oro · máximo goleador</span>
+          <span class="premio-value">{botin ? `${botin.name} — ${botin.goles} goles` : '—'}</span>
+        </div>
+      </div>
+      <p class="note"><a href="/balon-de-oro-mundial-2026">Ver el Balón de Oro del Mundial 2026 en detalle →</a></p>
+    </section>
+
+    {goleadores.length > 0 && (
+      <section class="botin">
+        <h2>⚽ Goleadores del Mundial 2026 — así terminó el botín de oro</h2>
+        <table>
+          <thead><tr><th>#</th><th>Jugador</th><th>Selección</th><th>Goles</th></tr></thead>
+          <tbody>
+            {goleadores.map((g, i) => (
+              <tr><td>{i + 1}</td><td>{g.name}</td><td>{g.flag} {g.es}</td><td><b>{g.goles}</b></td></tr>
+            ))}
+          </tbody>
+        </table>
+        <p class="note"><a href="/goleadores-mundial-2026">Ver la tabla completa de goleadores →</a></p>
+      </section>
+    )}
+
+    <section class="palmares">
+      <h2>🏆 Todos los campeones del mundo (1930-2026)</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Año</th><th>Campeón</th><th>Subcampeón</th><th>Final</th><th>Sede</th></tr></thead>
+          <tbody>
+            <tr class="row-2026" data-row-2026>
+              <td><b>2026</b></td>
+              <td data-champ-cell>{campeon ? `${campeon.flag} ${campeon.es}` : 'Se define el 19 de julio'}</td>
+              <td data-sub-cell>{subcampeon ? subcampeon.es : '—'}</td>
+              <td data-res-cell>{finalScore || '—'}</td>
+              <td>Estados Unidos, México y Canadá</td>
+            </tr>
+            {palmares.map((p) => (
+              <tr><td>{p.anio}</td><td>{p.campeon}</td><td>{p.sub}</td><td>{p.res}</td><td>{p.sede}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="titulos">
+      <h2>Títulos por país</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>País</th><th>Títulos</th><th>Años</th></tr></thead>
+          <tbody>
+            {titulosPorPais.map((t) => (
+              <tr><td>{t.pais}</td><td><b>{t.titulos}</b></td><td>{t.anios}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="links">
+      <h2>El Mundial 2026, partido por partido</h2>
+      <ul>
+        <li><a href="/llave-mundial-2026">🗂️ Cómo quedó la llave de eliminación</a></li>
+        <li><a href="/fixture-mundial-2026">📅 Todos los resultados, fecha por fecha</a></li>
+        <li><a href="/goleadores-mundial-2026">⚽ Tabla final de goleadores</a></li>
+        <li><a href="/balon-de-oro-mundial-2026">🏅 Balón de Oro y Bota de Oro</a></li>
+        <li><a href="/posiciones-mundial-2026">🏆 Así quedaron los grupos</a></li>
+      </ul>
+    </section>
+
+    <section class="links">
+      <h2>Ahora que terminó el Mundial</h2>
+      <ul>
+        <li><a href="/feriados-2026">📅 Feriados 2026: cuántos quedan y cuándo caen</a></li>
+        <li><a href="/sueldos-y-trabajo">💼 Sueldos y trabajo: aguinaldo, neto y más</a></li>
+        <li><a href="/calculadora-top-10-goleadores-historico-mundial-fifa">⚽ Top 10 goleadores históricos de los Mundiales</a></li>
+        <li><a href="/calculadora-f1-puntos-campeonato-mundial-quedan">🏎️ F1 2026: qué puntos quedan en juego</a></li>
+        <li><a href="/calculadora-calorias-futbol-5-7-11">🔥 Calorías que quemás jugando al fútbol</a></li>
+        <li><a href="/calculadora-distancia-recorrida-futbolista-por-posicion">🏃 Distancia recorrida por posición</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+
+    // Countdown a la final
+    if (cfg.kickoff) {
+      const target = new Date(cfg.kickoff).getTime();
+      const el = document.querySelector('[data-countdown]');
+      function tick() {
+        const diff = target - Date.now();
+        if (!el || diff <= 0) { if (el) el.hidden = true; return; }
+        el.hidden = false;
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        el.querySelector('[data-cd-d]').textContent = String(d);
+        el.querySelector('[data-cd-h]').textContent = String(h);
+        el.querySelector('[data-cd-m]').textContent = String(m);
+      }
+      tick();
+      setInterval(tick, 30000);
+    }
+
+    if (!cfg.url || !cfg.finalNum) return;
+
+    function winnerOf(m) {
+      if (!m || !m.score || !m.score.ft) return null;
+      const s = m.score;
+      const pair = s.p || s.et || s.ft;
+      if (pair[0] === pair[1]) return null;
+      return pair[0] > pair[1] ? m.team1 : m.team2;
+    }
+
+    async function refresh() {
+      try {
+        const res = await fetch(cfg.url, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !Array.isArray(data.matches)) return;
+        const final = data.matches.find((m, i) => (m.num ?? i + 1) === cfg.finalNum);
+        const winner = winnerOf(final);
+        if (winner && final.score && final.score.ft) {
+          const box = document.querySelector('[data-champ-box]');
+          if (box && box.querySelector('.pending')) {
+            box.innerHTML =
+              '<div class="champ known"><div class="champ-name">' + winner +
+              '</div><div class="champ-sub">CAMPEÓN DEL MUNDO 2026</div><div class="champ-score">Final: ' +
+              final.team1 + ' ' + final.score.ft[0] + ' - ' + final.score.ft[1] + ' ' + final.team2 + '</div></div>';
+          }
+          const cell = document.querySelector('[data-champ-cell]');
+          if (cell) cell.textContent = winner;
+          const res2 = document.querySelector('[data-res-cell]');
+          if (res2) res2.textContent = final.score.ft[0] + '-' + final.score.ft[1];
+          const sub = document.querySelector('[data-sub-cell]');
+          if (sub) sub.textContent = winner === final.team1 ? final.team2 : final.team1;
+        } else if (final && final.team1 && final.team2) {
+          const cross = document.querySelector('[data-final-cross]');
+          if (cross && !/^W\d+$/.test(final.team1) && !/^W\d+$/.test(final.team2)) {
+            cross.innerHTML = '<span>' + final.team1 + '</span><span class="vs">vs</span><span>' + final.team2 + '</span>';
+          }
+        }
+        const u = document.querySelector('[data-live-updated]');
+        if (u) u.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      } catch {}
+    }
+    refresh();
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.5rem, 4.5vw, 2.05rem); font-weight: 800; margin: 0 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.4rem; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.5rem; }
+  .updated a { color: var(--accent); }
+  .champ-box { margin: 0 0 2rem; }
+  .champ { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem 1.5rem; text-align: center; }
+  .champ.known { border-color: var(--accent); }
+  .champ-flag { font-size: 3.5rem; line-height: 1; }
+  .champ-name { font-size: clamp(1.8rem, 6vw, 2.6rem); font-weight: 800; margin-top: 0.5rem; }
+  .champ-sub { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); margin-top: 0.35rem; }
+  .champ-score { font-size: 0.95rem; color: var(--text-muted); margin-top: 0.75rem; }
+  .pending-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-subtle); }
+  .pending-cross { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; font-size: clamp(1.1rem, 4vw, 1.5rem); font-weight: 800; margin-top: 0.6rem; }
+  .pending-cross .vs { color: var(--text-subtle); font-weight: 600; }
+  .pending-when { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.6rem; }
+  .countdown { margin-top: 0.9rem; font-size: 1rem; color: var(--text-muted); }
+  .countdown b { color: var(--accent); font-size: 1.15rem; }
+  .pending-note { font-size: 0.8rem; color: var(--text-subtle); margin: 0.9rem 0 0; }
+  .tercero, .botin, .palmares, .titulos { margin-top: 2.25rem; }
+  h2 { font-size: 1.2rem; font-weight: 700; margin: 0 0 0.9rem; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th { text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); padding: 0.45rem 0.6rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--border); }
+  .row-2026 { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .note { font-size: 0.85rem; margin-top: 0.6rem; }
+  .note a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+
+  .premios { margin: 2rem 0; }
+  .premios-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+  .premio { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; }
+  .premio-label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); margin-bottom: 0.35rem; }
+  .premio-value { display: block; font-size: 1.05rem; font-weight: 700; }
+  [data-espn-mvp-root].is-known .premio-value[data-espn-mvp] { color: var(--accent); }
+  .premios .note { margin-top: 0.8rem; }
+  .premios .note a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  @media (max-width: 520px) { .premios-grid { grid-template-columns: 1fr; } }
+</style>

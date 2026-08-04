@@ -1,5 +1,14 @@
 ---
-export const prerender = false;
+// Los embeds deben existir como assets estáticos: el middleware de Astro no
+// corre bajo /embed/* en Cloudflare. Publicamos sólo calculadoras legacy que
+// realmente ofrecen iframe; los hubs usan ?hc_embed=1 sobre su URL canónica.
+export const prerender = true;
+
+export function getStaticPaths() {
+  return [
+    'calculadora-validar-cbu-cvu-identificar-banco',
+  ].map((slug) => ({ params: { slug } }));
+}
 
 import computeIndex from '../../lib/calc-compute-index.json';
 
