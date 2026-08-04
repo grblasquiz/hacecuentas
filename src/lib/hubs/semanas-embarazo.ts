@@ -23,11 +23,11 @@ export const hub: HubData = {
   siloHref: '/embarazo',
 
   eyebrow: 'Guía y estimación de embarazo',
-  h1: '¿De cuántas semanas estoy?',
+  h1: 'Calculadora de semanas de embarazo',
   lede:
     'Partimos del método más usado: contar desde el primer día de tu última menstruación. Si te databan por ecografía o esperás mellizos, cambiá el método abajo y las cuentas se ajustan.',
   stamps: [
-    'Revisado 31-07-2026',
+    'Revisado 04-08-2026',
     'Criterio OMS / ACOG de edad gestacional',
     '10 calculadoras adentro',
     'Orientativo: no reemplaza tu control obstétrico',
@@ -212,7 +212,7 @@ export const hub: HubData = {
     '/calculadora-calendario-ecografias-embarazo-semanas',
   ],
 
-  lastReviewed: '2026-07-31',
+  lastReviewed: '2026-08-04',
   audience: 'AR',
 };
 

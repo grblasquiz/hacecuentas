@@ -4,11 +4,28 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ValidarNitColombiaExperience from '../../components/generated/ValidarNitColombiaExperience.astro';
+import NextTenBoost from '../../components/NextTenBoost.astro';
 const canonical = 'https://hacecuentas.com/co/validar-nit';
-const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'Validador de NIT Colombia',url:canonical,applicationCategory:'FinanceApplication',operatingSystem:'Web'};
+const faq = [
+  ['¿Cómo validar un NIT colombiano?','Ingresá el número base y el dígito separado por guion. La herramienta aplica el algoritmo módulo 11 usado para comprobar el DV.'],
+  ['¿Qué es el dígito de verificación del NIT?','Es el número que aparece separado del NIT base y permite detectar errores de digitación. En el RUT figura en la casilla 6.'],
+  ['¿Un NIT con DV correcto confirma que la empresa existe?','No. Sólo confirma coherencia matemática. La existencia, razón social, actividad y estado se verifican en el RUT de la DIAN.'],
+  ['¿Puedo escribir el NIT con puntos y guion?','Sí. La herramienta elimina automáticamente puntos, espacios y guiones antes de calcular.'],
+  ['¿NIT y RUT son lo mismo?','No. El NIT identifica tributariamente; el RUT es el registro oficial que contiene ese NIT y las responsabilidades del contribuyente.'],
+  ['¿Dónde aparece el NIT en el RUT?','El número base aparece en la casilla 5 y el dígito de verificación en la casilla 6 de la hoja principal.'],
+  ['¿La validación envía el número a un servidor?','No. El cálculo se realiza localmente en el navegador.'],
+];
+const schema = {'@context':'https://schema.org','@graph':[
+  {'@type':'WebApplication',name:'Validador de NIT Colombia y calculadora de DV',url:canonical,applicationCategory:'FinanceApplication',operatingSystem:'Web',dateModified:'2026-08-04',offers:{'@type':'Offer',price:'0',priceCurrency:'COP'}},
+  {'@type':'FAQPage',mainEntity:faq.map(([q,a])=>({'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}}))},
+  {'@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Inicio',item:'https://hacecuentas.com/'},{'@type':'ListItem',position:2,name:'Colombia',item:'https://hacecuentas.com/co'},{'@type':'ListItem',position:3,name:'Validar NIT',item:canonical}]}
+]};
 ---
-<Layout title="Validador de NIT Colombia" description="Validá un NIT colombiano y su dígito de verificación." canonical={canonical} schema={schema} audience="CO" lang="es" ogType="article" articleSection="Trámites">
+<Layout title="Validar NIT Colombia y calcular dígito de verificación" description="Validá un NIT colombiano, calculá el dígito de verificación (DV) y detectá errores de formato. Algoritmo módulo 11, gratis y sin enviar datos." canonical={canonical} schema={schema} audience="CO" lang="es" ogType="article" articleSection="Trámites">
   <Header />
   <ValidarNitColombiaExperience />
+  <NextTenBoost variant="nit" />
+  <section class="nit-faq"><h2>Preguntas frecuentes sobre NIT y DV</h2>{faq.map(([q,a])=><details><summary>{q}</summary><p>{a}</p></details>)}</section>
   <Footer />
 </Layout>
+<style>.nit-faq{max-width:920px;margin:0 auto;padding:56px 20px}.nit-faq h2{font-size:clamp(1.7rem,3vw,2.3rem)}.nit-faq details{border-bottom:1px solid #dce5e8;padding:15px 0}.nit-faq summary{font-weight:750;cursor:pointer}.nit-faq p{color:#586b7c;line-height:1.6}</style>

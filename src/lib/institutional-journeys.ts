@@ -40,13 +40,13 @@ const commonFaq = (topic: string) => [
 export const JOURNEYS: Record<string, InstitutionalJourney> = {
   accidente: {
     slug: "trabajo/accidente-laboral",
-    title: "Accidente laboral: qué hacer, qué cobra la ART y cuándo reclamar",
+    title: "Accidente laboral: qué hacer, cómo denunciarlo y cuándo reclamar",
     description:
       "Recorrido paso a paso ante un accidente laboral: denuncia, ART, sueldo durante la baja, incapacidad, Comisión Médica e indemnización orientativa.",
     silo: "Trabajo",
     siloHref: "/trabajo",
     eyebrow: "SRT · ART · recorrido laboral",
-    h1: "Tuve un accidente laboral: ¿qué hago ahora?",
+    h1: "Accidente laboral: qué hacer y cómo denunciarlo",
     lede: "Elegí en qué momento del caso estás. Te mostramos el próximo paso, qué documentación guardar y qué herramienta usar para estimar lo económico.",
     accent: "#b54708",
     question: "¿En qué situación estás?",

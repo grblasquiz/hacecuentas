@@ -33,11 +33,11 @@ export const hub: HubData = {
   siloHref: '/conversores',
 
   eyebrow: 'Guía de talles y equivalencias',
-  h1: '¿Qué talle soy?',
+  h1: 'Conversor de talles AR, US, EU y UK',
   lede:
     'Con una cinta métrica y dos números sabés tu talle real, y de paso el equivalente argentino, estadounidense, europeo y británico. Arrancamos por la ropa, que es lo que más se busca; si venís por zapatillas, corpiño o anillo, cambiá la rama.',
   stamps: [
-    'Actualizado 27-07-2026',
+    'Actualizado 04-08-2026',
     'IRAM 75300 · ISO 8559-1 · ISO 9407 (Mondopoint)',
     '11 calculadoras adentro',
   ],
@@ -264,7 +264,7 @@ export const hub: HubData = {
     '/calculadora-color-cabello-tono-piel',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-04',
   audience: 'AR',
 };
 

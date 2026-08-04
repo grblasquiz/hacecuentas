@@ -9,10 +9,10 @@ export const hub: HubData = {
   siloHref: '/trabajo',
 
   eyebrow: 'Guía y estimación laboral',
-  h1: 'Renunciás. Veamos qué te tienen que pagar.',
+  h1: 'Calculadora de liquidación final por renuncia 2026',
   lede:
     'La renuncia no es un despido: no hay indemnización por antigüedad, ni preaviso a tu favor, ni integración del mes. Lo que sí se cobra es todo lo devengado hasta el último día. Partimos del caso más común y lo ajustás con tus datos.',
-  stamps: ['Revisado 31-07-2026', 'LCT actualizada', 'Cálculo explicado'],
+  stamps: ['Revisado 04-08-2026', 'LCT actualizada', 'Cálculo explicado'],
 
   resultLabel: 'Estimación inicial',
 
@@ -190,7 +190,7 @@ export const hub: HubData = {
     '/calculadora-dias-vacaciones-ganadas-antiguedad-lct',
   ],
 
-  lastReviewed: '2026-07-31',
+  lastReviewed: '2026-08-04',
   audience: 'AR',
 };
 

@@ -118,18 +118,18 @@ export const ESCALA_MAX = Math.ceil((ALICUOTA_MAX + 0.5) * 2) / 2;
 
 export const hub: HubData = {
   slug: 'impuestos/ingresos-brutos',
-  title: 'Ingresos Brutos: ¿cuánto pago en mi provincia? Alícuotas por actividad',
+  title: 'Calculadora de Ingresos Brutos 2026 por provincia y actividad',
   description:
     'Calculá cuánto pagás de Ingresos Brutos según tu provincia y tu actividad: alícuota aplicable, impuesto del mes, mínimo del régimen simplificado y reparto por Convenio Multilateral cuando facturás en más de una jurisdicción.',
   silo: 'Impuestos',
   siloHref: '/impuestos',
 
   eyebrow: 'Impuestos provinciales',
-  h1: 'Ingresos Brutos: ¿cuánto pago en mi provincia?',
+  h1: 'Calculadora de Ingresos Brutos 2026',
   lede:
     'Ingresos Brutos se paga sobre lo que facturás, no sobre lo que ganás: el mismo peso de venta paga distinto según dónde y de qué trabajes. Cargá tu facturación, elegí tu jurisdicción y tu actividad y mirá la alícuota que te toca, el impuesto del mes y dónde queda tu provincia respecto del resto del país.',
   stamps: [
-    'Actualizado 27-07-2026',
+    'Actualizado 04-08-2026',
     'Convenio Multilateral 18/8/77 · códigos fiscales provinciales',
     '24 jurisdicciones adentro',
   ],
@@ -375,6 +375,6 @@ export const hub: HubData = {
 
   replaces: ['/calculadora-ingresos-brutos-provincial', '/calculadora-iibb-convenio-multilateral-coeficientes'],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-04',
   audience: 'AR',
 };

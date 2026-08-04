@@ -132,11 +132,11 @@ export const hub: HubData = {
   siloHref: '/construccion',
 
   eyebrow: 'Guía y estimación de obra',
-  h1: '¿Cuánto sale construir una casa?',
+  h1: 'Calculadora de costo por m² de construcción 2026',
   lede:
     'Poné los metros que querés levantar, elegí la categoría de terminación y la zona: te decimos el costo por m², el total de obra y —lo que casi nadie te muestra— en qué se te va la plata.',
   stamps: [
-    'Actualizado 27-07-2026',
+    'Actualizado 04-08-2026',
     `Referencia estándar US$${USD_M2_ESTANDAR}/m² (CAC · CPIC · ICC INDEC)`,
     `Pesos calculados al ${FX.label} $${FX.value.toLocaleString('es-AR')} (${FX.date})`,
     '7 calculadoras adentro',
@@ -296,6 +296,6 @@ export const hub: HubData = {
     '/calculadora-proyectos-hogar',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-04',
   audience: 'AR',
 };
