@@ -13,17 +13,17 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'fechas/generaciones',
-  title: '¿De qué generación soy? Boomer, X, Millennial, Z o Alpha según tu año',
+  title: '¿De qué generación soy? Tabla por año de nacimiento',
   description:
-    'Tu generación según el año en que naciste, con los rangos de Pew Research y McCrindle: Silenciosa, Baby Boomer, X, Millennial, Z, Alpha y Beta. Incluye tu edad, la esperanza de vida de tu país y qué porcentaje de tu vida llevás recorrido.',
+    'Descubrí qué generación sos según tu año de nacimiento. Tabla de generaciones por edad: Baby Boomer, X, Millennial, Z, Alpha y Beta.',
   silo: 'Fechas',
   siloHref: '/fechas',
 
   eyebrow: 'Fechas y calendario',
   h1: '¿De qué generación soy?',
   lede:
-    'Las generaciones son tramos de años de nacimiento, no personalidades. Poné tu año y te decimos en qué tramo caés, con qué edad llegás a 2026 y cuánto de tu vida esperada llevás recorrido.',
-  stamps: ['Actualizado 27-07-2026', 'Rangos Pew Research · McCrindle', '17 calculadoras adentro'],
+    'Poné tu año de nacimiento y te decimos de qué generación sos y qué edad cumplís en 2026. Abajo tenés la tabla completa de generaciones por año y edad.',
+  stamps: ['Actualizado 04-08-2026', 'Rangos Pew Research · McCrindle', '17 calculadoras adentro'],
 
   resultLabel: 'Tu generación',
 
@@ -188,8 +188,8 @@ export const hub: HubData = {
     '/calculadora-nombre-elfo',
   ],
 
-  lastReviewed: '2026-07-27',
-  audience: 'AR',
+  lastReviewed: '2026-08-04',
+  audience: 'global',
 };
 
 /** Año de referencia del cálculo de edad (edad que cumplís durante el año). */
