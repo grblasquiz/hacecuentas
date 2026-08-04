@@ -260,15 +260,58 @@ function getPageLastMod(pagePath: string, fallback: string): string {
   // pagePath ej: '/privacidad' → src/pages/privacidad.astro
   const pagesDir = join(ROOT, 'src', 'pages');
   const slug = pagePath.replace(/^\/|\/$/g, '') || 'index';
-  const candidates = [
+  const directCandidates = [
     join(pagesDir, `${slug}.astro`),
     join(pagesDir, slug, 'index.astro'),
   ];
-  for (const c of candidates) {
-    const d = getLastMod(c, '');
-    if (d) return d;
+  const candidates = new Set<string>(directCandidates);
+  const hasDirectPage = directCandidates.some((candidate) => existsSync(candidate));
+
+  // Las guías viven en una ruta dinámica, pero cada una tiene un JSON editorial
+  // propio. Usar el mtime de /guia/[slug].astro (o buildDate) haría que todas
+  // parecieran modificadas juntas aunque sólo cambió una.
+  if (slug.startsWith('guia/')) {
+    candidates.add(join(ROOT, 'src', 'content', 'guias', `${slug.slice('guia/'.length)}.json`));
+    candidates.add(join(pagesDir, 'guia', '[slug].astro'));
   }
-  return fallback;
+
+  // Si no hay archivo de página directo, la ruta puede salir de un catch-all.
+  // Su mtime es una señal real y estable; buildDate no lo es.
+  if (!hasDirectPage && !slug.startsWith('guia/')) {
+    const parts = slug.split('/');
+    if (parts.length > 1) candidates.add(join(pagesDir, parts[0], '[...slug].astro'));
+    candidates.add(join(pagesDir, '[...slug].astro'));
+  }
+
+  // Una página prerenderizada puede cambiar porque cambió el snapshot de datos
+  // que importa, aunque el .astro quede intacto. Sumamos imports directos de
+  // src/data y src/lib/data, pero ignoramos Layout/Header/Footer compartidos:
+  // tocar chrome global no convierte cada URL en contenido nuevo.
+  for (const source of [...candidates]) {
+    if (!existsSync(source)) continue;
+    let text = '';
+    try { text = readFileSync(source, 'utf8'); } catch { continue; }
+    for (const match of text.matchAll(/(?:from\s+|import\s*)['"]([^'"]+)['"]/g)) {
+      const spec = match[1].split('?')[0];
+      if (!spec.startsWith('.')) continue;
+      const base = resolve(dirname(source), spec);
+      const resolved = [base, `${base}.ts`, `${base}.json`, `${base}.js`, `${base}.mjs`]
+        .find((p) => existsSync(p));
+      if (!resolved) continue;
+      const rel = relative(ROOT, resolved).replace(/\\/g, '/');
+      if (rel.startsWith('src/data/') || rel.startsWith('src/lib/data/')) {
+        candidates.add(resolved);
+      }
+    }
+  }
+
+  let best = '';
+  for (const c of candidates) {
+    if (!existsSync(c)) continue;
+    const d = getLastMod(c, '');
+    if (d && d > best) best = d;
+  }
+  return best || fallback;
 }
 
 /**
@@ -468,6 +511,22 @@ const argCalcs = safeReadDir(ARGENTINA_DIR)
 const site = 'https://hacecuentas.com';
 const buildDate = new Date().toISOString().split('T')[0];
 
+// Sólo estas páginas incorporan datos remotos directamente durante cada build;
+// para ellas buildDate sí representa un cambio real del HTML. El resto de las
+// páginas antes marcadas `dynamic` usa el .astro + sus imports de datos. Esto
+// evita reestampar decenas de URLs deportivas/cambiarias en cada deploy cuando
+// su snapshot no cambió.
+const REMOTE_BUILD_DYNAMIC_PATHS = new Set([
+  '/',
+  '/cambio-de-monedas',
+  '/cotizacion-cripto',
+  '/inflacion-argentina',
+  '/comparador-plazo-fijo',
+  '/plazo-fijo-vs-billeteras',
+  '/euro-hoy',
+  '/riesgo-pais-hoy',
+]);
+
 const topSlugs = new Set([
   'sueldo-en-mano-argentina',
   'calculadora-aguinaldo-sac',
@@ -498,7 +557,9 @@ const prio = (path: string, priority: string, changefreq: string, dynamic = fals
   loc: `${site}${path}`,
   priority,
   changefreq,
-  lastmod: dynamic ? buildDate : getPageLastMod(path, buildDate),
+  lastmod: dynamic && REMOTE_BUILD_DYNAMIC_PATHS.has(path)
+    ? buildDate
+    : getPageLastMod(path, buildDate),
 });
 const priorityUrls: Url[] = [
   prio('/',                                  '1.0',  'daily',  true),
@@ -808,7 +869,9 @@ const core = (path: string, priority: string, changefreq: string, dynamic = fals
   loc: `${site}${path}`,
   priority,
   changefreq,
-  lastmod: dynamic ? buildDate : getPageLastMod(path, buildDate),
+  lastmod: dynamic && REMOTE_BUILD_DYNAMIC_PATHS.has(path)
+    ? buildDate
+    : getPageLastMod(path, buildDate),
 });
 sitemaps.push({
   name: 'sitemap-core.xml',
