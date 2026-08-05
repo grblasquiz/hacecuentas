@@ -65,7 +65,8 @@ export const FERIADOS_CO_2026: Feriado[] = [
 ];
 
 // ─────────────────────────────────────────── CHILE ────────────────────────────
-// 16 feriados nacionales. Irrenunciable = el comercio cierra obligatoriamente.
+// 16 feriados nacionales. Los 5 irrenunciables corresponden a trabajadores
+// del comercio alcanzados por la Ley 19.973; la norma contempla excepciones.
 export const FERIADOS_CL_2026: Feriado[] = [
   { fecha: '2026-01-01', dia: 'Jueves', nombre: 'Año Nuevo', tipo: 'Irrenunciable' },
   { fecha: '2026-04-03', dia: 'Viernes', nombre: 'Viernes Santo', tipo: 'Religioso' },
@@ -149,12 +150,12 @@ export const FERIADOS_LATAM_2026: Record<string, FeriadosPais> = {
   },
   chile: {
     pais: 'Chile', gentilicio: 'los chilenos', audience: 'CL', slug: 'feriados-chile-2026',
-    totalLabel: '16 feriados nacionales', dataAsOf: '2026-07-09',
-    marco: 'feriados legales fijados por ley (Dirección del Trabajo)',
-    notaTipo: 'Irrenunciable = el comercio cierra obligatoriamente y no se puede pactar trabajo (Año Nuevo, 1 de mayo, 18 y 19 de septiembre, y Navidad).',
+    totalLabel: '16 feriados nacionales', dataAsOf: '2026-08-04',
+    marco: 'Ley 19.973 y normas que establecen los feriados legales de Chile',
+    notaTipo: 'Irrenunciable = descanso obligatorio para los trabajadores del comercio alcanzados por la Ley 19.973 (Año Nuevo, 1 de mayo, 18 y 19 de septiembre, y Navidad). La ley contempla excepciones, entre ellas restaurantes, entretenimiento, combustibles y farmacias de turno.',
     fuentes: [
-      { nombre: 'Feriados.cl — calendario oficial 2026', url: 'https://www.feriados.cl/' },
-      { nombre: 'Dirección del Trabajo (dt.gob.cl) — Ley 19.668', url: 'https://www.dt.gob.cl/portal/1628/w3-article-60252.html' },
+      { nombre: 'Dirección del Trabajo — feriados obligatorios e irrenunciables', url: 'https://www.dt.gob.cl/portal/1628/w3-article-95017.html' },
+      { nombre: 'Feriados.cl — calendario legal 2026', url: 'https://www.feriados.cl/' },
     ],
     feriados: FERIADOS_CL_2026,
   },
