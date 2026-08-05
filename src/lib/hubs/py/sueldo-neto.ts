@@ -53,17 +53,17 @@ const gs = (n: number) => 'Gs. ' + Math.round(n).toLocaleString('de-DE');
 
 export const hub: HubData = {
   slug: 'py/trabajo/sueldo-neto',
-  title: 'Salario neto en Paraguay: cuánto cobrás en mano después del IPS',
+  title: 'Salario mínimo Paraguay 2026: Gs. 3.044.000 y sueldo neto',
   description:
-    'Del bruto al neto en Paraguay: descuento del IPS 9%, bonificación familiar, horas extras al 50% y 100%, recargo nocturno del 30%, feriados trabajados, faltas descontadas y topes de embargo del art. 245.',
+    'El salario mínimo en Paraguay 2026 es Gs. 3.044.000 al mes y el jornal Gs. 117.077. Calculá cuánto queda después del IPS 9%.',
   silo: 'Trabajo',
   siloHref: '/py/trabajo',
   locale: 'py',
 
   eyebrow: 'Paraguay · Código del Trabajo · IPS',
-  h1: '¿Cuánto cobrás en mano este mes?',
+  h1: 'Salario mínimo Paraguay 2026: Gs. 3.044.000',
   lede:
-    'Una sola cuenta arma tu recibo completo: el descuento obrero del IPS, la bonificación familiar si te corresponde, los recargos por horas extras, trabajo nocturno y feriados, las faltas que te descuentan y el tope legal de lo que te pueden embargar.',
+    'Desde el 1 de julio de 2026, el salario mínimo mensual es Gs. 3.044.000 y el jornal mínimo es Gs. 117.077. Con el descuento obrero del IPS del 9%, el mínimo queda en aproximadamente Gs. 2.770.040 en mano.',
   stamps: [
     `Salario mínimo vigente: ${gs(SMVM)}`,
     `Jornal mínimo: ${gs(JORNAL_MINIMO)}`,
@@ -305,8 +305,8 @@ export const hub: HubData = {
       publisher: 'Biblioteca y Archivo Central del Congreso Nacional',
     },
     {
-      name: 'MTESS — Salario mínimo legal vigente',
-      url: 'https://www.mtess.gov.py/',
+      name: 'MTESS — Decreto N° 6225: salario mínimo de G. 3.044.000 desde julio de 2026',
+      url: 'https://www.mtess.gov.py/?p=36166',
       publisher: 'Ministerio de Trabajo, Empleo y Seguridad Social',
     },
     {
@@ -334,5 +334,5 @@ export const hub: HubData = {
     '/py/calculadora-empleada-domestica-paraguay',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-04',
 };

@@ -632,6 +632,9 @@ const priorityUrls: Url[] = [
   // Oportunidad salarial Perú: 6.101 impresiones, posición 4,85 y CTR 0,7% en Bing.
   // Sólo se distribuye la página informativa canónica, nunca un alias de calculadora.
   prio('/pe/datos-sueldo-minimo-peru-2026', '0.9', 'weekly'),
+  // El alias histórico /py/salario-minimo-paraguay-2026 queda retirado en 301.
+  // Toda la demanda y distribución se concentran en este hub canónico vivo.
+  prio('/py/trabajo/sueldo-neto', '0.9', 'weekly'),
   prio('/argentina/cordoba/calculadora-ingresos-brutos-provincial', '0.85', 'monthly'),
   prio('/co/calculadora-tarifa-taxi-bogota-2026-unidades-recargos', '0.85', 'monthly'),
   prio('/tabla/tabla-escalas-ganancias-2026', '0.85', 'monthly'),
