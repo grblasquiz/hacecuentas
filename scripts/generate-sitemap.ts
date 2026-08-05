@@ -1437,6 +1437,32 @@ if (decisionHubUrls.length > 0) {
   sitemaps.push({ name: 'sitemap-hubs.xml', urls: decisionHubUrls });
 }
 
+// Recuperación GSC de hubs nuevos todavía no rastreados/indexados.
+// La lista sale de una inspección URL-by-URL (API oficial de Search Console),
+// no de una heurística. Mantenerla en un sitemap separado permite reenviarla y
+// medir la recuperación sin inflar el lastmod de los hubs que ya están sanos.
+const gscCoverageReport = join(ROOT, 'scripts', 'gsc-coverage-report.json');
+if (existsSync(gscCoverageReport)) {
+  try {
+    const report = JSON.parse(readFileSync(gscCoverageReport, 'utf8'));
+    const hubsByLoc = new Map(decisionHubUrls.map((u) => [u.loc, u]));
+    const recoveryUrls: Url[] = (report.not_indexed || [])
+      .map((row: any) => String(row?.url || '').replace(/\/$/, ''))
+      .filter((loc: string) => hubsByLoc.has(loc))
+      .map((loc: string) => ({
+        ...hubsByLoc.get(loc)!,
+        loc,
+        priority: '1.0',
+        changefreq: 'daily',
+      }));
+    if (recoveryUrls.length > 0) {
+      sitemaps.push({ name: 'sitemap-hubs-recovery.xml', urls: recoveryUrls });
+    }
+  } catch (err) {
+    console.warn('[sitemap] No se pudo leer gsc-coverage-report.json:', err);
+  }
+}
+
 // 7c. Productos verticales (/mi y /mi/*) — namespace propio, segmento AISLADO.
 // Superficies de marca (Mi Plata / Trabajo / Casa / Familia). lastmod editorial
 // FIJO (no buildDate) para no inflar el sitemap en cada deploy (regla #1/#3).
