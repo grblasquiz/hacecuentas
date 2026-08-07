@@ -112,12 +112,13 @@ def urls_from_git_diff(before: str, after: str) -> list:
             continue
         if rel.startswith('src/lib/hubs/') and rel.endswith('.ts'):
             # src/lib/hubs/<slug>.ts (AR/global) o src/lib/hubs/<locale>/<slug>.ts.
-            # El slug con categoría está dentro del archivo: slug: 'trabajo/aguinaldo'.
-            prefix = f'/{parts[3]}' if len(parts) == 5 else ''
+            # El slug dentro del archivo ya es la ruta canónica COMPLETA, incluido
+            # el locale cuando corresponde (`uy/trabajo/...`). No anteponer el
+            # directorio: produciría rutas inválidas como `/uy/uy/trabajo/...`.
             m = re.search(r"slug:\s*['\"]([^'\"]+)['\"]", path.read_text(encoding='utf-8'))
             if not m:
                 continue
-            candidates.append(f'https://{HOST}{prefix}/{m.group(1)}')
+            candidates.append(f'https://{HOST}/{m.group(1).lstrip("/")}')
             continue
         if len(parts) < 4:
             continue
@@ -135,7 +136,7 @@ def urls_from_git_diff(before: str, after: str) -> list:
     urls = [u for u in candidates if u.rstrip('/') in indexable]
     dropped = [u for u in candidates if u.rstrip('/') not in indexable]
 
-    print(f'[git-changed] {before[:8]}..{after[:8]} → {len(candidates)} calcs tocadas, '
+    print(f'[git-changed] {before[:8]}..{after[:8]} → {len(candidates)} contenidos/hubs tocados, '
           f'{len(urls)} indexables a enviar, {len(dropped)} fuera del sitemap (301/noindex)')
     for u in dropped[:15]:
         print(f'  ↩ fuera del sitemap, no se envía: {u}')
