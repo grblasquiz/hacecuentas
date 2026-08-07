@@ -1,0 +1,93 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { ALL_HUBS } from '../lib/hubs/registry';
+import type { HubData } from '../lib/hubs/types';
+
+// Mapa del sitio HTML: deja cada hub a 1 salto de cualquier página crawleada
+// (el footer global linkea acá). Acelera el descubrimiento de los hubs nuevos
+// post-migración 7-27 sin tocar sitemaps ni churn de URLs.
+
+const MERCADOS: Array<{ locale: HubData['locale'] | undefined; nombre: string; prefijo: string }> = [
+  { locale: undefined, nombre: 'Argentina y general', prefijo: '' },
+  { locale: 'co', nombre: 'Colombia', prefijo: '/co' },
+  { locale: 'mx', nombre: 'México', prefijo: '/mx' },
+  { locale: 'cl', nombre: 'Chile', prefijo: '/cl' },
+  { locale: 'pe', nombre: 'Perú', prefijo: '/pe' },
+  { locale: 'ec', nombre: 'Ecuador', prefijo: '/ec' },
+  { locale: 'uy', nombre: 'Uruguay', prefijo: '/uy' },
+  { locale: 'py', nombre: 'Paraguay', prefijo: '/py' },
+  { locale: 've', nombre: 'Venezuela', prefijo: '/ve' },
+  { locale: 'do', nombre: 'República Dominicana', prefijo: '/do' },
+  { locale: 'es', nombre: 'España', prefijo: '/es' },
+  { locale: 'en', nombre: 'English', prefijo: '/en' },
+  { locale: 'pt', nombre: 'Português (BR)', prefijo: '/pt' },
+  { locale: 'pt-pt', nombre: 'Português (PT)', prefijo: '/pt-pt' },
+];
+
+type Silo = { silo: string; href: string; hubs: HubData[] };
+const porMercado = MERCADOS.map((m) => {
+  const hubs = ALL_HUBS.filter((h) => h.locale === m.locale);
+  const silos = new Map<string, Silo>();
+  for (const h of hubs) {
+    const cur = silos.get(h.siloHref) ?? { silo: h.silo, href: h.siloHref, hubs: [] };
+    cur.hubs.push(h);
+    silos.set(h.siloHref, cur);
+  }
+  return { ...m, silos: [...silos.values()].sort((a, b) => a.silo.localeCompare(b.silo, 'es')), total: hubs.length };
+}).filter((m) => m.total > 0);
+
+const totalHubs = ALL_HUBS.length;
+const title = 'Mapa del sitio — todas las guías y calculadoras';
+const description = `Índice completo de Hacé Cuentas: ${totalHubs} guías de decisión con calculadoras, organizadas por país y tema.`;
+---
+
+<Layout title={title} description={description}>
+  <Header />
+  <main class="mapa">
+    <nav class="breadcrumb" aria-label="Ruta"><a href="/">Inicio</a> › <span>Mapa del sitio</span></nav>
+    <h1>Mapa del sitio</h1>
+    <p class="lede">
+      Las {totalHubs} guías de decisión de Hacé Cuentas, organizadas por país y tema. Cada guía reúne sus
+      calculadoras, los valores vigentes y las respuestas a las preguntas más comunes.
+    </p>
+
+    {porMercado.map((m) => (
+      <section>
+        <h2 id={m.prefijo ? m.prefijo.slice(1) : 'argentina'}>{m.nombre} <small>({m.total})</small></h2>
+        {m.silos.map((s) => (
+          <div class="silo">
+            <h3><a href={s.href}>{s.silo}</a></h3>
+            <ul>
+              {s.hubs.map((h) => (
+                <li><a href={`/${h.slug}`}>{h.h1}</a></li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+    ))}
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .mapa { max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .breadcrumb { font-size: 0.85rem; margin-bottom: 1rem; opacity: 0.8; }
+  .mapa h1 { margin: 0 0 0.5rem; }
+  .lede { max-width: 46rem; opacity: 0.9; margin: 0 0 2rem; }
+  .mapa section { margin: 0 0 2.25rem; }
+  .mapa h2 { border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent); padding-bottom: 0.3rem; margin: 0 0 1rem; }
+  .mapa h2 small { font-weight: 400; opacity: 0.6; font-size: 0.8em; }
+  .silo { margin: 0 0 1.1rem; }
+  .silo h3 { margin: 0 0 0.35rem; font-size: 1.02rem; }
+  .silo ul { columns: 3; column-gap: 2rem; margin: 0; padding-left: 1.1rem; }
+  .silo li { break-inside: avoid; margin: 0 0 0.25rem; font-size: 0.92rem; }
+  .silo a { text-decoration: none; }
+  .silo a:hover { text-decoration: underline; }
+  @media (max-width: 900px) { .silo ul { columns: 2; } }
+  @media (max-width: 560px) { .silo ul { columns: 1; } }
+</style>
