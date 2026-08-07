@@ -2,17 +2,17 @@ import type { HubData } from './types';
 
 export const hub: HubData = {
   slug: 'impuestos/ganancias-cuarta-categoria',
-  title: '¿Me descuentan Ganancias del sueldo? — Cuarta categoría 2026',
+  title: 'Calcular Impuesto a las Ganancias sobre el sueldo 2026',
   description:
-    'Calculá si te retienen Ganancias de cuarta categoría y cuánto: sueldo mensual, aguinaldo, pase de monotributo a régimen general y saldo a favor de la liquidación anual. Escala del art. 94 y deducciones del art. 30 vigentes en 2026.',
+    'Calculá el impuesto a las ganancias sobre tu sueldo: si te retienen cuarta categoría y cuánto, sueldo mensual, aguinaldo, pase de monotributo a régimen general y saldo a favor de la liquidación anual. Escala del art. 94 y deducciones del art. 30 vigentes en 2026.',
   silo: 'Impuestos',
   siloHref: '/impuestos',
 
   eyebrow: 'Guía y estimación impositiva',
-  h1: '¿Me descuentan Ganancias del sueldo?',
+  h1: '¿Me descuentan Ganancias del sueldo? Calculá el impuesto de cuarta categoría',
   lede:
     'Partimos del caso más habitual: el descuento mes a mes del recibo. Cargá tu bruto y tus cargas de familia y mirá en qué tramo de la escala caés. Si tu situación es otra —aguinaldo, pase al régimen general o saldo a favor— la cambiás abajo.',
-  stamps: ['Actualizado 27-07-2026', 'Escala art. 94 LIG vigente', '8 calculadoras adentro'],
+  stamps: ['Actualizado 07-08-2026', 'Escala art. 94 LIG vigente', '8 calculadoras adentro'],
 
   resultLabel: 'Estimación inicial',
 
@@ -146,6 +146,10 @@ export const hub: HubData = {
       a: 'Depende de tus cargas de familia. Un soltero sin hijos empieza a tributar cuando su bruto supera aproximadamente el mínimo no imponible dividido 0,83 (por el 17% de aportes). Con cónyuge e hijos declarados en SiRADIG el piso sube varios cientos de miles de pesos. El hub calcula tu umbral exacto con los valores del art. 30 vigentes.',
     },
     {
+      q: '¿Cómo calcular el impuesto a las ganancias sobre el sueldo?',
+      a: 'Arrancá del bruto mensual y restale los aportes personales del 17% (jubilación 11%, PAMI 3%, obra social 3%). A ese neto restale la ganancia no imponible, la deducción especial incrementada de empleados y las cargas de familia que hayas declarado en SiRADIG. Lo que queda es tu base imponible: sobre ella se aplica la escala progresiva del art. 94, tramo por tramo, del 5% al 35%. El impuesto anual se divide en retenciones mensuales que practica tu empleador según la RG 4003. El hub de arriba hace exactamente esa cuenta con los valores vigentes del art. 30.',
+    },
+    {
       q: '¿Qué es la cuarta categoría?',
       a: 'Es la categoría del Impuesto a las Ganancias que grava las rentas del trabajo personal: empleados en relación de dependencia, jubilados, directores de sociedades y profesionales. Está definida en el art. 82 de la ley 20.628 y el empleador actúa como agente de retención.',
     },
@@ -236,6 +240,6 @@ export const hub: HubData = {
     '/calculadora-ganancias-segunda-categoria-renta-financiera-2026',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-08-07',
   audience: 'AR',
 };

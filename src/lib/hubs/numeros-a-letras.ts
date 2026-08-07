@@ -21,9 +21,9 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'conversores/numeros-a-letras',
-  title: 'Números a letras: conversor para cheques y pagarés',
+  title: 'Número a letras: cantidad en letras para cheques y montos',
   description:
-    'Convertí números a letras para cheques y pagarés, con centavos y formato listo para copiar. También admite letras a número, romanos y binario.',
+    'Pasá cualquier número a letras: la cantidad en letras lista para copiar en cheques, pagarés y montos, con los centavos como NN/100. También admite letras a número, romanos y binario.',
   silo: 'Conversores',
   siloHref: '/conversores',
 
@@ -31,7 +31,7 @@ export const hub: HubData = {
   h1: 'Conversor de números a letras',
   lede:
     'Escribí lo que tengas —un número, un texto en letras o un romano— y elegí a qué lo querés pasar. La rama por defecto es la que casi todos buscan: cómo se escribe un importe en un cheque o un pagaré, con los centavos incluidos.',
-  stamps: ['Actualizado 27-07-2026', 'Reglas de la RAE · escala larga', '4 conversores adentro'],
+  stamps: ['Actualizado 07-08-2026', 'Reglas de la RAE · escala larga', '4 conversores adentro'],
 
   resultLabel: 'Cómo se escribe',
 
@@ -187,6 +187,10 @@ export const hub: HubData = {
 
   faq: [
     {
+      q: '¿Cómo paso un número a letras para escribir una cantidad en un monto?',
+      a: 'Escribí la cifra en el conversor y te devuelve la cantidad en letras siguiendo las reglas de la RAE: 1.250,50 se escribe "mil doscientos cincuenta con cincuenta centavos", y en formato de cheque, SON PESOS MIL DOSCIENTOS CINCUENTA CON 50/100. Sirve para cheques, pagarés, contratos y cualquier monto que haya que repetir en palabras: la práctica habitual es poner la cifra en números y la cantidad en letras al lado o entre paréntesis. El conversor usa escala larga (un billón = un millón de millones) y funciona en pesos, dólares, euros y las principales monedas de la región.',
+    },
+    {
       q: '¿Cómo se escribe un importe en un cheque?',
       a: 'En mayúsculas de imprenta, con la fórmula "SON PESOS <importe en letras> CON NN/100". Por ejemplo, $1.250,50 se escribe SON PESOS MIL DOSCIENTOS CINCUENTA CON 50/100. Los centavos van siempre como fracción sobre cien, nunca en letras, y aunque sean cero se escribe 00/100 para que nadie pueda agregar cifras después. El espacio sobrante se tacha con una raya.',
     },
@@ -268,7 +272,7 @@ export const hub: HubData = {
     '/conversor-letras-a-numero',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-07',
   audience: 'global',
 };
 

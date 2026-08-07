@@ -15,7 +15,7 @@ export const hub: HubData = {
   slug: 'fechas/generaciones',
   title: '¿De qué generación soy? Tabla por año de nacimiento',
   description:
-    'Descubrí qué generación sos según tu año de nacimiento. Tabla de generaciones por edad: Baby Boomer, X, Millennial, Z, Alpha y Beta.',
+    'Descubrí a qué generación pertenecés según tu año de nacimiento. Tabla de generaciones por edad: Baby Boomer, X, Millennial, Z, Alpha y Beta.',
   silo: 'Fechas',
   siloHref: '/fechas',
 
@@ -23,7 +23,7 @@ export const hub: HubData = {
   h1: '¿De qué generación soy?',
   lede:
     'Poné tu año de nacimiento y te decimos de qué generación sos y qué edad cumplís en 2026. Abajo tenés la tabla completa de generaciones por año y edad.',
-  stamps: ['Actualizado 04-08-2026', 'Rangos Pew Research · McCrindle', '17 calculadoras adentro'],
+  stamps: ['Actualizado 07-08-2026', 'Rangos Pew Research · McCrindle', '17 calculadoras adentro'],
 
   resultLabel: 'Tu generación',
 
@@ -102,7 +102,7 @@ export const hub: HubData = {
       a: 'Sos Millennial, también llamada Generación Y: el tramo va de 1981 a 1996 según Pew Research Center. Los nacidos en 1990 tienen memoria del mundo previo al smartphone pero adoptaron internet en la adolescencia, que es justamente el rasgo que define al tramo.',
     },
     {
-      q: '¿Cuáles son los años exactos de cada generación?',
+      q: '¿A qué generación pertenezco según mi año de nacimiento?',
       a: 'Generación Silenciosa 1928–1945; Baby Boomer 1946–1964; Generación X 1965–1980; Millennial 1981–1996; Generación Z 1997–2012; Generación Alpha 2013–2024; Generación Beta desde 2025. Los cuatro primeros cortes son los de Pew Research Center y los dos últimos los de la consultora McCrindle, que fue la que acuñó los nombres Alpha y Beta.',
     },
     {
@@ -188,7 +188,7 @@ export const hub: HubData = {
     '/calculadora-nombre-elfo',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-08-07',
   audience: 'global',
 };
 

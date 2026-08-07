@@ -5720,7 +5720,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/porcentaje': '/matematica/porcentajes',
   '/porcentaje-grasa-corporal': '/salud/grasa-corporal',
   '/porcentaje-inverso-de-que-numero': '/matematica/porcentajes',
-  '/posiciones-mundial-2026': '/mundial-2026',
+  '/posiciones-mundial-2026': '/fixture-mundial-2026',
   '/postpartum-weight-loss': '/en/health/body-weight',
   '/pregnancy-weight-gain-calculator': '/en/health/fertility-and-pregnancy',
   '/pressao-arterial': '/pt/vida',

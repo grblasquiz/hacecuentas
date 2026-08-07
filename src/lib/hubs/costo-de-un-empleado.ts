@@ -11,9 +11,9 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'trabajo/costo-de-un-empleado',
-  title: '¿Cuánto me cuesta realmente un empleado? — Costo laboral 2026',
+  title: 'Aportes patronales y cargas sociales 2026: costo del empleado',
   description:
-    'Calculá el costo laboral total de un empleado registrado en Argentina: sueldo bruto, contribuciones patronales del decreto 814/01, ART, seguro de vida obligatorio y provisiones de aguinaldo y vacaciones. Con costo por hora real y cuánto tenés que facturar para pagarlo.',
+    'Calculá las cargas sociales y el costo laboral total de un empleado registrado en Argentina: sueldo bruto, aportes y contribuciones patronales del decreto 814/01 con sus porcentajes, ART, seguro de vida obligatorio y provisiones de aguinaldo y vacaciones. Con costo por hora real y cuánto tenés que facturar para pagarlo.',
   silo: 'Trabajo',
   siloHref: '/trabajo',
 
@@ -21,7 +21,7 @@ export const hub: HubData = {
   h1: '¿Cuánto me cuesta realmente un empleado?',
   lede:
     'El sueldo bruto es apenas la base. Encima van las contribuciones patronales, la ART, el seguro de vida obligatorio y las provisiones del aguinaldo y las vacaciones: el costo real ronda una vez y media el bruto. Partimos del caso más común y lo ajustás con tus datos.',
-  stamps: ['Actualizado 27-07-2026', 'Dec. 814/01 · Ley 27.430 · Ley 24.557', '8 calculadoras adentro'],
+  stamps: ['Actualizado 07-08-2026', 'Dec. 814/01 · Ley 27.430 · Ley 24.557', '8 calculadoras adentro'],
 
   resultLabel: 'Costo mensual total para la empresa',
 
@@ -158,7 +158,7 @@ export const hub: HubData = {
       a: 'Entre un 40% y un 55% más que su sueldo bruto, según la actividad y el riesgo de la ART. A las contribuciones patronales del decreto 814/01 se les suman la obra social del empleador, la ART, el seguro colectivo de vida obligatorio y las provisiones del aguinaldo y las vacaciones. Un bruto de un millón difícilmente cueste menos de un millón y medio.',
     },
     {
-      q: '¿Cuál es el porcentaje de contribuciones patronales en 2026?',
+      q: '¿Qué porcentajes son los aportes y contribuciones patronales 2026 de un empleado registrado?',
       a: 'El decreto 814/01, con la unificación de la ley 27.430, tiene dos incisos. El inciso a (comercio y servicios grandes) se compone de 12,71% de SIPA, 1,62% de INSSJP, 1,07% de Fondo Nacional de Empleo y 5,40% de asignaciones familiares: 20,8% en total. El inciso b (PyMEs, industria, agro y servicios chicos) es 10,77% + 1,50% + 0,89% + 4,44% = 17,6%. Aparte van el 6% de obra social del empleador (ley 23.660) y la alícuota de ART, así que la carga patronal completa ronda el 26,8% en el inciso a y el 23,6% en el inciso b, más ART.',
     },
     {
@@ -245,7 +245,7 @@ export const hub: HubData = {
     '/calculadora-productividad-empleados-output-hora',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-07',
   audience: 'AR',
 };
 

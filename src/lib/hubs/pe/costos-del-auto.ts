@@ -59,9 +59,9 @@ const sol = (n: number) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFract
 
 export const hub: HubData = {
   slug: 'pe/auto/costos-del-auto',
-  title: 'Cuánto cuesta tener el auto al día en el Perú: SOAT, revisión técnica, impuesto y gasolina',
+  title: 'SOAT Perú 2026: precio por tipo de vehículo y costos del auto',
   description:
-    'Suma el costo anual real de tu vehículo en el Perú: la prima del SOAT, la revisión técnica vehicular, el impuesto al patrimonio vehicular si todavía te corresponde, y la gasolina que gastas cada mes medida en galones.',
+    'Cuánto cuesta el SOAT 2026 en el Perú según el tipo de vehículo, más el costo anual real de tenerlo al día: la revisión técnica vehicular, el impuesto al patrimonio vehicular si todavía te corresponde, y la gasolina que gastas cada mes medida en galones.',
   silo: 'Auto',
   siloHref: '/pe/auto',
   locale: 'pe',
@@ -262,8 +262,8 @@ export const hub: HubData = {
 
   faq: [
     {
-      q: '¿Cuánto cuesta el SOAT en el Perú?',
-      a: 'No hay un precio único: el SOAT no tiene tarifa fija por ley. Cada aseguradora fija su prima según el tipo de vehículo, el uso, la antigüedad y la zona de circulación. Un auto particular puede conseguirse desde unas decenas de soles en modalidad virtual y llegar a doscientos según el caso; un vehículo de transporte de pasajeros cuesta bastante más. Lo que sí está regulado y es igual en todas las pólizas son las coberturas.',
+      q: '¿Cuánto cuesta el SOAT en el Perú en 2026?',
+      a: `No hay un precio único: el SOAT no tiene tarifa fija por ley y cada aseguradora fija su prima según el tipo de vehículo, el uso, la antigüedad y la zona. Como rango de mercado 2026: un auto particular va de ${sol(SOAT_RANGOS.auto.min)} a ${sol(SOAT_RANGOS.auto.max)} al año (las pólizas virtuales arrancan en el extremo bajo), una moto de ${sol(SOAT_RANGOS.moto.min)} a ${sol(SOAT_RANGOS.moto.max)}, y un taxi o auto de servicio entre ${sol(SOAT_RANGOS.taxi.min)} y ${sol(SOAT_RANGOS.taxi.max)}. El transporte público de pasajeros paga bastante más, desde unos S/ 200 hasta pasar los S/ 500. Lo que sí está regulado e igual en toda póliza son las coberturas.`,
     },
     {
       q: '¿Qué cubre el SOAT y por cuánto?',
@@ -327,5 +327,5 @@ export const hub: HubData = {
     '/pe/calculadora-costo-viaje-gasolina-galon-peru',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
 };

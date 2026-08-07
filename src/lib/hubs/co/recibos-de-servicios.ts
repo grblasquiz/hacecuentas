@@ -91,15 +91,15 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
   slug: 'co/vida/recibos-de-servicios',
-  title: 'Recibos de servicios en Colombia: por qué te llegó tan caro y cuánto es subsidio',
+  title: 'Recibo de luz por estrato Colombia: Codensa, EPM y subsidios',
   description:
-    'Descomponé tu factura de luz, gas, agua o internet en Colombia: cargo fijo, consumo, subsidio del estrato o contribución de solidaridad, y cuánto ahorrás bajando el consumo. Con las tarifas de tu propia factura.',
+    'Descomponé tu recibo de luz (Enel-Codensa, EPM), gas, agua o internet en Colombia: cargo fijo, consumo, subsidios por estrato o contribución de solidaridad, y cuánto ahorrás bajando el consumo. Con las tarifas de tu propia factura.',
   silo: 'Vida',
   siloHref: '/co/vida',
   locale: 'co',
 
   eyebrow: 'Colombia · CREG y CRA · subsidios por estrato',
-  h1: '¿Por qué me llegó tan caro el recibo?',
+  h1: '¿Por qué me llegó tan caro el recibo de luz, gas o agua? Subsidios y contribución por estrato',
   lede:
     'Una factura de servicios en Colombia tiene tres capas: el cargo fijo que pagás aunque no consumas, el consumo a la tarifa del mes, y el ajuste por estrato —subsidio si estás en 1, 2 o 3; contribución si estás en 5 o 6—. Acá las separás y ves cuánto bajaría el recibo si consumís menos.',
   stamps: [
@@ -314,12 +314,16 @@ export const hub: HubData = {
       a: 'Casi siempre por el estrato. En Colombia la tarifa del servicio es la misma, pero encima se aplica un subsidio si la vivienda es estrato 1, 2 o 3, y un sobrecosto llamado contribución de solidaridad si es estrato 5 o 6. Dos apartamentos del mismo edificio pueden tener estratos distintos si están en manzanas catastrales diferentes. El estrato lo asigna la alcaldía por características de la vivienda y del entorno, no por los ingresos de quien vive ahí.',
     },
     {
-      q: '¿De cuánto es el subsidio según mi estrato?',
+      q: '¿De cuánto son los subsidios y la contribución por estrato?',
       a: `El tope legal es de hasta ${Math.abs(FACTOR_ESTRATO[1] * 100)}% para estrato 1, ${Math.abs(FACTOR_ESTRATO[2] * 100)}% para estrato 2 y ${Math.abs(FACTOR_ESTRATO[3] * 100)}% para estrato 3, según la Ley 1117 de 2006 y sus prórrogas. El estrato 4 paga tarifa plena, sin subsidio ni contribución. Los estratos 5 y 6, junto con los usuarios comerciales e industriales, pagan una contribución del ${FACTOR_ESTRATO[5] * 100}% que financia justamente esos subsidios (Ley 142 de 1994, art. 89). Son topes: cada municipio puede aplicar un porcentaje menor según el balance de su fondo de solidaridad.`,
     },
     {
       q: '¿Qué es el consumo de subsistencia y por qué me importa tanto?',
       a: `Es el bloque de consumo mínimo vital sobre el que se aplica el subsidio. En energía son ${SUBSISTENCIA.luz.alta} kWh al mes desde los 1.000 msnm y ${SUBSISTENCIA.luz.baja} kWh por debajo de esa altura; en gas natural son ${SUBSISTENCIA.gas.alta} m³ mensuales; en acueducto el consumo básico es de ${SUBSISTENCIA.agua.alta} m³ en ciudades altas y ${SUBSISTENCIA.agua.baja} m³ en tierra caliente. Todo lo que consumás por encima de ese bloque se paga a tarifa plena, sin descuento. Por eso el recibo no crece en línea recta: pasado el bloque, cada unidad extra cuesta más que las anteriores.`,
+    },
+    {
+      q: '¿El recibo de luz de Codensa y el de EPM se calculan igual por estrato?',
+      a: `La estructura es idéntica porque la fija la CREG: cargo fijo, consumo por el costo unitario (CU) del mes y el ajuste por estrato encima. Lo que cambia entre Enel-Codensa (Bogotá), EPM (Antioquia), Celsia/EPSA (Valle) o Air-e y Afinia (Caribe) es el CU, que cada empresa recalcula todos los meses por fórmula tarifaria y que tenés que leer de tu propia factura. Los subsidios por estrato son de ley y valen igual con cualquier operador: hasta ${Math.abs(FACTOR_ESTRATO[1] * 100)}% en estrato 1, ${Math.abs(FACTOR_ESTRATO[2] * 100)}% en el 2 y ${Math.abs(FACTOR_ESTRATO[3] * 100)}% en el 3 sobre el bloque de subsistencia (${SUBSISTENCIA.luz.alta} kWh desde los 1.000 msnm, ${SUBSISTENCIA.luz.baja} en tierra caliente), y contribución del ${FACTOR_ESTRATO[5] * 100}% en estratos 5 y 6 sobre todo el consumo.`,
     },
     {
       q: '¿La contribución de los estratos 5 y 6 también tiene tope de consumo?',
@@ -400,5 +404,5 @@ export const hub: HubData = {
     '/co/calculadora-internet-fibra-claro-etb-tigo-colombia-mejor-precio',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
 };

@@ -72,15 +72,15 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
   slug: 'co/impuestos/renta-personas',
-  title: 'Declaración de renta Colombia 2026: topes, fecha y cálculo',
+  title: 'Renta personas naturales Colombia 2026: tabla UVT y topes',
   description:
-    'Verificá si estás obligado a declarar renta en Colombia, cuándo vence según tu cédula y cuánto te toca pagar: topes del art. 592, límite del 40% del art. 336 y tabla del art. 241 del Estatuto Tributario.',
+    'Tabla del impuesto de renta para personas naturales en Colombia 2026, en UVT: verificá si estás obligado a declarar, cuándo vence según tu cédula y cuánto te toca pagar con los topes del art. 592, el límite del 40% del art. 336 y la tabla del art. 241 del Estatuto Tributario.',
   silo: 'Impuestos',
   siloHref: '/co/impuestos',
   locale: 'co',
 
   eyebrow: 'Colombia · DIAN · persona natural',
-  h1: 'Declaración de renta Colombia 2026: si te toca, cuándo vence y cuánto pagás.',
+  h1: 'Declaración de renta de personas naturales Colombia 2026: la tabla, si te toca, cuándo vence y cuánto pagás.',
   lede:
     'Una sola cuenta responde las tres preguntas. Con tus ingresos del año, tus aportes y beneficios, la calculadora depura la base, la pasa por la tabla del art. 241 y la cruza con los topes del art. 592 y el calendario de la DIAN.',
   stamps: [
@@ -266,7 +266,7 @@ export const hub: HubData = {
       a: `El primer tramo del art. 241 va de 0 a ${TABLA_241[1].desde.toLocaleString('es-CO')} UVT con tarifa del 0%. Con la UVT vigente eso son unos ${cop(TABLA_241[1].desde * UVT)} de renta líquida gravable al año. Ojo: es renta gravable, no ingreso. Alguien puede facturar bastante más y no pagar nada porque los aportes, el 25% exento y las deducciones bajan la base por debajo del piso.`,
     },
     {
-      q: '¿Cuáles son los tramos y las tarifas de la tabla del art. 241?',
+      q: '¿Cuál es la tabla del impuesto de renta para personas naturales en Colombia 2026 (art. 241, en UVT)?',
       a: `Siete tramos progresivos: 0% hasta ${TABLA_241[1].desde.toLocaleString('es-CO')} UVT; 19% de ${TABLA_241[1].desde.toLocaleString('es-CO')} a ${TABLA_241[2].desde.toLocaleString('es-CO')}; 28% de ${TABLA_241[2].desde.toLocaleString('es-CO')} a ${TABLA_241[3].desde.toLocaleString('es-CO')}; 33% de ${TABLA_241[3].desde.toLocaleString('es-CO')} a ${TABLA_241[4].desde.toLocaleString('es-CO')}; 35% de ${TABLA_241[4].desde.toLocaleString('es-CO')} a ${TABLA_241[5].desde.toLocaleString('es-CO')}; 37% de ${TABLA_241[5].desde.toLocaleString('es-CO')} a ${TABLA_241[6].desde.toLocaleString('es-CO')}; y 39% de ${TABLA_241[6].desde.toLocaleString('es-CO')} UVT en adelante. Cada tramo suma una adición fija en UVT más el porcentaje sobre el excedente, así que la tarifa alta sólo pega sobre la parte que entra en ese tramo.`,
     },
     {
@@ -339,6 +339,7 @@ export const hub: HubData = {
     '/impuestos/renta-colombia',
     '/co/calculadora-renta-personas-naturales-colombia-2026-anual',
     '/co/calculadora-tabla-impuesto-renta-personas-naturales-colombia-2026',
+    '/calculadora-impuesto-renta-colombia-persona-natural-2026',
     '/co/calculadora-isr-anual-colombia-personas-naturales-cedulas',
     '/co/calculadora-obligado-declarar-renta-2026',
     '/co/calculadora-fecha-declaracion-renta-2026-colombia-cedula',
@@ -352,5 +353,5 @@ export const hub: HubData = {
     '/co/calculadora-cripto-colombia-impuestos-renta-trader-2026',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-08-07',
 };

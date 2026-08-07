@@ -244,7 +244,7 @@ const LADRILLOS_M2_HUECO = PIEZAS.hueco_18.porM2;
 
 export const hub: HubData = {
   slug: 'construccion/ladrillos',
-  title: '¿Cuántos ladrillos necesito? Calculadora por m² de pared 2026',
+  title: '¿Cuántos ladrillos por m² de pared? Común, hueco y bloque',
   description:
     'Calculá cuántos ladrillos, bloques o adoquines necesitás y cuánto cemento, cal y arena lleva el mortero. Pared común, bloques de hormigón, cerco perimetral y piso de adoquines, con la lista para el corralón.',
   silo: 'Construcción',
@@ -255,7 +255,7 @@ export const hub: HubData = {
   lede:
     'Poné el largo y el alto de lo que vas a levantar y te devolvemos la lista para el corralón: piezas, bolsas de cemento, bolsas de cal y baldes de arena, con el desperdicio ya sumado.',
   stamps: [
-    'Actualizado 27-07-2026',
+    'Actualizado 07-08-2026',
     `${LADRILLOS_M2_COMUN} ladrillos comunes/m² · ${LADRILLOS_M2_HUECO} huecos 18/m²`,
     'Mortero 1:1:6 · CIRSOC 101',
     '7 calculadoras adentro',
@@ -403,7 +403,7 @@ export const hub: HubData = {
 
   faq: [
     {
-      q: '¿Cuántos ladrillos entran en un metro cuadrado de pared?',
+      q: '¿Cuántos ladrillos por m² de pared lleva el común y el hueco?',
       a: `Depende del ladrillo y del espesor de la pared. Un ladrillo común de 24×12×6 cm en pared de 12 rinde <b>${LADRILLOS_M2_COMUN} piezas por m²</b>; el hueco cerámico de 18×18×33 cm, apenas <b>${LADRILLOS_M2_HUECO} por m²</b> porque cada pieza cubre mucha más superficie; el ladrillo visto sube a ${PIEZAS.visto.porM2} por m² y el bloque de hormigón de 20×20×40 baja a ${BLOQUES_M2_TXT}. Por eso el hueco se volvió el estándar de la vivienda argentina: menos piezas, menos juntas y menos horas de albañil.`,
     },
     {
@@ -492,6 +492,6 @@ export const hub: HubData = {
     '/calculadora-cerramiento-perimetro-casa-ladrillos-costo',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-07',
   audience: 'AR',
 };

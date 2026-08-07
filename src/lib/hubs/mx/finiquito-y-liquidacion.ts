@@ -57,7 +57,7 @@ export const hub: HubData = {
   slug: 'mx/trabajo/finiquito-y-liquidacion',
   title: 'Finiquito y liquidación en México: cuánto te tienen que pagar',
   description:
-    'Calcula tu finiquito o tu liquidación en México según la LFT: partes proporcionales, tres meses de indemnización, 20 días por año, prima de antigüedad con el tope de 2 salarios mínimos y el ISR de la separación con la exención de 90 UMA por año.',
+    'Calcula tu finiquito o tu liquidación en México según la LFT: partes proporcionales, tres meses de indemnización, 20 días por año, prima de antigüedad de 12 días por año con el tope de 2 salarios mínimos y el ISR de la separación con la exención de 90 UMA por año.',
   silo: 'Trabajo',
   siloHref: '/mx/trabajo',
 
@@ -238,8 +238,12 @@ export const hub: HubData = {
       a: 'El finiquito son las partes proporcionales que ya devengaste: días trabajados, vacaciones no disfrutadas, prima vacacional y aguinaldo del año. Te toca siempre, sin importar cómo termine la relación. La liquidación es la indemnización por un despido injustificado: tres meses de salario más veinte días por cada año de servicio, y se suma al finiquito solo en ese supuesto.',
     },
     {
-      q: '¿Cómo se calcula la prima de antigüedad?',
-      a: 'Son doce días de salario por cada año de servicio (Art. 162 de la LFT), y el tiempo incompleto se paga proporcional, no se trunca. El salario que sirve de base está topado a dos veces el salario mínimo general (Art. 486), así que quien gana bien cobra la prima sobre ese tope y no sobre su sueldo real. Se paga en toda separación, salvo la renuncia voluntaria con menos de quince años.',
+      q: '¿Cómo se calcula la prima de antigüedad en México: 12 días por año?',
+      a: 'Sí: son 12 días de salario por cada año de servicio (Art. 162 de la LFT), y el tiempo incompleto se paga proporcional, no se trunca. El salario que sirve de base está topado a dos veces el salario mínimo general (Art. 486), así que quien gana bien cobra la prima sobre ese tope y no sobre su sueldo real. Se paga en toda separación, salvo la renuncia voluntaria con menos de quince años.',
+    },
+    {
+      q: '¿Cuál es el tope de 2 salarios mínimos de la prima de antigüedad en 2026?',
+      a: 'Con el salario mínimo general de $315.04 diarios, el tope del salario base es de $630.08 al día en la zona general; en la Zona Libre de la Frontera Norte, con mínimo de $440.87, el tope sube a $881.74. Eso significa que la prima máxima por cada año de servicio es de $7,560.96 en zona general y de $10,580.88 en la frontera (12 días por el tope diario). Si tu salario diario es menor al tope, la prima se calcula sobre tu salario real.',
     },
     {
       q: '¿Me toca prima de antigüedad si renuncio?',
@@ -325,6 +329,6 @@ export const hub: HubData = {
     '/calculadora-isr-finiquito-liquidacion-mexico-2026',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
   locale: 'mx',
 };

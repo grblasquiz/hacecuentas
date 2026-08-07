@@ -68,9 +68,9 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
   slug: 'co/impuestos/sanciones-dian',
-  title: 'Sanciones DIAN: cuánto pago por declarar tarde, corregir o no pagar',
+  title: 'Sanción por extemporaneidad DIAN 2026: cálculo y mínima UVT',
   description:
-    'Calculá la sanción por extemporaneidad (arts. 641 y 642 ET), la de corrección (art. 644), la sanción mínima de 10 UVT (art. 639) y los intereses de mora del art. 635, con la UVT y la tasa de usura vigentes.',
+    'Calculá la sanción por extemporaneidad DIAN 2026 (arts. 641 y 642 ET), la de corrección (art. 644), la sanción mínima de 10 UVT (art. 639) y los intereses de mora del art. 635, con la UVT y la tasa de usura vigentes.',
   silo: 'Impuestos',
   siloHref: '/co/impuestos',
   locale: 'co',
@@ -253,11 +253,11 @@ export const hub: HubData = {
 
   faq: [
     {
-      q: '¿Cuál es la sanción mínima de la DIAN?',
+      q: '¿Cuál es la sanción mínima de la DIAN en 2026, en UVT?',
       a: `${SANCIONES.minimaUvt} UVT, o sea ${cop(SANCIONES.minimaUvt * UVT)} con la UVT vigente (art. 639 del Estatuto Tributario). Es el piso de casi toda sanción tributaria: si la cuenta del porcentaje te da menos que eso, pagás igual la mínima. Se actualiza sola cada año porque está escrita en UVT y la DIAN fija el valor de la UVT en diciembre para el año siguiente.`,
     },
     {
-      q: '¿Cuánto es la sanción por declarar tarde?',
+      q: '¿Cuánto es la sanción por extemporaneidad de la DIAN en 2026?',
       a: `Depende de si te movés vos primero. Antes de que la DIAN te emplace, el art. 641 fija el ${(SANCIONES.extemporaneidadPorMes * 100).toFixed(0)}% del impuesto a cargo por cada mes o fracción de mes de retraso, con tope del ${(SANCIONES.topeSinEmplazamiento * 100).toFixed(0)}%. Después del emplazamiento, el art. 642 la duplica: ${(SANCIONES.extemporaneidadConEmplazamientoPorMes * 100).toFixed(0)}% por mes, con tope del ${(SANCIONES.topeConEmplazamiento * 100).toFixed(0)}%. En los dos casos rige el piso de ${SANCIONES.minimaUvt} UVT.`,
     },
     {
@@ -359,5 +359,5 @@ export const hub: HubData = {
     '/co/calculadora-conversion-uvt-uvr-colombia-actualizacion-2026',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
 };

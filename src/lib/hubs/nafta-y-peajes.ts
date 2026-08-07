@@ -47,7 +47,7 @@ const mesLabel = (() => {
 
 export const hub: HubData = {
   slug: 'auto/nafta-y-peajes',
-  title: '¿Cuánta nafta y peaje gasto en este viaje? — Calculadora 2026',
+  title: '¿Cuánta nafta gasto en un viaje? Combustible por km y peajes',
   description:
     'Calculá el costo real de tu viaje en auto: litros de nafta o gasoil con el precio oficial de tu provincia, peajes con y sin Telepase, desgaste del auto y cuánto le toca a cada pasajero. Sirve también para el gasto mensual de ir al trabajo.',
   silo: 'Auto',
@@ -58,7 +58,7 @@ export const hub: HubData = {
   lede:
     'Poné los kilómetros, el consumo de tu auto y las cabinas de peaje del camino: te decimos cuántos litros vas a quemar, cuánta plata es con el precio oficial del combustible en tu provincia y cuánto sale el viaje por cabeza. Si es tu viaje de todos los días al trabajo, poné los viajes del mes y sale el gasto mensual.',
   stamps: [
-    'Actualizado 27-07-2026',
+    'Actualizado 07-08-2026',
     `${COMBUSTIBLE_DEFAULT} $${precioDefault.toLocaleString('es-AR')}/L en ${PROVINCIA_DEFAULT} (${mesLabel})`,
     'Precios oficiales de Secretaría de Energía',
     '8 calculadoras adentro',
@@ -228,6 +228,10 @@ export const hub: HubData = {
       a: 'Dividí los kilómetros por 100 y multiplicalo por el consumo de tu auto en L/100 km. Para 400 km con un auto que hace 8,5 L/100 km son 34 litros solo de ida, 68 litros ida y vuelta. Después multiplicás por el precio del litro y tenés la plata.',
     },
     {
+      q: '¿Cuánto combustible gasto en un viaje en auto y cuánto me sale por km?',
+      a: `El combustible para un viaje en auto sale de una sola cuenta: litros = kilómetros ÷ 100 × consumo, y plata = litros × precio del litro. El costo por km es el consumo dividido 100 por ese mismo precio: un auto de 8,5 L/100 km con la súper a $${precioDefault.toLocaleString('es-AR')} en ${PROVINCIA_DEFAULT} (dato oficial de ${mesLabel}) gasta ${(precioDefault * 0.085).toLocaleString('es-AR', { maximumFractionDigits: 0 })} pesos por kilómetro solo de nafta. A eso el hub le suma peajes, desgaste y otros gastos, y te lo divide por pasajero.`,
+    },
+    {
       q: '¿De dónde sale el precio del litro que usa la calculadora?',
       a: 'Del relevamiento oficial de precios en surtidor de la Secretaría de Energía (Resolución 314/2016), que las estaciones YPF, Shell, Axion y Puma están obligadas a declarar. Tomamos el promedio diurno del mes vigente para la provincia que elijas, así que se actualiza solo cuando se actualiza el dato oficial.',
     },
@@ -310,6 +314,6 @@ export const hub: HubData = {
     '/calculadora-nafta-mensual-commute',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-08-07',
   audience: 'AR',
 };

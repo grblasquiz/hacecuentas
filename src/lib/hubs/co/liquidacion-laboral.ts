@@ -65,15 +65,15 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
   slug: 'co/trabajo/liquidacion-laboral',
-  title: 'Liquidación laboral en Colombia: cuánto te tienen que pagar al salir',
+  title: 'Liquidación laboral Colombia: empleada doméstica por días 2026',
   description:
-    'Calculá tu liquidación en Colombia: cesantías, intereses del 12%, prima, vacaciones e indemnización del art. 64 CST. Cubre renuncia, despido sin justa causa, contrato a término fijo y empleada doméstica por días, con la sanción moratoria del art. 65.',
+    'Calculá tu liquidación en Colombia 2026: cesantías, intereses del 12%, prima, vacaciones e indemnización del art. 64 CST. Cubre renuncia, despido sin justa causa, contrato a término fijo y la liquidación de empleada doméstica por días, con la sanción moratoria del art. 65.',
   silo: 'Trabajo',
   siloHref: '/co/trabajo',
   locale: 'co',
 
   eyebrow: 'Colombia · CST y Ley 50 de 1990',
-  h1: 'Me voy o me echan: ¿cuánto me tienen que liquidar?',
+  h1: 'Me voy o me echan: ¿cuánto me tienen que liquidar? (también la liquidación de empleada doméstica por días)',
   lede:
     'Las prestaciones sociales se deben siempre, renuncies o te despidan: cesantías, intereses del 12%, prima y vacaciones se causan por el tiempo que trabajaste. Lo que cambia con el motivo de la salida es la indemnización. Poné tus fechas y mirá el total, concepto por concepto.',
   stamps: [
@@ -290,8 +290,12 @@ export const hub: HubData = {
       a: `No, y se confunden todo el tiempo porque tienen la misma tarifa. La del art. 65 del CST castiga no pagar salarios y prestaciones al TERMINAR el contrato. La del art. 99 de la Ley 50 de 1990 castiga otra cosa: no consignar las cesantías del año en el fondo antes del 14 de febrero, con el contrato todavía vivo. Las dos cuestan un día de salario por día de retardo, pero se activan en momentos distintos y se pueden acumular si el empleador incumplió las dos.`,
     },
     {
-      q: '¿Cómo se liquida a una empleada doméstica que trabaja por días?',
+      q: '¿Cómo se calcula la liquidación de una empleada doméstica por días en Colombia 2026?',
       a: `Igual que a cualquier trabajador, pero proporcional a los días. El pago diario tiene que cubrir tres cosas: el salario mínimo diario (${cop(SMDLV)}), el descanso dominical proporcional (una sexta parte del día, art. 173 CST) y el auxilio de transporte proporcional. Sobre esa base se causan cesantías, intereses, prima y vacaciones proporcionales al tiempo. La prima es un derecho pleno desde la Ley 1788 de 2016; hasta entonces el servicio doméstico estaba excluido, y todavía hay familias que liquidan como si esa ley no existiera.`,
+    },
+    {
+      q: '¿Cuánto vale como mínimo el día de una empleada doméstica en 2026?',
+      a: `El piso legal por día en 2026 es de ${cop(SMDLV + SMDLV / 6 + AUXILIO / 30)}: el salario mínimo diario de ${cop(SMDLV)} (SMLMV ÷ 30), más el descanso dominical proporcional de ${cop(SMDLV / 6)} (una sexta parte del día, art. 173 CST) y el auxilio de transporte diario de ${cop(AUXILIO / 30)} (${cop(AUXILIO)} ÷ 30). Para liquidar se mensualiza el pago —días por semana × 52 ÷ 12, así que 3 días por semana son unos 13 días al mes— y sobre ese salario mensualizado se causan cesantías, intereses del ${PRESTACIONES.interesesCesantias * 100}%, prima y vacaciones, todo proporcional (Corte Constitucional, sentencia C-871 de 2014).`,
     },
     {
       q: '¿Las prestaciones sociales pagan salud y pensión?',
@@ -382,5 +386,5 @@ export const hub: HubData = {
     '/co/calculadora-prestaciones-empleada-domestica-colombia-2026',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
 };

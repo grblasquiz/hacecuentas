@@ -55,7 +55,7 @@ export const hub: HubData = {
   slug: 'py/trabajo/sueldo-neto',
   title: 'Salario mínimo Paraguay 2026: Gs. 3.044.000 y sueldo neto',
   description:
-    'El salario mínimo en Paraguay 2026 es Gs. 3.044.000 al mes y el jornal Gs. 117.077. Calculá cuánto queda después del IPS 9%.',
+    'El salario mínimo Paraguay 2026 en guaraníes es Gs. 3.044.000 al mes y el jornal Gs. 117.077. Calculá cuánto queda después del IPS 9%.',
   silo: 'Trabajo',
   siloHref: '/py/trabajo',
   locale: 'py',
@@ -253,7 +253,7 @@ export const hub: HubData = {
       a: `Un único descuento obligatorio: el aporte obrero al IPS, del ${(IPS.obrero * 100).toFixed(0)}% del salario bruto. No hay retención de impuesto a la renta sobre el sueldo mes a mes: el IRP se liquida de forma anual y sólo si el ingreso bruto del año supera el umbral de no incidencia. Cualquier otro descuento del recibo (anticipos, cuotas, embargos) tiene que estar autorizado por vos o por una orden judicial.`,
     },
     {
-      q: '¿Cuál es el salario mínimo vigente y cuánto es el jornal mínimo?',
+      q: '¿Cuánto es el salario mínimo Paraguay 2026 en guaraníes y cuánto el jornal mínimo?',
       a: `El salario mínimo mensual para actividades diversas no especificadas es de ${gs(SMVM)}, fijado por el Decreto N° 6225 con un reajuste del 5%. El jornal mínimo diario es de ${gs(JORNAL_MINIMO)}. Antes del reajuste el mínimo era de ${gs(PARAGUAY_2026.salarioMinimoAnterior)}, así que si tu recibo todavía muestra ese número está atrasado.`,
     },
     {
@@ -334,5 +334,5 @@ export const hub: HubData = {
     '/py/calculadora-empleada-domestica-paraguay',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-08-07',
 };

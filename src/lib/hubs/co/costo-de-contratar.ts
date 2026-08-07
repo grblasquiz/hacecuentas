@@ -79,15 +79,15 @@ const pct = (n: number) => (n * 100).toLocaleString('es-CO', { maximumFractionDi
 
 export const hub: HubData = {
   slug: 'co/trabajo/costo-de-contratar',
-  title: 'Cuánto cuesta contratar un empleado en Colombia: costo real y factor prestacional',
+  title: 'Cuánto cuesta contratar y aportes ARL por riesgo, Colombia',
   description:
-    'Calculá lo que de verdad te cuesta un empleado en Colombia: factor prestacional, seguridad social, ARL por clase de riesgo, caja de compensación, exoneración del art. 114-1 ET, costo por hora y cuánto vale despedirlo.',
+    'Calculá lo que de verdad te cuesta un empleado en Colombia: factor prestacional, seguridad social, aportes ARL por nivel de riesgo (tarifas clase I a V, los paga el empleador, no el empleado), caja de compensación, exoneración del art. 114-1 ET, costo por hora y cuánto vale despedirlo.',
   silo: 'Trabajo',
   siloHref: '/co/trabajo',
   locale: 'co',
 
   eyebrow: 'Colombia · lado empleador · nómina',
-  h1: '¿Cuánto me cuesta de verdad tener un empleado?',
+  h1: '¿Cuánto me cuesta de verdad tener un empleado? Nómina, prestaciones y aportes ARL por nivel de riesgo',
   lede:
     'El sueldo que acordás no es lo que pagás. Encima van prestaciones, seguridad social, ARL, caja de compensación y parafiscales, y todo eso cambia según seas persona jurídica o natural, cuánto gane el trabajador y de qué clase de riesgo sea la actividad. Acá sale el costo mensual cargado, el costo por hora y lo que vale terminar el contrato.',
   stamps: [
@@ -312,6 +312,14 @@ export const hub: HubData = {
       a: `El Fondo de la Industria de la Construcción es un aporte del ${pct(FIC_CONSTRUCCION)} sobre la nómina mensual de los trabajadores de obra, a cargo de los empleadores de la industria de la construcción y administrado por el SENA (Ley 21/1982, art. 6). Es adicional al 2% ordinario del SENA, financia la formación de personal para el sector y no lo cubre la exoneración del art. 114-1. Si tu empresa no es de construcción, no aplica.`,
     },
     {
+      q: '¿Cuáles son las tarifas de aportes ARL por nivel de riesgo, clase I a V?',
+      a: `Cinco tarifas fijas sobre el salario, según la clase de riesgo de la actividad (Decreto 1772/1994 y Decreto 1607/2002): clase I, riesgo mínimo, ${pct(APORTES.arl.I)} (oficinas, bancos, educación); clase II, riesgo bajo, ${pct(APORTES.arl.II)} (comercio, hoteles, transporte de pasajeros); clase III, riesgo medio, ${pct(APORTES.arl.III)} (construcción liviana, gastronomía, textiles); clase IV, riesgo alto, ${pct(APORTES.arl.IV)} (manufactura pesada, metalmecánica, química); y clase V, riesgo máximo, ${pct(APORTES.arl.V)} (minería, explosivos, trabajo en alturas). La clase la define el CIIU de la actividad, no el cargo: minería cuesta más de 13 veces lo que una oficina a igual salario.`,
+    },
+    {
+      q: '¿Quién paga los aportes ARL: el empleador o el empleado?',
+      a: `El empleador, siempre y al 100% (Decreto-Ley 1295 de 1994, art. 16). A diferencia de salud y pensión, donde el trabajador aporta 4% + 4%, por riesgos laborales al empleado no se le descuenta nada: si en el desprendible aparece un descuento por ARL, es un error reclamable. Ejemplo con las tarifas vigentes: un salario de $2.500.000 en clase III (${pct(APORTES.arl.III)}) le cuesta al empleador ${cop(2500000 * APORTES.arl.III)} por mes, y el mismo salario en clase V (${pct(APORTES.arl.V)}) sube a ${cop(2500000 * APORTES.arl.V)}. El aporte se paga junto con salud y pensión a través de la PILA.`,
+    },
+    {
       q: '¿Hay tope para los aportes?',
       a: `Sí, pero sólo para la seguridad social: el ingreso base de cotización se topa en ${APORTES.ibcTopeSmlmv} SMLMV, hoy ${cop(APORTES.ibcTopeSmlmv * SMLMV)}. Salud, pensión y ARL se calculan hasta ahí y no más. Los parafiscales y las prestaciones sociales no tienen tope: se liquidan sobre el salario completo por alto que sea. Por eso, en sueldos muy altos, el factor de costo baja un poco: una parte de la carga deja de crecer.`,
     },
@@ -376,5 +384,5 @@ export const hub: HubData = {
     '/co/calculadora-costo-despido-empleador-colombia-2026',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
 };

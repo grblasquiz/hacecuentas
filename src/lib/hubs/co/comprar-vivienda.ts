@@ -65,9 +65,9 @@ const pct = (n: number) => n.toFixed(2).replace('.', ',') + '%';
 
 export const hub: HubData = {
   slug: 'co/finanzas/comprar-vivienda',
-  title: 'Comprar vivienda en Colombia: ¿me alcanza y cuánto termino pagando?',
+  title: 'Comprar vivienda Colombia: cuota, gastos notariales y registro',
   description:
-    'Cuota inicial, tope legal de la primera cuota sobre tu ingreso familiar, crédito en UVR o en pesos, subsidio Mi Casa Ya, gastos notariales y de registro, y la comparación entre arrendar y comprar a diez años.',
+    'Cuota inicial, tope legal de la primera cuota sobre tu ingreso familiar, crédito en UVR o en pesos, subsidio Mi Casa Ya, los gastos notariales y de registro de la compraventa en Colombia 2026 —con beneficencia y quién paga cada uno—, y la comparación entre arrendar y comprar a diez años.',
   silo: 'Finanzas',
   siloHref: '/co/finanzas',
   locale: 'co',
@@ -318,8 +318,12 @@ export const hub: HubData = {
       a: 'En pesos la cuota es fija y previsible: sabés hoy cuánto vas a pagar dentro de quince años, y si la inflación se dispara, la inflación juega a tu favor porque tu deuda se licúa. En UVR arrancás pagando menos, lo que ayuda a pasar el tope del 30% del ingreso, pero asumís el riesgo inflacionario completo. La regla práctica: si tu ingreso se ajusta con el salario mínimo o con el IPC, la UVR es más tolerable; si tu ingreso es fijo o nominal, el crédito en pesos te protege mucho mejor.',
     },
     {
-      q: '¿Cuánto se paga de gastos notariales y de registro?',
+      q: '¿Cuánto se paga de gastos notariales y de registro en una compraventa en Colombia 2026?',
       a: `Los derechos notariales son del ${(CIERRE.derechosNotariales * 100).toFixed(2).replace('.', ',')}% del valor de la escritura y se suelen repartir mitad y mitad entre comprador y vendedor. El impuesto de registro y los derechos de beneficencia los paga el comprador y varían por departamento: en Bogotá y Cundinamarca rondan el ${(CIERRE.impuestoRegistroBogota * 100).toFixed(2).replace('.', ',')}% y el ${(CIERRE.beneficenciaBogota * 100).toFixed(2).replace('.', ',')}% respectivamente. Y hay una retención en la fuente del ${(CIERRE.retencionVendedorPN * 100).toFixed(0)}% a cargo del vendedor persona natural. En conjunto, el cierre suele moverse en el orden del 2,5% al 3% del valor sobre el comprador, y no es financiable.`,
+    },
+    {
+      q: '¿Quién paga los gastos notariales, el registro y la beneficencia: el comprador o el vendedor?',
+      a: `Por costumbre —y salvo pacto en contrario en la promesa— los derechos notariales del ${(CIERRE.derechosNotariales * 100).toFixed(2).replace('.', ',')}% se reparten por mitades entre comprador y vendedor. El impuesto de registro y los derechos de beneficencia los asume el comprador, porque es quien inscribe su título en la Oficina de Registro: en Bogotá y Cundinamarca rondan el ${(CIERRE.impuestoRegistroBogota * 100).toFixed(2).replace('.', ',')}% y el ${(CIERRE.beneficenciaBogota * 100).toFixed(2).replace('.', ',')}% respectivamente. Y la retención en la fuente del ${(CIERRE.retencionVendedorPN * 100).toFixed(0)}% corre siempre por cuenta del vendedor persona natural: el notario se la practica en la firma y él la recupera después en su declaración de renta. El reparto de la notaría es negociable; el registro y la retención, en la práctica, no.`,
     },
     {
       q: '¿Cómo funciona el subsidio Mi Casa Ya?',
@@ -407,5 +411,5 @@ export const hub: HubData = {
     '/co/calculadora-coste-arriendo-vs-comprar-colombia-10-anos',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
 };

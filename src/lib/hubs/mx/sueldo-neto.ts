@@ -55,14 +55,14 @@ export const SALARIO_MINIMO = {
 
 export const hub: HubData = {
   slug: 'mx/trabajo/sueldo-neto',
-  title: 'Sueldo neto en México: cuánto te queda en mano del bruto',
+  title: 'Sueldo neto y salario diario integrado (SDI) en México',
   description:
-    'Calcula tu sueldo neto en México con la tarifa de ISR del Art. 96 de la LISR, la cuota obrera del IMSS, el subsidio para el empleo y el Infonavit. Incluye el camino inverso de neto a bruto, el sueldo por hora y la comparación contra el salario mínimo.',
+    'Calcula tu sueldo neto en México con la tarifa de ISR del Art. 96 de la LISR, la cuota obrera del IMSS, el subsidio para el empleo y el Infonavit, y entiende cómo se arma tu salario diario integrado (SDI) con el factor de integración. Incluye el camino inverso de neto a bruto, el sueldo por hora y la comparación contra el salario mínimo.',
   silo: 'Trabajo',
   siloHref: '/mx/trabajo',
 
   eyebrow: 'México · nómina y descuentos',
-  h1: '¿Cuánto me queda del sueldo en mano?',
+  h1: '¿Cuánto me queda del sueldo en mano y cuál es mi salario diario integrado?',
   lede:
     'De tu bruto salen el ISR y la cuota obrera del IMSS, y si traes crédito, el Infonavit. En sueldos bajos el subsidio para el empleo puede borrar el ISR completo. Pon tu sueldo, elige tu caso y mira el recibo por dentro.',
   stamps: [
@@ -262,6 +262,14 @@ export const hub: HubData = {
       a: 'El descuento aparece solo si tienes un crédito de vivienda vigente: el patrón lo retiene de tu nómina y lo entera al Infonavit. El porcentaje, el monto fijo o los VSM los determina el aviso de retención del propio instituto, no una tasa general. Por eso el campo arranca en cero y lo llenas con lo que dice tu recibo.',
     },
     {
+      q: '¿Cómo se calcula el salario diario integrado (SDI) para el IMSS?',
+      a: 'El SDI es tu salario diario multiplicado por el factor de integración, que suma la parte proporcional de aguinaldo y prima vacacional. Con las prestaciones mínimas de ley (15 días de aguinaldo y prima vacacional de 25% sobre 12 días de vacaciones), el factor del primer año es 1.0493: un sueldo de $500 diarios da un SDI de $524.65. Con ese SDI el patrón te registra ante el IMSS como salario base de cotización, topado a 25 UMA.',
+    },
+    {
+      q: '¿Qué es el factor de integración y por qué sube con la antigüedad?',
+      a: 'Es el multiplicador que convierte tu salario diario en salario diario integrado. Sube con los años porque la reforma de vacaciones dignas (Art. 76 de la LFT) da más días de vacaciones conforme creces en antigüedad: 12 el primer año, 14 el segundo, hasta 20 en el quinto y de ahí dos más por cada cinco años. Con prestaciones mínimas de ley, el factor va de 1.0493 en el primer año a 1.0589 con 16 a 20 años de servicio. Si tu empresa da prestaciones superiores, el factor real es mayor.',
+    },
+    {
       q: '¿Cuál es la diferencia entre tasa marginal y tasa efectiva?',
       a: 'La marginal es el porcentaje del renglón donde caes y se aplica solo al excedente del límite inferior: es lo que paga tu último peso. La efectiva es el ISR total dividido entre tu sueldo bruto y siempre da bastante menos. Que la tarifa diga 21,36% no significa que pierdas ese porcentaje del sueldo entero.',
     },
@@ -333,9 +341,10 @@ export const hub: HubData = {
     '/calculadora-recibo-nomina-percepciones-deducciones-mexico-2026',
     '/calculadora-aumento-salario-inflacion-mx',
     '/calculadora-uma-conversion-mexico',
+    '/calculadora-salario-diario-integrado-sdi-mexico',
     '/trabajo/sueldo-neto-mexico',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-08-07',
   locale: 'mx',
 };

@@ -2,17 +2,17 @@ import type { HubData } from './types';
 
 export const hub: HubData = {
   slug: 'trabajo/liquidacion-final',
-  title: 'Calculadora de liquidación final por renuncia 2026',
+  title: 'Liquidación final por renuncia y antigüedad laboral 2026',
   description:
-    'Si renunciás no cobrás indemnización por antigüedad, preaviso ni integración: sólo lo devengado. Calculá días trabajados, SAC proporcional y vacaciones no gozadas. Casas particulares (ley 26.844) incluido.',
+    'Si renunciás no cobrás indemnización por antigüedad, preaviso ni integración: sólo lo devengado. Calculá tu antigüedad laboral en años, meses y días trabajados, el SAC proporcional y las vacaciones no gozadas. Casas particulares (ley 26.844) incluido.',
   silo: 'Trabajo',
   siloHref: '/trabajo',
 
   eyebrow: 'Guía y estimación laboral',
-  h1: 'Calculadora de liquidación final por renuncia 2026',
+  h1: 'Calculadora de liquidación final por renuncia y antigüedad laboral 2026',
   lede:
     'La renuncia no es un despido: no hay indemnización por antigüedad, ni preaviso a tu favor, ni integración del mes. Lo que sí se cobra es todo lo devengado hasta el último día. Partimos del caso más común y lo ajustás con tus datos.',
-  stamps: ['Revisado 04-08-2026', 'LCT actualizada', 'Cálculo explicado'],
+  stamps: ['Revisado 07-08-2026', 'LCT actualizada', 'Cálculo explicado'],
 
   resultLabel: 'Estimación inicial',
 
@@ -140,6 +140,10 @@ export const hub: HubData = {
       a: 'Según el Art. 150 LCT: 14 días corridos hasta 5 años de antigüedad, 21 días de 5 a 10, 28 días de 10 a 20 y 35 días con más de 20. Con menos de 6 meses en el puesto se liquida 1 día por cada 20 días trabajados.',
     },
     {
+      q: '¿Cómo calcular la antigüedad laboral en años, meses y días trabajados?',
+      a: 'Se cuenta desde la fecha de ingreso real —no desde la registración— hasta el último día trabajado, restando fecha contra fecha: primero los años completos, después los meses sueltos y por último los días. Esa antigüedad define tu tramo de vacaciones del Art. 150 LCT: 14 días hasta 5 años, 21 de 5 a 10, 28 de 10 a 20 y 35 con más de 20. Con menos de 6 meses no hay tramo completo y se liquida 1 día cada 20 trabajados. El caso "Quiero saber sólo mi antigüedad" del hub hace la cuenta y valoriza esos días a sueldo dividido 25.',
+    },
+    {
       q: 'Soy empleada de casas particulares: ¿me rige la misma ley?',
       a: 'No, te rige la ley 26.844. Los rubros devengados de la renuncia son equivalentes, pero el despido tiene su propio esquema: indemnización de 1 mes por año o fracción mayor a 3 meses (Art. 48), preaviso de 10 días / 1 mes / 2 meses según antigüedad (Art. 42) e integración del mes (Art. 43). No se aplica tope de convenio.',
     },
@@ -190,7 +194,7 @@ export const hub: HubData = {
     '/calculadora-dias-vacaciones-ganadas-antiguedad-lct',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-08-07',
   audience: 'AR',
 };
 

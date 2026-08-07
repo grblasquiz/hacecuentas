@@ -23,14 +23,14 @@ const DISCLAIMER_FISCAL =
 
 export const hub: HubData = {
   slug: 'es/trabajo/mi-nomina',
-  title: 'Mi nómina en España: convenio, horas extra, pagas y coste para la empresa',
+  title: 'Sueldo convenio hostelería y comercio 2026 — Nómina España',
   description:
-    'Comprueba si tu nómina cuadra: salario del convenio por categoría, valor real de la hora extra, paga extra y prorrateo, días de vacaciones y lo que le cuestas a la empresa.',
+    'Comprueba si tu nómina cuadra: sueldo del convenio de hostelería y comercio 2026 por categoría y nivel, valor real de la hora extra, paga extra y prorrateo, días de vacaciones y lo que le cuestas a la empresa.',
   silo: 'Trabajo',
   siloHref: '/es/trabajo',
 
   eyebrow: 'Guía laboral y estimación',
-  h1: 'Lo que cobras, ¿cuadra con tu convenio?',
+  h1: 'Tu sueldo por convenio en España 2026: hostelería, comercio y tu nómina',
   lede:
     'Una nómina española se arma por capas: el salario base que fija tu convenio, los pluses, las pagas extra —cobradas aparte o prorrateadas—, las horas extra con su recargo y, al final, lo que descuentan la Seguridad Social y el IRPF. Aquí puedes rehacer cada capa y ver también la cifra que casi nadie enseña: lo que le cuestas de verdad a la empresa.',
   stamps: ['Salario mínimo y convenios sectoriales', 'Cotización de trabajador y de empresa', '8 calculadoras dentro'],
@@ -268,6 +268,10 @@ export const hub: HubData = {
       a: 'El mínimo legal son 30 días naturales al año, que en muchos convenios se traducen en 22 días laborables. Son irrenunciables y no se pueden cambiar por dinero salvo cuando el contrato termina sin haberlas disfrutado: ahí se pagan en el finiquito.',
     },
     {
+      q: '¿Cuál es el sueldo del convenio de hostelería en España 2026 por categoría y nivel?',
+      a: 'Como referencia estatal media, el salario base mensual por categoría es: encargado de sector 1.580 €, jefe de rango 1.510 €, gobernanta 1.445 €, cocinero 1.385 €, recepcionista 1.365 €, camarero 1.345 € y ayudante de cocina 1.245 €. A eso se suman el plus de nocturnidad del 15% cuando se trabaja de noche y la antigüedad de alrededor de un 1% por año con tope del 20%. Ojo: cada convenio provincial agrupa las categorías en niveles y puede pagar varios cientos de euros más que esta media; consulta la tabla de tu provincia en el BOE o el boletín provincial.',
+    },
+    {
       q: '¿Qué es la antigüedad y cuánto suma?',
       a: 'Es un complemento por permanencia que fija cada convenio, normalmente en trienios o en un porcentaje anual con tope. En comercio suele ir por tramos de tres, seis y diez años; en hostelería, alrededor de un 1% por año con un techo del 20%. Hay convenios que la han congelado o suprimido para nuevas incorporaciones.',
     },
@@ -336,7 +340,7 @@ export const hub: HubData = {
     '/calculadora-coste-trabajador-empresa-seguridad-social-espana',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
   audience: 'global',
   locale: 'es',
 };

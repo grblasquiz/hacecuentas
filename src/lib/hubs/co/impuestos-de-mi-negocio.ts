@@ -43,9 +43,9 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
 slug: 'co/impuestos/impuestos-de-mi-negocio',
-  title: 'Impuestos de un negocio en Colombia: IVA, ICA, RST y renta',
+  title: 'Impuestos de tu negocio: IVA, ICA por municipio, RST y renta',
   description:
-    'Qué impuestos paga tu negocio en Colombia según cómo estés inscrito: IVA del 19% y tarifas diferenciales, la diferencia entre exento y excluido, zonas de frontera, ICA municipal por tarifa por mil, Régimen Simple de Tributación y renta de sociedades al 35%.',
+    'Qué impuestos paga tu negocio en Colombia según cómo estés inscrito: IVA del 19% y tarifas diferenciales, la diferencia entre exento y excluido, zonas de frontera, el impuesto de industria y comercio (ICA) por municipio con las tarifas por mil de Bogotá, Medellín y Cali, Régimen Simple de Tributación y renta de sociedades al 35%.',
   silo: 'Impuestos',
 siloHref: '/co/impuestos',
   locale: 'co',
@@ -240,6 +240,10 @@ siloHref: '/co/impuestos',
       a: 'El Impuesto de Industria y Comercio es municipal, no nacional: lo creó la Ley 14 de 1983 y cada municipio fija sus tarifas por acuerdo del concejo. Se liquida sobre los ingresos brutos del período, aplicando una tarifa expresada "por mil": una tarifa de 8 por mil sobre ingresos de cien millones da ochocientos mil pesos. Las tarifas cambian por actividad —el comercio suele pagar más que los servicios profesionales o la industria— y por municipio, así que dos negocios idénticos en ciudades distintas pagan distinto.',
     },
     {
+      q: '¿Cuál es la tarifa del impuesto de industria y comercio (ICA) en Bogotá, Medellín y Cali?',
+      a: 'Cada municipio la fija por acuerdo de su concejo, expresada por mil sobre los ingresos brutos y diferenciada por actividad. En Bogotá el comercio general paga 8,48 por mil, con un rango que va de 4,14 a 13,8 por mil según la actividad. En Medellín las tarifas se mueven entre 2 y 10 por mil, y en Cali entre 3 y 8 por mil, con el comercio general alrededor de 5 por mil en ambas ciudades. Son valores orientativos de los acuerdos vigentes: antes de liquidar, confirmá tu tarifa exacta por código CIIU con la secretaría de hacienda de tu municipio, que es la única fuente que vale ante un requerimiento.',
+    },
+    {
       q: 'Si trabajo en varios municipios, ¿dónde pago el ICA?',
       a: 'En cada uno donde tengas actividad, y por los ingresos que le correspondan a cada uno. La regla es la territorialidad: no se paga todo en la ciudad donde está la oficina principal. Para comercio con establecimiento, el municipio del establecimiento; para servicios, el municipio donde se ejecuta; para industria, el municipio de la sede fabril, pero comercializando desde ahí. Repartir mal los ingresos entre municipios es una de las causas más comunes de requerimiento de las secretarías de hacienda.',
     },
@@ -333,5 +337,5 @@ siloHref: '/co/impuestos',
     '/co/calculadora-costo-vender-online-colombia-2026',
   ],
 
-lastReviewed: '2026-07-28',
+lastReviewed: '2026-08-07',
 };

@@ -46,9 +46,9 @@ const DISCLAIMER_TAX =
 
 export const hub: HubData = {
   slug: 'impuestos/retenciones',
-  title: 'Retenciones y percepciones al facturar: cuánto te descuentan | ARCA',
+  title: 'Retención de Ganancias RG 830: mínimos y alícuotas por régimen',
   description:
-    'Calculá qué te retienen y qué te perciben cuando facturás o movés plata: retención de Ganancias RG 830, impuesto al cheque, percepciones, intereses por mora y plan de pagos de ARCA.',
+    'Calculá qué te retienen y qué te perciben cuando facturás o movés plata: retención de Ganancias RG 830 con sus mínimos y alícuotas por régimen, impuesto al cheque, percepciones, intereses por mora y plan de pagos de ARCA.',
   silo: 'Impuestos',
   siloHref: '/impuestos',
 
@@ -271,6 +271,10 @@ export const hub: HubData = {
       a: 'La alícuota del régimen general para sujetos no inscriptos es del 28% y se aplica sin mínimo no imponible. Es el peor escenario posible y suele ser más caro que el costo de inscribirse y presentar la declaración.',
     },
     {
+      q: '¿Cuáles son las alícuotas de retención de Ganancias de la RG 830 por régimen?',
+      a: 'Las que usa este hub, espejo de la fórmula real: 2% para venta de bienes o servicios de un inscripto en Ganancias, 6% para alquileres de inmuebles, 10% para honorarios de profesiones liberales y 28% para sujetos no inscriptos, que además no tienen mínimo no imponible. La RG 830 tiene muchos más regímenes con sus propias alícuotas y mínimos; estos cuatro son los que más aparecen al facturar. La retención se practica sobre el importe del comprobante y siempre es un pago a cuenta computable en tu declaración jurada.',
+    },
+    {
       q: '¿Qué es el mínimo no imponible de la RG 830?',
       a: 'Cada régimen de la RG 830 tiene un importe mensual por debajo del cual el agente de retención no debe retener. Se computa por el acumulado de pagos del mes calendario entre el mismo agente y el mismo beneficiario, no por factura individual: dos facturas chicas en el mismo mes pueden sumar y disparar la retención.',
     },
@@ -364,6 +368,6 @@ export const hub: HubData = {
     '/calculadora-retencion-ganancias-rg-830',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-07',
   audience: 'AR',
 };

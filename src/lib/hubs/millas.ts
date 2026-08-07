@@ -161,14 +161,14 @@ export const DESTINOS: Array<{ value: string; label: string }> = [
 
 export const hub: HubData = {
   slug: 'viajes/millas',
-  title: '¿Cuántas millas necesito para este destino? — Calculadora 2026',
+  title: '¿Cuántas millas necesito? LifeMiles, LATAM Pass y más 2026',
   description:
     'Elegí el programa (LifeMiles, LATAM Pass, AAdvantage, MileagePlus o SkyMiles) y el destino: te decimos cuántas millas necesitás, cuántas te faltan y si conviene canjear o pagar cash.',
   silo: 'Viajes',
   siloHref: '/viajes',
 
   eyebrow: 'Guía de canjes y millas',
-  h1: '¿Cuántas millas necesito para este destino?',
+  h1: '¿Cuántas millas necesito para este destino? LifeMiles, LATAM Pass y más',
   lede:
     'Poné el programa, el destino y las millas que ya tenés en la cuenta. Te decimos cuántas pide el canje, cuántas te faltan y si la cuenta cierra mejor con millas o pagando el pasaje.',
   stamps: ['Tablas revisadas 27-07-2026', '5 programas adentro', '17 destinos'],
@@ -276,6 +276,14 @@ export const hub: HubData = {
       a: 'Depende del programa. Con LifeMiles son 15.000 millas solo ida y 30.000 ida y vuelta en económica (55.000 en business). Con LATAM Pass el mismo tramo arranca en 25.000 solo ida y 50.000 ida y vuelta. Con AAdvantage, que tiene hub en Miami, baja a 7.500 solo ida y 15.000 ida y vuelta.',
     },
     {
+      q: '¿Cuántas millas Avianca LifeMiles necesito para un vuelo?',
+      a: 'Depende del destino y la cabina. Con LifeMiles de Avianca, un Bogotá ida y vuelta en económica pide 15.000 millas; Lima, 20.000; Miami, 30.000; São Paulo, 35.000; Buenos Aires, 40.000 y Madrid, 60.000. En business el mismo Miami sube a 55.000 y Madrid a 100.000. LifeMiles no cobra fuel surcharges, así que en cabina premium suele ser el canje que más rinde de la región; las tasas rondan USD 160–300 según la ruta. Elegí LifeMiles en el selector y la calculadora te dice cuántas te faltan con tu saldo actual.',
+    },
+    {
+      q: '¿Cuántas millas LATAM Pass necesito según el destino?',
+      a: 'La tabla de referencia de LATAM Pass en económica ida y vuelta arranca en 14.000 millas para Buenos Aires o Santiago, 50.000 para Miami, 90.000 para Madrid, 110.000 para Londres y 120.000 para Sídney. En business, Miami pide 85.000 y Madrid 150.000. Ojo: LATAM Pass pasó a precio dinámico, así que estos valores son un piso y en alta temporada la cotización real puede subir. Las tasas del canje van aparte, unos USD 150–300 según la ruta.',
+    },
+    {
       q: '¿Me alcanzan las millas que tengo?',
       a: 'Poné tu saldo en el campo "Millas que tenés hoy en la cuenta" y la barra te muestra el porcentaje cubierto. Si te falta poco, casi todos los programas te dejan comprar el faltante o completar con dinero, aunque comprar millas suele ser el peor negocio del canje.',
     },
@@ -354,7 +362,7 @@ export const hub: HubData = {
     '/calculadora-millas-delta-skymiles',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-07',
   audience: 'global',
 };
 

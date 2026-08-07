@@ -125,9 +125,9 @@ const USD_M2_ESTANDAR = M2.estandar.gba_sur.usd;
 
 export const hub: HubData = {
   slug: 'construccion/costo-por-m2',
-  title: '¿Cuánto sale construir una casa? Costo por m² 2026 (Argentina)',
+  title: 'Costo del m² de construcción en Argentina 2026: calculadora',
   description:
-    'Calculá cuánto sale construir tu casa: costo por m² según categoría (económica, estándar o premium) y zona, con el desglose real de materiales, mano de obra, honorarios y permisos.',
+    'El costo del m² de construcción en Argentina, hoy: calculá cuánto sale construir por metro cuadrado según categoría (económica, estándar o premium) y zona, con el desglose real de materiales, mano de obra, honorarios y permisos.',
   silo: 'Construcción',
   siloHref: '/construccion',
 
@@ -136,7 +136,7 @@ export const hub: HubData = {
   lede:
     'Poné los metros que querés levantar, elegí la categoría de terminación y la zona: te decimos el costo por m², el total de obra y —lo que casi nadie te muestra— en qué se te va la plata.',
   stamps: [
-    'Actualizado 04-08-2026',
+    'Actualizado 07-08-2026',
     `Referencia estándar US$${USD_M2_ESTANDAR}/m² (CAC · CPIC · ICC INDEC)`,
     `Pesos calculados al ${FX.label} $${FX.value.toLocaleString('es-AR')} (${FX.date})`,
     '7 calculadoras adentro',
@@ -208,8 +208,8 @@ export const hub: HubData = {
 
   faq: [
     {
-      q: '¿Cuánto sale el m² de construcción en Argentina en 2026?',
-      a: `Una casa estándar en GBA ronda los <b>US$${USD_M2_ESTANDAR} por m²</b> llave en mano. Una vivienda económica arranca cerca de US$${M2.economica.gba_sur.usd}/m² y una premium supera los US$${M2.premium.gba_sur.usd}/m². En CABA sumá alrededor de un 25% y en Tierra del Fuego hasta un 40% por logística y aislamiento obligatorio.`,
+      q: '¿Cuánto sale construir por metro cuadrado en Argentina en 2026?',
+      a: `El costo del m² de construcción para una casa estándar en GBA ronda los <b>US$${USD_M2_ESTANDAR} por m²</b> llave en mano. Una vivienda económica arranca cerca de US$${M2.economica.gba_sur.usd}/m² y una premium supera los US$${M2.premium.gba_sur.usd}/m². En CABA sumá alrededor de un 25% y en Tierra del Fuego hasta un 40% por logística y aislamiento obligatorio.`,
     },
     {
       q: '¿Qué diferencia hay entre construcción económica, estándar y premium?',
@@ -296,6 +296,6 @@ export const hub: HubData = {
     '/calculadora-proyectos-hogar',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-08-07',
   audience: 'AR',
 };

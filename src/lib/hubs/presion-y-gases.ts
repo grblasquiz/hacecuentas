@@ -41,7 +41,7 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'ciencia/presion-y-gases',
-  title: 'Presión, densidad y gases: convertir y calcular — psi, bar, atm y Pa 2026',
+  title: 'Presión atmosférica según altitud, psi, bar, atm y gases 2026',
   description:
     'Convertí presión entre psi, bar, atmósferas, pascales y mmHg con factores exactos, calculá la presión atmosférica según la altitud, la presión hidrostática a una profundidad y despejá la ley de los gases ideales PV = nRT. Incluye conversión de energía (cal, J, kWh, BTU) y de potencia (kW, HP).',
   silo: 'Ciencia',
@@ -52,7 +52,7 @@ export const hub: HubData = {
   lede:
     'Cuatro preguntas con la misma raíz: cuánto es eso en otra unidad, cuánta presión hay a tu altura, cuánta hay bajo el agua y qué pasa con un gas cuando cambiás la temperatura o el volumen. Los factores son exactos por definición internacional, no redondeados.',
   stamps: [
-    'Actualizado 27-07-2026',
+    'Actualizado 07-08-2026',
     'Factores exactos BIPM / NIST',
     'Atmósfera estándar ICAO (ISO 2533)',
     '11 calculadoras adentro',
@@ -370,7 +370,7 @@ export const hub: HubData = {
       a: '1 psi = 0,0689475729317 bar y, al revés, 1 bar = 14,5037738 psi. Los 32 psi típicos de un neumático de auto son 2,206 bar en el manómetro. Ojo con eso último: el manómetro mide presión manométrica, o sea por encima de la atmósfera. En términos absolutos, esos 32 psi son 46,7 psi (3,22 bar), porque hay que sumarle la atmósfera que empuja desde afuera.',
     },
     {
-      q: '¿Cómo se calcula la presión atmosférica a una altura determinada?',
+      q: '¿Cómo se calcula la presión atmosférica según la altitud? La fórmula barométrica',
       a: 'Con la fórmula barométrica de la atmósfera estándar: P(h) = P₀ × (1 − L·h/T₀)^5,2559, donde P₀ es la presión al nivel del mar (1.013,25 hPa estándar), L el gradiente térmico de 0,0065 K/m y T₀ = 288,15 K (15 °C). A 1.000 m da 898,7 hPa, a 3.000 m unos 701 hPa y en la cumbre del Everest (8.849 m) apenas 314 hPa, menos de un tercio del nivel del mar. La fórmula vale hasta los 11.000 m; más arriba la temperatura deja de bajar y el modelo cambia.',
     },
     {
@@ -458,7 +458,7 @@ export const hub: HubData = {
     '/calculadora-entropia-cambio-fase',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-07',
   audience: 'global',
 };
 

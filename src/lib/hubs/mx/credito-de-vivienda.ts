@@ -48,9 +48,9 @@ export const VIVIENDA_MX = {
 
 export const hub: HubData = {
   slug: 'mx/finanzas/credito-de-vivienda',
-  title: 'Crédito de vivienda en México: cuánto te presta Infonavit, Fovissste o el banco',
+  title: 'Crédito Infonavit: cuánto te presta y cuánto te descuentan',
   description:
-    'Estima tu precalificación y monto máximo de Infonavit, la mensualidad de un crédito ya otorgado, el escenario FOVISSSTE con subcuenta, la hipoteca bancaria con enganche y seguros, y cuánto ahorro tienes en tu Subcuenta de Vivienda.',
+    'Estima tu precalificación y monto máximo de Infonavit, cuánto te descuentan del sueldo vía nómina por tu crédito, el escenario FOVISSSTE con subcuenta, la hipoteca bancaria con enganche y seguros, y cuánto ahorro tienes en tu Subcuenta de Vivienda.',
   silo: 'Finanzas',
   siloHref: '/mx/finanzas',
 
@@ -337,8 +337,8 @@ export const hub: HubData = {
       a: 'Infonavit atiende a quienes cotizan al IMSS, es decir trabajadores del sector privado; FOVISSSTE atiende a trabajadores del Estado que cotizan al ISSSTE. Los dos funcionan con una subcuenta de vivienda que se aporta con el 5% del salario y se aplica al crédito, pero difieren en modalidades, tasas y calendario de asignación.',
     },
     {
-      q: '¿Cuánto me descuentan de mi sueldo por el crédito?',
-      a: 'El descuento se aplica vía nómina y depende del esquema del crédito. En los créditos en pesos es una cuota fija; en los antiguos denominados en veces salario mínimo se calcula como un factor sobre tu salario. Como referencia práctica, el descuento suele rondar el 30% del salario, pero lo que manda es el factor asentado en tu contrato y tu estado de cuenta.',
+      q: '¿Cuánto me descuentan del sueldo por el crédito Infonavit vía nómina?',
+      a: 'El descuento se aplica vía nómina y suele ubicarse entre el 20% y el 35% del salario base de cotización según el producto: con un sueldo de $20,000 y un factor del 30%, son $6,000 al mes. En los créditos en pesos es una cuota fija; los antiguos denominados en veces salario mínimo se actualizan con la UMI, que en 2026 vale $100.81 diarios. Lo que manda es el factor asentado en tu contrato y en tu estado de cuenta.',
     },
     {
       q: '¿Es cierto que mi crédito en VSM sube con el salario mínimo?',
@@ -421,6 +421,6 @@ export const hub: HubData = {
     '/calculadora-devolucion-ahorro-infonavit-subcuenta-vivienda-mexico',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
   locale: 'mx',
 };

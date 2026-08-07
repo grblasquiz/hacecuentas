@@ -47,15 +47,15 @@ const pct = (n: number) => Math.round(n * 100) + '%';
 
 export const hub: HubData = {
   slug: 'co/trabajo/horas-extras-y-recargos',
-  title: 'Horas extras y recargos en Colombia: cuánto te tienen que pagar por esa hora',
+  title: 'Horas extras y recargo dominical y festivo Colombia 2026',
   description:
-    'Calculá cuánto vale tu hora extra diurna, nocturna, el recargo nocturno desde las 19:00 y el dominical o festivo en Colombia, con las dos transiciones de 2026: jornada de 42 horas desde el 15 de julio y recargo dominical del 90% desde el 1 de julio.',
+    'Calculadora de horas extras Colombia 2026: hora extra diurna, nocturna, recargo nocturno desde las 19:00 y recargo dominical y festivo, con las dos transiciones de 2026: jornada de 42 horas desde el 15 de julio y recargo dominical del 90% desde el 1 de julio.',
   silo: 'Trabajo',
   siloHref: '/co/trabajo',
   locale: 'co',
 
   eyebrow: 'Colombia · CST y Ley 2466 de 2025',
-  h1: '¿Cuánto me tienen que pagar por esa hora?',
+  h1: 'Horas extras y recargo dominical y festivo en Colombia 2026: ¿cuánto te tienen que pagar por esa hora?',
   lede:
     'Todo arranca en el valor de tu hora ordinaria, y ese valor cambió el 15 de julio de 2026: el divisor pasó de 220 a 210 horas, así que la misma hora vale casi 5% más sin que te hayan subido el sueldo. Encima va el recargo que corresponda. Poné tu salario, la fecha y las horas, y mirá qué te deben.',
   stamps: [
@@ -223,7 +223,7 @@ export const hub: HubData = {
       a: `Es la confusión más común de toda la nómina colombiana. El recargo nocturno del ${pct(RECARGOS.nocturno)} se paga por trabajar tu jornada normal en horario de noche: no trabajaste de más, trabajaste en un horario peor. La hora extra nocturna del ${pct(RECARGOS.extraNocturna)} se paga por trabajar de noche por encima de tu jornada. Si tu turno pactado es de 14:00 a 22:00, las horas después de las ${RECARGOS.horaInicioNocturna}:00 son recargo nocturno; si te quedás hasta las 23:00, esa última hora es extra nocturna.`,
     },
     {
-      q: '¿Cuánto se paga el domingo trabajado en 2026?',
+      q: '¿Cuánto es el recargo dominical y festivo en Colombia 2026?',
       a: `Depende de la fecha exacta. Hasta el 30 de junio de 2026 el recargo era del ${pct(RECARGOS.dominicalFestivoHasta30Jun2026)}; desde el 1 de julio de 2026 es del ${pct(RECARGOS.dominicalFestivoDesde01Jul2026)}, y desde el 1 de julio de 2027 llegará al ${pct(RECARGOS.dominicalFestivoDesde01Jul2027)}, según el calendario que fijó la Ley 2466 de 2025. Es un recargo sobre la hora ordinaria: con el ${pct(RECARGOS.dominicalFestivoDesde01Jul2026)}, cada hora dominical vale 1,9 veces la hora normal. Si además fue de noche, se le suma el ${pct(RECARGOS.nocturno)} y llega a 2,25 veces.`,
     },
     {
@@ -249,6 +249,10 @@ export const hub: HubData = {
     {
       q: '¿Qué pasó exactamente el 15 de julio de 2026?',
       a: `Entró el último escalón de la Ley 2101 de 2021: la jornada máxima legal bajó de ${JORNADA.horasSemanaHasta14Jul2026} a ${JORNADA.horasSemanaDesde15Jul2026} horas semanales, sin reducción de salario. El divisor mensual para calcular el valor hora pasó de ${JORNADA.divisorMensualHasta14Jul2026} a ${JORNADA.divisorMensualDesde15Jul2026}. En la práctica trabajás dos horas menos por semana y cada hora tuya vale más, así que el mismo número de horas extras te tiene que rendir más plata que antes de esa fecha.`,
+    },
+    {
+      q: '¿Cómo funciona esta calculadora de horas extras Colombia 2026?',
+      a: `Ponés tu salario mensual, la fecha y las horas, y la calculadora arma el valor de tu hora ordinaria con el divisor vigente ese día (${JORNADA.divisorMensualHasta14Jul2026} hasta el 14 de julio de 2026, ${JORNADA.divisorMensualDesde15Jul2026} desde el 15) y le aplica el recargo que corresponda: ${pct(RECARGOS.extraDiurna)} extra diurna, ${pct(RECARGOS.extraNocturna)} extra nocturna, ${pct(RECARGOS.nocturno)} nocturno y ${pct(RECARGOS.dominicalFestivoDesde01Jul2026)} dominical o festivo desde el 1 de julio de 2026. Con el mínimo de ${cop(SMLMV)}, la hora ordinaria con divisor ${JORNADA.divisorMensualDesde15Jul2026} vale ${cop(SMLMV / JORNADA.divisorMensualDesde15Jul2026)} y la extra diurna ${cop((SMLMV / JORNADA.divisorMensualDesde15Jul2026) * (1 + RECARGOS.extraDiurna))}.`,
     },
     {
       q: '¿Cómo pruebo las horas extras si mi empresa no las registra?',
@@ -305,5 +309,5 @@ export const hub: HubData = {
     '/co/calculadora-festivos-colombia-2026-calendario-puentes',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-07',
 };
