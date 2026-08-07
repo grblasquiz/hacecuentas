@@ -12,8 +12,27 @@ const popular = [
   { href: '/alquiler/aumento-de-alquiler', group: 'Alquiler', title: '¿Cuánto me aumenta el alquiler?', desc: 'ICL, IPC y fecha del contrato.', icon: '⌂', color: 'yellow' },
   { href: '/trabajo/indemnizacion-por-despido', group: 'Trabajo', title: 'Me despiden: ¿cuánto me pagan?', desc: 'Todos los conceptos de la indemnización.', icon: '↗', color: 'blue' },
   { href: '/trabajo/aguinaldo', group: 'Trabajo', title: '¿Cuánto aguinaldo me corresponde?', desc: 'SAC completo o proporcional.', icon: '＋', color: 'coral' },
-  { href: '/calculadora-actualizacion-inflacion-ipc', group: 'Plata', title: '¿Cuánto vale hoy este monto?', desc: 'Actualización por IPC entre dos fechas.', icon: '%', color: 'lilac' },
-  { href: '/simulador-jubilacion-anses', group: 'Jubilación', title: '¿Cuándo y con cuánto me jubilo?', desc: 'Edad, aportes y haber orientativo.', icon: '◷', color: 'navy' },
+  { href: '/trabajo/sueldo-vs-inflacion', group: 'Plata', title: '¿Mi sueldo le gana a la inflación?', desc: 'Inflación, poder de compra y decisiones.', icon: '%', color: 'lilac' },
+  { href: '/jubilacion', group: 'Jubilación', title: '¿Cuándo y con cuánto me jubilo?', desc: 'Edad, aportes y próximos pasos.', icon: '◷', color: 'navy' },
+];
+
+const tierOne = [
+  ['/trabajo/sueldo-bruto-y-neto', 'Entender mi sueldo'],
+  ['/trabajo/indemnizacion-por-despido', 'Me despidieron'],
+  ['/trabajo/aguinaldo', 'Cobrar el aguinaldo'],
+  ['/alquiler/aumento-de-alquiler', 'Revisar mi alquiler'],
+  ['/alquiler/entrar-a-un-alquiler', 'Entrar a un alquiler'],
+  ['/finanzas-personales/salir-de-deudas', 'Salir de deudas'],
+  ['/finanzas-personales/prestamo', 'Evaluar un préstamo'],
+  ['/inversiones/plazo-fijo', 'Comparar inversiones'],
+  ['/impuestos/monotributo', 'Resolver monotributo'],
+  ['/jubilacion', 'Planificar mi jubilación'],
+  ['/auto/costo-anual', 'Decidir sobre el auto'],
+  ['/vivienda/gastos-de-escritura', 'Comprar una vivienda'],
+  ['/construccion/costo-por-m2', 'Construir o refaccionar'],
+  ['/familia/costo-de-un-bebe', 'Prepararme para un bebé'],
+  ['/salud/peso-ideal-imc', 'Entender mi peso e IMC'],
+  ['/eventos', 'Organizar un evento'],
 ];
 
 const moments = [
@@ -71,7 +90,7 @@ const moments = [
 
 const live = [
   { href: '/futbol-hoy', tag: 'EN VIVO', title: 'Fútbol hoy en 14 países', meta: 'Partidos, resultados y tablas por país', color: 'navy' },
-  { href: '/recategorizacion-monotributo-julio-2026', tag: 'VENCE 5/8', title: 'Recategorización Monotributo', meta: 'Nueva escala y calculadora', color: 'green' },
+  { href: '/recategorizacion-monotributo-julio-2026', tag: 'VENCE 5/8', title: 'Recategorización Monotributo', meta: 'Nueva escala y guía para decidir', color: 'green' },
   { href: '/valores-bcra', tag: 'HOY', title: 'Dólar, UVA e inflación', meta: 'Datos económicos diarios', color: 'blue' },
   { href: '/fechas/feriados', tag: 'CALENDARIO', title: 'Feriados de Argentina', meta: 'Días hábiles y próximos feriados', color: 'yellow' },
 ];
@@ -111,8 +130,8 @@ const schema = {
 ---
 
 <Layout
-  title="Calculadoras online para Argentina — Hacé Cuentas"
-  description="Calculadoras gratuitas de sueldo, alquiler, indemnización, jubilación, impuestos, salud y vida cotidiana, con fórmulas explicadas y fuentes vigentes."
+  title="Decisiones con números claros para Argentina — Hacé Cuentas"
+  description="Hubs de decisión para resolver trabajo, alquiler, impuestos, finanzas, salud y vida cotidiana con números claros, fuentes y datos vigentes."
   image="/og/index.png"
   audience="AR"
   pageType="home"
@@ -181,6 +200,16 @@ const schema = {
           ))}
         </div>
       </div>
+    </section>
+
+    <section class="tier-one wrap" aria-labelledby="tier-one-title">
+      <div class="section-title">
+        <div><span>DECISIONES PRIORITARIAS</span><h2 id="tier-one-title">Llegá directo a lo que necesitás resolver.</h2></div>
+        <p>Los hubs que concentran las decisiones más importantes, enlazados directamente desde el inicio.</p>
+      </div>
+      <nav aria-label="Hubs de decisión prioritarios">
+        {tierOne.map(([href, label]) => <a href={href}>{label}<span>→</span></a>)}
+      </nav>
     </section>
 
     <section class="fresh wrap" aria-labelledby="fresh-title">
@@ -364,6 +393,12 @@ const schema = {
   .moment-card li a { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(24,34,56,.13); color:#32445e; font-size:12px; text-decoration:none; }
   .moment-cta { position:relative; z-index:1; display:flex; justify-content:space-between; margin-top:auto; padding:12px 13px; border-radius:10px; background:rgba(255,255,255,.58); color:var(--navy); font-size:12px; font-weight:800; text-decoration:none; }
 
+  .tier-one { padding:88px 0 24px; }
+  .tier-one nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }
+  .tier-one nav a { display:flex; justify-content:space-between; gap:12px; align-items:center; min-height:58px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fff; color:#263b59; font-size:13px; font-weight:780; text-decoration:none; }
+  .tier-one nav a:hover { border-color:#9db7ec; color:var(--blue); transform:translateY(-1px); }
+  .tier-one nav span { color:var(--blue); }
+
   .fresh { padding:96px 0; }
   .fresh-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
   .fresh-card { min-height:230px; display:flex; flex-direction:column; padding:22px; border-radius:18px; text-decoration:none; }
@@ -401,7 +436,7 @@ const schema = {
     .hero { padding-top:54px; }.hero-copy { max-width:760px; }
     .popular-grid { grid-template-columns:repeat(2,1fr); }.moment-grid { grid-template-columns:repeat(2,1fr); }
     .moment-card,.moment-card:nth-child(1),.moment-card:nth-child(2) { grid-column:span 1; }
-    .fresh-grid { grid-template-columns:repeat(2,1fr); }.method,.world-grid,.directory { grid-template-columns:1fr; }
+    .fresh-grid { grid-template-columns:repeat(2,1fr); }.tier-one nav { grid-template-columns:repeat(2,1fr); }.method,.world-grid,.directory { grid-template-columns:1fr; }
     .method { padding:55px; }.method-visual { max-width:500px; }.world-grid,.directory { gap:45px; }
   }
 
@@ -410,7 +445,7 @@ const schema = {
     .hero { min-height:0; padding:48px 0 64px; }.hero h1 { font-size:clamp(52px,16vw,68px); }
     .hero-copy>p { font-size:16px; }.search-box { grid-template-columns:22px 1fr; }.search-box button { grid-column:1/-1; width:100%; }
     .section-title { grid-template-columns:1fr; gap:16px; }.section-title h2,.method-copy h2,.world-copy h2,.directory h2 { font-size:36px; }
-    .popular { padding:70px 0; }.popular-grid,.moment-grid,.fresh-grid { grid-template-columns:1fr; }
+    .popular { padding:70px 0; }.popular-grid,.moment-grid,.fresh-grid,.tier-one nav { grid-template-columns:1fr; }
     .popular-card { min-height:180px; }.moments,.fresh,.world { padding:72px 0; }
     .moment-card { min-height:340px; }.method { width:calc(100% - 24px); padding:32px 20px; margin-bottom:70px; }
     .method-visual { min-height:330px; transform:scale(.88); transform-origin:left center; }

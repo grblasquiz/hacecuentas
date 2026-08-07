@@ -51,37 +51,43 @@ const cluster = current
       .sort((a, b) => a.path.localeCompare(b.path))
   : [];
 
-const ring: typeof tools = [];
-if (current && cluster.length > 1) {
-  const index = cluster.findIndex((tool) => tool.path === current.path);
-  for (const offset of [-1, 1, -2, 2, -3, 3]) {
-    const candidate = cluster[(index + offset + cluster.length) % cluster.length];
-    if (candidate && candidate.path !== current.path && !ring.some((tool) => tool.path === candidate.path)) {
-      ring.push(candidate);
-    }
-  }
-}
-const localeRing: typeof tools = [];
-if (current) {
-  const localeTools = tools
-    .filter((tool) => tool.locale === current.locale)
-    .sort((a, b) => a.path.localeCompare(b.path));
-  const index = localeTools.findIndex((tool) => tool.path === current.path);
-  for (const offset of [-1, 1]) {
-    const candidate = localeTools[(index + offset + localeTools.length) % localeTools.length];
-    if (candidate && candidate.path !== current.path && !localeRing.some((tool) => tool.path === candidate.path)) {
-      localeRing.push(candidate);
-    }
-  }
-}
-
 const stopwords = new Set(['para','como','cuanto','cuanta','calcular','calculadora','hace','cuentas','online','gratis','guia','tabla','2026','the','and','with','from','como','uma','das','dos']);
-const tokens = String(pageTitle)
+const tokenize = (value: string) => String(value)
   .toLowerCase()
   .normalize('NFD')
   .replace(/\p{Diacritic}/gu, '')
   .split(/[^a-z0-9]+/)
   .filter((token) => token.length > 3 && !stopwords.has(token));
+const tokens = tokenize(pageTitle);
+const currentTokens = new Set(tokenize(`${current?.title || ''} ${current?.h1 || ''} ${current?.description || ''} ${current?.category || ''}`));
+const decisionFamilies = [
+  ['sueldo','salario','trabajo','empleado','indemnizacion','despido','aguinaldo','liquidacion'],
+  ['alquiler','vivienda','hipoteca','escritura','inmueble','mudanza'],
+  ['impuesto','ganancias','monotributo','renta','iva','retencion'],
+  ['prestamo','credito','deuda','cuota','interes','inversion','ahorro'],
+  ['auto','vehiculo','nafta','combustible','patente','uber'],
+  ['salud','peso','imc','embarazo','bebe','nutricion','calorias'],
+  ['construccion','hogar','pintura','piso','ladrillo','material'],
+  ['viaje','millas','equipaje','vuelo','aeropuerto'],
+  ['cocina','evento','comida','bebida','receta','fiesta'],
+];
+const activeFamilies = decisionFamilies.filter((family) => family.some((token) => currentTokens.has(token)));
+const semanticRelated = current
+  ? tools
+      .filter((tool) => tool.locale === current.locale && tool.path !== path)
+      .map((tool) => {
+        const candidateTokens = new Set(tokenize(`${tool.title} ${tool.h1} ${tool.description} ${tool.category}`));
+        const shared = [...currentTokens].filter((token) => candidateTokens.has(token)).length;
+        const family = activeFamilies.reduce((sum, words) => sum + (words.some((word) => candidateTokens.has(word)) ? 3 : 0), 0);
+        const sameCategory = tool.category === current.category ? 4 : 0;
+        const hierarchy = tool.path.startsWith(`${path}/`) || path.startsWith(`${tool.path}/`) ? 5 : 0;
+        return { tool, score: shared * 2 + family + sameCategory + hierarchy };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score || a.tool.path.localeCompare(b.tool.path))
+      .slice(0, 8)
+      .map((item) => item.tool)
+  : [];
 const editorial = /^\/(?:guia|blog|tabla|historias)\//.test(path);
 const editorialRelated = !current && editorial
   ? tools
@@ -110,9 +116,8 @@ if (current) {
       return priority.categories.some((category) => category === current.category);
     })
     .forEach((priority) => add(byPath.get(priority.path)));
-  localeRing.forEach(add);
+  semanticRelated.forEach(add);
   directChildren.slice(0, 3).forEach(add);
-  ring.forEach(add);
 } else {
   editorialRelated.forEach(add);
 }
@@ -121,11 +126,31 @@ if (current) {
 const related = selected.slice(0, current ? 9 : 4);
 const lang = current?.locale?.startsWith('pt') ? 'pt' : current?.locale === 'en' ? 'en' : 'es';
 const heading = lang === 'pt'
-  ? 'Ferramentas relacionadas'
+  ? 'Decisões relacionadas'
   : lang === 'en'
-    ? 'Related tools'
-    : 'Herramientas relacionadas';
+    ? 'Related decisions'
+    : 'Decisiones relacionadas';
+const breadcrumbLabel = current?.h1 || current?.title || pageTitle;
+const parent = parentPath ? byPath.get(parentPath) : undefined;
 ---
+
+{!noindex && current && (
+  <nav class="hub-breadcrumb" aria-label="Migas de pan">
+    <a href="/">Inicio</a><span aria-hidden="true">›</span>
+    {parent && <><a href={parent.path}>{parent.h1 || parent.title}</a><span aria-hidden="true">›</span></>}
+    <span aria-current="page">{breadcrumbLabel}</span>
+  </nav>
+)}
+
+{!noindex && current && directChildren.length > 0 && (
+  <nav class="hub-children" aria-labelledby="hub-children-title">
+    <div class="hub-children__inner">
+      <p class="hub-interlinking__eyebrow">Elegí el próximo paso</p>
+      <h2 id="hub-children-title">Decisiones dentro de este tema</h2>
+      <ul>{directChildren.map((tool) => <li><a href={tool.path}>{tool.h1 || tool.title}<span>→</span></a></li>)}</ul>
+    </div>
+  </nav>
+)}
 
 {!noindex && related.length > 0 && (
   <nav class="hub-interlinking" aria-labelledby="hub-interlinking-title">
@@ -143,13 +168,20 @@ const heading = lang === 'pt'
         ))}
       </ul>
       <a class="hub-interlinking__all" href="/buscar">
-        {lang === 'pt' ? 'Ver todas as ferramentas →' : lang === 'en' ? 'Browse all tools →' : 'Ver todos los hubs →'}
+        {lang === 'pt' ? 'Ver o mapa completo →' : lang === 'en' ? 'Browse the full decision map →' : 'Ver el mapa completo de decisiones →'}
       </a>
     </div>
   </nav>
 )}
 
 <style>
+  .hub-breadcrumb{width:min(1120px,calc(100% - 32px));display:flex;align-items:center;gap:.5rem;margin:1rem auto;color:#6b7584;font-size:.78rem;line-height:1.35}
+  .hub-breadcrumb a{color:#3155b7;text-decoration:none}.hub-breadcrumb span[aria-current="page"]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hub-children{width:100%;padding:2.25rem 1rem;background:#fff;border-top:1px solid #e1e6df}
+  .hub-children__inner{width:min(1120px,100%);margin:auto}.hub-children h2{margin:0 0 1rem;color:#172033;font-size:clamp(1.4rem,3vw,1.9rem)}
+  .hub-children ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;margin:0;padding:0;list-style:none}
+  .hub-children a{display:flex;justify-content:space-between;gap:.75rem;height:100%;padding:.9rem 1rem;border:1px solid #dfe5df;border-radius:12px;color:#172033;font-size:.9rem;font-weight:700;text-decoration:none}
+  .hub-children a span{color:#3155b7}
   .hub-interlinking{width:100%;margin:3rem 0 0;padding:2.5rem 1rem;background:#f5f7f4;border-top:1px solid #e1e6df}
   .hub-interlinking__inner{width:min(1120px,100%);margin:auto}
   .hub-interlinking__eyebrow{margin:0 0 .4rem;color:#3155b7;font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
@@ -161,5 +193,5 @@ const heading = lang === 'pt'
   .hub-interlinking strong{display:block;margin-bottom:.35rem;font-size:.96rem;line-height:1.3}
   .hub-interlinking li span{display:-webkit-box;overflow:hidden;color:#637083;font-size:.84rem;line-height:1.45;-webkit-box-orient:vertical;-webkit-line-clamp:2}
   .hub-interlinking__all{display:inline-block;margin-top:1rem;color:#3155b7;font-size:.9rem;font-weight:750;text-decoration:none}
-  @media(max-width:760px){.hub-interlinking ul{grid-template-columns:1fr}.hub-interlinking{padding:2rem 1rem}}
+  @media(max-width:760px){.hub-interlinking ul,.hub-children ul{grid-template-columns:1fr}.hub-interlinking{padding:2rem 1rem}}
 </style>

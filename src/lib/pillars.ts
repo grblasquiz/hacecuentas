@@ -125,8 +125,8 @@ export const PILLARS: PillarDef[] = [
     guide: 'finanzas-personales',
     categories: [],
     dataPages: [
-      { href: '/comparador-plazo-fijo', label: 'Comparador de plazos fijos (tasas hoy)' },
-      { href: '/plazo-fijo-vs-billeteras', label: 'Plazo fijo vs billeteras: dónde rinde más hoy' },
+      { href: '/inversiones/plazo-fijo', label: 'Comparador de plazos fijos (tasas hoy)' },
+      { href: '/inversiones/plazo-fijo', label: 'Plazo fijo vs billeteras: dónde rinde más hoy' },
       { href: '/valores-bcra', label: 'Dólar y valores BCRA hoy' },
       { href: '/presupuesto-familiar', label: 'Presupuesto familiar' },
     ],

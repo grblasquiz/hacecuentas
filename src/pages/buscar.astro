@@ -4,15 +4,63 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import BuscarExperience from '../components/generated/BuscarExperience.astro';
+import currentTools from '../lib/current-tools-index.json';
 const canonical = 'https://hacecuentas.com/buscar';
-const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'Buscar calculadoras',url:canonical,applicationCategory:'FinanceApplication',operatingSystem:'Web'};
+const schema = {'@context':'https://schema.org','@type':'CollectionPage',name:'Hubs de decisión de Hacé Cuentas',url:canonical,about:'Decisiones de dinero, trabajo, hogar, salud y vida cotidiana'};
+
+const localeNames: Record<string, string> = {
+  es: 'Argentina y temas generales', 'es-MX': 'México', 'es-CO': 'Colombia',
+  'es-CL': 'Chile', 'es-PE': 'Perú', 'es-EC': 'Ecuador', 'es-VE': 'Venezuela',
+  'es-PY': 'Paraguay', 'es-UY': 'Uruguay', 'es-DO': 'República Dominicana',
+  'es-ES': 'España', 'pt-BR': 'Brasil', 'pt-PT': 'Portugal', en: 'English',
+};
+const normalizePath = (value: string) => new URL(value, 'https://hacecuentas.com').pathname.replace(/\/$/, '') || '/';
+const hubs = currentTools.map((tool) => ({ ...tool, path: normalizePath(tool.url || `/${tool.slug}`) }));
+const groupBy = <T,>(items: T[], key: (item: T) => string) => {
+  const grouped = new Map<string, T[]>();
+  for (const item of items) grouped.set(key(item), [...(grouped.get(key(item)) || []), item]);
+  return [...grouped.entries()];
+};
+const directory = groupBy(hubs, (hub) => hub.locale || 'es')
+  .map(([locale, localeHubs]) => ({
+    locale,
+    label: localeNames[locale] || locale,
+    groups: groupBy(localeHubs || [], (hub) => hub.category || 'otros')
+      .map(([category, categoryHubs]) => ({ category, hubs: [...categoryHubs].sort((a, b) => (a.h1 || a.title).localeCompare(b.h1 || b.title, 'es')) }))
+      .sort((a, b) => a.category.localeCompare(b.category, 'es')),
+  }))
+  .sort((a, b) => (a.locale === 'es' ? -1 : b.locale === 'es' ? 1 : a.label.localeCompare(b.label, 'es')));
 ---
-<Layout title="Buscar calculadoras" description="Buscá calculadoras, guías y herramientas de Hacé Cuentas." canonical={canonical} schema={schema} audience="AR" lang="es" ogType="article" articleSection="Búsqueda">
+<Layout title="Hubs de decisión — encontrá qué resolver | Hacé Cuentas" description="Explorá todos los hubs de decisión de Hacé Cuentas por problema, tema y país. Respuestas conectadas para decidir con datos y fuentes vigentes." canonical={canonical} schema={schema} audience="AR" lang="es" ogType="article" articleSection="Decisiones">
   <Header />
   <BuscarExperience />
+  <section class="hub-directory" aria-labelledby="hub-directory-title">
+    <div class="hub-directory__head">
+      <span>MAPA COMPLETO</span>
+      <h2 id="hub-directory-title">Todos los hubs de decisión</h2>
+      <p>Entrá por el tema que estás resolviendo. Cada enlace lleva directamente a su destino definitivo.</p>
+    </div>
+    <div class="hub-directory__locales">
+      {directory.map(({ locale, label, groups }, localeIndex) => (
+        <details open={localeIndex === 0}>
+          <summary>{label} <small>{groups.reduce((sum, group) => sum + group.hubs.length, 0)} hubs</small></summary>
+          <div class="hub-directory__groups">
+            {groups.map(({ category, hubs: categoryHubs }) => (
+              <section aria-labelledby={`directory-${locale}-${category}`}>
+                <h3 id={`directory-${locale}-${category}`}>{category.replaceAll('-', ' ')}</h3>
+                <ul>
+                  {categoryHubs.map((hub) => <li><a href={hub.path}>{hub.h1 || hub.title}</a></li>)}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
+  </section>
   <section class="search-editorial" aria-labelledby="como-buscar">
-    <h2 id="como-buscar">Encontrá la herramienta correcta</h2>
-    <p>Escribí la decisión, el cálculo o el dato que necesitás resolver. Podés buscar por tema, país o situación cotidiana; los resultados combinan calculadoras, guías y datos vigentes para llevarte a la respuesta más específica disponible.</p>
+    <h2 id="como-buscar">Encontrá el hub de decisión correcto</h2>
+    <p>Escribí la decisión o el dato que necesitás resolver. Podés buscar por tema, país o situación cotidiana; los resultados conectan respuestas, guías y datos vigentes para llevarte al próximo paso más específico.</p>
   </section>
   <Footer />
 </Layout>
@@ -31,4 +79,23 @@ const schema = {'@context':'https://schema.org','@type':'WebApplication',name:'B
     color: #4b5868;
     line-height: 1.7;
   }
+</style>
+
+<style>
+  .hub-directory{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:4rem 0}
+  .hub-directory__head{max-width:760px;margin-bottom:1.5rem}
+  .hub-directory__head>span{color:#2462df;font-size:.75rem;font-weight:900;letter-spacing:.12em}
+  .hub-directory__head h2{margin:.45rem 0;font-size:clamp(2rem,4vw,3.2rem);letter-spacing:-.045em}
+  .hub-directory__head p{color:#5d6878;line-height:1.65}
+  .hub-directory details{margin:.75rem 0;border:1px solid #dfe4e6;border-radius:16px;background:#fff}
+  .hub-directory summary{cursor:pointer;padding:1rem 1.15rem;font-weight:850;text-transform:none}
+  .hub-directory summary small{margin-left:.5rem;color:#6b7584;font-weight:650}
+  .hub-directory__groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem;padding:0 1.15rem 1.25rem}
+  .hub-directory__groups section{min-width:0}
+  .hub-directory__groups h3{margin:.75rem 0;text-transform:capitalize;font-size:1rem}
+  .hub-directory__groups ul{display:grid;gap:.45rem;margin:0;padding:0;list-style:none}
+  .hub-directory__groups a{color:#224fbd;font-size:.9rem;line-height:1.35;text-decoration:none}
+  .hub-directory__groups a:hover{text-decoration:underline}
+  @media(max-width:850px){.hub-directory__groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:560px){.hub-directory__groups{grid-template-columns:1fr}.hub-directory{padding:3rem 0}}
 </style>

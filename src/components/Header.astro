@@ -11,20 +11,20 @@ const isActive = (path: string) => currentPath.startsWith(path);
 const translations = {
   en: {
     skip: 'Skip to content', logoAria: 'Hacé Cuentas — Home',
-    navAria: 'Main navigation', allCalcs: 'All calculators',
-    searchAria: 'Search calculator', searchTitle: 'Search (⌘K)', searchLabel: 'Search',
+    navAria: 'Main navigation', allCalcs: 'All decision hubs',
+    searchAria: 'Search decision hubs', searchTitle: 'Search (⌘K)', searchLabel: 'Search',
     themeAria: 'Toggle theme', themeTitle: 'Toggle light/dark theme', menuAria: 'Open menu',
   },
   pt: {
     skip: 'Pular para o conteúdo', logoAria: 'Hacé Cuentas — Início',
-    navAria: 'Navegação principal', allCalcs: 'Todas as calculadoras',
-    searchAria: 'Buscar calculadora', searchTitle: 'Buscar (⌘K)', searchLabel: 'Buscar',
+    navAria: 'Navegação principal', allCalcs: 'Todos os hubs de decisão',
+    searchAria: 'Buscar decisões', searchTitle: 'Buscar (⌘K)', searchLabel: 'Buscar',
     themeAria: 'Alternar tema', themeTitle: 'Alternar tema claro/escuro', menuAria: 'Abrir menu',
   },
   es: {
     skip: 'Saltar al contenido', logoAria: 'Hacé Cuentas — Inicio',
     navAria: 'Navegación principal', allCalcs: 'Cambio de monedas',
-    searchAria: 'Buscar calculadora', searchTitle: 'Buscar (⌘K)', searchLabel: 'Buscar',
+    searchAria: 'Buscar decisiones', searchTitle: 'Buscar (⌘K)', searchLabel: 'Buscar',
     themeAria: 'Cambiar tema', themeTitle: 'Cambiar tema claro/oscuro', menuAria: 'Abrir menú',
   },
 };
@@ -34,18 +34,18 @@ const intlHome = lang === 'en' ? '/en' : '/pt';
 
 // #13 Acciones rápidas del overlay de búsqueda (command-palette liviano): atajos
 // de navegación arriba de los resultados. Lang-aware — /valores-bcra y
-// /decidir son AR, así que intl muestra sólo cuenta + catálogo.
+// /finanzas-personales son AR, así que intl muestra sólo cuenta + catálogo.
 const searchQuick = lang === 'en' ? [
   { href: '/mi-hacecuentas', label: 'My account', icon: '👤' },
-  { href: intlHome, label: 'All calculators', icon: '🔢' },
+  { href: intlHome, label: 'Decision hubs', icon: '🧭' },
 ] : lang === 'pt' ? [
   { href: '/mi-hacecuentas', label: 'Minha conta', icon: '👤' },
-  { href: intlHome, label: 'Todas', icon: '🔢' },
+  { href: intlHome, label: 'Decisões', icon: '🧭' },
 ] : [
   { href: '/mi-hacecuentas', label: 'Mi tablero', icon: '👤' },
   { href: '/valores-bcra', label: 'Valores', icon: '📊' },
-  { href: '/decidir', label: 'Decidir', icon: '🧭' },
-  { href: '/calculadoras', label: 'Todas', icon: '🔢' },
+  { href: '/finanzas-personales', label: 'Decidir', icon: '🧭' },
+  { href: '/buscar', label: 'Mapa', icon: '🧭' },
 ];
 
 // Detección de país por path para nav country-aware
@@ -83,103 +83,85 @@ const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePa
   // curados (src/lib/pillars.ts) en vez de repartirse entre 26 categorías.
   // Los productos /mi/*, Decidir y las categorías viven en el dropdown "Más".
   AR: [
-    { href: '/sueldos-y-trabajo', label: 'Sueldos y trabajo', activePath: '/sueldos-y-trabajo' },
-    { href: '/impuestos-argentina', label: 'Impuestos', activePath: '/impuestos-argentina' },
+    { href: '/trabajo', label: 'Sueldos y trabajo', activePath: '/trabajo' },
+    { href: '/impuestos', label: 'Impuestos', activePath: '/impuestos' },
     { href: '/finanzas-personales', label: 'Finanzas', activePath: '/finanzas-personales' },
-    { href: '/negocios-e-independientes', label: 'Negocios', activePath: '/negocios-e-independientes' },
+    { href: '/negocios', label: 'Negocios', activePath: '/negocios' },
   ],
   ES: [
-    { href: '/es/calculadora-irpf-2026-tramos-espana-nomina', label: 'IRPF', activePath: '/es/calculadora-irpf' },
-    { href: '/es/calculadora-hipoteca-fija-vs-variable-euribor-espana-2026', label: 'Hipoteca', activePath: '/es/calculadora-hipoteca' },
-    { href: '/es/calculadora-autonomo-cuota-2026-espana-rendimiento-neto', label: 'Autónomos', activePath: '/es/calculadora-autonomo' },
-    { href: '/es/calculadora-finiquito-despido-improcedente-espana-2026', label: 'Finiquito', activePath: '/es/calculadora-finiquito' },
-    { href: '/es/calculadora-jubilacion-espana-2026-pension-anos-cotizados', label: 'Jubilación', activePath: '/es/calculadora-jubilacion' },
+    { href: '/es/impuestos/irpf-nomina', label: 'IRPF', activePath: '/es/impuestos/irpf-nomina' },
+    { href: '/es/vivienda/hipoteca', label: 'Hipoteca', activePath: '/es/vivienda/hipoteca' },
+    { href: '/es/impuestos/irpf-nomina', label: 'Autónomos', activePath: '/es/impuestos/irpf-nomina' },
+    { href: '/es/trabajo/perder-el-trabajo', label: 'Finiquito', activePath: '/es/trabajo/perder-el-trabajo' },
+    { href: '/es/trabajo/jubilacion', label: 'Jubilación', activePath: '/es/trabajo/jubilacion' },
     { href: '/es', label: 'Todas' },
   ],
   MX: [
-    { href: '/mx/calculadora-isr-mexico-2026-tarifa-mensual-empleado', label: 'ISR', activePath: '/mx/calculadora-isr' },
-    { href: '/mx/calculadora-finiquito-mexico-completo-rescision-relacion', label: 'Finiquito', activePath: '/mx/calculadora-finiquito' },
-    { href: '/mx/calculadora-aguinaldo-mexico-2026-15-dias-tope-30', label: 'Aguinaldo', activePath: '/mx/calculadora-aguinaldo' },
-    { href: '/mx/calculadora-imss-cuotas-empleado-patron-mexico-2026', label: 'IMSS', activePath: '/mx/calculadora-imss' },
-    { href: '/mx/calculadora-rfc-homoclave-persona-fisica-mexico', label: 'RFC', activePath: '/mx/calculadora-rfc' },
-    { href: '/mx/decidir', label: 'Decidir', activePath: '/mx/decidir' },
+    { href: '/mx/trabajo/sueldo-neto', label: 'ISR', activePath: '/mx/trabajo/sueldo-neto' },
+    { href: '/mx/trabajo/finiquito-y-liquidacion', label: 'Finiquito', activePath: '/mx/trabajo/finiquito-y-liquidacion' },
+    { href: '/mx/trabajo/aguinaldo-prima-y-ptu', label: 'Aguinaldo', activePath: '/mx/trabajo/aguinaldo-prima-y-ptu' },
+    { href: '/mx/trabajo/costo-de-un-empleado', label: 'IMSS', activePath: '/mx/trabajo/costo-de-un-empleado' },
+    { href: '/mx/tramites/costo-de-mis-documentos', label: 'RFC', activePath: '/mx/tramites/costo-de-mis-documentos' },
     { href: '/mx', label: 'Todas' },
   ],
   CO: [
-    { href: '/co/calculadora-retefuente-colombia-2026-empleado-tabla', label: 'Retefuente', activePath: '/co/calculadora-retefuente' },
-    { href: '/co/calculadora-prima-legal-colombia-30-dias-junio-diciembre', label: 'Prima', activePath: '/co/calculadora-prima' },
-    { href: '/co/calculadora-cesantias-colombia-12-porciento-anual', label: 'Cesantías', activePath: '/co/calculadora-cesantias' },
-    { href: '/co/calculadora-liquidacion-laboral-colombia-completa-cesantias', label: 'Liquidación', activePath: '/co/calculadora-liquidacion' },
-    { href: '/co/calculadora-salario-minimo-colombia-2026-auxilio-transporte', label: 'Salario mín.', activePath: '/co/calculadora-salario' },
-    { href: '/co/decidir', label: 'Decidir', activePath: '/co/decidir' },
+    { href: '/co/impuestos/retencion-en-la-fuente', label: 'Retefuente', activePath: '/co/impuestos/retencion-en-la-fuente' },
+    { href: '/co/trabajo/liquidacion-laboral', label: 'Prima y cesantías', activePath: '/co/trabajo/liquidacion-laboral' },
+    { href: '/co/trabajo/sueldo-neto', label: 'Salario', activePath: '/co/trabajo/sueldo-neto' },
     { href: '/co', label: 'Todas' },
   ],
   CL: [
-    { href: '/cl/calculadora-salario-por-hora-chile', label: 'Salario por hora', activePath: '/cl/calculadora-salario' },
-    { href: '/cl/calculadora-finiquito-renuncia-voluntaria-chile-vacaciones-proporcionales', label: 'Finiquito', activePath: '/cl/calculadora-finiquito' },
-    { href: '/cl/calculadora-saldo-afp-rentabilidad-multifondos-chile-2026', label: 'AFP', activePath: '/cl/calculadora-saldo-afp' },
-    { href: '/cl/calculadora-isapre-cotizacion-chile-7-porcentaje-plan', label: 'Isapre', activePath: '/cl/calculadora-isapre' },
-    { href: '/cl/calculadora-credito-hipotecario-chile-uf-cmf-2026', label: 'Hipoteca', activePath: '/cl/calculadora-credito-hipotecario' },
-    { href: '/cl/decidir', label: 'Decidir', activePath: '/cl/decidir' },
+    { href: '/cl/trabajo/sueldo-liquido', label: 'Sueldo líquido', activePath: '/cl/trabajo/sueldo-liquido' },
+    { href: '/cl/trabajo/me-quedo-sin-trabajo', label: 'Finiquito', activePath: '/cl/trabajo/me-quedo-sin-trabajo' },
+    { href: '/cl/dinero/cuanta-pension-voy-a-tener', label: 'AFP', activePath: '/cl/dinero/cuanta-pension-voy-a-tener' },
+    { href: '/cl/vida/fonasa-o-isapre', label: 'Salud', activePath: '/cl/vida/fonasa-o-isapre' },
+    { href: '/cl/hogar/comprar-casa-con-credito', label: 'Hipoteca', activePath: '/cl/hogar/comprar-casa-con-credito' },
     { href: '/cl', label: 'Todas' },
   ],
   PE: [
-    { href: '/pe/calculadora-sueldo-bruto-a-neto-peru', label: 'Sueldo neto', activePath: '/pe/calculadora-sueldo' },
-    { href: '/pe/calculadora-cts-peru-deposito-semestral', label: 'CTS', activePath: '/pe/calculadora-cts' },
-    { href: '/pe/calculadora-gratificacion-peru-julio-diciembre', label: 'Gratificación', activePath: '/pe/calculadora-gratificacion' },
-    { href: '/pe/calculadora-impuesto-renta-quinta-categoria-peru', label: 'Renta 5ta', activePath: '/pe/calculadora-impuesto-renta' },
-    { href: '/pe/decidir', label: 'Decidir', activePath: '/pe/decidir' },
+    { href: '/pe/trabajo/sueldo-neto', label: 'Sueldo neto', activePath: '/pe/trabajo/sueldo-neto' },
+    { href: '/pe/trabajo/liquidacion-y-beneficios', label: 'CTS y gratificación', activePath: '/pe/trabajo/liquidacion-y-beneficios' },
+    { href: '/pe/impuestos/renta-de-personas', label: 'Renta', activePath: '/pe/impuestos/renta-de-personas' },
     { href: '/pe', label: 'Todas' },
   ],
   EC: [
-    { href: '/ec/calculadora-sueldo-neto-ecuador', label: 'Sueldo neto', activePath: '/ec/calculadora-sueldo-neto' },
-    { href: '/ec/calculadora-decimo-tercer-sueldo-ecuador', label: 'Décimo 13°', activePath: '/ec/calculadora-decimo-tercer' },
-    { href: '/ec/calculadora-liquidacion-finiquito-ecuador', label: 'Finiquito', activePath: '/ec/calculadora-liquidacion' },
-    { href: '/ec/calculadora-iva-ecuador', label: 'IVA', activePath: '/ec/calculadora-iva' },
+    { href: '/ec/trabajo/sueldo-neto', label: 'Sueldo neto', activePath: '/ec/trabajo/sueldo-neto' },
+    { href: '/ec/trabajo/decimos-y-fondos-de-reserva', label: 'Décimos', activePath: '/ec/trabajo/decimos-y-fondos-de-reserva' },
+    { href: '/ec/trabajo/liquidacion-y-despido', label: 'Liquidación', activePath: '/ec/trabajo/liquidacion-y-despido' },
+    { href: '/ec/impuestos/iva-y-consumo', label: 'IVA', activePath: '/ec/impuestos/iva-y-consumo' },
     { href: '/ec', label: 'Todas' },
   ],
   VE: [
-    { href: '/ve/dolar-bcv-paralelo-bolivares-hoy', label: 'Dólar BCV', activePath: '/ve/dolar-bcv' },
-    { href: '/ve/calculadora-prestaciones-sociales-venezuela', label: 'Prestaciones', activePath: '/ve/calculadora-prestaciones' },
-    { href: '/ve/calculadora-utilidades-aguinaldo-venezuela', label: 'Utilidades', activePath: '/ve/calculadora-utilidades' },
-    { href: '/ve/calculadora-liquidacion-finiquito-venezuela', label: 'Liquidación', activePath: '/ve/calculadora-liquidacion' },
-    { href: '/ve/calculadora-islr-venezuela-2026', label: 'ISLR', activePath: '/ve/calculadora-islr' },
+    { href: '/ve/finanzas/dolar-y-bolivares', label: 'Dólar y bolívares', activePath: '/ve/finanzas/dolar-y-bolivares' },
+    { href: '/ve/trabajo/liquidacion-lottt', label: 'Liquidación LOTTT', activePath: '/ve/trabajo/liquidacion-lottt' },
+    { href: '/ve/impuestos/islr-y-tributos-seniat', label: 'ISLR', activePath: '/ve/impuestos/islr-y-tributos-seniat' },
     { href: '/ve', label: 'Todas' },
   ],
   PY: [
-    { href: '/py/calculadora-salario-neto-paraguay', label: 'Salario neto', activePath: '/py/calculadora-salario-neto' },
-    { href: '/py/calculadora-aguinaldo-paraguay', label: 'Aguinaldo', activePath: '/py/calculadora-aguinaldo' },
-    { href: '/py/descuento-ips-9-salario', label: 'IPS', activePath: '/py/descuento-ips' },
-    { href: '/py/indemnizacion-despido-paraguay', label: 'Indemnización', activePath: '/py/indemnizacion-despido' },
-    { href: '/py/irp-paraguay-tramos', label: 'IRP', activePath: '/py/irp-paraguay' },
+    { href: '/py/trabajo/sueldo-neto', label: 'Sueldo neto', activePath: '/py/trabajo/sueldo-neto' },
+    { href: '/py/trabajo/liquidacion-final', label: 'Liquidación', activePath: '/py/trabajo/liquidacion-final' },
+    { href: '/py/trabajo/ips', label: 'IPS', activePath: '/py/trabajo/ips' },
+    { href: '/py/impuestos/cuanto-pago', label: 'Impuestos', activePath: '/py/impuestos/cuanto-pago' },
     { href: '/py', label: 'Todas' },
   ],
   UY: [
-    { href: '/uy/salario-liquido-uruguay', label: 'Sueldo líquido', activePath: '/uy/salario-liquido' },
-    { href: '/uy/aguinaldo-uruguay', label: 'Aguinaldo', activePath: '/uy/aguinaldo' },
-    { href: '/uy/calculadora-bps-aportes', label: 'BPS', activePath: '/uy/calculadora-bps' },
-    { href: '/uy/calculadora-irpf-uruguay', label: 'IRPF', activePath: '/uy/calculadora-irpf' },
-    { href: '/uy/calculadora-despido-uruguay', label: 'Despido', activePath: '/uy/calculadora-despido' },
+    { href: '/uy/trabajo/sueldo-liquido', label: 'Sueldo líquido', activePath: '/uy/trabajo/sueldo-liquido' },
+    { href: '/uy/trabajo/liquidacion-final', label: 'Liquidación', activePath: '/uy/trabajo/liquidacion-final' },
     { href: '/uy', label: 'Todas' },
   ],
   DO: [
-    { href: '/do/salario-neto-republica-dominicana', label: 'Salario neto', activePath: '/do/salario-neto' },
-    { href: '/do/calculadora-liquidacion-republica-dominicana', label: 'Liquidación', activePath: '/do/calculadora-liquidacion' },
-    { href: '/do/calculadora-cesantia-republica-dominicana', label: 'Cesantía', activePath: '/do/calculadora-cesantia' },
-    { href: '/do/regalia-pascual-republica-dominicana', label: 'Regalía', activePath: '/do/regalia-pascual' },
-    { href: '/do/calculadora-itbis-republica-dominicana', label: 'ITBIS', activePath: '/do/calculadora-itbis' },
+    { href: '/do/trabajo/sueldo-neto', label: 'Sueldo neto', activePath: '/do/trabajo/sueldo-neto' },
+    { href: '/do/trabajo/liquidacion', label: 'Liquidación', activePath: '/do/trabajo/liquidacion' },
+    { href: '/do/trabajo/regalia-y-bonificacion', label: 'Regalía', activePath: '/do/trabajo/regalia-y-bonificacion' },
+    { href: '/do/impuestos/negocio-dgii', label: 'DGII', activePath: '/do/impuestos/negocio-dgii' },
     { href: '/do', label: 'Todas' },
   ],
   PT: [
-    { href: '/pt-pt/calculadora-salario-liquido-portugal', label: 'Salário líquido', activePath: '/pt-pt/calculadora-salario-liquido' },
-    { href: '/pt-pt/calculadora-irs-portugal-2026', label: 'IRS', activePath: '/pt-pt/calculadora-irs' },
-    { href: '/pt-pt/calculadora-subsidio-ferias-portugal', label: 'Subsídios', activePath: '/pt-pt/calculadora-subsidio' },
-    { href: '/pt-pt/calculadora-iva-portugal', label: 'IVA', activePath: '/pt-pt/calculadora-iva' },
-    { href: '/pt-pt/calculadora-compensacao-despedimento-portugal', label: 'Indemnização', activePath: '/pt-pt/calculadora-compensacao' },
+    { href: '/pt-pt/trabalho/salario-liquido', label: 'Salário líquido', activePath: '/pt-pt/trabalho/salario-liquido' },
     { href: '/pt-pt', label: 'Todas' },
   ],
-  BR: [{ href: '/pt', label: 'Todas as calculadoras' }],
-  EN: [{ href: '/en', label: 'All calculators' }],
+  BR: [{ href: '/pt', label: 'Todos os hubs' }],
+  EN: [{ href: '/en', label: 'All decision hubs' }],
   GLOBAL: [
     { href: '/global', label: 'Todas' },
     { href: '/salud', label: 'Salud' },
@@ -204,19 +186,19 @@ const navItems = [...COUNTRY_NAVS[pageCountry], ...(footballByCountry[pageCountr
 const NAV_MORE: Array<{ href: string; label: string; icon?: string }> = pageCountry === 'AR' ? [
   { href: '/deportes', label: 'Deportes: Mundial, NBA y F1' },
   { href: '/valores-bcra', label: 'Dólar y economía', icon: 'chart' },
-  { href: '/decidir', label: 'Salas de decisión' },
+  { href: '/finanzas-personales', label: 'Salas de decisión' },
   { href: '/planificador-de-objetivos', label: 'Planificá tus objetivos' },
   { href: '/mi/plata', label: 'Mi Plata' },
   { href: '/mi/trabajo', label: 'Mi Trabajo' },
   { href: '/mi/casa', label: 'Mi Casa' },
   { href: '/mi/familia', label: 'Mi Familia' },
   { href: '/guias', label: 'Guías y notas' },
-  { href: '/calculadoras', label: 'Todas las categorías →' },
+  { href: '/buscar', label: 'Todas las categorías →' },
 ] : [];
 
 // Menú mobile: sólo las categorías PRINCIPALES (arquitectura de pilares
 // jul-2026: la lista completa de 26 categorías inflaba el grafo de links
-// sitewide y diluía autoridad). El resto se llega vía /calculadoras.
+// sitewide y diluía autoridad). El resto se llega vía /buscar.
 // Silos de hubs de decisión. Antes eran `/categoria/*`, que se generaban desde
 // las calcs sueltas: al consolidarlas en hubs esa taxonomía dejó de existir.
 const MOBILE_CATEGORIES: Array<{ href: string; label: string }> = [
@@ -349,7 +331,7 @@ const MOBILE_CATEGORIES: Array<{ href: string; label: string }> = [
       {MOBILE_CATEGORIES.map(cat => (
         <a href={cat.href}>{cat.label}</a>
       ))}
-      <a href="/calculadoras" class="mobile-nav-all">Ver todas las guías →</a>
+      <a href="/buscar" class="mobile-nav-all">Ver todas las guías →</a>
     </div>
   )}
 </header>
