@@ -24,6 +24,7 @@ Uso:
 """
 import json
 import os
+import re
 import ssl
 import subprocess
 import sys
@@ -91,7 +92,12 @@ def urls_from_git_diff(before: str, after: str) -> list:
         out = subprocess.run(
             ['git', 'log', '--name-only', '--diff-filter=AMR', '--pretty=format:',
              f'{before}..{after}', '--',
-             *(f'src/content/{d}/*.json' for d in LOCALE_PREFIX)],
+             *(f'src/content/{d}/*.json' for d in LOCALE_PREFIX),
+             # Hubs de decisión: viven en src/lib/hubs/ (no en src/content/) y
+             # eran INVISIBLES para este detector — los 478 hubs de la migración
+             # 7-27 jamás se avisaron a Bing (forense 8-07). El slug real está
+             # DENTRO del .ts (`slug: 'trabajo/aguinaldo'`), nunca el filename.
+             'src/lib/hubs/*.ts', 'src/lib/hubs/*/*.ts'],
             cwd=ROOT, capture_output=True, text=True, check=True,
         ).stdout
     except subprocess.CalledProcessError as e:
@@ -101,13 +107,22 @@ def urls_from_git_diff(before: str, after: str) -> list:
     candidates = []
     for rel in (ln.strip() for ln in out.splitlines() if ln.strip()):
         parts = rel.split('/')
+        path = ROOT / rel
+        if not path.exists():
+            continue
+        if rel.startswith('src/lib/hubs/') and rel.endswith('.ts'):
+            # src/lib/hubs/<slug>.ts (AR/global) o src/lib/hubs/<locale>/<slug>.ts.
+            # El slug con categoría está dentro del archivo: slug: 'trabajo/aguinaldo'.
+            prefix = f'/{parts[3]}' if len(parts) == 5 else ''
+            m = re.search(r"slug:\s*['\"]([^'\"]+)['\"]", path.read_text(encoding='utf-8'))
+            if not m:
+                continue
+            candidates.append(f'https://{HOST}{prefix}/{m.group(1)}')
+            continue
         if len(parts) < 4:
             continue
         prefix = LOCALE_PREFIX.get(parts[2])
         if prefix is None:
-            continue
-        path = ROOT / rel
-        if not path.exists():
             continue
         try:
             slug = json.loads(path.read_text(encoding='utf-8')).get('slug') or Path(rel).stem

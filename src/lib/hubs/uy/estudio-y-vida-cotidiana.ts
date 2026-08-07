@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'uy/trabajo/estudio-y-vida-cotidiana',
-  title: "¿Qué resultado necesito para decidir? | Hacé Cuentas",
+  title: "Edad de tu perro en años humanos y promedio UdelaR — Uruguay",
   description: "Hub de decisión con 2 cálculos: Edad de perro en años humanos según tamaño — Uruguay; Calculadora de promedio de escolaridad — UdelaR (Uruguay).",
   silo: "Vida cotidiana",
   siloHref: '/uy/trabajo',
   locale: 'uy',
   eyebrow: "Uruguay · Vida cotidiana",
-  h1: "¿Qué resultado necesito para decidir?",
+  h1: "Edad de tu perro en años humanos y promedio de escolaridad UdelaR",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
