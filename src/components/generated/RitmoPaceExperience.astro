@@ -6,7 +6,7 @@ const { data } = Astro.props;
 <script is:inline>
 (()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-ritmo-pace')?document.currentScript.previousElementSibling:document.querySelector('.mockup-ritmo-pace');
 
-const $=x=>root.querySelector("#"+x),fmt=s=>`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')}`;function render(){let d=Math.max(.1,+$('distance').value),total=+$('hours').value*3600 + +$('minutes').value*60 + +$('seconds').value,pace=total/d;$('pace').textContent=fmt(pace);$('center').textContent=`${(3600/pace).toFixed(1)} km/h`;$('splits').innerHTML=Array.from({length:Math.min(5,Math.ceil(d))},(_,i)=>`<div class=\"split\"><b>Km ${Math.round((i+1)*d/Math.min(5,Math.ceil(d)))}</b><br>${fmt(pace*(i+1)*d/Math.min(5,Math.ceil(d)))}</div>`).join('');$('projections').innerHTML=[5,10,21.1,42.2].map(x=>`<div class=\"projection\"><span>${x} km</span><b>${fmt(pace*x)}</b></div>`).join('')}
+const $=x=>root.querySelector("#"+x),fmt=s=>{s=Math.round(s);return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};function render(){let d=Math.max(.1,+$('distance').value),total=+$('hours').value*3600 + +$('minutes').value*60 + +$('seconds').value,pace=total/d;$('pace').textContent=fmt(pace);$('center').textContent=`${(3600/pace).toFixed(1)} km/h`;$('splits').innerHTML=Array.from({length:Math.min(5,Math.ceil(d))},(_,i)=>`<div class=\"split\"><b>Km ${Math.round((i+1)*d/Math.min(5,Math.ceil(d)))}</b><br>${fmt(pace*(i+1)*d/Math.min(5,Math.ceil(d)))}</div>`).join('');$('projections').innerHTML=[5,10,21.1,42.2].map(x=>`<div class=\"projection\"><span>${x} km</span><b>${fmt(pace*x)}</b></div>`).join('')}
 root.querySelectorAll('input').forEach(x=>x.oninput=render);render();
 
 })();
