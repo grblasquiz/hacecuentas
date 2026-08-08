@@ -177,7 +177,7 @@ export const hub: HubData = {
         hint: 'Ingreso a mitad de mes, finiquito, días sin goce de sueldo o valor hora para horas extra.',
         yes: [
           'Sueldo proporcional: el bruto mensual dividido en 30 días y multiplicado por los días efectivamente trabajados',
-          'Valor de la hora ordinaria: bruto mensual ÷ 30 × 28 ÷ jornada semanal pactada (Art. 32 CT)',
+          'Valor de la hora ordinaria: bruto mensual ÷ 30 × 28 ÷ (4 × jornada semanal pactada) (Art. 32 CT)',
           'Sobre el bruto proporcional se aplican los mismos descuentos previsionales',
         ],
         warn: [
@@ -316,7 +316,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuánto vale mi hora de trabajo?',
-      a: 'El valor de la hora ordinaria sale del Art. 32 del Código del Trabajo: sueldo mensual ÷ 30 × 28 ÷ horas de la jornada semanal pactada. Con la Ley 21.561 la jornada máxima legal viene bajando de 45 a 40 horas de forma gradual, así que a igual sueldo el valor hora sube cada vez que baja la jornada. Ese valor hora es la base sobre la que se calcula el recargo del 50% de las horas extraordinarias.',
+      a: 'El valor de la hora ordinaria sale del Art. 32 del Código del Trabajo: sueldo mensual ÷ 30 × 28 ÷ (4 × horas de la jornada semanal pactada), que equivale a dividir el sueldo por las horas ordinarias del mes. Con la Ley 21.561 la jornada máxima legal viene bajando de 45 a 40 horas de forma gradual, así que a igual sueldo el valor hora sube cada vez que baja la jornada. Ese valor hora es la base sobre la que se calcula el recargo del 50% de las horas extraordinarias.',
     },
     {
       q: '¿La asignación de zona extrema paga cotizaciones e impuesto?',

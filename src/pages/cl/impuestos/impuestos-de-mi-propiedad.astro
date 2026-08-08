@@ -4,14 +4,14 @@ import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import DecisionHub from '../../../components/hub/DecisionHub.astro';
-import { hub, UF, UTM, TERRITORIAL, MORA_TGR, MAYOR_VALOR, TIMBRES, HERENCIA_TRAMOS, HERENCIA_PARENTESCO, DONACION_EXENTA_UTM } from '../../../lib/hubs/cl/impuestos-de-mi-propiedad';
+import { hub, UF, UTM, UTA, TERRITORIAL, MORA_TGR, MAYOR_VALOR, TIMBRES, HERENCIA_TRAMOS, HERENCIA_PARENTESCO, DONACION_EXENTA_UTM } from '../../../lib/hubs/cl/impuestos-de-mi-propiedad';
 const canonical = `https://hacecuentas.com/${hub.slug}`;
 const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
 ---
 <Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="CL" lang="es" ogType="article" articleSection={hub.silo}>
   <Header /><DecisionHub data={hub} /><Footer />
 </Layout>
-<script is:inline define:vars={{ UF, UTM, TERRITORIAL, MORA_TGR, MAYOR_VALOR, TIMBRES, HERENCIA_TRAMOS, HERENCIA_PARENTESCO, DONACION_EXENTA_UTM }}>
+<script is:inline define:vars={{ UF, UTM, UTA, TERRITORIAL, MORA_TGR, MAYOR_VALOR, TIMBRES, HERENCIA_TRAMOS, HERENCIA_PARENTESCO, DONACION_EXENTA_UTM }}>
   (function () {
     const H = window.HC_HUB;
     const clp = n => '$' + Math.round(n || 0).toLocaleString('es-CL');
@@ -31,11 +31,12 @@ const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub
         base=Math.max(0,v.montoCredito); const rate=v.exencionTimbres==='si'?0:Math.min(TIMBRES.tope,TIMBRES.tasaMensual*Math.ceil(Math.max(1,v.plazoMeses)));
         tax=base*rate; rows=[{k:'Monto del crédito',v:base},{k:'Tasa aplicable',v:rate*100,format:'unit',unit:'%'},{k:'Impuesto de timbres',ref:'DL 3.475',v:tax,extra:true}];
       } else if (id === 'heredar') {
+        // Ley 16.271 art. 2: escala, exenciones y deducciones expresadas en UTA (no UTM).
         const kin=HERENCIA_PARENTESCO.find(p=>p.id===v.parentesco)||HERENCIA_PARENTESCO[4];
-        const exempt=(v.esDonacion==='donacion'?DONACION_EXENTA_UTM:kin.exencionUtm)*UTM;
-        base=Math.max(0,v.asignacion-v.deudas-exempt); const u=base/UTM;
-        const band=HERENCIA_TRAMOS.find(t=>t.hastaUtm===null||u<=t.hastaUtm); tax=Math.max(0,(u*band.tasa-band.deduccionUtm)*UTM)*(1+kin.recargo);
-        rows=[{k:'Asignación neta',v:Math.max(0,v.asignacion-v.deudas)},{k:'Exención',v:exempt},{k:'Base afecta',v:base},{k:'Base en UTM',v:u,format:'unit',unit:'UTM',decimals:2},{k:'Impuesto',ref:'Ley 16.271',v:tax,extra:true}];
+        const exempt=(v.esDonacion==='donacion'?DONACION_EXENTA_UTM:kin.exencionUtm)*UTA;
+        base=Math.max(0,v.asignacion-v.deudas-exempt); const u=base/UTA;
+        const band=HERENCIA_TRAMOS.find(t=>t.hastaUtm===null||u<=t.hastaUtm); tax=Math.max(0,(u*band.tasa-band.deduccionUtm)*UTA)*(1+kin.recargo);
+        rows=[{k:'Asignación neta',v:Math.max(0,v.asignacion-v.deudas)},{k:'Exención',v:exempt},{k:'Base afecta',v:base},{k:'Base en UTA',v:u,format:'unit',unit:'UTA',decimals:2},{k:'Impuesto',ref:'Ley 16.271',v:tax,extra:true}];
       } else {
         base=Math.max(0,v.avaluo-(v.tipoPropiedad==='habitacional'?Math.max(0,v.exentoAvaluo):0));
         tax=base*Math.max(0,v.tasaTerritorial)/100; rows=[{k:'Avalúo afecto',v:base},{k:'Contribución anual',ref:'Ley 17.235',v:tax,extra:true},{k:'Cada cuota',v:tax/TERRITORIAL.cuotasAlAnio}];

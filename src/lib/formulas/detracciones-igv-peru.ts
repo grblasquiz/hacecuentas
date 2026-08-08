@@ -9,7 +9,7 @@ export interface Outputs { [k: string]: any; _insight?: any; _chart?: any; }
 
 // % de detracción típicos del Sistema de Pago de Obligaciones Tributarias (SPOT).
 const TASAS: Record<string, { pct: number; label: string }> = {
-  intermediacion: { pct: 0.04, label: 'Intermediación laboral y tercerización' },
+  intermediacion: { pct: 0.12, label: 'Intermediación laboral y tercerización' }, // Anexo 3 num. 1, R.S. 183-2004 (12%)
   arrendamiento: { pct: 0.10, label: 'Arrendamiento de bienes muebles' },
   servicios_empresariales: { pct: 0.12, label: 'Otros servicios empresariales' },
   contratos_construccion: { pct: 0.04, label: 'Contratos de construcción' },

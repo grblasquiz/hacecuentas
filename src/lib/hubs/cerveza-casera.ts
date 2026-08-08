@@ -226,7 +226,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuánto CO2 queda disuelto después de fermentar?',
-      a: 'Depende de la temperatura más alta que alcanzó la cerveza durante la fermentación, porque el CO2 se disuelve mejor en frío. A 18 °C quedan cerca de 0,9 volúmenes; a 20 °C, alrededor de 0,85; a 24 °C, unos 0,98 menos. Ese residual se descuenta del objetivo antes de calcular el azúcar.',
+      a: 'Depende de la temperatura más alta que alcanzó la cerveza durante la fermentación, porque el CO2 se disuelve mejor en frío. A 18 °C quedan cerca de 0,9 volúmenes; a 20 °C, alrededor de 0,85; a 24 °C, unos 0,78. Ese residual se descuenta del objetivo antes de calcular el azúcar.',
     },
     {
       q: '¿Cuántos litros se pierden entre el hervor y la botella?',

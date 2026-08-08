@@ -47,7 +47,7 @@ export const SMI_2026 = {
   subidaPct: 3.1,            // % subida 2026 vs 2025
   // Cotización del trabajador a la Seguridad Social (régimen general, contrato indefinido):
   ssTrabajadorPct: 6.35,     // 4,70% contingencias comunes + 1,55% desempleo + 0,10% FP
-  meiTrabajadorPct: 0.13,    // Mecanismo de Equidad Intergeneracional (a cargo del trabajador) 2026
+  meiTrabajadorPct: 0.15,    // Mecanismo de Equidad Intergeneracional (a cargo del trabajador) 2026
   jornadaHorasSemana: 40,    // jornada máxima legal (media anual) vigente en 2026
   horasMes: 173.33,          // 40 × 52 ÷ 12
 };

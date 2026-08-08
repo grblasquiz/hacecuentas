@@ -46,7 +46,9 @@ export function primingSugarCarbonatacionCerveza(i: Inputs): Outputs {
   if (!V || V <= 0) throw new Error(TR.errVolumen);
   if (!objCO2 || objCO2 <= 0) throw new Error(TR.errCO2);
 
-  const residual = 3.0378 - 0.050062 * T + 0.00026555 * T * T;
+  // El polinomio clásico de CO2 residual espera °F; el input llega en °C.
+  const TF = T * 9 / 5 + 32;
+  const residual = 3.0378 - 0.050062 * TF + 0.00026555 * TF * TF;
   const delta = Math.max(0, objCO2 - residual);
   const factores: Record<string, number> = { dextrosa: 3.86, sacarosa: 3.51, dme: 4.50, miel: 4.26 };
   const f = factores[tipo] ?? 3.86;

@@ -70,7 +70,8 @@ const schema = {
       // ── Caso 1: Cetes ─────────────────────────────────────────────────
       if (id === 'cetes') {
         const bruto = monto * (tasaCete / 100) * (dias / K.diasAnioComercial);
-        const isr = bruto * K.retencionIsr * (dias / K.diasAnioNatural);
+        // Retención LIF: tasa anual sobre el CAPITAL, prorrateada por días (no sobre el interés).
+        const isr = monto * K.retencionIsr * (dias / K.diasAnioNatural);
         const neto = bruto - isr;
         const vencimiento = monto + neto;
         const tasaNeta = monto > 0 ? (neto / monto) * (K.diasAnioComercial / dias) * 100 : 0;
@@ -106,13 +107,14 @@ const schema = {
       // ── Caso 2: pagaré bancario vs Cete ───────────────────────────────
       if (id === 'pagare') {
         const brutoP = monto * (tasaPagare / 100) * (dias / K.diasAnioNatural);
-        const isrP = brutoP * K.retencionIsr;
+        // Retención LIF sobre el capital, prorrateada por días.
+        const isrP = monto * K.retencionIsr * (dias / K.diasAnioNatural);
         const netoP = brutoP - isrP;
         const finalP = monto + netoP;
         const rendP = monto > 0 ? (netoP / monto) * (K.diasAnioNatural / dias) * 100 : 0;
 
         const brutoC = monto * (tasaCete / 100) * (dias / K.diasAnioNatural);
-        const isrC = brutoC * K.retencionIsr;
+        const isrC = monto * K.retencionIsr * (dias / K.diasAnioNatural);
         const netoC = brutoC - isrC;
         const finalC = monto + netoC;
         const rendC = monto > 0 ? (netoC / monto) * (K.diasAnioNatural / dias) * 100 : 0;
@@ -157,13 +159,16 @@ const schema = {
 
         const brutoInicial = monto * (tasa / 100) * (dias / K.diasAnioNatural);
         let brutoDepositos = 0;
+        // Capital ponderado por días: base de la retención de ISR (LIF: % anual sobre el capital).
+        let capitalDias = monto * (dias / K.diasAnioNatural);
         const mesesEnteros = Math.floor(dias / 30);
         for (let mes = 1; mes <= mesesEnteros; mes++) {
           const diasRestantes = dias - (mes - 1) * 30;
           brutoDepositos += depositos * (tasa / 100) * (diasRestantes / K.diasAnioNatural);
+          capitalDias += depositos * (diasRestantes / K.diasAnioNatural);
         }
         const bruto = brutoInicial + brutoDepositos;
-        const isr = bruto * K.retencionIsr;
+        const isr = capitalDias * K.retencionIsr;
         const neto = bruto - isr;
         const depositosTotales = depositos * mesesEnteros;
         const saldoFinal = monto + depositosTotales + neto;

@@ -87,7 +87,7 @@ export const hub: HubData = {
         hint: 'Proyecta tu saldo actual más las aportaciones obligatorias y voluntarias hasta la edad de retiro.',
         yes: [
           'Capitalización de tu saldo actual con el rendimiento neto que elijas',
-          'Aportación tripartita obligatoria del 6,5% del salario base de cotización más la cuota social',
+          'Aportación tripartita obligatoria de entre 9,15% y 10,64% del salario base de cotización según tu nivel salarial (reforma 2020), más la cuota social',
           'Aportaciones voluntarias mensuales que decidas sumar',
           'Estimación de la pensión mensual que compraría ese saldo y tasa de reemplazo sobre tu sueldo actual',
         ],
@@ -323,7 +323,7 @@ export const hub: HubData = {
   faq: [
     {
       q: '¿Cuánto se aporta a mi Afore cada mes?',
-      a: 'La aportación obligatoria de retiro, cesantía y vejez es del 6,5% del salario base de cotización repartido entre trabajador, patrón y gobierno, más la cuota social para los salarios más bajos. Con la reforma de pensiones de 2020, la parte patronal de cesantía y vejez sube cada año de forma progresiva hasta 2030, así que la aportación total va creciendo. Además va un 5% del salario a la subcuenta de vivienda, que administra el Infonavit.',
+      a: 'La aportación obligatoria de retiro, cesantía y vejez en 2026 es de entre el 9,15% y el 10,64% del salario base de cotización según el nivel salarial (retiro 2% + CEAV patronal progresiva de la reforma 2020 + 1,125% del trabajador), más la cuota social para los salarios más bajos. Con la reforma de pensiones de 2020, la parte patronal de cesantía y vejez sube cada año de forma progresiva hasta 2030, así que la aportación total va creciendo. Además va un 5% del salario a la subcuenta de vivienda, que administra el Infonavit.',
     },
     {
       q: '¿Cuánto cobran de comisión las Afores en 2026?',

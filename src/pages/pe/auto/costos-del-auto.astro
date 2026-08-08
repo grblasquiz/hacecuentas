@@ -95,7 +95,8 @@ const schema = {
       // --- CITV ---
       const tarifaCitv = CITV[cat];
       const citvAnual = tarifaCitv.tipico * citvPorAnio;
-      const multaCitv = UIT * (cat === 'moto' ? MULTA.vehiculoMenorL5 : MULTA.general);
+      // M27 (0,5 UIT) aplica a autos, taxis y motos lineales; la M42 (0,05 UIT) es solo para L5/mototaxis.
+      const multaCitv = UIT * MULTA.general;
 
       // --- Impuesto al patrimonio vehicular ---
       // Se paga durante 3 ejercicios desde el AÑO SIGUIENTE al de la primera inscripción:
@@ -140,7 +141,7 @@ const schema = {
       rows.push({ k: 'Lo mismo repartido por mes', ref: 'Costo anual ÷ 12', v: totalMes });
       rows.push({ k: 'Costo por kilómetro recorrido', ref: 'Sin contar mantenimiento ni depreciación', v: costoPorKm, decimals: 2 });
       rows.push({ k: 'Cuánto pesa el combustible en el total', ref: 'Casi siempre es el rubro más grande', v: totalAnual > 0 ? (combustibleAnio / totalAnual) * 100 : 0, format: 'unit', unit: '%', decimals: 0 });
-      rows.push({ k: 'Multa por circular sin inspección vigente', ref: cat === 'moto' ? 'Infracción específica de vehículos menores L5' : 'Infracción muy grave · 50 puntos e internamiento', v: multaCitv });
+      rows.push({ k: 'Multa por circular sin inspección vigente', ref: cat === 'moto' ? 'Infracción muy grave · los L5 (mototaxis) tienen una multa específica menor de ' + sol(UIT * MULTA.vehiculoMenorL5) : 'Infracción muy grave · 50 puntos e internamiento', v: multaCitv });
       rows.push({ k: 'Cuántas inspecciones pagas con esa multa', ref: 'La razón por la que conviene no dejarla vencer', v: tarifaCitv.tipico > 0 ? multaCitv / tarifaCitv.tipico : 0, format: 'unit', unit: 'inspecciones', decimals: 0 });
 
       const total = sol(totalAnual);

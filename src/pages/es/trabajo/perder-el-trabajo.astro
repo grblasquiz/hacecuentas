@@ -89,12 +89,23 @@ const schema = {
       let indemnizacion = 0;
       let refIndemnizacion = 'No corresponde en este caso';
       if (id === 'improcedente') {
-        const pre = Math.min(salarioDiario * D.diasImprocedentePre2012 * aniosPre, salarioMensual * D.topePre2012);
-        const post = salarioDiario * D.diasImprocedente * aniosPost;
-        indemnizacion = Math.min(pre + post, salarioMensual * D.topeImprocedente);
+        // Disposición Transitoria 5ª ET (espejo de indemnizacion-despido-improcedente-espana.ts):
+        // pre-2012 a 45 días/año y post a 33; el total topa en 720 días SALVO que el tramo
+        // pre-2012 por sí solo ya supere 720, en cuyo caso rige sólo ese tramo con tope
+        // absoluto de 42 mensualidades (1.260 días).
+        let diasPre = D.diasImprocedentePre2012 * aniosPre;
+        let diasPost = D.diasImprocedente * aniosPost;
+        const topeCombinado = D.topeImprocedente * 30; // 720 días
+        if (diasPre >= topeCombinado) {
+          diasPost = 0;
+          diasPre = Math.min(diasPre, D.topePre2012 * 30); // 1.260 días
+        } else if (diasPre + diasPost > topeCombinado) {
+          diasPost = Math.max(0, topeCombinado - diasPre);
+        }
+        indemnizacion = salarioDiario * (diasPre + diasPost);
         refIndemnizacion =
           D.diasImprocedente + ' días/año' + (aniosPre > 0 ? ' + ' + D.diasImprocedentePre2012 + ' días pre-2012' : '') +
-          ' · tope ' + D.topeImprocedente + ' mensualidades';
+          ' · tope ' + (D.diasImprocedentePre2012 * aniosPre >= D.topeImprocedente * 30 ? D.topePre2012 : D.topeImprocedente) + ' mensualidades';
       } else if (id === 'objetivo') {
         indemnizacion = Math.min(salarioDiario * D.diasObjetivo * anios, salarioMensual * D.topeObjetivo);
         refIndemnizacion = D.diasObjetivo + ' días/año · tope ' + D.topeObjetivo + ' mensualidades';

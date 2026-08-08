@@ -23,11 +23,11 @@ import clLive from '../../../data/live/chile.json';
  *     $859.788: veintiocho veces menos.
  *  3. `impuesto-herencias` aplicaba tasas planas inventadas por parentesco (4%,
  *     10%, 15%, 16%, 17%, 25%) y declaraba EXENTO al cónyuge. La Ley 16.271
- *     aplica una escala progresiva en UTM a cada asignación, con una exención de
- *     50 UTM por asignatario para el cónyuge, el conviviente civil, los
+ *     aplica una escala progresiva en UTA a cada asignación, con una exención de
+ *     50 UTA por asignatario para el cónyuge, el conviviente civil, los
  *     ascendientes y los descendientes, y recargos del 20% y del 40% para los
  *     colaterales y los extraños. El cónyuge NO está exento: tiene una exención
- *     de 50 UTM, que es otra cosa.
+ *     de 50 UTA, que es otra cosa.
  *  4. `impuesto-herencias` daba un "descuento por antigüedad de la donación" del
  *     5% anual hasta 5 años. Ese descuento no existe en la Ley 16.271.
  *  5. `impuesto-timbres` cobraba 0,8% fijo a todo crédito hipotecario. El DL 3.475
@@ -94,7 +94,7 @@ export const TIMBRES = {
 
 /**
  * Impuesto a las herencias y donaciones — Ley 16.271 Art. 2.
- * Escala progresiva sobre CADA asignación, expresada en UTM, con deducción fija
+ * Escala progresiva sobre CADA asignación, expresada en UTA, con deducción fija
  * por tramo para dar continuidad.
  */
 export const HERENCIA_TRAMOS: Array<{ hastaUtm: number | null; tasa: number; deduccionUtm: number }> = [
@@ -110,7 +110,7 @@ export const HERENCIA_TRAMOS: Array<{ hastaUtm: number | null; tasa: number; ded
 
 /**
  * Exenciones y recargos por parentesco — Ley 16.271 Arts. 2 y 3.
- * El cónyuge NO está exento: tiene la exención de 50 UTM por asignación, igual
+ * El cónyuge NO está exento: tiene la exención de 50 UTA por asignación, igual
  * que ascendientes y descendientes.
  */
 export const HERENCIA_PARENTESCO: Array<{
@@ -126,7 +126,7 @@ export const HERENCIA_PARENTESCO: Array<{
   { id: 'extrano', label: 'Sin parentesco o de grado más lejano', exencionUtm: 0, recargo: 0.4 },
 ];
 
-/** Exención de las donaciones, en UTM — Ley 16.271. */
+/** Exención de las donaciones, en UTA — Ley 16.271. */
 export const DONACION_EXENTA_UTM = 5;
 
 const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
@@ -135,7 +135,7 @@ export const hub: HubData = {
   slug: 'cl/impuestos/impuestos-de-mi-propiedad',
   title: 'Impuestos de una propiedad en Chile: contribuciones, mayor valor, timbres y herencia',
   description:
-    'Calcula tus contribuciones anuales y su morosidad en la TGR, el impuesto al mayor valor por vender con la exención de 8.000 UF, el impuesto de timbres del crédito hipotecario y el impuesto a las herencias con la escala real en UTM de la Ley 16.271.',
+    'Calcula tus contribuciones anuales y su morosidad en la TGR, el impuesto al mayor valor por vender con la exención de 8.000 UF, el impuesto de timbres del crédito hipotecario y el impuesto a las herencias con la escala real en UTA de la Ley 16.271.',
   silo: 'Impuestos',
   siloHref: '/cl/impuestos',
   locale: 'cl',
@@ -253,26 +253,26 @@ export const hub: HubData = {
       {
         id: 'heredar',
         label: 'Heredé o me van a donar la propiedad',
-        hint: 'Escala progresiva en UTM sobre cada asignación, con exenciones y recargos por parentesco.',
+        hint: 'Escala progresiva en UTA sobre cada asignación, con exenciones y recargos por parentesco.',
         yes: [
           'Escala progresiva de la Ley 16.271, del 1% al 25%, aplicada a tu asignación',
-          'Exención de 50 UTM para cónyuge, conviviente civil, ascendientes y descendientes',
+          'Exención de 50 UTA para cónyuge, conviviente civil, ascendientes y descendientes',
           'Recargo del 20% para los colaterales y del 40% para los extraños',
           'Impuesto neto y lo que efectivamente recibes',
         ],
         warn: [
           DISCLAIMER_TAX,
-          'El cónyuge NO está exento del impuesto a la herencia: tiene una exención de 50 UTM sobre su asignación, que es otra cosa. La calculadora anterior de este sitio lo declaraba exento por completo',
+          'El cónyuge NO está exento del impuesto a la herencia: tiene una exención de 50 UTA sobre su asignación, que es otra cosa. La calculadora anterior de este sitio lo declaraba exento por completo',
           'El impuesto se calcula sobre CADA asignación por separado, no sobre el total de la masa hereditaria: tener más herederos suele bajar el impuesto total',
           'Las donaciones que el causante hizo en vida a un mismo asignatario se acumulan a la herencia para determinar la tasa',
-          'Las donaciones tienen una exención más baja, de 5 UTM, y requieren trámite de insinuación ante el tribunal',
+          'Las donaciones tienen una exención más baja, de 5 UTA, y requieren trámite de insinuación ante el tribunal',
           'No existe el "descuento por antigüedad de la donación" del 5% anual que aplicaba la calculadora anterior',
           'Las deudas hereditarias y los gastos de última enfermedad y sepultación se rebajan de la masa antes de repartir',
         ],
         plazo:
           'el impuesto a la herencia se declara y paga dentro de los 2 años siguientes al fallecimiento; después corren reajustes e intereses.',
         answer:
-          'El impuesto a la herencia es una escala progresiva del 1% al 25% sobre cada asignación, con 50 UTM exentas para el cónyuge y los descendientes.',
+          'El impuesto a la herencia es una escala progresiva del 1% al 25% sobre cada asignación, con 50 UTA exentas para el cónyuge y los descendientes.',
       },
     ],
   },
@@ -445,8 +445,8 @@ export const hub: HubData = {
       type: 'select',
       value: 'herencia',
       options: [
-        { value: 'herencia', label: 'Herencia (exención de 50 UTM si eres cónyuge, ascendiente o descendiente)' },
-        { value: 'donacion', label: `Donación (exención de ${DONACION_EXENTA_UTM} UTM)` },
+        { value: 'herencia', label: 'Herencia (exención de 50 UTA si eres cónyuge, ascendiente o descendiente)' },
+        { value: 'donacion', label: `Donación (exención de ${DONACION_EXENTA_UTM} UTA)` },
       ],
     },
     {
@@ -472,7 +472,7 @@ export const hub: HubData = {
   },
   breakdownTitle: 'El cálculo, línea por línea',
   breakdownIntro:
-    'Cada fila indica la ley que la respalda. Los tramos de la herencia están en UTM y la exención del mayor valor en UF: en pesos se mueven todos los días.',
+    'Cada fila indica la ley que la respalda. Los tramos de la herencia están en UTA y la exención del mayor valor en UF: en pesos se mueven todos los días.',
 
   faq: [
     {
@@ -509,15 +509,15 @@ export const hub: HubData = {
     },
     {
       q: '¿El cónyuge paga impuesto a la herencia en Chile?',
-      a: 'Sí. El cónyuge sobreviviente y el conviviente civil no están exentos: tienen una exención de 50 UTM sobre su asignación y quedan afectos a la escala progresiva de la Ley 16.271 por el resto. Es un error frecuente creer que están exentos por completo.',
+      a: 'Sí. El cónyuge sobreviviente y el conviviente civil no están exentos: tienen una exención de 50 UTA sobre su asignación y quedan afectos a la escala progresiva de la Ley 16.271 por el resto. Es un error frecuente creer que están exentos por completo.',
     },
     {
       q: '¿Cuáles son las tasas del impuesto a la herencia?',
-      a: 'Una escala progresiva en UTM sobre cada asignación: 1% hasta 80 UTM, 2,5% hasta 160, 5% hasta 320, 7,5% hasta 480, 10% hasta 640, 15% hasta 800, 20% hasta 1.200 y 25% de ahí en adelante. A eso se suma un recargo del 20% si eres colateral de segundo a cuarto grado y del 40% si no tienes parentesco.',
+      a: 'Una escala progresiva en UTA sobre cada asignación: 1% hasta 80 UTA, 2,5% hasta 160, 5% hasta 320, 7,5% hasta 480, 10% hasta 640, 15% hasta 800, 20% hasta 1.200 y 25% de ahí en adelante. A eso se suma un recargo del 20% si eres colateral de segundo a cuarto grado y del 40% si no tienes parentesco.',
     },
     {
       q: '¿El impuesto a la herencia se calcula sobre el total o sobre lo que me toca?',
-      a: 'Sobre cada asignación por separado. Por eso repartir la misma masa hereditaria entre más herederos suele bajar el impuesto total: cada uno usa su propia exención de 50 UTM y entra por los tramos bajos de la escala.',
+      a: 'Sobre cada asignación por separado. Por eso repartir la misma masa hereditaria entre más herederos suele bajar el impuesto total: cada uno usa su propia exención de 50 UTA y entra por los tramos bajos de la escala.',
     },
     {
       q: '¿Cuánto tiempo tengo para pagar el impuesto a la herencia?',

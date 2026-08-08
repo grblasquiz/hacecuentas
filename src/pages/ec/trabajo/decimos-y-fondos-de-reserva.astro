@@ -82,7 +82,8 @@ const schema = {
       // Décimo cuarto (art. 113): 1 SBU, proporcional a meses y a la jornada sobre 40 h.
       const factorJornada = horas > 0 ? horas / 40 : 0;
       const d14 = ((SBU * meses) / 12) * factorJornada;
-      const d14Mensualizado = d14 / 12;
+      // Mensualizado = acumulación de un mes (no depende de los meses ya trabajados).
+      const d14Mensualizado = (SBU / 12) * factorJornada;
 
       // Fondos de reserva: 8,33% desde el mes 13 con el mismo empleador.
       const tieneFondos = anios >= 1;
@@ -109,7 +110,7 @@ const schema = {
           v: d14,
           extra: id === 'd14costa' || id === 'd14sierra',
         },
-        { k: 'Décimo cuarto si lo cobras mensualizado', ref: 'Décimo cuarto ÷ 12', v: d14Mensualizado },
+        { k: 'Décimo cuarto si lo cobras mensualizado', ref: '1 SBU ÷ 12' + (factorJornada < 1 ? ' · jornada de ' + horas + ' h' : ''), v: d14Mensualizado },
         {
           k: 'Fondos de reserva mensuales',
           ref: tieneFondos ? '8,33% · desde el mes 13' : 'Aún no corresponde: primer año con el empleador',

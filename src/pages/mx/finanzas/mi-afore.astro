@@ -20,6 +20,21 @@ import {
   ISR_ANUAL_MX,
   DEDUCCION_MX,
 } from '../../../lib/hubs/mx/mi-afore';
+import { MEXICO_2026 } from '../../../lib/data/mexico-2026';
+
+/**
+ * Aportación obligatoria a la subcuenta RCV 2026 (reforma de pensiones 2020):
+ * retiro patronal 2% + CEAV obrero 1,125% + CEAV patronal progresivo por nivel
+ * de SBC (tabla 2026 de mexico-2026.ts). `Infinity` no cruza define:vars → null.
+ * No incluye la cuota social del Estado (monto fijo por día, fuera de esta tabla).
+ */
+const RCV_MX = {
+  fijo: MEXICO_2026.imss.patron.retiro + MEXICO_2026.imss.obrero.cesantiaVejez,
+  ceavTabla: MEXICO_2026.imss.patron.ceavTabla2026.map((f) => ({
+    hastaUmas: Number.isFinite(f.hastaUmas) ? f.hastaUmas : null,
+    tasa: f.tasa,
+  })),
+};
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
 
@@ -70,6 +85,7 @@ const schema = {
     DES: DESEMPLEO_MX,
     ISR_ANUAL: ISR_ANUAL_MX,
     DED: DEDUCCION_MX,
+    RCV: RCV_MX,
   }}
 >
   (function () {
@@ -121,10 +137,23 @@ const schema = {
         const anios = edadRet - edadHoy;
         const rNeto = rendimiento - comision;
 
-        // Aportación obligatoria RCV: 6,5% del SBC (obrero + patrón + Estado), topada a 25 UMA.
+        // Aportación obligatoria RCV 2026 (reforma 2020): retiro 2% + CEAV obrero 1,125%
+        // + CEAV patronal progresivo según el SBC (tabla mexico-2026.ts). Tope: 25 UMA.
+        // No incluye la cuota social del Estado (monto fijo diario para SBC bajos).
         const topeMensual = UMA.diaria * 25 * SM.factorMensual;
         const sbc = Math.min(salario, topeMensual);
-        const obligatoriaAnual = sbc * 0.065 * 12;
+        const sbcDiario = sbc / SM.factorMensual;
+        let tasaCeavPatron = RCV.ceavTabla[RCV.ceavTabla.length - 1].tasa;
+        if (sbcDiario <= SM.generalDiario) {
+          tasaCeavPatron = RCV.ceavTabla[0].tasa;
+        } else {
+          const enUmas = sbcDiario / UMA.diaria;
+          for (const f of RCV.ceavTabla) {
+            if (f.hastaUmas === null || enUmas <= f.hastaUmas) { tasaCeavPatron = f.tasa; break; }
+          }
+        }
+        const tasaRcv = RCV.fijo + tasaCeavPatron;
+        const obligatoriaAnual = sbc * tasaRcv * 12;
         const voluntariaAnual = Math.max(0, v.voluntarioMensual || 0) * 12;
         const aporteAnual = obligatoriaAnual + voluntariaAnual;
 
@@ -150,7 +179,7 @@ const schema = {
             { k: 'Saldo proyectado al retiro', v: saldoFinal, extra: true },
             { k: 'Saldo actual capitalizado', v: saldoBase },
             { k: 'Aportaciones futuras con rendimiento', v: saldoAportes },
-            { k: 'Aportación obligatoria anual', ref: '6,5% del SBC', v: obligatoriaAnual },
+            { k: 'Aportación obligatoria anual', ref: (tasaRcv * 100).toFixed(2).replace('.', ',') + '% del SBC · reforma 2020, sin cuota social', v: obligatoriaAnual },
             { k: 'Aportación voluntaria anual', v: voluntariaAnual },
             { k: 'Pensión mensual estimada', v: pension },
             { k: 'Tasa de reemplazo', v: reemplazo, format: 'unit', unit: '%', decimals: 0 },

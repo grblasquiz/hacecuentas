@@ -137,7 +137,9 @@ const schema = {
         positionLabel = method.label + ' — 1:' + method.ratio;
       } else if (id === 'beer') {
         const tC = fToC(bottlingF);
-        const residual = PRIMING.residualA - PRIMING.residualB * tC + PRIMING.residualC * tC * tC;
+        // The classic residual-CO2 polynomial takes the temperature in °F
+        // (68 °F → 0.86 vol). Feeding it Celsius overstates residual ~2.5×.
+        const residual = PRIMING.residualA - PRIMING.residualB * bottlingF + PRIMING.residualC * bottlingF * bottlingF;
         const delta = Math.max(0, targetCo2 - residual);
         const dextrose = delta * batchL * PRIMING.sugarFactor.dextrose;
         const tableSugar = delta * batchL * PRIMING.sugarFactor.table_sugar;
