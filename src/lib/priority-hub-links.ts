@@ -29,4 +29,34 @@ export const PRIORITY_HUB_LINKS = [
   { path: '/pt/veiculos', categories: ['veiculos'], locale: 'pt-BR', localeWide: true },
   { path: '/pt-pt/familia', categories: ['familia'], locale: 'pt-PT', localeWide: true },
   { path: '/ve/vida', categories: ['vida'], locale: 'es-VE', localeWide: true },
+
+  // Receptores de los 301 más valiosos de la poda 7-27 (~5.900 clicks Bing/90d
+  // absorbidos). Refuerzo de inlinks para acelerar el re-rank post-caída;
+  // ver memoria diagnostico-caida-bing-post-poda-2026-08-07. localeWide sólo
+  // en el receptor top de cada mercado.
+  { path: '/impuestos/ganancias-cuarta-categoria', categories: ['impuestos', 'trabajo'] },
+  { path: '/impuestos/retenciones', categories: ['impuestos'] },
+  { path: '/trabajo/liquidacion-final', categories: ['trabajo'] },
+  { path: '/trabajo/costo-de-un-empleado', categories: ['trabajo', 'impuestos'] },
+  { path: '/construccion/costo-por-m2', categories: ['construccion', 'hogar'] },
+  { path: '/construccion/ladrillos', categories: ['construccion', 'hogar'] },
+  { path: '/auto/nafta-y-peajes', categories: ['auto', 'viajes'] },
+  { path: '/ciencia/presion-y-gases', categories: ['ciencia', 'educacion'] },
+  { path: '/conversores/numeros-a-letras', categories: ['conversores', 'matematica', 'finanzas'] },
+  { path: '/viajes/millas', categories: ['viajes'] },
+  { path: '/fechas/generaciones', categories: ['fechas', 'ocio'] },
+  { path: '/co/trabajo/horas-extras-y-recargos', categories: ['trabajo'], locale: 'es-CO', localeWide: true },
+  { path: '/co/trabajo/costo-de-contratar', categories: ['trabajo'], locale: 'es-CO' },
+  { path: '/co/trabajo/liquidacion-laboral', categories: ['trabajo'], locale: 'es-CO' },
+  { path: '/co/impuestos/renta-personas', categories: ['impuestos'], locale: 'es-CO' },
+  { path: '/co/impuestos/impuestos-de-mi-negocio', categories: ['impuestos'], locale: 'es-CO' },
+  { path: '/co/impuestos/sanciones-dian', categories: ['impuestos'], locale: 'es-CO' },
+  { path: '/co/finanzas/comprar-vivienda', categories: ['finanzas'], locale: 'es-CO' },
+  { path: '/co/vida/recibos-de-servicios', categories: ['vida'], locale: 'es-CO' },
+  { path: '/mx/trabajo/sueldo-neto', categories: ['trabajo'], locale: 'es-MX', localeWide: true },
+  { path: '/mx/trabajo/finiquito-y-liquidacion', categories: ['trabajo'], locale: 'es-MX' },
+  { path: '/mx/finanzas/credito-de-vivienda', categories: ['finanzas'], locale: 'es-MX' },
+  { path: '/pe/auto/costos-del-auto', categories: ['auto'], locale: 'es-PE', localeWide: true },
+  { path: '/py/trabajo/sueldo-neto', categories: ['trabajo'], locale: 'es-PY', localeWide: true },
+  { path: '/es/trabajo/mi-nomina', categories: ['trabajo'], locale: 'es-ES', localeWide: true },
 ] as const;
