@@ -243,6 +243,16 @@
         border-radius: 0 10px 10px 0;
         color: #69483b;
       }
+      #afpVerdict {
+        margin-top: 0;
+        background: #e8f6ef;
+        border-left-color: #148f62;
+        color: #14523c;
+        font-weight: 600;
+      }
+      #afpVerdict a {
+        color: #0b6e4a;
+      }
       @media (max-width: 850px) {
         .hero .wrap,
         .sheet,
@@ -302,10 +312,13 @@
           ><input id="salary" type="number" value="1800000" /><label
             >Tu AFP</label
           ><select id="afp">
-            <option value=".0049">Uno · comisión 0,49%</option>
-            <option value=".0058">Modelo · comisión 0,58%</option>
-            <option value=".0127">Habitat · comisión 1,27%</option>
-            <option value=".0144">Capital · comisión 1,44%</option></select
+            <option value=".0049" data-name="AFP Uno">Uno · comisión 0,49%</option>
+            <option value=".0058" data-name="Modelo">Modelo · comisión 0,58%</option>
+            <option value=".0116" data-name="PlanVital">PlanVital · comisión 1,16%</option>
+            <option value=".0127" data-name="Habitat" selected>Habitat · comisión 1,27%</option>
+            <option value=".0144" data-name="Capital">Capital · comisión 1,44%</option>
+            <option value=".0144" data-name="Cuprum">Cuprum · comisión 1,44%</option>
+            <option value=".0145" data-name="ProVida">ProVida · comisión 1,45%</option></select
           ><label>Sistema de salud</label
           ><select id="health">
             <option value=".07">Fonasa · 7%</option>
@@ -338,6 +351,7 @@
             </aside>
           </div>
           <div class="tip" id="tip"></div>
+          <div class="tip" id="afpVerdict"></div>
         </section>
       </div>
     </main>
@@ -415,6 +429,22 @@
             +$("#health").value === 0.07 ? "Fonasa" : "Isapre";
           $("#tip").innerHTML =
             `Tus descuentos estimados suman <b>$${Math.round(x.s - x.net).toLocaleString("es-CL")}</b>. ${mode === "gross" ? "Cambiá AFP o salud para ver qué parte se mueve." : "Este bruto es una aproximación iterativa para alcanzar el líquido objetivo."}`;
+          // Veredicto de AFP: comisión elegida vs la más barata del sistema.
+          let sel = $("#afp"),
+            opts = [...sel.options].map((o) => ({
+              name: o.dataset.name,
+              pct: +o.value,
+            })),
+            cheap = opts.reduce((a, b) => (b.pct < a.pct ? b : a)),
+            myOpt = sel.options[sel.selectedIndex],
+            myCom = x.s * +myOpt.value,
+            cheapCom = x.s * cheap.pct,
+            ahorroAnual = (myCom - cheapCom) * 12,
+            clp = (n) => "$" + Math.round(n).toLocaleString("es-CL");
+          $("#afpVerdict").innerHTML =
+            ahorroAnual > 0
+              ? `<b>Veredicto de AFP:</b> en ${myOpt.dataset.name} pagás <b>${clp(myCom)}/mes</b> de comisión; la más barata (${cheap.name}) te costaría ${clp(cheapCom)} — cambiarte ahorra <b>${clp(ahorroAnual)}/año</b>. El trámite es online en <a href="https://www.spensiones.cl" target="_blank" rel="nofollow noopener">spensiones.cl</a>.`
+              : `<b>Veredicto de AFP:</b> ya estás en la comisión más baja del sistema (${myOpt.dataset.name}, 0,49%): pagás ${clp(myCom)}/mes y no hay ahorro por cambiarte.`;
         }
         $("#go").onclick = go;
         go();

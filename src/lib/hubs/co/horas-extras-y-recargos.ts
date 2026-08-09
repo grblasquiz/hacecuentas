@@ -284,6 +284,11 @@ export const hub: HubData = {
       date: '2025',
     },
     {
+      name: 'Ministerio del Trabajo de Colombia — reclamos y quejas laborales por horas extras no pagadas',
+      url: 'https://www.mintrabajo.gov.co',
+      publisher: 'Ministerio del Trabajo',
+    },
+    {
       name: 'Ley 50 de 1990, art. 22 — límite de horas extras diarias y semanales',
       url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=281',
       publisher: 'Función Pública',

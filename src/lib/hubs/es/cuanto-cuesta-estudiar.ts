@@ -29,7 +29,9 @@ export const hub: HubData = {
   siloHref: '/es/educacion',
 
   eyebrow: 'Guía de costes y becas',
-  h1: '¿Cuánto me va a costar estudiar y llego a beca?',
+  // Alineado con el H1 visible del mockup (MasterOficialTituloPropioExperience):
+  // el schema no puede prometer un H1 distinto al que se ve en la página.
+  h1: '¿Máster oficial o título propio? Compará antes.',
   lede:
     'El precio de estudiar en España depende de tres cosas que casi nunca se miran juntas: los créditos que tiene el título, el precio del crédito que fija tu comunidad autónoma y si entras o no en beca. Entre una pública con beca y una privada sin ella hay una diferencia de decenas de miles de euros por el mismo título.',
   stamps: ['Precio del crédito por comunidad', 'Umbrales de las becas del Ministerio', '5 calculadoras dentro'],

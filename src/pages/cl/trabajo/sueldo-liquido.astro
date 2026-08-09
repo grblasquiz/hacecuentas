@@ -186,6 +186,21 @@ const schema = {
             : ' · no llegas al tramo gravado de ' + TASAS.exentoUtm.toLocaleString('es-CL') + ' UTM, no pagas Impuesto Único');
       }
 
+      // Veredicto de AFP: la cotización del 10% es igual en todas; lo único que
+      // cambia entre AFP es la comisión, así que el ahorro por cambiarse es
+      // directamente la diferencia de comisión sobre la misma base imponible.
+      const cheapest = AFP.reduce((a, b) => (b.comision < a.comision ? b : a));
+      const baseCom = Math.min(bruto, TOPE_AFP_SALUD);
+      const cheapestCom = baseCom * (cheapest.comision / 100);
+      const ahorroAfpAnual = (r.com - cheapestCom) * 12;
+      sub +=
+        ahorroAfpAnual > 0
+          ? ' · Veredicto de AFP: en ' + afpSel.nombre + ' pagás ' + clp(r.com) +
+            '/mes de comisión; la más barata (' + cheapest.nombre + ') te costaría ' + clp(cheapestCom) +
+            ' — cambiarte ahorra ' + clp(ahorroAfpAnual) + '/año. El trámite es online (spensiones.cl).'
+          : ' · Veredicto de AFP: ya estás en la comisión más baja del sistema (' + cheapest.nombre + ', ' +
+            cheapest.comision.toFixed(2).replace('.', ',') + '%); no hay ahorro por cambiarte.';
+
       rows.push({ k: 'AFP — cotización obligatoria', ref: '10% · DL 3.500', v: r.afp });
       rows.push({ k: 'AFP — comisión de ' + afpSel.nombre, ref: afpSel.comision.toFixed(2).replace('.', ',') + '% de la renta imponible', v: r.com });
       rows.push({

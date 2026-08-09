@@ -27,6 +27,12 @@
   const trackedAt = new WeakMap<Element, number>();
   const viewed = new WeakSet<Element>();
   const inputStarted = new WeakSet<Element>();
+  // Detección pasiva para runtimes que calculan oninput (sin click en botón):
+  // si el usuario interactúa y el bloque de resultado muta, es un uso real.
+  const observedRoots = new WeakSet<Element>();
+  const autoTracked = new WeakSet<Element>();
+  const lastInteraction = new WeakMap<Element, number>();
+  const autoTimers = new WeakMap<Element, number>();
 
   function sessionId(): string {
     try {
@@ -98,6 +104,8 @@
     const now = performance.now();
     if (now - (trackedAt.get(root) || 0) < 600) return;
     trackedAt.set(root, now);
+    // Una vez registrado un uso (botón o pasivo), la detección pasiva no vuelve a sumar.
+    autoTracked.add(root);
 
     const slug = location.pathname.replace(/^\/|\/$/g, '') || 'inicio';
     const params = {
@@ -124,6 +132,34 @@
     funnel('hc_calculator_success');
   }
 
+  function armResultObserver(root: Element): void {
+    if (observedRoots.has(root) || autoTracked.has(root)) return;
+    observedRoots.add(root);
+    const resultNode =
+      root.querySelector('[aria-live], .result, #result, output, .breakdown') || root;
+    const observer = new MutationObserver(() => {
+      if (autoTracked.has(root)) {
+        observer.disconnect();
+        return;
+      }
+      // Sólo cuenta si la mutación llega poco después de una interacción del usuario
+      // (evita animaciones, relojes u otros cambios autónomos del runtime).
+      if (performance.now() - (lastInteraction.get(root) || 0) > 1500) return;
+      const prev = autoTimers.get(root);
+      if (prev) clearTimeout(prev);
+      autoTimers.set(
+        root,
+        window.setTimeout(() => {
+          if (autoTracked.has(root)) return;
+          autoTracked.add(root);
+          observer.disconnect();
+          track(root);
+        }, 400),
+      );
+    });
+    observer.observe(resultNode, { childList: true, characterData: true, subtree: true });
+  }
+
   registerViews();
   document.addEventListener('astro:page-load', registerViews);
 
@@ -133,7 +169,10 @@
       const target = event.target as Element | null;
       if (!target) return;
       const root = hubRoot(target);
-      if (!root || inputStarted.has(root)) return;
+      if (!root) return;
+      lastInteraction.set(root, performance.now());
+      armResultObserver(root);
+      if (inputStarted.has(root)) return;
       inputStarted.add(root);
       funnel('hc_calculator_input_started');
     },
@@ -144,11 +183,16 @@
     'click',
     (event) => {
       const button = (event.target as Element | null)?.closest('button, [role="button"]');
-      if (!button || button.matches(EXCLUDED_BUTTON)) return;
+      if (!button) return;
       const root = hubRoot(button);
       if (!root) return;
+      // Switches/modos/presets recalculan el resultado: cuentan como interacción
+      // para la detección pasiva, aunque no sean el botón primario.
+      lastInteraction.set(root, performance.now());
+      armResultObserver(root);
+      if (button.matches(EXCLUDED_BUTTON)) return;
       const primaryControl =
-        button.matches('.go, .primary, [type="submit"]') ||
+        button.matches('.go, .primary, .calcbtn, [type="submit"]') ||
         /(?:calc|calculate|update|submit|result)/i.test(button.id);
       if (!primaryControl && !ACTION_TEXT.test(button.textContent || '')) return;
       const form = button.closest('form') || root.querySelector('form');

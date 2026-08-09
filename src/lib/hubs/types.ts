@@ -160,6 +160,14 @@ export interface HubData {
   audience?: 'AR' | 'global';
 
   /**
+   * Ids de casos (de `cases.items`) a comparar lado a lado con los MISMOS
+   * inputs. OPCIONAL (Nivel 1): sin este campo no se renderiza nada nuevo.
+   * Requiere que el hub sea ramificado y que su compute(valores, caso) sea
+   * puro respecto del caso recibido (la firma actual ya lo es).
+   */
+  compareCases?: string[];
+
+  /**
    * Mercado del hub, cuando no es Argentina. Los hubs de país viven bajo su
    * propio prefijo (`slug: 'co/impuestos/renta'` → /co/impuestos/renta), que es
    * donde ya vivían sus calculadoras y donde el hreflang tiene sentido. Sin
@@ -222,4 +230,15 @@ export interface HubResult {
   position?: number;
   /** Etiqueta de la posición ("Semana 24", "IMC 23,1 — normal"). */
   positionLabel?: string;
+  /**
+   * Veredicto accionable (Nivel 1 "salas de decisión"). OPCIONAL: si compute()
+   * no lo devuelve, el render es EXACTAMENTE el histórico. Cuando está, la
+   * plantilla lo pinta destacado en el answer-strip con una clase por tono.
+   */
+  verdict?: { title: string; copy?: string; tone?: 'ok' | 'warn' | 'info' };
+  /**
+   * Filas del bloque "¿Y si cambia?" (sensibilidad ±10% del dato principal).
+   * OPCIONAL: sin él, el bloque no se renderiza. Ver src/lib/hubs/sensitivity.ts.
+   */
+  sensitivity?: Array<{ label: string; value: string }>;
 }

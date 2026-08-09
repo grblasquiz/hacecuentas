@@ -1,0 +1,41 @@
+---
+/**
+ * Comparación de casos lado a lado (Nivel 1 "salas de decisión").
+ *
+ * Shell estático: las columnas se llenan desde el runtime de
+ * DecisionHubClassic, que re-ejecuta el MISMO compute(valores, caso) del hub
+ * con cada caso declarado en `data.compareCases` y los mismos inputs.
+ *
+ * Degradación: si el hub no declara `compareCases`, este componente no emite
+ * NADA (el que lo monta ya filtra); si compute todavía no corrió o algún caso
+ * tira, la sección queda `hidden` — cero cambio respecto del render histórico.
+ *
+ * Qué le falta a un hub para adoptarlo: sólo agregar
+ * `compareCases: ['id-caso-a', 'id-caso-b']` en su .ts, con ids existentes en
+ * `cases.items`. Requiere compute puro respecto del caso recibido (la firma
+ * actual compute(valores, caso) ya lo garantiza en todos los hubs ramificados).
+ */
+export interface Props {
+  cases: Array<{ id: string; label: string }>;
+  title: string;
+  kicker: string;
+}
+const { cases, title, kicker } = Astro.props;
+---
+{cases.length > 1 && (
+  <section class="panel compare-panel" id="compare-grid" hidden>
+    <div class="panel-head">
+      <p class="panel-kicker">{kicker}</p>
+      <h2>{title}</h2>
+    </div>
+    <div class="compare-cols">
+      {cases.map((c) => (
+        <div class="compare-col" data-compare-case={c.id}>
+          <b>{c.label}</b>
+          <span class="compare-val">—</span>
+          <span class="compare-sub"></span>
+        </div>
+      ))}
+    </div>
+  </section>
+)}

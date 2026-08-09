@@ -118,6 +118,40 @@ const schema = {
       const baseReguladoraMensual = salarioMensual;
       const topeMin = P.iprem * (P.topeMin[hijos] || P.topeMin['0']);
       const topeMax = P.iprem * (P.topeMax[hijos] || P.topeMax['0']);
+      // ── ERTE: suspensión, no extinción — sin finiquito ni indemnización ──
+      if (id === 'erte') {
+        const prestacionErte = Math.min(Math.max(baseReguladoraMensual * P.pctPrimeros180, topeMin), topeMax);
+        return {
+          total: eur(prestacionErte),
+          sub:
+            'Cobrarías ' +
+            eur(prestacionErte) +
+            ' al mes de prestación del SEPE mientras dure el ERTE · sin indemnización, porque el contrato no se extingue',
+          rows: [
+            { k: 'Salario bruto anual', ref: 'Base del cálculo', v: brutoAnual },
+            { k: 'Base reguladora mensual', ref: 'Bruto anual ÷ 12', v: baseReguladoraMensual },
+            {
+              k: 'Prestación mensual durante el ERTE',
+              ref: Math.round(P.pctPrimeros180 * 100) + '% de la base, entre topes',
+              v: prestacionErte,
+              extra: true,
+            },
+            { k: 'Tope mínimo mensual', ref: 'Según hijos a cargo', v: topeMin },
+            { k: 'Tope máximo mensual', ref: 'Según hijos a cargo', v: topeMax },
+            { k: 'Indemnización', ref: 'No corresponde: el contrato sigue vivo', v: 0 },
+            {
+              k: 'Consumo de paro',
+              ref: 'Depende de la norma que ampare el ERTE: confírmalo en el SEPE',
+              v: 0,
+            },
+          ],
+          chart: [{ label: 'Prestación mensual', value: Math.round(prestacionErte), tone: 'good' }],
+          format: 'unit',
+          unit: '€',
+          decimals: 0,
+        };
+      }
+
       const tieneParo = id !== 'fin' && diasCotizados >= P.diasMinimos;
       const brutoPrimeros = Math.min(Math.max(baseReguladoraMensual * P.pctPrimeros180, topeMin), topeMax);
       const brutoResto = Math.min(Math.max(baseReguladoraMensual * P.pctDesde181, topeMin), topeMax);

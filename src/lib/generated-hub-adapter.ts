@@ -1,7 +1,17 @@
+import { computeSensitivity } from './hubs/sensitivity';
+
 type OutputConfig = {
   id: string;
   label?: string;
   primary?: boolean;
+  /**
+   * Formato por output (Nivel 1). Antes el adapter aplicaba UN formato global
+   * a todas las filas: minutos y USD salían como $ARS. Si el config lo declara,
+   * pisa el formato global para esa fila; si no, todo sigue como antes.
+   */
+  format?: 'ars' | 'plain' | 'unit';
+  unit?: string;
+  decimals?: number;
 };
 
 type CalculatorConfig = {
@@ -80,6 +90,25 @@ function stripPresentationMarkdown(value: string): string {
 
 function outputLabel(config: CalculatorConfig, key: string): string {
   return config.outputs.find((output) => output.id === key)?.label || key.replace(/_/g, ' ');
+}
+
+/**
+ * Veredicto genérico a partir del `_insight` de la fórmula (Nivel 1).
+ * Conservador a propósito: sólo cuando el insight ARRANCA con una recomendación
+ * inequívoca. Ante la duda, sin verdict y el hub queda exactamente como hoy.
+ */
+const VERDICT_RX =
+  /^(te conviene|no te conviene|conviene|no conviene|recomendamos|no recomendamos|recomendado|no recomendado|mejor\s|evit[áa]|s[íi],|no,)/i;
+
+function deriveVerdict(insight: string): { title: string; copy?: string; tone: 'ok' | 'warn' } | undefined {
+  const text = stripPresentationMarkdown(insight || '');
+  if (!text || !VERDICT_RX.test(text)) return undefined;
+  const match = text.match(/^(.{10,160}?[.!?])\s+(\S[\s\S]*)$/);
+  const title = match ? match[1].trim() : text.length <= 160 ? text : undefined;
+  if (!title) return undefined;
+  const copy = match ? match[2].trim() : undefined;
+  const tone: 'ok' | 'warn' = /^(no\b|evit)/i.test(text) ? 'warn' : 'ok';
+  return copy ? { title, copy, tone } : { title, tone };
 }
 
 function displayValue(value: unknown, numeric: number, locale: string): string {
@@ -175,11 +204,17 @@ export function adaptGeneratedHubResult(
     };
   }
 
-  const rows = numericOutputs.slice(0, 12).map((item) => ({
-    k: outputLabel(config, item.key),
-    v: item.numeric,
-    format,
-  }));
+  // Formato POR FILA: respeta lo que declare cada output y cae al global.
+  const rows = numericOutputs.slice(0, 12).map((item) => {
+    const outputConfig = config.outputs.find((o) => o.id === item.key);
+    return {
+      k: outputLabel(config, item.key),
+      v: item.numeric,
+      format: outputConfig?.format || format,
+      ...(outputConfig?.unit ? { unit: outputConfig.unit } : {}),
+      ...(outputConfig?.decimals != null ? { decimals: outputConfig.decimals } : {}),
+    };
+  });
   const fallbackChart = numericOutputs.slice(0, 6).map((item, index) => ({
     label: outputLabel(config, item.key),
     value: Math.abs(item.numeric),
@@ -191,6 +226,30 @@ export function adaptGeneratedHubResult(
     plainText(output.resumen) ||
     config.title;
 
+  // Verdict genérico desde el _insight (sólo si arranca con recomendación clara).
+  const verdict = deriveVerdict(plainText(output._insight));
+
+  // Sensibilidad ±10% del primer campo numérico del caso. 2 ejecuciones extra
+  // envueltas en try/catch adentro del helper: si la fórmula tira, sin bloque.
+  let sensitivity: Array<{ label: string; value: string }> = [];
+  const driverKey = config.fields.find((key) => {
+    const v = Number(values[key]);
+    return Number.isFinite(v) && v !== 0;
+  });
+  if (driverKey && primaryKey) {
+    sensitivity = computeSensitivity(
+      (perturbed) => formulaMap[id](perturbed),
+      values,
+      driverKey,
+      {
+        driverLabel: driverKey.replace(/_/g, ' '),
+        extract: (result) => numericValue(result?.[primaryKey]),
+        format: (n) => n.toLocaleString(locale, { maximumFractionDigits: 2 }),
+        locale,
+      },
+    );
+  }
+
   return {
     total: primaryNumeric === null
       ? String(primaryRaw).trim()
@@ -199,5 +258,7 @@ export function adaptGeneratedHubResult(
     rows,
     chart: chartFromFormula(output._chart, fallbackChart),
     format,
+    ...(verdict ? { verdict } : {}),
+    ...(sensitivity.length ? { sensitivity } : {}),
   };
 }

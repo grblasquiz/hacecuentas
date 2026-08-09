@@ -9,7 +9,7 @@ export const hub: HubData = {
   locale: 'pe',
   eyebrow: "Perú · Construir en Perú",
   h1: "¿Cuánto cuesta construir mi casa?",
-  lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 1 fórmulas originales y reúne la decisión en una sola página.",
+  lede: "Elige tu caso y completa sólo sus campos. Este hub conserva la fórmula original y reúne la decisión en una sola página.",
   stamps: ['1 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
   cases: { title: "¿Qué necesitas calcular?", intro: "Elige un caso; el hub aplica su fórmula original.", items: [

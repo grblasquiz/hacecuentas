@@ -24,6 +24,7 @@ import '../../styles/hub.css';
 import type { HubData } from '../../lib/hubs/types';
 import { hubsOfSilo } from '../../lib/hubs/registry';
 import HubRelatedPosts from './HubRelatedPosts.astro';
+import CompareGrid from './CompareGrid.astro';
 
 export interface Props {
   data: HubData;
@@ -135,6 +136,8 @@ type ChromeStrings = {
   composicion: string; sinDatos: string; respuesta: string; queCorresponde: string;
   entra: string; ojo: string; plazo: string; faq: string; fuentes: string;
   advanced: string; advancedClose: string;
+  ejemplo: string; tuEstimacion: string; proximoPaso: string; ySiCambia: string;
+  comparar: string;
 };
 const CHROME: Record<string, ChromeStrings> = {
   /* Argentina: el default cuando el hub no declara `locale`. Único con voseo. */
@@ -147,6 +150,8 @@ const CHROME: Record<string, ChromeStrings> = {
     entra: 'Entra en el cálculo', ojo: 'Ojo con esto', plazo: 'Plazo:',
     faq: 'Preguntas frecuentes', fuentes: 'Fuentes',
     advanced: 'Afinar con más datos', advancedClose: 'Ver sólo lo esencial',
+    ejemplo: 'Ejemplo', tuEstimacion: 'Tu estimación', proximoPaso: 'Próximo paso',
+    ySiCambia: '¿Y si cambia?', comparar: 'Comparado con los otros casos',
   },
   'es-neutro': {
     home: 'Inicio', migas: 'Migas', tuCaso: 'Tu caso', otroCaso: 'Mi caso es otro',
@@ -157,6 +162,8 @@ const CHROME: Record<string, ChromeStrings> = {
     entra: 'Entra en el cálculo', ojo: 'Ojo con esto', plazo: 'Plazo:',
     faq: 'Preguntas frecuentes', fuentes: 'Fuentes',
     advanced: 'Ajustar con más datos', advancedClose: 'Ver sólo lo esencial',
+    ejemplo: 'Ejemplo', tuEstimacion: 'Tu estimación', proximoPaso: 'Próximo paso',
+    ySiCambia: '¿Y si cambia?', comparar: 'Comparado con los otros casos',
   },
   en: {
     home: 'Home', migas: 'Breadcrumb', tuCaso: 'Your situation', otroCaso: "That's not my case",
@@ -167,6 +174,8 @@ const CHROME: Record<string, ChromeStrings> = {
     entra: "What's included", ojo: 'Watch out for this', plazo: 'Deadline:',
     faq: 'Frequently asked questions', fuentes: 'Sources',
     advanced: 'Fine-tune with more details', advancedClose: 'Show essentials only',
+    ejemplo: 'Example', tuEstimacion: 'Your estimate', proximoPaso: 'Next step',
+    ySiCambia: 'What if it changes?', comparar: 'Compared with the other cases',
   },
   pt: {
     home: 'Início', migas: 'Navegação', tuCaso: 'O seu caso', otroCaso: 'Meu caso é outro',
@@ -177,9 +186,11 @@ const CHROME: Record<string, ChromeStrings> = {
     entra: 'Entra no cálculo', ojo: 'Atenção a isto', plazo: 'Prazo:',
     faq: 'Perguntas frequentes', fuentes: 'Fontes',
     advanced: 'Ajustar com mais dados', advancedClose: 'Mostrar só o essencial',
+    ejemplo: 'Exemplo', tuEstimacion: 'Sua estimativa', proximoPaso: 'Próximo passo',
+    ySiCambia: 'E se mudar?', comparar: 'Comparado com os outros casos',
   },
 };
-CHROME['pt-pt'] = { ...CHROME.pt, actualiza: 'Atualiza à medida que preenche os seus dados', queCorresponde: 'O que lhe corresponde' };
+CHROME['pt-pt'] = { ...CHROME.pt, actualiza: 'Atualiza à medida que preenche os seus dados', queCorresponde: 'O que lhe corresponde', tuEstimacion: 'A sua estimativa' };
 for (const l of ['cl', 'co', 'mx', 'uy', 'py', 've', 'pe', 'ec', 'do', 'es']) CHROME[l] = CHROME['es-neutro'];
 
 const T = (data.locale && CHROME[data.locale]) || CHROME.ar;
@@ -240,6 +251,22 @@ const otherCases = cases.slice(1);
 // competir visualmente con la acción principal hasta que el usuario lo abre.
 const progressiveFields = data.fields.length > 6;
 const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
+
+/*
+ * Nivel 1 "salas de decisión" — todo aditivo y con fallback:
+ * - Un "plazo" que en realidad es un sello de revisión ("Datos revisados el…")
+ *   no es un próximo paso: se filtra acá y en el runtime con la misma regla.
+ * - `compareItems`: casos declarados en data.compareCases resueltos contra
+ *   cases.items. Sin el campo, el array queda vacío y no se emite nada.
+ */
+const esSelloDeRevision = (s: string) => /^\s*(datos?|dados?|data)\s+(revisad|reviewed)/i.test(s || '');
+const staticPlazo =
+  !data.cases && data.answer?.plazo && !esSelloDeRevision(data.answer.plazo)
+    ? data.answer.plazo
+    : '';
+const compareItems = (data.compareCases ?? [])
+  .map((id) => cases.find((c) => c.id === id))
+  .filter((c): c is NonNullable<typeof c> => !!c);
 ---
 
 <div class="hc-hub">
@@ -275,7 +302,7 @@ const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
             <path class="line" stroke-width="3" d="M9 30h-5M12 20l-4-4M84 39h7M83 30l5-5"/>
           </svg>
         </figure>
-        <p class="res-lbl">{data.resultLabel}</p>
+        <p class="res-lbl">{data.resultLabel} <span class="estim-chip" id="estim-chip">{T.ejemplo}</span></p>
         <p class="res-val" id="total">{CERO}</p>
         <p class="res-sub" id="sub"></p>
         <div class="result-status"><span class="pulse"></span>{T.actualiza}</div>
@@ -377,7 +404,18 @@ const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
           <ul class="viz-legend" id="viz-legend"></ul>
         </div>
         <div class="breakdown" id="breakdown"></div>
+        {/* Nivel 1: sensibilidad ±10%. Oculto salvo que el resultado la traiga. */}
+        <div class="sensitivity" id="sensitivity" hidden>
+          <h3>{T.ySiCambia}</h3>
+          <ul id="sensitivity-list"></ul>
+        </div>
+        {/* Nivel 1: próximo paso (plazo del caso activo o del answer estático). */}
+        <p class="next-step" id="next-step" hidden={!staticPlazo}>
+          <b>{T.proximoPaso}:</b> <span id="next-step-text">{staticPlazo}</span>
+        </p>
       </section>
+
+      <CompareGrid cases={compareItems} title={T.comparar} kicker={T.comoSeForma} />
 
       <section class="panel context-panel">
         <div class="panel-head">
@@ -385,6 +423,11 @@ const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
           <h2>{T.queCorresponde}</h2>
         </div>
         <div class="answer-strip">
+          {/* Nivel 1: veredicto de compute(). Oculto = comportamiento histórico. */}
+          <div class="verdict" id="verdict" hidden>
+            <b id="verdict-title"></b>
+            <span id="verdict-copy"></span>
+          </div>
           <b id="answer-title">{defaultCase?.answer ?? data.answer?.title}</b>
           <span id="answer-copy">{defaultCase?.yes[0] ?? data.answer?.copy}</span>
         </div>
@@ -495,7 +538,7 @@ const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
   @media(max-width:680px){.hc-hub .editorial-review{grid-template-columns:1fr}}
 </style>
 
-<script is:inline define:vars={{ PUNTO_DECIMAL, NUM_LOCALE, MONEDA, CASES: cases, HAS_CASES: !!data.cases }}>
+<script is:inline define:vars={{ PUNTO_DECIMAL, NUM_LOCALE, MONEDA, CASES: cases, HAS_CASES: !!data.cases, COMPARE: data.compareCases ?? [], CHIP_USER: T.tuEstimacion }}>
   (function () {
     const $ = (id) => document.getElementById(id);
     const ars = (n) => MONEDA + Math.round(n || 0).toLocaleString(NUM_LOCALE);
@@ -578,6 +621,36 @@ const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
 
     function paint(res) {
       if (!res) return;
+
+      // --- Nivel 1: veredicto (opcional; sin él, todo igual que siempre) ---
+      const verdictEl = $('verdict');
+      if (verdictEl) {
+        if (res.verdict && res.verdict.title) {
+          verdictEl.hidden = false;
+          verdictEl.className = 'verdict tone-' + (res.verdict.tone || 'info');
+          $('verdict-title').textContent = res.verdict.title;
+          $('verdict-copy').textContent = res.verdict.copy || '';
+        } else {
+          verdictEl.hidden = true;
+        }
+      }
+
+      // --- Nivel 1: sensibilidad "¿Y si cambia?" (opcional) ---
+      const sensEl = $('sensitivity');
+      if (sensEl) {
+        const items = res.sensitivity || [];
+        const list = $('sensitivity-list');
+        list.replaceChildren();
+        items.forEach((it) => {
+          const li = document.createElement('li');
+          const k = document.createElement('span'); k.textContent = it.label;
+          const v = document.createElement('b'); v.textContent = it.value;
+          li.append(k, v);
+          list.appendChild(li);
+        });
+        sensEl.hidden = !items.length;
+      }
+
       // Formato por defecto del resultado; cada fila puede pisarlo.
       const base = { format: res.format, unit: res.unit, decimals: res.decimals };
       const f = (v, over) => fmt(v, Object.assign({}, base, over || {}));
@@ -668,7 +741,43 @@ const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
     }
 
     function run() {
-      if (computeFn) paint(computeFn(values(), current));
+      if (!computeFn) return;
+      const vals = values();
+      paint(computeFn(vals, current));
+      runCompare(vals);
+    }
+
+    // Recalcular en cada tecla es barato pero ruidoso: 300ms de debounce.
+    let runTimer = null;
+    function runSoon() {
+      clearTimeout(runTimer);
+      runTimer = setTimeout(run, 300);
+    }
+
+    /**
+     * Nivel 1: comparación de casos lado a lado. Sólo actúa si el hub declaró
+     * `compareCases` (COMPARE no vacío) y el shell #compare-grid existe.
+     * Re-ejecuta el mismo compute con cada caso y los mismos inputs; si algún
+     * caso tira o no devuelve total, la sección queda oculta como hasta hoy.
+     */
+    function runCompare(vals) {
+      const grid = $('compare-grid');
+      if (!grid || !computeFn || !COMPARE.length || !HAS_CASES) return;
+      let painted = 0;
+      grid.querySelectorAll('[data-compare-case]').forEach((col) => {
+        const c = CASES.find((x) => x.id === col.dataset.compareCase);
+        if (!c) return;
+        try {
+          const r = computeFn(vals, c);
+          if (r && r.total) {
+            col.querySelector('.compare-val').textContent = r.total;
+            col.querySelector('.compare-sub').textContent = r.sub || '';
+            col.classList.toggle('is-active', current && c.id === current.id);
+            painted++;
+          }
+        } catch (e) { /* caso roto: no se pinta y no rompe el resto */ }
+      });
+      grid.hidden = painted < 2;
     }
 
     function fill(el, arr) {
@@ -688,6 +797,15 @@ const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
       fill($('yes-list'), c.yes);
       fill($('warn-list'), c.warn);
       $('plazo').textContent = c.plazo;
+      // Nivel 1: "Próximo paso" bajo el resultado con el plazo del caso activo.
+      // Un sello tipo "Datos revisados el…" no es un próximo paso: se oculta.
+      const nextStep = $('next-step');
+      if (nextStep) {
+        const plazoTxt = (c.plazo || '').trim();
+        const esSello = /^\s*(datos?|dados?|data)\s+(revisad|reviewed)/i.test(plazoTxt);
+        nextStep.hidden = !plazoTxt || esSello;
+        if (!nextStep.hidden) $('next-step-text').textContent = plazoTxt;
+      }
       $('calc-name').textContent = c.label;
       $('answer-title').textContent = c.answer;
       $('answer-copy').textContent = c.yes[0] || '';
@@ -703,6 +821,7 @@ const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
     }
 
     $('go').addEventListener('click', () => {
+      markUserEstimate();
       run();
       document.querySelector('.result-panel').scrollIntoView({
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
@@ -721,7 +840,18 @@ const essentialFieldCount = progressiveFields ? 4 : data.fields.length;
       if (icon) icon.textContent = open ? '−' : '＋';
     });
 
-    document.querySelectorAll('[data-field]').forEach((el) => el.addEventListener('input', run));
+    // Nivel 1: chip "Ejemplo" → "Tu estimación" en el primer input del usuario.
+    const chip = $('estim-chip');
+    let userTouched = false;
+    function markUserEstimate() {
+      if (userTouched || !chip) return;
+      userTouched = true;
+      chip.textContent = CHIP_USER;
+      chip.classList.add('is-user');
+    }
+
+    document.querySelectorAll('[data-field]').forEach((el) =>
+      el.addEventListener('input', () => { markUserEstimate(); runSoon(); }));
     document.querySelectorAll('[data-thousands]').forEach((el) =>
       el.addEventListener('input', (e) => {
         const v = num(e.target.value);

@@ -415,7 +415,9 @@ const heightRows = Array.from({ length: 12 }, (_, index) => {
         const difference = weight - maxWeight;
         action.dataset.tone = 'high';
         actionTitle.textContent = `Te separan ${decimal(difference)} kg del rango orientativo`;
-        actionCopy.textContent = `Esa es la diferencia hasta ${decimal(maxWeight)} kg, el límite superior de referencia para tu altura. Una reducción gradual del 5–10% ya puede ser clínicamente relevante.`;
+        const weeksMin = Math.ceil(difference / 1);
+        const weeksMax = Math.ceil(difference / 0.5);
+        actionCopy.textContent = `Esa es la diferencia hasta ${decimal(maxWeight)} kg, el límite superior de referencia para tu altura. A un ritmo sostenible de 0,5 a 1 kg por semana (más rápido se pierde músculo), son entre ${weeksMin} y ${weeksMax} semanas. Una reducción gradual del 5–10% ya puede ser clínicamente relevante.`;
       } else {
         action.dataset.tone = 'healthy';
         actionTitle.textContent = 'Estás dentro del rango orientativo';
@@ -453,7 +455,7 @@ const heightRows = Array.from({ length: 12 }, (_, index) => {
     const whtr = waist / heightCm;
     document.querySelector('#imc-whtr')!.textContent = waist ? decimal(whtr, 2) : '—';
     document.querySelector('#imc-whtr-copy')!.textContent = waist
-      ? (bmi >= 35 ? 'Con IMC ≥ 35 esta relación aporta poca información adicional.' : whtr < .4 ? 'Valor bajo: revisá que la medición sea correcta.' : whtr < .5 ? 'Sin aumento de riesgo por adiposidad central.' : whtr < .6 ? 'Adiposidad central aumentada.' : 'Adiposidad central alta.')
+      ? (bmi >= 35 ? 'Con IMC ≥ 35 esta relación aporta poca información adicional.' : whtr < .4 ? 'Valor bajo: revisá que la medición sea correcta.' : whtr < .5 ? 'Sin aumento de riesgo por adiposidad central.' : (bmi >= 18.5 && bmi < 25) ? 'IMC normal pero cintura sobre la mitad de la altura: igual indica grasa abdominal de riesgo. Consultalo.' : whtr < .6 ? 'Adiposidad central aumentada.' : 'Adiposidad central alta.')
       : 'Agregá tu cintura para estimarla.';
     const ageNote = document.querySelector<HTMLElement>('#imc-age-note');
     if (ageNote) ageNote.hidden = age < 65;
