@@ -1,15 +1,16 @@
 # Hacé Cuentas — robots.txt
 #
-# Política 2026 (revisada 2026-05-01):
-# Maximizar visibilidad en search ENGINES tradicionales + AI search
-# (ChatGPT, Claude, Gemini, Perplexity, etc.). En 2026 el tráfico
-# orgánico tradicional cae mientras AI search crece 10x — conviene
-# permitir LLMs para ser citados como fuente.
+# Política 2026:
+# - El contenido público queda disponible para buscadores tradicionales y AI search.
+# - Las rutas técnicas y el panel editorial quedan fuera del crawl.
+# - Sólo se bloquean scrapers comerciales no-IA sin valor de búsqueda.
 #
-# Bloqueamos solo scrapers comerciales sin valor SEO (Bytespider,
-# Diffbot, Omgili, etc.) y rutas técnicas internas.
+# Los crawlers de búsqueda y AI (OAI-SearchBot, ChatGPT-User, Claude-User,
+# PerplexityBot, Google-Extended, GPTBot, ClaudeBot, etc.) heredan este grupo
+# global. No se duplican grupos de permiso: un grupo específico reemplaza al
+# grupo * y puede reabrir rutas técnicas por accidente.
 
-# ──────── Default (todos los bots) ────────
+# ──────── Default: contenido público ────────
 User-agent: *
 Allow: /
 Allow: /api/calcs-index.json
@@ -22,379 +23,11 @@ Disallow: /embed/
 Disallow: /embed.js
 Disallow: /search-index.json
 
-# ──────── Search engines tradicionales ────────
-User-agent: Googlebot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
+# ──────── Bloqueados: scrapers comerciales no-IA ────────
+# robots.txt no es una barrera de seguridad; estas reglas sólo expresan la
+# política para crawlers que respetan el Robots Exclusion Protocol.
 
-User-agent: Bingbot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
-
-User-agent: DuckDuckBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
-
-User-agent: Applebot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
-
-User-agent: YandexBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
-
-# ──────── AI / LLM search bots — PERMITIDOS (cambio de política 2026-05-01) ────────
-# Razón: aparecer en AI Overviews + ChatGPT + Claude + Perplexity respuestas.
-# El tráfico desde AI search convierte 2-27x premium vs organic search.
-
-# OpenAI: GPTBot (training), ChatGPT-User (live citations), OAI-SearchBot (search)
-User-agent: GPTBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
-
-User-agent: ChatGPT-User
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-User-agent: OAI-SearchBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Anthropic: ClaudeBot (training), Claude-Web (research mode), anthropic-ai (legacy)
-User-agent: ClaudeBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
-
-User-agent: Claude-Web
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-User-agent: anthropic-ai
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Google Gemini (separado de Googlebot — opt-in explícito para AI training)
-User-agent: Google-Extended
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
-
-# Perplexity (search engine basado en LLMs, alta conversión)
-User-agent: PerplexityBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
-
-User-agent: Perplexity-User
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Apple Intelligence (Siri, Apple Search)
-User-agent: Applebot-Extended
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Common Crawl — base de training data de muchos LLMs públicos (Llama, Mistral, etc.)
-User-agent: CCBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Meta (Llama models)
-User-agent: Meta-ExternalAgent
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-User-agent: FacebookBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# You.com
-User-agent: YouBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Amazon (Amazon Q + Alexa AI — ahora cita fuentes y manda tráfico,
-# revisado 2026-05-13: mismo tratamiento que GPTBot / ClaudeBot)
-User-agent: Amazonbot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-Disallow: /embed/
-Disallow: /embed.js
-Disallow: /search-index.json
-
-# ──────── Search engines regionales (LATAM-relevant via diaspora + viajes) ────────
-
-# Naver (Corea — usa búsqueda propia, no Bing)
-User-agent: Yeti
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Seznam.cz (Chequia — buscador propio top en CZ)
-User-agent: SeznamBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Google adicional bots (AdsBot, Mobile, etc)
-User-agent: GoogleOther
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Huawei Petal Search (mercados emergentes)
-User-agent: PetalBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Mojeek (independent search engine, privacy-focused — usa crawler propio)
-User-agent: MojeekBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Sogou (Tencent search — usuarios chinos en LATAM)
-User-agent: Sogou web spider
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Exalead (Dassault Systèmes, used in France/EU)
-User-agent: Exabot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# ──────── AI search emergentes 2026 ────────
-
-# Yep (Ahrefs new search engine, 2024+)
-User-agent: YepBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Phind (dev-focused AI search)
-User-agent: PhindBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Andi (conversational AI search)
-User-agent: Andibot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Komo AI
-User-agent: KomoBot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Qwant (Francia — independent EU search)
-User-agent: Qwantify
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Marginalia Search (independent, slow web)
-User-agent: search.marginalia.nu
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# Stract (open source search engine)
-User-agent: stractbot
-Allow: /
-Allow: /api/calcs-index.json
-Allow: /api/calcs-slim.json
-Allow: /api/calcs-top.json
-Allow: /api/calc/
-Disallow: /admin
-Disallow: /api/
-
-# ──────── Bloqueados: scrapers comerciales sin valor SEO ────────
-# Estos no traen tráfico ni mejoran AI visibility — solo consumen ancho de banda.
-
-# Bytespider (TikTok/ByteDance scraper — no agrega tráfico, opaco)
+# Bytespider (TikTok/ByteDance scraper)
 User-agent: Bytespider
 Disallow: /
 
@@ -406,49 +39,25 @@ Disallow: /
 User-agent: ImagesiftBot
 Disallow: /
 
-# Omgili / Omgilibot (scraping for sale, no valor SEO)
+# Omgili / Omgilibot (scraping comercial)
 User-agent: Omgilibot
 Disallow: /
 
 User-agent: Omgili
 Disallow: /
 
-# Timpibot (AI scraper poco transparente)
-User-agent: Timpibot
-Disallow: /
-
-# Cohere (no es buscador público, training-only)
-User-agent: cohere-ai
-Disallow: /
-
-User-agent: cohere-training-data-crawler
-Disallow: /
-
-# Mistral (Le Chat — buscador IA público con citación). Permitido explícitamente
-# (paridad con .well-known/llms-allowed.txt).
-User-agent: MistralAI-User
-Allow: /
-
-# ──────── Sitemap ────────
-# Index principal (Google sigue los sub-sitemaps automáticamente vía sitemap index).
+# ──────── Sitemaps ────────
+# Índice canónico; contiene los sub-sitemaps activos del sitio.
 Sitemap: https://hacecuentas.com/sitemap.xml
-# Sitemap-fresh: URLs modificadas en últimos 14 días — Bing/Yandex freshness
+
+# URLs modificadas recientemente.
 Sitemap: https://hacecuentas.com/sitemap-fresh.xml
-# RSS feed: discovery alternativo para Yandex/Seznam/Naver y AI engines (Claude/Perplexity)
-# que parsean RSS para detectar contenido nuevo. Google lo ignora silenciosamente
-# (acepta solo XML sitemaps válidos) — cero impacto en crawl budget de Google.
+
+# Google acepta RSS 2.0 como sitemap; el feed sólo cubre URLs recientes.
 Sitemap: https://hacecuentas.com/rss.xml
-# Sub-sitemaps declarados explícitamente: Bing y otros crawlers que no
-# auto-procesan sitemap-index los descubren acá directo. Resuelve el warning
-# "Important pages missing in sitemaps" de BWT (2026-05-25).
-#
-# 28-07-2026: los sitemaps por país (sitemap-{co,cl,mx,es,en,pt}.xml) y
-# sitemap-argentina.xml se generaban desde las calculadoras sueltas de cada
-# mercado. Con la consolidación en hubs esas calcs dejaron de existir, los
-# sitemaps ya no se emiten y quedaban acá declarados dando 404 — un error
-# reportable en GSC y BWT. Los hubs de los 13 mercados viven hoy en
-# sitemap-hubs.xml. Antes de agregar una línea acá, verificá que la URL
-# devuelva 200.
+
+# Sub-sitemaps activos declarados explícitamente para crawlers que no siguen
+# automáticamente un sitemap index. Verificar HTTP 200 antes de agregar otro.
 Sitemap: https://hacecuentas.com/sitemap-hubs.xml
 Sitemap: https://hacecuentas.com/sitemap-core.xml
 Sitemap: https://hacecuentas.com/sitemap-priority.xml
