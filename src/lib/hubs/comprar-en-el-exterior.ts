@@ -45,14 +45,14 @@ const DISCLAIMER_TAX =
 
 export const hub: HubData = {
   slug: 'impuestos/comprar-en-el-exterior',
-  title: 'Comprar en el exterior: cuánto pagás de impuestos y qué te sale puesto en casa',
+  title: '¿Cuánto me cuesta realmente importar una compra? | Hacé Cuentas',
   description:
     'Calculá el precio final de una compra en Temu, Shein, AliExpress o Amazon puesta en tu casa: producto, envío, IVA, derechos sobre el excedente de la franquicia de US$400 y gastos de despacho.',
   silo: 'Impuestos',
   siloHref: '/impuestos',
 
   eyebrow: 'Aduana y régimen de envíos',
-  h1: '¿Cuánto me sale de verdad traerlo de afuera?',
+  h1: '¿Cuánto me cuesta realmente importar una compra?',
   lede:
     'El precio del carrito no es lo que pagás. Elegí cómo te llega el paquete y mirá el costo final puesto en tu casa: producto, envío, IVA, derechos si te pasás de la franquicia y los gastos que cobra el courier.',
   stamps: [

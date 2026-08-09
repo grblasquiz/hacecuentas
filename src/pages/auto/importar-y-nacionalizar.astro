@@ -1,0 +1,32 @@
+---
+export const prerender = true;
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub } from '../../lib/hubs/es/importar-y-nacionalizar';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'FAQPage', mainEntity: hub.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+    { '@type': 'ListItem', position: 3, name: hub.h1, item: canonical },
+  ] },
+] };
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="AR" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script>
+  import { importarAuto } from '../../lib/hubs/es/new-hub-math';
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (H) H.onCompute(importarAuto);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>
