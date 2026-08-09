@@ -4,7 +4,10 @@ import { footballEventAllowed, footballNameAllowed } from '../../lib/football-po
 
 export const prerender = false;
 
-const ESPN = 'https://site.api.espn.com/apis';
+const ESPN_HOSTS = [
+  'https://site.web.api.espn.com/apis',
+  'https://site.api.espn.com/apis',
+];
 const argentina = {
   key: 'ar',
   country: 'Argentina',
@@ -31,10 +34,14 @@ const dateKey = (value: Date, timeZone: string) => new Intl.DateTimeFormat('en-C
   day: '2-digit',
 }).format(value).replaceAll('-', '');
 
-const fetchJson = async (url: string) => {
-  const response = await fetch(url, { headers: { accept: 'application/json' } });
-  if (!response.ok) throw new Error(`ESPN ${response.status}`);
-  return response.json();
+const fetchJson = async (path: string) => {
+  let lastError = new Error('ESPN sin respuesta');
+  for (const host of ESPN_HOSTS) {
+    const response = await fetch(`${host}${path}`, { headers: { accept: 'application/json' } });
+    if (response.ok) return response.json();
+    lastError = new Error(`ESPN ${response.status} (${host})`);
+  }
+  throw lastError;
 };
 
 const cleanStandings = (payload: any) => (payload?.children || []).map((group: any) => ({
@@ -49,8 +56,8 @@ const cleanStandings = (payload: any) => (payload?.children || []).map((group: a
 
 const fetchLeague = async (code: string, start: string, end: string) => {
   const [scoreboard, standings] = await Promise.all([
-    fetchJson(`${ESPN}/site/v2/sports/soccer/${code}/scoreboard?dates=${start}-${end}&limit=100`),
-    fetchJson(`${ESPN}/v2/sports/soccer/${code}/standings?season=${new Date().getFullYear()}`),
+    fetchJson(`/site/v2/sports/soccer/${code}/scoreboard?dates=${start}-${end}&limit=100`),
+    fetchJson(`/v2/sports/soccer/${code}/standings?season=${new Date().getFullYear()}`),
   ]);
 
   return {
@@ -107,7 +114,8 @@ export const GET: APIRoute = async ({ url }) => {
         'cdn-cache-control': 'max-age=60',
       },
     });
-  } catch {
+  } catch (error) {
+    console.error('football-api-upstream', error instanceof Error ? error.message : String(error));
     return new Response(JSON.stringify({ error: 'fuente de fútbol temporalmente no disponible' }), {
       status: 502,
       headers: {
