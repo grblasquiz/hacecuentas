@@ -47,14 +47,14 @@ export const hub: HubData = {
     "id": "c1__fechaInicio",
     "label": "Calculadora de días hábiles — Paraguay 2026 (con feriados): Fecha de inicio",
     "type": "date",
-    "value": "2026-07-28",
+    "value": "2026-08-01",
     "thousands": false
   },
   {
     "id": "c1__fechaFin",
     "label": "Calculadora de días hábiles — Paraguay 2026 (con feriados): Fecha final",
     "type": "date",
-    "value": "2026-07-28",
+    "value": "2026-12-31",
     "thousands": false
   },
   {

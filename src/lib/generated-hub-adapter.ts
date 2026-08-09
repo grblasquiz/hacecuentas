@@ -45,7 +45,8 @@ export function numericValue(value: unknown): number | null {
       const parts = normalized.split(separator);
       const groupedThousands =
         parts.length > 2 ||
-        (parts.length === 2 && parts[1].length === 3 && /[$€£¥₲₡₹]|S\/|R\$|RD\$|Gs/i.test(value));
+        (parts.length === 2 && parts[1].length === 3 &&
+          /[$€£¥₲₡₹]|S\/|R\$|RD\$|Gs|\b(?:USD|ARS|COP|CLP|PEN|MXN|UYU|BRL|EUR|BOB|PYG|DOP|VES|GTQ|CRC|HNL|NIO|PAB)\b/i.test(value));
       normalized = groupedThousands
         ? parts.join('')
         : parts.slice(0, -1).join('') + '.' + parts.at(-1);
@@ -128,6 +129,9 @@ export function adaptGeneratedHubResult(
 
   const values: Record<string, unknown> = {};
   for (const key of config.fields) values[key] = allValues[`${id}__${key}`];
+  // Las fórmulas multi-idioma leen i.__lang ('es' | 'en' | 'pt'); sin esto los
+  // hubs pt/en renderizaban los textos en español.
+  if (!('__lang' in values)) values.__lang = locale.toLowerCase().startsWith('pt') ? 'pt' : locale.toLowerCase().startsWith('en') ? 'en' : 'es';
 
   let output: Record<string, any>;
   try {

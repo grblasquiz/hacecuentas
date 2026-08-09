@@ -60,7 +60,7 @@ export const hub: HubData = {
     "id": "c1__valor",
     "label": "New Car Registration Fee (DNRPA) in Argentina 2026: Vehicle value",
     "type": "number",
-    "value": 1,
+    "value": 20000000,
     "step": 0.01,
     "thousands": false
   },
@@ -131,7 +131,7 @@ export const hub: HubData = {
     "id": "c2__valor",
     "label": "Transfer Your Car Registration to Another Province: Vehicle Value",
     "type": "number",
-    "value": 1,
+    "value": 20000000,
     "step": 0.01,
     "thousands": false
   },
@@ -139,7 +139,7 @@ export const hub: HubData = {
     "id": "c3__valor",
     "label": "Used Car Transfer Cost: Car Value",
     "type": "number",
-    "value": 1,
+    "value": 20000000,
     "step": 0.01,
     "thousands": false
   },

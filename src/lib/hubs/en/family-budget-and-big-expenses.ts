@@ -99,7 +99,7 @@ export const hub: HubData = {
     "id": "c1__monto",
     "label": "50/30/20 Family Budget Rule: Monthly Net Income (Take-Home)",
     "type": "number",
-    "value": 1,
+    "value": 5000,
     "step": 0.01,
     "thousands": false,
     "help": "After-tax pay deposited to checking. Subtract federal, state, FICA, 401k, and health premiums from gross. Example: $5,000."

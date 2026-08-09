@@ -212,7 +212,7 @@ export const hub: HubData = {
     "id": "c5__km",
     "label": "Mudança: custo frete + embalagem: Quilômetros a percorrer",
     "type": "number",
-    "value": 1,
+    "value": 10,
     "step": 0.01,
     "thousands": false,
     "help": "Distância em quilômetros pela rota real (Google Maps), não em linha reta."
@@ -221,7 +221,7 @@ export const hub: HubData = {
     "id": "c5__m3",
     "label": "Mudança: custo frete + embalagem: Volume de móveis",
     "type": "number",
-    "value": 1,
+    "value": 20,
     "step": 0.01,
     "thousands": false,
     "help": "Volume estimado em m³. Kitnet ≈ 10–12 m³, ap 2Q ≈ 18–28 m³, ap 3Q ≈ 30–40 m³."

@@ -73,24 +73,24 @@ export const hub: HubData = {
     "id": "c1__ancho",
     "label": "Medida de Pneu: Calcule o Diâmetro Real: Largura",
     "type": "number",
-    "value": 1,
-    "step": 0.01,
+    "value": 205,
+    "step": 5,
     "thousands": false
   },
   {
     "id": "c1__aspect",
     "label": "Medida de Pneu: Calcule o Diâmetro Real: Aspecto",
     "type": "number",
-    "value": 1,
-    "step": 0.01,
+    "value": 55,
+    "step": 5,
     "thousands": false
   },
   {
     "id": "c1__rin",
     "label": "Medida de Pneu: Calcule o Diâmetro Real: Aro",
     "type": "number",
-    "value": 1,
-    "step": 0.01,
+    "value": 16,
+    "step": 1,
     "thousands": false
   },
   {

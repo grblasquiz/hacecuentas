@@ -245,7 +245,7 @@ export const hub: HubData = {
     "id": "c6__dolarOficial",
     "label": "Total Cost of a US B1/B2 Tourist Visa — Full Breakdown: Official Exchange Rate (USD/ARS)",
     "type": "number",
-    "value": 1,
+    "value": 1520,
     "step": 0.01,
     "thousands": false
   }

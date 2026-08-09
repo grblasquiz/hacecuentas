@@ -156,7 +156,7 @@ export const hub: HubData = {
     "id": "c3__tarifa",
     "label": "¿Cuánto ahorrás cambiando a electrodoméstico A+++?: Tarifa R$/kWh",
     "type": "number",
-    "value": 80,
+    "value": 0.9,
     "step": 0.01,
     "thousands": false
   }
