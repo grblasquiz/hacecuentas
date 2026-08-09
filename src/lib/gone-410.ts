@@ -490,4 +490,23 @@ export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
   "/uy/calculadora-jubilacion-bps-uruguay",
 
   // 7-17: newborns 7-16 con 0 tráfico + contenido incompleto (thin/sin-fuente) → 410 hasta mejorar
+  // Crawl 404 cleanup 2026-08-09: legacy surfaces without a current equivalent.
+  "/categoria/entretenimiento/2",
+  "/categoria/vida/4",
+  "/categoria/vida/5",
+  "/categoria/vida/6",
+  "/categoria/vida/6",
+  "/financiamento-imobiliario",
+  "/hop-utilization-boil-time",
+  "/juros-compostos",
+  "/magnesium-daily-required",
+  "/mx/calculadora-erte-vs-ere-diferencias-cuantia-espana",
+  "/mx/calculadora-modelo-347-operaciones-superiores-3005-espana",
+  "/mx/calculadora-modelo-720-bienes-extranjero-espana",
+  "/mx/calculadora-pias-plan-individual-ahorro-sistematico-espana",
+  "/mx/calculadora-renta-vitalicia-mayores-65-espana-fiscalidad",
+  "/position-size-forex-pips-risk",
+  "/reajuste-aluguel",
+  "/rol-ira-401k-argentino-equivalente",
+  "/words-per-page",
 ]);
