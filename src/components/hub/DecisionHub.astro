@@ -117,7 +117,13 @@ const baseStyles = data.locale === 'pt'
           ? latamCoreStyles + (['uy', 'ec', 'do', 've'].includes(data.locale) ? '\n' + latamCountryStyles : '')
         : enCoreStyles;
 const sharedScript = ['uy', 'ec', 'do', 've'].includes(data.locale) ? latamCountryScript : '';
-const sourceHasH1 = !!source && /<h1\b/i.test(source);
+// Los mockups LATAM montan su H1 desde el canvas compartido en JavaScript;
+// el HTML fuente sólo trae el contenedor vacío, así que el chequeo textual no
+// alcanza y el soporte editorial terminaría agregando un segundo H1.
+const sourceHasH1 = !!source && (
+  /<h1\b/i.test(source) ||
+  (['pe', 'co', 'py', 'uy', 'ec', 'do', 've'].includes(data.locale ?? '') && sharedScript.includes('<h1'))
+);
 ---
 
 {source

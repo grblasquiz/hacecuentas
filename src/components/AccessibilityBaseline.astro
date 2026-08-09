@@ -30,9 +30,15 @@
         if (control.closest('label')) return;
         var wrap = control.closest('.field, .smonth, .input-wrap, .form-group');
         var label = wrap && wrap.querySelector('label');
-        if (!label) return;
-        if (!control.id) control.id = 'hc-auto-field-' + (++serial);
-        label.setAttribute('for', control.id);
+        if (label) {
+          if (!control.id) control.id = 'hc-auto-field-' + (++serial);
+          label.setAttribute('for', control.id);
+          return;
+        }
+        // Los campos compactos de matrices suelen describirse con title en
+        // lugar de repetir cuatro labels visibles en la misma fila.
+        var title = control.getAttribute('title');
+        if (title) control.setAttribute('aria-label', title);
       });
     }
 
