@@ -52,7 +52,7 @@ const CALC_COLLECTIONS = [
   ['calcs-do', 'do'],
   ['calcs-pt', 'pt'],
   ['calcs-pt-pt', 'pt-pt'],
-];
+].filter(([collection]) => existsSync(join(ROOT, 'src', 'content', collection)));
 
 function normalizePath(value) {
   try {

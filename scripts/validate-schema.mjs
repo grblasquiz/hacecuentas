@@ -45,14 +45,24 @@ const REQUIRED_FIELDS = {
   FAQPage: ['mainEntity'],
   BreadcrumbList: ['itemListElement'],
   Article: ['headline'],
-  WebApplication: ['name', 'applicationCategory'],
-  SoftwareApplication: ['name', 'applicationCategory'],
+  WebApplication: ['name'],
+  SoftwareApplication: ['name'],
   Dataset: ['name', 'description'],
-  ItemList: ['itemListElement'],
-  Organization: ['name', 'url'],
+  ItemList: [],
+  Organization: ['name'],
   WebSite: ['url'],
   SiteNavigationElement: ['name'],
   CollectionPage: ['name', 'url'],
+};
+
+// Recomendaciones que no deben invalidar JSON-LD válido. Publishers de citas
+// no siempre tienen URL propia y un ItemList vacío puede ser correcto mientras
+// no haya datos publicados todavía.
+const RECOMMENDED_FIELDS = {
+  WebApplication: ['applicationCategory', 'description', 'offers', 'dateModified'],
+  SoftwareApplication: ['applicationCategory', 'description', 'offers', 'dateModified'],
+  ItemList: ['itemListElement'],
+  Organization: ['url'],
 };
 
 function getTypes(obj) {
@@ -71,6 +81,11 @@ function validateNode(node, path, errors, warnings) {
     for (const field of required) {
       if (node[field] === undefined || node[field] === null || node[field] === '') {
         errors.push(`${path}: ${type} falta campo obligatorio "${field}"`);
+      }
+    }
+    for (const field of RECOMMENDED_FIELDS[type] || []) {
+      if (node[field] === undefined || node[field] === null || node[field] === '' || (field === 'itemListElement' && Array.isArray(node[field]) && node[field].length === 0)) {
+        warnings.push(`${path}: ${type} recomienda campo "${field}"`);
       }
     }
   }

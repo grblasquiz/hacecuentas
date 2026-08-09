@@ -5,9 +5,10 @@ interface Props {
   source: string;
   baseStyles?: string;
   sharedScript?: string;
+  seoTitle?: string;
 }
 
-const { source, baseStyles = '', sharedScript = '' } = Astro.props;
+const { source, baseStyles = '', sharedScript = '', seoTitle = '' } = Astro.props;
 const styles = [...source.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)]
   .map((match) => match[1])
   .join('\n');
@@ -21,6 +22,24 @@ const content = body
   .replace(/<header\b[\s\S]*?<\/header>/i, '')
   .replace(/<footer\b[\s\S]*?<\/footer>/i, '')
   .replace(/<script\b[\s\S]*?<\/script>/gi, '');
+
+const escapeHtml = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+// Algunos mockups LATAM nacen con un #app vacío y montan todo su hero desde
+// JS. Dejamos un H1 real dentro de ese contenedor para que el HTML inicial
+// tenga una señal inequívoca; el script lo toma y lo reutiliza en el hero
+// hidratado, por lo que no quedan dos títulos después de cargar.
+const ssrContent = seoTitle.trim()
+  ? content.replace(
+      /(<div\s+id=["']app["'])\s*>(\s*)<\/div>/i,
+      `$1><h1 data-hub-seo-title>${escapeHtml(seoTitle.trim())}</h1>$2</div>`,
+    )
+  : content;
 
 // Los mockups son documentos completos y usan selectores cortos como `.card`,
 // `.hero` y `body`. Se prefijan al contenedor para que nunca alteren el header,
@@ -59,7 +78,7 @@ const scopedScripts = scripts
 
 <div class="approved-mockup-page" data-page={dataPage}>
   <div hidden set:html={headerControls}></div>
-  <Fragment set:html={content} />
+  <Fragment set:html={ssrContent} />
 </div>
 <style is:global set:html={scopedStyles}></style>
 <style is:global>
@@ -85,6 +104,13 @@ const scopedScripts = scripts
      cada celda debe poder encogerse dentro del viewport, especialmente cuando
      un input o un texto largo fija el ancho mínimo de la tarjeta. */
   .approved-mockup-page * { min-width: 0; }
+  .approved-mockup-page [data-hub-seo-title] {
+    margin: 2rem 1rem;
+    max-width: 850px;
+    font-size: clamp(2.6rem, 5vw, 5rem);
+    line-height: .96;
+    letter-spacing: -.055em;
+  }
   /* Los hubs de categoría comparten un hero de dos columnas. Sus escenas
      decorativas tienen anchos intencionales en desktop, pero no deben fijar el
      ancho de la columna de texto en pantallas chicas. */

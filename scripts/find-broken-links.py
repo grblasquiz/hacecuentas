@@ -304,7 +304,14 @@ def detect(idx: dict) -> dict:
                                           "source": g["__file"], "field": "sections.calcs"})
     for b in idx["blog"]:
         for cs in b.get("relatedCalcs") or []:
-            if cs not in slugs_by_coll["calcs"]:
+            # El blog admite dos contratos: slug de calc (sin '/') o ruta
+            # directa a un hub/índice (con '/'). Las rutas directas ya pasan
+            # por la resolución de hubs en src/pages/blog/[slug].astro.
+            if isinstance(cs, str) and cs.startswith('/'):
+                if not resolves(cs):
+                    broken_lookup.append({"path": cs, "ref": cs,
+                                          "source": b["__file"], "field": "relatedCalcs"})
+            elif cs not in slugs_by_coll["calcs"]:
                 broken_lookup.append({"path": "/" + cs, "ref": cs,
                                       "source": b["__file"], "field": "relatedCalcs"})
         for rp in b.get("relatedPosts") or []:

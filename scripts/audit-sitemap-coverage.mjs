@@ -39,6 +39,9 @@ const SITE = 'https://hacecuentas.com';
 const ALLOWLIST = new Set([
   '/404',
   '/410',
+  // Índice HTML enlazado desde el footer; sirve para descubrimiento humano y
+  // no necesita entrar al XML sitemap, reservado para páginas de contenido.
+  '/mapa-del-sitio',
 ]);
 
 // Segmentos utilitarios fuera del sitemap a propósito (ver generate-sitemap.ts):
@@ -154,6 +157,7 @@ for (const abs of walk(PAGES)) {
   // noindex declarado en la página (prop del Layout o meta directa).
   const src = readFileSync(abs, 'utf8');
   if (/noindex/.test(src)) continue;
+  if (retired.has(url)) continue;
   missing.push({ url, file: `src/pages/${rel}` });
 }
 

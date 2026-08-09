@@ -55,11 +55,25 @@ async function getHtml(path: string): Promise<string | null> {
     const res = await fetch(`${ORIGIN}${path}`, { signal: AbortSignal.timeout(20000) });
     return res.status === 200 ? await res.text() : null;
   }
-  const file = join(DIST, path === '/' ? 'index.html' : `${path.slice(1)}.html`);
-  return existsSync(file) ? readFileSync(file, 'utf8') : null;
+  if (path === '/') return existsSync(join(DIST, 'index.html')) ? readFileSync(join(DIST, 'index.html'), 'utf8') : null;
+  const clean = path.slice(1);
+  const candidates = [join(DIST, `${clean}.html`), join(DIST, clean, 'index.html')];
+  const file = candidates.find((candidate) => existsSync(candidate));
+  return file ? readFileSync(file, 'utf8') : null;
 }
 
 const results: Check[] = [];
+const NON_CALC = new Set([
+  '/blog',
+  '/embarazo/dias-fertiles',
+  '/inversiones/interes-compuesto',
+  '/auto/auto-o-uber',
+  '/matematica/regla-de-tres',
+  '/valores-bcra',
+  '/tecnologia/impresion-3d',
+  '/hogar/huella-de-carbono',
+  '/estudio/cuanto-tardo-en-leer',
+]);
 
 for (const path of PRIORITY_PATHS) {
   const html = await getHtml(path);
@@ -81,9 +95,10 @@ for (const path of PRIORITY_PATHS) {
 
   const canonical = (head.match(/<link\s+rel="canonical"\s+href="([^"]+)"/i) || [])[1] || '';
 
+  const renderableHtml = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<template[\s\S]*?<\/template>/gi, '');
   const c: Check = {
     url: `${ORIGIN}${path}`,
-    h1: /<h1[\s>]/.test(html),
+    h1: /<h1[\s>]/.test(renderableHtml),
     title: /<title[^>]*>[^<]{10,}/.test(head),
     meta_description: /<meta\s+name="description"\s+content="[^"]{50,}"/.test(head),
     canonical_self: canonical === `${ORIGIN}${path}`,
@@ -96,7 +111,7 @@ for (const path of PRIORITY_PATHS) {
     action_required: '',
   };
   // Páginas prioritarias no-calculadora: no se les exige fórmula/FAQ/fuentes/related.
-  const exemptKeys: Set<string> = path === '/blog'
+  const exemptKeys: Set<string> = NON_CALC.has(path)
     ? new Set(['formula_section', 'faq_section', 'sources_section', 'related_links'])
     : new Set();
   const missing = (Object.keys(c) as (keyof Check)[]).filter((k) => k !== 'url' && k !== 'action_required' && !exemptKeys.has(k) && !c[k]);

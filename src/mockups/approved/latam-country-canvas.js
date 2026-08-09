@@ -30,6 +30,8 @@ const PAGES={
 
 const q=new URLSearchParams(location.search), key=document.body.dataset.page, p=PAGES[key];
 const money=n=>new Intl.NumberFormat("es-419",{maximumFractionDigits:0}).format(Math.max(0,n));
+const app=document.getElementById("app");
+const ssrTitle=app?.querySelector("[data-hub-seo-title]")?.textContent?.trim()||"";
 function calc(){
  const v=[...document.querySelectorAll("input")].map(x=>+x.value||0), base=v[0], second=v[1], third=v[2];
  const out=[base*.18+second*.31,Math.max(0,base-second-third),base+second*8+third*3];
@@ -42,8 +44,8 @@ const motifs={
  garage:"▰ ▱ ▰",cart:"▥  +  ◫",ribbon:"━━ 12 ━━ 24 ━━",timeline:"42 ───── 60 ── 65",deed:"▤  propiedad  ✓",week:"L M X J V S D",receipt:"TOTAL · detalle · control",network:"○──●──○",steps:"1 → 2 → 3 → 4",meters:"▮▮▮  ▮▮  ▮",calendar:"ENE  MAR  AGO  DIC",tree:"causa ┬ derechos ┬ total",dossier:"▤ ▤ ▤",race:"PESOS ━━━━ DÓLAR",dealer:"inicial → cuotas → llave",table:"hogar · comida · ahorro",envelopes:"▱   ▱",idcard:"TITULAR  •  COBERTURA",dashboard:"deuda  ◉  consumo",exchange:"USD ⇄ Bs",payslip:"BRUTO − APORTES = NETO",planner:"HOY  /  MES  /  RESERVA"
 };
 document.title=p.t+" · Hacé Cuentas";
-document.getElementById("app").innerHTML=`<header class="site-header"><div class="shell nav"><a class="brand">▣ Hacé Cuentas</a><nav>Trabajo · Dinero · Hogar · Vida</nav><button class="nav-action">Buscar</button></div></header>
-<main><section class="hero" style="background:${p.bg}"><div class="shell"><span class="kicker" style="color:${p.a}">${p.c} · ${p.k}</span><h1>${p.t}</h1><p>${p.d}</p></div></section>
+app.innerHTML=`<header class="site-header"><div class="shell nav"><a class="brand">▣ Hacé Cuentas</a><nav>Trabajo · Dinero · Hogar · Vida</nav><button class="nav-action">Buscar</button></div></header>
+<main><section class="hero" style="background:${p.bg}"><div class="shell"><span class="kicker" style="color:${p.a}">${p.c} · ${p.k}</span><h1>${ssrTitle||p.t}</h1><p>${p.d}</p></div></section>
 <section class="work"><div class="shell canvas ${p.layout}">
  <aside class="card controls"><div class="badge" style="background:${p.a}">${p.icon}</div><h2>Armá tu caso</h2>${p.fields.map((f,i)=>`<div class="field"><label>${f[0]}</label><input type="number" value="${f[1]}" min="0" data-i="${i}"></div>`).join("")}<button class="primary" style="background:${p.a}" id="calculate">Actualizar escenario</button><button class="ghost" id="reset">Restablecer</button></aside>
  <article class="story"><div class="visual" style="--accent:${p.a}"><div class="motif">${motifs[p.layout]}</div><span>${p.k}</span></div>

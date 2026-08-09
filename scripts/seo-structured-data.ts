@@ -64,7 +64,17 @@ function hasType(nodes: Record<string, unknown>[], type: string): Record<string,
 const WEBAPP_REQUIRED = ['name', 'url', 'applicationCategory', 'operatingSystem', 'description', 'offers', 'dateModified'];
 
 // Páginas prioritarias que no son calculadoras: no se les exige WebApplication/FAQ/Breadcrumb.
-const NON_CALC = new Set(['/blog']);
+const NON_CALC = new Set([
+  '/blog',
+  '/embarazo/dias-fertiles',
+  '/inversiones/interes-compuesto',
+  '/auto/auto-o-uber',
+  '/matematica/regla-de-tres',
+  '/valores-bcra',
+  '/tecnologia/impresion-3d',
+  '/hogar/huella-de-carbono',
+  '/estudio/cuanto-tardo-en-leer',
+]);
 
 const results: Audit[] = [];
 

@@ -19,8 +19,10 @@ interface Props {
   topics: string;       // 'salario mínimo, prestaciones, retención, UVT…'
   dataLink?: string;    // '/co/datos-...'
   dataLabel?: string;   // '📊 …'
+  countryContext?: string;
+  countryAdvice?: string;
 }
-const { calcs: suppliedCalcs, prefix, audience, country, lang, topics, dataLink, dataLabel } = Astro.props as Props;
+const { calcs: suppliedCalcs, prefix, audience, country, lang, topics, dataLink, dataLabel, countryContext, countryAdvice } = Astro.props as Props;
 // Los catálogos locales no pueden depender sólo de los JSON de calcs: desde la
 // consolidación editorial, la mayoría de las herramientas vive dentro de hubs
 // de decisión y aparece en current-tools-index. Antes, si había aunque fuera
@@ -164,6 +166,14 @@ const schema = {
     <p>No encontramos calculadoras que coincidan con tu filtro.</p>
   </div>
 
+  {countryContext && countryAdvice && (
+    <section class="country-context" aria-labelledby="country-context-title">
+      <h2 id="country-context-title">Cómo usar estas calculadoras en {country}</h2>
+      <p>{countryContext}</p>
+      <p>{countryAdvice}</p>
+    </section>
+  )}
+
   <section class="catalog-guide" aria-labelledby="catalog-guide-title">
     <h2 id="catalog-guide-title">{lang.startsWith('pt') ? 'Como usar este catálogo' : 'Cómo usar este catálogo'}</h2>
     {lang.startsWith('pt') ? (
@@ -217,6 +227,9 @@ const schema = {
 <style>
   .breadcrumbs { display: flex; gap: 0.5rem; font-size: 0.8125rem; color: var(--text-subtle); margin-bottom: 1.25rem; }
   .catalog-guide { margin: 2.5rem 0 0; padding: 1.5rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--surface, #fff); }
+  .country-context { margin: 2.5rem 0 0; padding: 1.5rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--surface, #fff); }
+  .country-context h2 { margin: 0 0 0.75rem; font-size: 1.35rem; }
+  .country-context p { max-width: 76ch; margin: 0.65rem 0 0; color: var(--text-muted); line-height: 1.65; }
   .catalog-guide h2 { margin: 0 0 0.75rem; font-size: 1.35rem; }
   .catalog-guide p { max-width: 76ch; margin: 0.65rem 0 0; color: var(--text-muted); line-height: 1.65; }
   .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
