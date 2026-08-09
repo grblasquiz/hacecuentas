@@ -20,7 +20,17 @@ import {
 export async function getStaticPaths() {
   const posts = import.meta.glob<any>('../../content/blog/*.json', { eager: true });
   const all = Object.values(posts).map((mod: any) => mod.default || mod);
-  return filterByIncremental(all, 'blog').map((p: any) => ({
+  // Estas notas tienen rutas dedicadas porque necesitan una composición o
+  // actualización específica. Evitar que también las genere el catch-all,
+  // que producía warnings de colisión durante el build.
+  const dedicatedRoutes = new Set([
+    'como-calcular-aguinaldo-2026',
+    'costo-de-vida-argentina-2026',
+    'escala-ganancias-2026-argentina-tabla-completa-explicada',
+    'informe-financiero-argentina-2026-07',
+    'salario-minimo-mexico-2027-que-se-espera',
+  ]);
+  return filterByIncremental(all, 'blog').filter((p: any) => !dedicatedRoutes.has(p.slug)).map((p: any) => ({
     params: { slug: p.slug },
     props: { post: p },
   }));

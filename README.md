@@ -2,11 +2,13 @@
 
 [![Deploy](https://img.shields.io/badge/deploy-Cloudflare%20Workers-orange?logo=cloudflare)](https://hacecuentas.com)
 [![Astro](https://img.shields.io/badge/Astro-6.x-blueviolet?logo=astro)](https://astro.build)
-[![Tests](https://img.shields.io/badge/tests-572%20passing-brightgreen)](https://github.com/grblasquiz/hacecuentas/actions)
+[![Tests](https://img.shields.io/badge/tests-CI-brightgreen)](https://github.com/grblasquiz/hacecuentas/actions)
 [![License](https://img.shields.io/badge/code-MIT-blue)](LICENSE)
 [![Datos](https://img.shields.io/badge/datos-CC--BY%204.0-success)](https://hacecuentas.com/datasets)
 
 **[Hacé Cuentas](https://hacecuentas.com)** reúne herramientas gratuitas, explicaciones y datasets económicos para Argentina y Latinoamérica. Las páginas canónicas agrupan cálculos relacionados para responder una decisión completa, con fórmulas verificables, fuentes declaradas y ejecución privada en el navegador.
+
+El catálogo público reúne 600+ herramientas canónicas, con cobertura en español, portugués e inglés.
 
 - Sin registro ni muros de pago.
 - Cálculos ejecutados en el dispositivo del usuario.

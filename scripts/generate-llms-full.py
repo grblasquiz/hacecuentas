@@ -29,23 +29,6 @@ OUTPUT = ROOT / "public/llms-full.txt"
 SITE = "https://hacecuentas.com"
 MAX_BYTES = 2_000_000  # 2 MB cap
 
-# Calcs de colecciones país que merecen entrar aunque no sean audience AR
-# (campaña estacional agosto 2026, 14 mercados — todas con answerSnippet).
-EXTRA_CALC_FILES = [
-    "src/content/calcs-cl/calculadora-presupuesto-asado-18-fiestas-patrias-chile.json",
-    "src/content/calcs-co/calculadora-fecha-declaracion-renta-2026-colombia-cedula.json",
-    "src/content/calcs-do/calculadora-presupuesto-utiles-escolares-republica-dominicana.json",
-    "src/content/calcs-en/back-to-school-budget-calculator.json",
-    "src/content/calcs-en/sales-tax-holiday-2026-savings-calculator.json",
-    "src/content/calcs-es/calculadora-coste-vuelta-al-cole-2026.json",
-    "src/content/calcs-es/calculadora-devolucion-renta-2025-cuanto-tarda.json",
-    "src/content/calcs-mx/calculadora-gasto-regreso-clases-2026-mexico.json",
-    "src/content/calcs-pt-pt/calculadora-orcamento-regresso-as-aulas-2026.json",
-    "src/content/calcs-pt-pt/calculadora-reembolso-irs-2026-quando-recebo.json",
-    "src/content/calcs-pt/calculadora-orcamento-presente-dia-dos-pais.json",
-    "src/content/calcs-pt/calculadora-restituicao-imposto-renda-2026-lotes.json",
-]
-
 # Páginas .astro estáticas de eventos/actualidad (no viven en src/content/calcs,
 # así que se listan acá con su respuesta directa). Mantener las respuestas en
 # sync con el contenido de src/pages/*.astro.
@@ -224,22 +207,6 @@ preguntas frecuentes y fuentes oficiales.
     chunk = "".join(static_section)
     body_parts.append(chunk)
     total_bytes += len(chunk.encode("utf-8"))
-
-    # Sección 2: calcs destacadas de otros países (campañas estacionales).
-    extra_parts = []
-    for rel in EXTRA_CALC_FILES:
-        p = ROOT / rel
-        calc = load_calc(p) if p.exists() else None
-        if calc and calc.get("noindex") is not True and not is_restricted(calc):
-            # calcs-mx → /mx/<slug>, calcs-pt-pt → /pt-pt/<slug>, etc.
-            locale = p.parent.name.removeprefix("calcs-")
-            extra_parts.append(format_calc(calc, url_prefix=f"{locale}/"))
-        elif not p.exists():
-            print(f"  AVISO: extra calc no encontrada: {rel}")
-    if extra_parts:
-        chunk = "\n# Calculadoras destacadas de otros países\n" + "".join(extra_parts)
-        body_parts.append(chunk)
-        total_bytes += len(chunk.encode("utf-8"))
 
     body_parts.append("\n# Calculadoras Argentina\n")
     total_bytes += len(body_parts[-1].encode("utf-8"))

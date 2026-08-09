@@ -18,6 +18,7 @@ import Breadcrumbs from './Breadcrumbs.astro';
 import { WEEKEND_CLUSTERS } from '../lib/weekend-clusters';
 import { FINDE_HUBS, type FindeHubDef } from '../lib/fin-de-semana-hubs';
 import { ALL_HUBS } from '../lib/hubs/registry';
+import { PRUNING_REDIRECTS } from '../lib/pruning-redirects';
 
 interface Props {
   hub: FindeHubDef;
@@ -33,6 +34,7 @@ const canonical = `/fin-de-semana/${hub.slug}`;
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+const hubBySlug = new Map(ALL_HUBS.map((h) => [h.slug.replace(/^\//, ''), h]));
 const replacementHubBySlug = new Map<string, (typeof ALL_HUBS)[number]>();
 for (const currentHub of ALL_HUBS) {
   for (const replaced of currentHub.replaces || []) {
@@ -52,7 +54,17 @@ wantSlugs.push(...hub.extraSlugs);
 
 const seen = new Set<string>();
 const tools: Array<{ slug: string; icon: string; name: string; desc: string }> = [];
-const resolveCurrentSlug = (legacySlug: string) => bySlug.get(legacySlug)?.slug || replacementHubBySlug.get(legacySlug)?.slug;
+const resolveCurrentSlug = (legacySlug: string) => {
+  const current = bySlug.get(legacySlug)?.slug;
+  if (current) return current;
+  const replacement = replacementHubBySlug.get(legacySlug)?.slug;
+  if (replacement) return replacement;
+  // Algunas entradas históricas fueron podadas antes de declararse en
+  // `hub.replaces`. Resolverlas contra el mapa consolidado evita que el hub
+  // de fin de semana pierda herramientas silenciosamente.
+  const redirected = PRUNING_REDIRECTS[`/${legacySlug}`]?.replace(/^\//, '');
+  return redirected && (hubBySlug.has(redirected) || bySlug.has(redirected)) ? redirected : undefined;
+};
 for (const s of wantSlugs) {
   const c = bySlug.get(s);
   const replacementHub = replacementHubBySlug.get(s);
@@ -64,11 +76,12 @@ for (const s of wantSlugs) {
   }
   if (seen.has(resolvedSlug)) continue;
   seen.add(resolvedSlug);
+  const resolvedHub = hubBySlug.get(resolvedSlug);
   tools.push({
     slug: resolvedSlug,
     icon: c?.icon || '🧮',
-    name: c?.h1 || replacementHub?.h1 || c?.title?.replace(/\s*\|.*$/, '') || resolvedSlug,
-    desc: c?.answerSnippet ? String(c.answerSnippet).split('. ')[0] + '.' : (c?.description || replacementHub?.description || ''),
+    name: c?.h1 || replacementHub?.h1 || resolvedHub?.h1 || c?.title?.replace(/\s*\|.*$/, '') || resolvedSlug,
+    desc: c?.answerSnippet ? String(c.answerSnippet).split('. ')[0] + '.' : (c?.description || replacementHub?.description || resolvedHub?.description || ''),
   });
 }
 

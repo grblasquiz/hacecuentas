@@ -1,7 +1,7 @@
 /**
  * Sincroniza el conteo de calculadoras en los archivos ESTÁTICOS de public/
- * que no pueden importar src/lib/calc-counts.ts (llms.txt, ai.txt, openapi,
- * ai-plugin.json). Las páginas Astro ya usan calc-counts.ts directo.
+ * que no pueden importar src/lib/calc-counts.ts (llms.txt, ai.txt, README,
+ * openapi, ai-plugin.json). Las páginas Astro ya usan calc-counts.ts directo.
  *
  * Misma convención que calc-counts.ts: total real redondeado HACIA ABAJO a la
  * centena ("3.295 → 3.200+") para no over-promise. Corre en prebuild, así el
@@ -114,41 +114,8 @@ const TARGETS: Target[] = [
   },
   {
     file: 'README.md',
-    pattern: /Calculadoras Online Gratuitas \(\d[\d.,]*\+\)/,
-    replacement: `Calculadoras Online Gratuitas (${display}+)`,
-  },
-  {
-    // Badge shields.io: sin separador de miles, "+" URL-encoded.
-    file: 'README.md',
-    pattern: /calculadoras-\d+%2B/,
-    replacement: `calculadoras-${floored}%2B`,
-  },
-  {
-    file: 'README.md',
-    pattern: /\d[\d.,]*\+ calculadoras gratuitas/,
-    replacement: `${display}+ calculadoras gratuitas`,
-  },
-  // OJO: nada de /g acá — el README también tiene conteos parciales
-  // ("100+ calcs" de fútbol) que NO son el total. Patrones con contexto.
-  {
-    file: 'README.md',
-    pattern: /\d[\d.,]*\+ calcs\*\* entre/,
-    replacement: `${display}+ calcs** entre`,
-  },
-  {
-    file: 'README.md',
-    pattern: /\d[\d.,]*\+ calcs indexadas/,
-    replacement: `${display}+ calcs indexadas`,
-  },
-  {
-    file: 'README.md',
-    pattern: /\*\*\d[\d.,]*\+? calcs PT-BR\*\*/,
-    replacement: `**${ptDisplay}+ calcs PT-BR**`,
-  },
-  {
-    file: 'README.md',
-    pattern: /\[\+\d[\d.,]* calcs PT-BR\]/,
-    replacement: `[+${ptDisplay} calcs PT-BR]`,
+    pattern: /catálogo público reúne \d[\d.,]*\+ herramientas/,
+    replacement: `catálogo público reúne ${display}+ herramientas`,
   },
 ];
 

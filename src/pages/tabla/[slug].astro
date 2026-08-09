@@ -18,7 +18,11 @@ import {
 export async function getStaticPaths() {
   const tablas = import.meta.glob<any>('../../content/tablas/*.json', { eager: true });
   const all = Object.values(tablas).map((mod: any) => mod.default || mod);
-  return filterByIncremental(all, 'tablas').map((t: any) => ({
+  const dedicatedRoutes = new Set([
+    'tabla-escalas-ganancias-2026',
+    'tabla-imc-peso-altura',
+  ]);
+  return filterByIncremental(all, 'tablas').filter((t: any) => !dedicatedRoutes.has(t.slug)).map((t: any) => ({
     params: { slug: t.slug },
     props: { tabla: t },
   }));

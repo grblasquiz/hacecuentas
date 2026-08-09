@@ -90,9 +90,9 @@ export const GSC_QUERY_TARGETS: Record<string, string[]> = {
  * a la cabeza de familia, sin 301). El audit las reporta como canonical_consolidation.
  */
 export const GSC_ALIAS_301: Record<string, string> = {
-  '/calculadora-comision-mercadolibre-venta': '/calculadora-comision-venta-vendedor',
-  '/calculadora-mercadolibre-comision-venta': '/calculadora-comision-venta-vendedor',
-  '/calculadora-tiempo-lectura-libro-paginas': '/calculadora-tiempo-lectura-paginas-estudio',
-  '/calculadora-dividir-gastos-viaje-amigos': '/calculadora-split-gastos-grupo-amigos',
-  '/calculadora-seguro-auto-estimacion-precio': '/calculadora-seguro-auto-estimado',
+  '/calculadora-comision-mercadolibre-venta': '/negocios/comisiones-de-plataforma',
+  '/calculadora-mercadolibre-comision-venta': '/negocios/comisiones-de-plataforma',
+  '/calculadora-tiempo-lectura-libro-paginas': '/estudio/cuanto-tardo-en-leer',
+  '/calculadora-dividir-gastos-viaje-amigos': '/finanzas-personales/dividir-gastos',
+  '/calculadora-seguro-auto-estimacion-precio': '/auto/costo-anual',
 };
