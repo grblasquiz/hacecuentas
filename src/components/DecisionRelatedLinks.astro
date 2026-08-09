@@ -1,0 +1,45 @@
+---
+interface Item {
+  href: string;
+  title: string;
+  description: string;
+  icon: string;
+}
+
+interface Props {
+  items: Item[];
+}
+
+const { items } = Astro.props as Props;
+---
+
+{items.length > 0 && (
+  <section class="decision-related" aria-labelledby="decision-related-title">
+    <p class="decision-related__eyebrow">Seguí calculando</p>
+    <h2 id="decision-related-title">Herramientas relacionadas</h2>
+    <div class="cf-related__grid decision-related__grid">
+      {items.map((item) => (
+        <a class="decision-related__card" href={item.href}>
+          <span class="decision-related__icon" aria-hidden="true">{item.icon}</span>
+          <span class="decision-related__title">{item.title}</span>
+          <span class="decision-related__description">{item.description}</span>
+          <span class="decision-related__link">Abrir herramienta <span aria-hidden="true">→</span></span>
+        </a>
+      ))}
+    </div>
+  </section>
+)}
+
+<style>
+  .decision-related { width: min(1120px, calc(100% - 40px)); margin: 2.5rem auto; }
+  .decision-related__eyebrow { margin: 0 0 .4rem; color: #3568a8; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  .decision-related h2 { margin: 0 0 1.15rem; color: #13263f; font-size: clamp(1.45rem, 2.2vw, 2rem); letter-spacing: -.03em; }
+  .decision-related__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+  .decision-related__card { display: flex; min-height: 170px; flex-direction: column; gap: .55rem; padding: 1.15rem; border: 1px solid #dce5ee; border-radius: 16px; background: #fff; color: #13263f; text-decoration: none; transition: border-color .15s, transform .15s, box-shadow .15s; }
+  .decision-related__card:hover { border-color: #6a9bd0; box-shadow: 0 10px 24px #193b5d12; transform: translateY(-2px); }
+  .decision-related__icon { font-size: 1.35rem; }
+  .decision-related__title { font-weight: 800; line-height: 1.25; }
+  .decision-related__description { color: #61728a; font-size: .88rem; line-height: 1.45; }
+  .decision-related__link { margin-top: auto; color: #2565ad; font-size: .8rem; font-weight: 800; }
+  @media (max-width: 760px) { .decision-related { width: min(100% - 28px, 1120px); } .decision-related__grid { grid-template-columns: 1fr; } }
+</style>

@@ -187,8 +187,8 @@ function analyze(url: string, html: string, statusCode: number): Row {
   const internalLinks = [...mainHtml.matchAll(/<a[^>]+href="(\/[^"#?]*|https:\/\/hacecuentas\.com\/[^"#?]*)"/g)].length;
   // Related: bloque real primero (related-grid / id="related"); el texto plano
   // también matchea secciones markdown del explanation (falso positivo).
-  const relBlockIdx = html.search(/class="related-grid"|id="related"/i);
-  const relIdx = relBlockIdx >= 0 ? relBlockIdx : html.search(/Calculadoras relacionadas/i);
+  const relBlockIdx = html.search(/class="[^"]*(?:related-grid|related__grid)[^"]*"|id="related"/i);
+  const relIdx = relBlockIdx >= 0 ? relBlockIdx : html.search(/(?:Calculadoras|Herramientas) relacionadas/i);
   let relatedCount = 0;
   if (relIdx >= 0) {
     const relChunk = html.slice(relIdx, relIdx + 12000);

@@ -1234,7 +1234,14 @@ const MOCKUP_COMPONENTS: Record<string, any> = {
 };
 const MockupComp = mockupBatch ? MOCKUP_COMPONENTS[mockupBatch] : null;
 // metros-lineales usa una lista de relacionadas curada, no la del JSON.
-const mockupRelated = mockupBatch === 'metros-lineales' ? mtlRelated : mbRelated;
+const ipcRelated = mockupBatch === 'ipc'
+  ? [
+      { slug: 'inflacion-argentina', h1: 'Inflación argentina mes a mes', icon: '📊' },
+      { slug: 'alquiler/aumento-de-alquiler', h1: 'Aumento de alquiler', icon: '🏠' },
+      { slug: 'trabajo/sueldo-vs-inflacion', h1: 'Sueldo versus inflación', icon: '💼' },
+    ]
+  : [];
+const mockupRelated = mockupBatch === 'metros-lineales' ? mtlRelated : mockupBatch === 'ipc' ? ipcRelated : mbRelated;
 
 const PESO_PERRO_FLAGSHIP = new Set([
   'calculadora-peso-ideal-pitbull',
@@ -1324,7 +1331,11 @@ const ivRelated = isIvaAgregarDisc
   : [];
 const isInteresJudicial = calc.slug === 'calculadora-interes-judicial-tasa';
 const ijRelated = isInteresJudicial
-  ? (calc.relatedSlugs || []).map((s: string) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
+  ? [
+      { slug: 'trabajo/liquidacion-final', h1: 'Liquidación final de trabajo', icon: '🧾' },
+      { slug: 'vivienda/gastos-de-escritura', h1: 'Gastos de escritura', icon: '🏠' },
+      { slug: 'finanzas-personales/prestamo', h1: 'Cuota y costo de un préstamo', icon: '💳' },
+    ]
   : [];
 const isAportesPatronales = calc.slug === 'calculadora-aportes-patronales-empleado-registrado-cargas-sociales-2026';
 const apRelated = isAportesPatronales

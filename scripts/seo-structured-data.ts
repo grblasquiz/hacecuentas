@@ -15,6 +15,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { PRIORITY_PATHS } from './seo-priority-urls.ts';
+import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const DIST = join(ROOT, 'dist', 'client');
@@ -39,7 +40,10 @@ interface Audit {
 }
 
 function pathToFile(p: string): string {
-  return join(DIST, p === '/' ? 'index.html' : `${p.slice(1)}.html`);
+  if (p === '/') return join(DIST, 'index.html');
+  const clean = p.slice(1);
+  const flat = join(DIST, `${clean}.html`);
+  return existsSync(flat) ? flat : join(DIST, clean, 'index.html');
 }
 
 /** Aplana @graph y arrays anidados en una lista de nodos con @type. */
@@ -77,9 +81,11 @@ const NON_CALC = new Set([
 ]);
 
 const results: Audit[] = [];
+let skippedRedirects = 0;
 
 for (const path of PRIORITY_PATHS) {
   const file = pathToFile(path);
+  if (!existsSync(file) && PRUNING_REDIRECTS[path]) { skippedRedirects++; continue; }
   const audit: Audit = {
     url: `https://hacecuentas.com${path}`,
     ld_blocks: 0, parse_errors: [], types_found: [],
@@ -144,6 +150,7 @@ writeFileSync(join(REPORTS, 'structured-data-audit.json'), JSON.stringify(result
 
 const clean = results.filter((r) => !r.issues.length).length;
 console.log(`✓ ${results.length} URLs validadas → reports/structured-data-audit.json`);
+if (skippedRedirects) console.log(`  ${skippedRedirects} URLs retiradas omitidas: tienen redirección canónica.`);
 console.log(`  Sin issues: ${clean}/${results.length}`);
 for (const r of results.filter((x) => x.issues.length)) {
   console.log(`  ⚠ ${r.url.replace('https://hacecuentas.com', '')}: ${r.issues.join(', ')}${r.webapp.missing_fields.length ? ` [webapp faltan: ${r.webapp.missing_fields.join(',')}]` : ''}`);

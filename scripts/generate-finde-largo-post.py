@@ -110,7 +110,7 @@ def generate():
 <li>El feriado que lo arma: <strong>{feriado_str}</strong>.</li>
 <li>Total: <strong>{n} días corridos</strong> de descanso.</li>
 </ul>
-<p>¿Querés saber exactamente cuánto falta para el próximo feriado o cuántos quedan en el año? Mirá la <a href="/calculadora-cuanto-falta-feriado-proximo-argentina-2026">cuenta regresiva al próximo feriado</a> y el <a href="/calculadora-puente-feriado-fines-semana-largos-argentina-2026">calendario de fines de semana largos 2026</a>.</p>
+<p>¿Querés saber exactamente cuánto falta para el próximo feriado o cuántos quedan en el año? Consultá el <a href="/feriados-2026">calendario de feriados y fines de semana largos 2026</a>.</p>
 
 <h2 id="proximos">Próximos findes largos de 2026</h2>
 {tabla}
@@ -141,9 +141,9 @@ def generate():
         'heroEmoji': '🏖️',
         'content': content,
         'relatedCalcs': [
-            'calculadora-puente-feriado-fines-semana-largos-argentina-2026',
-            'calculadora-cuanto-falta-feriado-proximo-argentina-2026',
-            'calculadora-feriados-argentina-2026-calendario',
+            'fechas/feriados',
+            'trabajo/horas-extra',
+            'trabajo/sueldo-bruto-y-neto',
             'calculadora-sueldo-hora-extra-nocturna-feriado',
         ],
         'faq': [

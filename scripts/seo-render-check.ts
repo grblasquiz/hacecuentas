@@ -17,6 +17,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { PRIORITY_PATHS } from './seo-priority-urls.ts';
+import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const DIST = join(ROOT, 'dist', 'client');
@@ -63,6 +64,7 @@ async function getHtml(path: string): Promise<string | null> {
 }
 
 const results: Check[] = [];
+let skippedRedirects = 0;
 const NON_CALC = new Set([
   '/blog',
   '/embarazo/dias-fertiles',
@@ -78,6 +80,7 @@ const NON_CALC = new Set([
 for (const path of PRIORITY_PATHS) {
   const html = await getHtml(path);
   if (html === null) {
+    if (PRUNING_REDIRECTS[path]) { skippedRedirects++; continue; }
     results.push({ url: `${ORIGIN}${path}`, h1: false, title: false, meta_description: false, canonical_self: false, editorial_text: false, formula_section: false, faq_section: false, sources_section: false, related_links: false, jsonld: false, action_required: 'html_not_found' });
     continue;
   }
@@ -88,9 +91,10 @@ for (const path of PRIORITY_PATHS) {
 
   // Bloque related real primero (related-grid / id="related"); el texto plano
   // matchea también secciones markdown del explanation (falso positivo).
-  const relIdx = html.search(/class="related-grid"|id="related"/i) >= 0
-    ? html.search(/class="related-grid"|id="related"/i)
-    : html.search(/Calculadoras relacionadas|Calcs relacionadas/i);
+  const relatedMarker = /class="[^"]*(?:related-grid|related__grid)[^"]*"|id="related"/i;
+  const relIdx = relatedMarker.test(html)
+    ? html.search(relatedMarker)
+    : html.search(/Calculadoras relacionadas|Herramientas relacionadas|Calcs relacionadas/i);
   const relatedLinks = relIdx >= 0 ? [...html.slice(relIdx, relIdx + 12000).matchAll(/<a[^>]+href="\/[^"#?]*"/g)].length : 0;
 
   const canonical = (head.match(/<link\s+rel="canonical"\s+href="([^"]+)"/i) || [])[1] || '';
@@ -124,6 +128,7 @@ writeFileSync(join(REPORTS, 'render-check.json'), JSON.stringify(results, null, 
 
 const ok = results.filter((r) => !r.action_required).length;
 console.log(`✓ ${results.length} URLs chequeadas (${LIVE ? 'producción' : 'dist local'}) → reports/render-check.json`);
+if (skippedRedirects) console.log(`  ${skippedRedirects} URLs retiradas omitidas: tienen redirección canónica.`);
 console.log(`  OK completas: ${ok}/${results.length}`);
 for (const r of results.filter((x) => x.action_required)) {
   console.log(`  ⚠ ${r.url.replace(ORIGIN, '')} → ${r.action_required}`);
