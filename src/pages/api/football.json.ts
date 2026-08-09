@@ -107,7 +107,8 @@ export const GET: APIRoute = async ({ url }) => {
         'cdn-cache-control': 'max-age=60',
       },
     });
-  } catch {
+  } catch (error) {
+    console.error('football-api-upstream', error instanceof Error ? error.message : String(error));
     return new Response(JSON.stringify({ error: 'fuente de fútbol temporalmente no disponible' }), {
       status: 502,
       headers: {
