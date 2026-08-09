@@ -1169,6 +1169,25 @@ const globalSchema = {
       }
       html[lang="en"] body[data-page-type="hub"] h1::before { content: "This hub answers"; }
 
+      /* Los hubs de categoría usan héroes compartidos con arte decorativo de
+       * ancho fijo en desktop. En mobile la ilustración nunca debe ensanchar
+       * la columna editorial ni recortar el H1 y la bajada. */
+      @media (max-width: 600px) {
+        body[data-page-type="hub"] [class^="mockup-"] :is(.heroGrid, .hero-grid) {
+          grid-template-columns: minmax(0, 1fr) !important;
+        }
+        body[data-page-type="hub"] [class^="mockup-"] :is(.heroGrid, .hero-grid) > * {
+          min-width: 0;
+        }
+        body[data-page-type="hub"] [class^="mockup-"] :is(.scene, .chart, .visual, .illustration) {
+          width: 100%; max-width: 100% !important;
+        }
+        body[data-page-type="hub"] [class^="mockup-"] :is(.heroGrid, .hero-grid) h1,
+        body[data-page-type="hub"] [class^="mockup-"] :is(.heroGrid, .hero-grid) .lead {
+          max-width: 100%; overflow-wrap: anywhere;
+        }
+      }
+
       /* Dark mode — data-theme="dark" en <html> */
       html[data-theme="dark"] {
         --bg: #0f172a;

@@ -85,5 +85,19 @@ const scopedScripts = scripts
      cada celda debe poder encogerse dentro del viewport, especialmente cuando
      un input o un texto largo fija el ancho mínimo de la tarjeta. */
   .approved-mockup-page * { min-width: 0; }
+  /* Los hubs de categoría comparten un hero de dos columnas. Sus escenas
+     decorativas tienen anchos intencionales en desktop, pero no deben fijar el
+     ancho de la columna de texto en pantallas chicas. */
+  @media (max-width: 600px) {
+    .approved-mockup-page [class^="mockup-"][class$="-home"] .heroGrid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .approved-mockup-page [class^="mockup-"][class$="-home"] .heroGrid > * {
+      min-width: 0;
+    }
+    .approved-mockup-page [class^="mockup-"][class$="-home"] :is(.scene, .chart, .visual, .illustration) {
+      width: 100%; max-width: 100%;
+    }
+  }
 </style>
 <script is:inline set:html={`(()=>{const root=document.querySelector('.approved-mockup-page');if(!root)return;if(!window.HC_HUB)window.HC_HUB={onCompute:function(){}};\n${scopedScripts}\nroot.querySelector('.site-header')?.remove();root.querySelector('.site-footer')?.remove();})();`}></script>
