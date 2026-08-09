@@ -32,7 +32,7 @@ const dateKey = (value: Date, timeZone: string) => new Intl.DateTimeFormat('en-C
 }).format(value).replaceAll('-', '');
 
 const fetchJson = async (url: string) => {
-  const response = await fetch(url, { headers: { 'User-Agent': 'hacecuentas.com football live hub' } });
+  const response = await fetch(url, { headers: { accept: 'application/json' } });
   if (!response.ok) throw new Error(`ESPN ${response.status}`);
   return response.json();
 };
@@ -107,8 +107,7 @@ export const GET: APIRoute = async ({ url }) => {
         'cdn-cache-control': 'max-age=60',
       },
     });
-  } catch (error) {
-    console.error('football-api-upstream', error instanceof Error ? error.message : String(error));
+  } catch {
     return new Response(JSON.stringify({ error: 'fuente de fútbol temporalmente no disponible' }), {
       status: 502,
       headers: {
