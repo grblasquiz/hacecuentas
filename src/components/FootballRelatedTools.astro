@@ -1,0 +1,71 @@
+---
+const language = Astro.props.language === 'en' ? 'en' : Astro.props.language === 'pt' ? 'pt' : 'es';
+const content = {
+  es: {
+    eyebrow: 'Después del partido',
+    title: 'Hacé tus propias cuentas de fútbol',
+    description: 'Pasá de mirar el resultado a entender puntos, rendimiento y escenarios.',
+    items: [
+      ['/futbol/puntos-y-campeonato', 'Puntos y campeonato', '¿Cuántos puntos necesitás para clasificar o salvarte?'],
+      ['/futbol/estadisticas', 'Estadísticas de jugadores', 'Distancia, velocidad, precisión y referencias por posición.'],
+      ['/futbol/premios', 'Premios del fútbol', 'Compará premios, contratos y números del deporte.'],
+      ['/salud/calorias-quemadas', 'Calorías por deporte', 'Estimá el gasto según actividad, tiempo y peso.'],
+    ],
+  },
+  pt: {
+    eyebrow: 'Depois do jogo',
+    title: 'Faça suas próprias contas de futebol',
+    description: 'Saia do resultado e entenda pontos, desempenho e cenários.',
+    items: [
+      ['/futbol/puntos-y-campeonato', 'Pontos e campeonato', 'Quantos pontos faltam para classificar ou escapar?'],
+      ['/futbol/estadisticas', 'Estatísticas de jogadores', 'Distância, velocidade, precisão e referências por posição.'],
+      ['/futbol/premios', 'Prêmios do futebol', 'Compare prêmios, contratos e números do esporte.'],
+      ['/salud/calorias-quemadas', 'Calorias por esporte', 'Estime o gasto por atividade, tempo e peso.'],
+    ],
+  },
+  en: {
+    eyebrow: 'After the match',
+    title: 'Run your own football numbers',
+    description: 'Go beyond the score and understand points, performance and scenarios.',
+    items: [
+      ['/futbol/puntos-y-campeonato', 'Points and championship', 'How many points do you need to qualify or stay up?'],
+      ['/futbol/estadisticas', 'Player statistics', 'Distance, speed, accuracy and position benchmarks.'],
+      ['/futbol/premios', 'Football awards', 'Compare awards, contracts and sports numbers.'],
+      ['/salud/calorias-quemadas', 'Calories by sport', 'Estimate expenditure by activity, time and weight.'],
+    ],
+  },
+} as const;
+const copy = content[language];
+---
+
+<section class="football-related" aria-labelledby="football-related-title">
+  <header>
+    <div><span>{copy.eyebrow}</span><h2 id="football-related-title">{copy.title}</h2></div>
+    <p>{copy.description}</p>
+  </header>
+  <div class="football-related-grid">
+    {copy.items.map(([href, title, description]) => (
+      <a href={href} data-football-tool-link>
+        <strong>{title}</strong>
+        <span>{description}</span>
+        <b>→</b>
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .football-related{margin-top:28px;padding:28px;background:#174b7a;color:#fff;border-radius:22px}
+  .football-related header{display:flex;justify-content:space-between;gap:28px;align-items:end;margin-bottom:20px}
+  .football-related header span{color:#b9e0ff;font-size:10px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}
+  .football-related h2{font-size:26px;letter-spacing:-.04em;margin:7px 0 0}
+  .football-related header p{color:#d7e8f5;font-size:13px;line-height:1.5;max-width:380px;margin:0}
+  .football-related-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .football-related-grid a{display:flex;flex-direction:column;gap:8px;min-height:154px;padding:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:14px;color:#fff;transition:.18s ease}
+  .football-related-grid a:hover{background:rgba(255,255,255,.18);transform:translateY(-2px)}
+  .football-related-grid strong{font-size:15px;line-height:1.2}
+  .football-related-grid span{color:#d7e8f5;font-size:11px;line-height:1.45}
+  .football-related-grid b{margin-top:auto;color:#b9e0ff;font-size:18px}
+  @media(max-width:850px){.football-related-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:600px){.football-related{padding:20px 14px;border-radius:17px}.football-related header{display:block}.football-related header p{margin-top:8px}.football-related h2{font-size:22px}.football-related-grid{grid-template-columns:1fr}.football-related-grid a{min-height:0}}
+</style>

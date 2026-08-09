@@ -2,10 +2,9 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const TZ = 'America/Argentina/Buenos_Aires';
 const OUT = new URL('../src/data/live/futbol-argentino.json', import.meta.url);
+const policy = JSON.parse(await readFile(new URL('../src/data/football-policy.json', import.meta.url), 'utf8'));
 const normalize = (value = '') => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-const blockedTerms = ['independiente','diablo','diablos','demonio','demonios','demon','demons','devil','devils','satan','satanas','lucifer'];
-const blockedClubs = ['manchester united','toluca','america de cali','nublense','crawley town','kaiserslautern'];
-const visibleName = (name = '') => { const value=normalize(name); return !blockedTerms.some(x=>value.includes(x))&&!blockedClubs.some(x=>value.includes(x)); };
+const visibleName = (name = '') => { const value=normalize(name); return !policy.terms.some(x=>value.includes(x))&&!policy.clubs.some(x=>value.includes(x)); };
 const dateKey = (value) => new Intl.DateTimeFormat('en-CA', {
   timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
 }).format(new Date(value)).replaceAll('-', '');
@@ -23,13 +22,15 @@ const json = async (url) => {
   }
   throw error;
 };
-const eventVisible = (event) => (event.competitions?.[0]?.competitors || [])
-  .every((entry) => visibleName(entry.team?.displayName));
+const eventVisible = (event) => {
+  const competitors = event.competitions?.[0]?.competitors || [];
+  return competitors.length >= 2 && competitors.every((entry) => visibleName(entry.team?.displayName) && visibleName(entry.team?.shortDisplayName));
+};
 const cleanGroups = (payload) => (payload.children || []).map((group) => ({
   ...group,
   standings: {
     ...group.standings,
-    entries: (group.standings?.entries || []).filter((entry) => visibleName(entry.team?.displayName)),
+    entries: (group.standings?.entries || []).filter((entry) => visibleName(entry.team?.displayName) && visibleName(entry.team?.shortDisplayName)),
   },
 }));
 
@@ -58,19 +59,14 @@ const [first, national] = await Promise.all([
 ]);
 const snapshot = { fetchedAt: now.toISOString(), timeZone: TZ, startKey, endKey, first, national };
 if (process.argv.includes('--final-only')) {
-  const finished = (payload) => [...(payload.first?.events || []), ...(payload.national?.events || [])]
-    .filter((event) => event.competitions?.[0]?.status?.type?.completed || event.competitions?.[0]?.status?.type?.state === 'post')
-    .map((event) => `${event.id}:${(event.competitions?.[0]?.competitors || []).map((team) => `${team.id}:${team.score}`).sort().join(',')}`);
   let previous = null;
   try { previous = JSON.parse(await readFile(OUT, 'utf8')); } catch {}
-  const oldFinals = new Set(finished(previous || {}));
-  const newFinals = finished(snapshot);
-  const newlyFinished = newFinals.filter((result) => !oldFinals.has(result));
-  if (previous && newlyFinished.length === 0) {
-    console.log('Sin partidos nuevos en estado Final; no se modifica el snapshot.');
+  const comparable = (payload) => JSON.stringify({ first: payload?.first, national: payload?.national });
+  if (previous && comparable(previous) === comparable(snapshot)) {
+    console.log('Sin cambios en partidos, agenda o tablas; no se modifica el snapshot.');
     process.exit(0);
   }
-  console.log(`${newlyFinished.length} partido(s) nuevo(s) en estado Final.`);
+  console.log('Cambió el estado de fútbol; se actualiza el snapshot.');
 }
 await mkdir(new URL('../src/data/live/', import.meta.url), { recursive: true });
 await writeFile(OUT, `${JSON.stringify(snapshot, null, 2)}\n`);
