@@ -117,6 +117,28 @@ function readJSONs(dir: string, pathPrefix = ''): any[] {
 }
 
 /**
+ * Lee colecciones editoriales que no son calculadoras (comparaciones, tablas,
+ * glosario). No deben pasar por la política YMYL de calculadoras: esa política
+ * puede excluir una pieza editorial válida aunque la ruta sea 200, indexable y
+ * tenga canonical propio. Igual respetamos noindex explícito y los redirects
+ * de poda de la URL pública.
+ */
+function readCollectionJSONs(dir: string, pathPrefix = ''): any[] {
+  return safeReadDir(dir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => {
+      try { return JSON.parse(readFileSync(join(dir, f), 'utf8')); } catch { return null; }
+    })
+    .filter(Boolean)
+    .filter((d: any) => d.noindex !== true)
+    .filter((d: any) => {
+      if (!d.slug) return true;
+      const key = pathPrefix ? `${pathPrefix}/${d.slug}` : d.slug;
+      return !PRUNED_SLUGS.has(key);
+    });
+}
+
+/**
  * Cache de timestamps git por archivo — evita N llamadas a git por cada build.
  * Se popula en build-time con `git log --format=%ct --name-only` (una sola llamada).
  */
@@ -492,9 +514,9 @@ const calcsUy = readJSONs(CALCS_UY_DIR, 'uy');
 const calcsDo = readJSONs(CALCS_DO_DIR, 'do');
 const blogPosts = readJSONs(BLOG_DIR);
 const blogPostsPt = readJSONs(join(ROOT, 'src', 'content', 'blog-pt'));
-const tablas = readJSONs(TABLAS_DIR);
-const comparaciones = readJSONs(COMPARACIONES_DIR, 'comparar');
-const glosarioTerms = readJSONs(GLOSARIO_DIR, 'glosario');
+const tablas = readCollectionJSONs(TABLAS_DIR, 'tabla');
+const comparaciones = readCollectionJSONs(COMPARACIONES_DIR, 'comparar');
+const glosarioTerms = readCollectionJSONs(GLOSARIO_DIR, 'glosario');
 
 let provincias: any[] = [];
 try {
@@ -1313,6 +1335,7 @@ function sitemapForContent(items: any[], dir: string, pathPrefix: string, priori
   // y manda una señal contradictoria. `canonicalUrl` lo setea el JSON cuando la
   // página queda como contenido de apoyo de otra (ver canonicalReason).
   return items
+    .filter((it: any) => it.noindex !== true)
     .filter((it: any) => !it.canonicalUrl)
     .map((it: any) => {
     const fp = join(dir, `${it.slug}.json`);
