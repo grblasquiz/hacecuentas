@@ -146,6 +146,10 @@ for (const abs of walk(PAGES)) {
   if (isDynamic(rel)) continue;
   const url = urlFor(rel);
   if (ALLOWLIST.has(url) || isAllowedPrefix(url)) continue;
+  // Una página .astro puede seguir en el checkout como compatibilidad de
+  // build mientras el Worker la retira con 301/410. No debe exigirse en el
+  // sitemap: la URL indexable es el destino canónico del redirect.
+  if (retired.has(url)) continue;
   if (inSitemap.has(url)) continue;
   // noindex declarado en la página (prop del Layout o meta directa).
   const src = readFileSync(abs, 'utf8');

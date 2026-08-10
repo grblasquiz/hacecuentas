@@ -12,10 +12,12 @@ import AccessibilityBaseline from '../components/AccessibilityBaseline.astro';
 import HubEmbedMode from '../components/HubEmbedMode.astro';
 import SitewideHubDecisionLayer from '../components/SitewideHubDecisionLayer.astro';
 import GeneratedCtaNavigation from '../components/GeneratedCtaNavigation.astro';
+import EditorialTrustLayer from '../components/EditorialTrustLayer.astro';
 import { compactSeoTitle } from '../lib/seo-title';
 import { compactSeoDescription } from '../lib/seo-description';
 import { seoDescriptionFor } from '../lib/seo-description-overrides';
 import { isSelfCanonicalUrl } from '../lib/hreflang';
+import { isLegacyReviewNoindexPath } from '../lib/route-policy';
 import currentTools from '../lib/current-tools-index.json';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
@@ -57,6 +59,11 @@ export interface Props {
   domain?: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life';  // familia visual → data-domain en <body> (tokens --domain-*)
   pageType?: 'calculator' | 'category' | 'guide' | 'hub' | 'home' | 'data' | 'room';  // data-page-type en <body>
   noAds?: boolean;           // YMYL: páginas restringidas no cargan AdSense (Fase 8)
+  ymylRisk?: 'low' | 'medium' | 'high' | 'unknown' | string;
+  editorialStatus?: 'source-backed' | 'automated-checked' | 'editorial-reviewed' | 'pending' | 'unknown' | string;
+  editorialReviewedAt?: string;
+  editorialSources?: Array<{ name?: string; title?: string; publisher?: string; url?: string; date?: string }>;
+  professionalReviewer?: { name?: string; profession?: string; credential?: string; licenseNumber?: string; profileUrl?: string; reviewedAt?: string } | null;
 }
 
 const {
@@ -86,6 +93,11 @@ const {
   domain,
   pageType,
   noAds = false,
+  ymylRisk = 'unknown',
+  editorialStatus = 'unknown',
+  editorialReviewedAt,
+  editorialSources = [],
+  professionalReviewer,
 } = Astro.props;
 
 // La mayoría de los hubs históricos no declaraba pageType aunque ya figure en
@@ -136,6 +148,11 @@ const seoTitle = compactSeoTitle(titleForSearch);
 const siteUrl = 'https://hacecuentas.com';
 // Cloudflare Pages sirve /foo.html en /foo — canonical sin .html para matchear sitemap
 const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
+// Rutas históricas fuera del catálogo canónico conservan su respuesta para no
+// romper enlaces, pero salen del índice hasta ser reescritas bajo el contrato
+// editorial actual. La política vive acá para que ningún template pueda
+// olvidarse de emitir el noindex correspondiente.
+const effectiveNoindex = noindex || isLegacyReviewNoindexPath(cleanPath);
 // La meta description se compacta al ancho que Google muestra (~160). Las URLs
 // que el crawl 2026-07-28 detectó cortas tienen una mejora explícita por path.
 const effectiveDescription = seoDescriptionFor(cleanPath, description);
@@ -151,7 +168,7 @@ const seoDescription = compactSeoDescription(descriptionForSearch);
 // monetizable aunque una página olvide pasar noAds={true}.
 // Monetización opt-in: incluso con serving + CMP habilitados, una URL nueva no
 // recibe anuncios hasta entrar en la allowlist editorial de adsense.ts.
-const effectiveNoAds = noAds || noindex || isAdsenseExcludedPath(cleanPath) || !isAdsenseApprovedPath(cleanPath);
+const effectiveNoAds = noAds || effectiveNoindex || isAdsenseExcludedPath(cleanPath) || !isAdsenseApprovedPath(cleanPath);
 const fullCanonical = canonical
   ? (canonical.startsWith('http') ? canonical : `${siteUrl}${canonical}`)
   : `${siteUrl}${cleanPath}`;
@@ -451,6 +468,7 @@ const globalSchema = {
 
     <title>{seoTitle}</title>
     <meta name="description" content={seoDescription} />
+    <meta name="author" content="Martín Rodríguez" />
     {keywordsArr && keywordsArr.length > 0 && (
       <meta name="keywords" content={keywordsArr.slice(0, 10).join(', ')} />
     )}
@@ -493,7 +511,7 @@ const globalSchema = {
          nuestras OG images en full-width cards del feed Android/Chrome.
          Sin este tag, Discover limita los thumbnails o los omite. Es la
          señal #1 para optar-in a Discover según los docs de Google. */}
-    {noindex
+    {effectiveNoindex
       ? <meta name="robots" content="noindex, follow" />
       : <meta name="robots" content="max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     }
@@ -503,14 +521,14 @@ const globalSchema = {
        2026-05-25: REMOVIDO `noarchive` porque bloqueaba Copilot/grounding results
        (BWT warning "Important URLs visible in search cannot appear in Copilot").
        Bing necesita poder cachear el contenido para usarlo como fuente en AI. */}
-    {!noindex && (
+    {!effectiveNoindex && (
       <meta name="bingbot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     )}
     <link rel="canonical" href={fullCanonical} />
     {/* Una URL noindex o no-autocanónica no es elegible como alternate, ni
         siquiera de sí misma. El guard central cubre también páginas no-calc
         que usan el fallback. */}
-    {!noindex && isSelfCanonical && (
+    {!effectiveNoindex && isSelfCanonical && (
       hreflang ? (
         hreflang.map(h => <link rel="alternate" hreflang={h.lang} href={h.href} />)
       ) : lang === 'en' ? (
@@ -827,8 +845,17 @@ const globalSchema = {
     <slot name="header" />
     <main id="main" tabindex="-1">
       <slot />
-      <SitewideHubDecisionLayer pageTitle={title} modified={articleModifiedTime} noindex={noindex} />
-      <HubInterlinking pageTitle={title} noindex={noindex} />
+      <EditorialTrustLayer
+        noindex={effectiveNoindex}
+        pageType={effectivePageType}
+        ymylRisk={ymylRisk}
+        status={editorialStatus}
+        reviewedAt={editorialReviewedAt}
+        sources={editorialSources}
+        professionalReviewer={professionalReviewer}
+      />
+      <SitewideHubDecisionLayer pageTitle={title} modified={articleModifiedTime} noindex={effectiveNoindex} />
+      <HubInterlinking pageTitle={title} noindex={effectiveNoindex} />
     </main>
     <slot name="footer" />
     <HubEmbedMode />

@@ -38,5 +38,6 @@ export function isAdsenseApprovedPath(pathname: string): boolean {
 
 export function isAdsenseExcludedPath(pathname: string): boolean {
   const clean = normalizePath(pathname);
-  return NO_ADS_PATH_RE.test(clean);
+  return NO_ADS_PATH_RE.test(clean) || isLegacyReviewNoindexPath(clean);
 }
+import { isLegacyReviewNoindexPath } from './route-policy';

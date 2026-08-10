@@ -20,6 +20,13 @@ export const hub: HubData = {
   chart: { type: 'timeline', caption: 'Recorrido habitual desde la denuncia hasta la evaluación de secuelas.' },
   breakdownTitle: 'Qué hacer ahora',
   breakdownIntro: 'Los pasos concretos para no perder documentación ni plazos.',
+  answer: {
+    title: 'La prioridad es denunciar y conservar constancia',
+    copy: 'Ante un accidente laboral, buscá atención médica si la necesitás, avisá al empleador o a la ART y guardá el número de siniestro. Después reuní certificados, estudios, recibos y comunicaciones para que el recorrido pueda revisarse con la SRT.',
+    yes: ['Atención médica y denuncia registrada', 'Número de siniestro y copia de cada comunicación', 'Documentación médica y laboral ordenada por fecha'],
+    warn: ['No firmes un alta o acuerdo sin entender su alcance', 'Los plazos y trámites dependen del tipo de accidente y de la etapa del caso'],
+    plazo: 'Revisá hoy la denuncia y la constancia; para una decisión concreta consultá la fuente oficial o un profesional.',
+  },
   faq: [
     { q: '¿Cómo se denuncia un accidente laboral?', a: 'Podés avisar al empleador, que debe comunicarlo a la ART, o denunciarlo directamente ante la aseguradora. Pedí siempre el número de siniestro y guardá una constancia del aviso.' },
     { q: '¿Qué hago si necesito atención médica urgente?', a: 'Priorizá la atención médica. Ante una emergencia llamá al 107 o al 911. Después documentá dónde, cuándo y cómo ocurrió el accidente y notificá al empleador o a la ART.' },

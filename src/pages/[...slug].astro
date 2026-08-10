@@ -910,6 +910,14 @@ const readingMin = Math.max(1, Math.round(wordCount / 200));
 
 // Nuevos campos SEO (todos opcionales)
 const sources: Array<{ name: string; url?: string }> = calc.sources || [];
+const editorialStatus = calc.editorialReviewMethod === 'human' && calc.editorialReview === 'approved'
+  ? 'editorial-reviewed'
+  : calc.sourceVerified === true && calc.automatedTests === 'passed'
+    ? 'automated-checked'
+    : sources.length > 0
+      ? 'source-backed'
+      : 'pending';
+const editorialReviewedAt = calc.editorialReviewedAt || calc.lastReviewed || calc.dataUpdate?.lastUpdated;
 const useCases: string[] = calc.useCases || [];
 const example: { title?: string; steps?: string[]; result?: string } | null = calc.example || null;
 const keyTakeaway: string = calc.keyTakeaway || '';
@@ -1371,6 +1379,11 @@ const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life
   canonical={calc.canonicalSlug ? `/${calc.canonicalSlug}` : undefined}
   noindex={effectiveNoindex}
   noAds={!canAdvertiseCalc(calc)}
+  ymylRisk={calc.ymylRisk || 'unknown'}
+  editorialStatus={editorialStatus}
+  editorialReviewedAt={editorialReviewedAt}
+  editorialSources={sources}
+  professionalReviewer={calc.professionalReviewer}
   domain={flagshipDomain || categoryDomain(calc.category)}
   pageType="calculator"
 >

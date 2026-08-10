@@ -546,7 +546,13 @@ const topSlugs = new Set([
 // Build individual sitemaps
 // --------------------------------------------------------------------------
 
-const sitemaps: Array<{ name: string; urls: Url[] }> = [];
+type SitemapEntry = {
+  name: string;
+  urls: Url[];
+  skipWrite?: boolean;
+  includeInIndex?: boolean;
+};
+const sitemaps: SitemapEntry[] = [];
 
 // 0. Priority sitemap: las ~60 URLs top (home, guías, categorías, calcs estrella).
 // Este se declara PRIMERO en el index para que Google lo lea/crawle antes que el resto.
@@ -1017,10 +1023,12 @@ sitemaps.push({
     core('/aviso-legal',                         '0.5',  'yearly'),
     core('/politica-editorial',                  '0.5',  'monthly'),
     core('/metodologia',                         '0.5',  'monthly'),
+    core('/correcciones',                        '0.6',  'monthly'),
     core('/cooperativa-de-datos',                '0.7',  'weekly'),
     core('/contacto',                            '0.4',  'yearly'),
     core('/sugerir',                             '0.6',  'weekly'),
     core('/blog',                                '0.7',  'weekly'),
+    core('/mapa-del-sitio',                      '0.65', 'monthly'),
     core('/datasets',                            '0.6',  'monthly'),
     // Los hubs de vertical (/mx /co /cl /es /pt /en) NO van acá: cada
     // sitemap-<locale>.xml ya publica su home vía sitemapForLocale(withIndex),
@@ -1455,7 +1463,10 @@ if (existsSync(gscCoverageReport)) {
         changefreq: 'daily',
       }));
     if (recoveryUrls.length > 0) {
-      sitemaps.push({ name: 'sitemap-hubs-recovery.xml', urls: recoveryUrls });
+      // Es una cohorte operativa para reenvío puntual en Search Console, no
+      // una segunda fuente de URLs indexables. Mantenerla fuera del índice
+      // evita publicar 300 hubs duplicados en el sitemap principal.
+      sitemaps.push({ name: 'sitemap-hubs-recovery.xml', urls: recoveryUrls, includeInIndex: false });
     }
   } catch (err) {
     console.warn('[sitemap] No se pudo leer gsc-coverage-report.json:', err);
@@ -1662,7 +1673,6 @@ if (imageEntriesClean.length > 0) {
     name: 'sitemap-images.xml',
     urls: [{ loc: `${site}/`, lastmod: buildDate, changefreq: 'weekly', priority: '0.5' }],
     // marcamos que no se debe re-escribir desde urlsetXml (ya escribimos arriba con imagesetXml)
-    // @ts-expect-error campo extra controlado abajo
     skipWrite: true,
   });
 }
@@ -1816,6 +1826,38 @@ if (prunedStripped > 0) {
   console.log(`Stripped ${prunedStripped} URLs podadas (301/410 del worker) que alguna lista seguía publicando.`);
 }
 
+// Una URL indexable debe tener una sola pertenencia en el índice principal.
+// Antes priority/core/hubs podían repetir cientos de loc: el protocolo lo
+// tolera, pero desperdicia crawl budget y hace menos legible qué cohorte se
+// está evaluando. La cohorte de recuperación queda fuera del índice y conserva
+// deliberadamente sus URLs para poder reenviarse por separado.
+const seenIndexedUrls = new Set<string>();
+let sitemapDuplicatesRemoved = 0;
+const sitemapDedupRank = (name: string): number => {
+  if (name === 'sitemap-news.xml') return 100;
+  if (name === 'sitemap-hubs.xml') return 90;
+  if (name === 'sitemap-priority.xml') return 80;
+  if (name === 'sitemap-core.xml') return 70;
+  if (name === 'sitemap-blog.xml') return 60;
+  return 10;
+};
+// Deduplicamos primero en las cohortes más específicas: una noticia debe
+// conservar su entrada de News, y un hub su sitemap canónico, aunque también
+// aparezca como página prioritaria o de blog.
+for (const s of [...sitemaps].sort((a, b) => sitemapDedupRank(b.name) - sitemapDedupRank(a.name))) {
+  if (s.includeInIndex === false || s.skipWrite) continue;
+  const before = s.urls.length;
+  s.urls = s.urls.filter((u) => {
+    if (seenIndexedUrls.has(u.loc)) return false;
+    seenIndexedUrls.add(u.loc);
+    return true;
+  });
+  sitemapDuplicatesRemoved += before - s.urls.length;
+}
+if (sitemapDuplicatesRemoved > 0) {
+  console.log(`Removed ${sitemapDuplicatesRemoved} URLs duplicadas entre sitemaps indexables.`);
+}
+
 let totalUrls = 0;
 // Si una categoría o un locale queda con cero URLs distribuibles, ya no entra
 // en `sitemaps`. Eliminamos el XML de builds anteriores para que Cloudflare no
@@ -1854,7 +1896,7 @@ totalUrls += imageEntriesClean.length;
 // nada. Pasaba con sitemap-{comparaciones,decidir,mi,registries}.xml, que
 // quedaron en 0 URLs cuando su contenido se consolidó o salió del sitemap a
 // propósito (p. ej. /decidir/*, que sigue vivo pero no compite por queries).
-const indexableSitemaps = sitemaps.filter((s) => s.urls.length > 0 || (s as any).skipWrite);
+const indexableSitemaps = sitemaps.filter((s) => s.includeInIndex !== false && (s.urls.length > 0 || s.skipWrite));
 const indexEntries = indexableSitemaps.map((s) => {
   const loc = `${site}/${s.name}`;
   const desired = maxLastmod(s.urls, buildDate);

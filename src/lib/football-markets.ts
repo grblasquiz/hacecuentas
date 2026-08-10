@@ -14,8 +14,13 @@ export const footballMarkets = [
   { key:'en', path:'/en/football-today', locale:'en-GB', tz:'Europe/London', country:'England', adjective:'English', leagues:['Premier League','Championship'], codes:['eng.1','eng.2'], en:true },
 ] as const;
 
+// Las páginas sin códigos de competición no tienen datos suficientes para ser
+// indexables. Se mantienen publicadas como destino útil, pero no forman parte
+// del cluster hreflang que se ofrece a buscadores.
+const indexableFootballMarkets = footballMarkets.filter(m => m.codes.length > 0);
+
 export const footballHreflang = [
   { lang:'es-AR', href:'https://hacecuentas.com/futbol-argentino-hoy' },
-  ...footballMarkets.map(m => ({ lang:m.locale, href:`https://hacecuentas.com${m.path}` })),
+  ...indexableFootballMarkets.map(m => ({ lang:m.locale, href:`https://hacecuentas.com${m.path}` })),
   { lang:'x-default', href:'https://hacecuentas.com/futbol-hoy' },
 ];

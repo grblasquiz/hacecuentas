@@ -116,6 +116,10 @@ function loadCalcMetadata(prunedPaths, gonePaths) {
 
   for (const [collection, prefix] of CALC_COLLECTIONS) {
     const directory = join(ROOT, 'src', 'content', collection);
+    // Algunas variantes de idioma son opcionales en checkouts parciales. La
+    // ausencia de la colección no debe convertir una auditoría read-only en
+    // un error de filesystem: si existe, se audita; si no, se continúa.
+    if (!existsSync(directory)) continue;
     for (const name of readdirSync(directory)) {
       if (!name.endsWith('.json')) continue;
       const file = join(directory, name);

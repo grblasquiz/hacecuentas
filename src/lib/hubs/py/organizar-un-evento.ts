@@ -230,6 +230,12 @@ export const hub: HubData = {
   {
     "name": "Ministerio de Salud — Guías Alimentarias para la Población Argentina",
     "url": "https://www.argentina.gob.ar/salud/alimentacion-saludable"
+  },
+  {
+    "name": "Ministerio de Salud Pública y Bienestar Social — Paraguay",
+    "url": "https://www.mspbs.gov.py/",
+    "publisher": "Gobierno de Paraguay",
+    "date": "2026-07-28"
   }
 ],
   replaces: [

@@ -395,6 +395,11 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
   ogTitle={post.ogTitle}
   noindex={post.noindex === true}
   noAds={post.noindex === true || post.adsenseEligible === false}
+  ymylRisk={['finanzas', 'negocios', 'salud', 'familia'].includes(post.category) ? 'medium' : 'low'}
+  editorialStatus={sources.length > 0 ? 'source-backed' : 'pending'}
+  editorialReviewedAt={reviewedRaw}
+  editorialSources={sources}
+  professionalReviewer={post.professionalReviewer}
   audience={audience}
   ogType="article"
   articleAuthor={displayAuthor}
@@ -547,6 +552,21 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
             </div>
           </section>
         )}
+
+        <!-- Prueba editorial transversal: incluso una nota sin fuente externa
+             específica explica quién la revisó, cuándo y cómo continuar. No se
+             presenta como una fuente primaria; la sección hace explícita la
+             diferencia entre una guía original y una noticia documentada. -->
+        <section class="bp-editorial-proof" aria-labelledby="bp-editorial-proof-title">
+          <p class="bp-eyebrow">Transparencia editorial</p>
+          <h2 id="bp-editorial-proof-title">Cómo preparamos esta nota</h2>
+          <p>La nota tiene autor, fecha de publicación y fecha de revisión. Cuando trata montos, normas o datos que cambian, enlazamos la fuente primaria disponible y señalamos la fecha que usamos. Cuando explica una cuenta propia, mostramos el razonamiento y los supuestos para que puedas repetirlo.</p>
+          <div class="bp-editorial-proof__links">
+            <a href="/autores/martin-rodriguez" rel="author">Conocé al editor responsable →</a>
+            <a href="/politica-editorial">Política editorial →</a>
+            <a href="/metodologia">Metodología de las cuentas →</a>
+          </div>
+        </section>
 
         <!-- FAQ -->
         {post.faq && post.faq.length > 0 && (
@@ -1167,6 +1187,11 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
   .bp-sources__title { font-size: 1.35rem; font-weight: 800; color: var(--text); margin: 0.4rem 0 0.5rem; letter-spacing: -0.01em; }
   .bp-sources__desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 1.1rem; }
   .bp-sources__list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .bp-editorial-proof { margin-top: 3rem; padding: 1.35rem 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
+  .bp-editorial-proof h2 { font-size: 1.25rem; font-weight: 800; color: var(--text); margin: 0.35rem 0 0.55rem; }
+  .bp-editorial-proof > p:not(.bp-eyebrow) { max-width: 72ch; color: var(--text-muted); line-height: 1.65; margin: 0; }
+  .bp-editorial-proof__links { display: flex; flex-wrap: wrap; gap: .6rem 1.1rem; margin-top: 1rem; }
+  .bp-editorial-proof__links a { color: var(--accent); font-size: .875rem; font-weight: 700; }
   .bp-source {
     display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
     padding: 0.8rem 1rem; border: 1px solid var(--border); border-radius: var(--radius);

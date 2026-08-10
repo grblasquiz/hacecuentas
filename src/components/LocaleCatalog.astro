@@ -7,6 +7,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
 import { isDistributablePublicPath } from '../lib/content-policy';
+import currentTools from '../lib/current-tools-index.json';
 
 interface CalcItem { h1: string; slug: string; icon?: string; category: string; url: string; }
 interface Props {
@@ -20,7 +21,20 @@ interface Props {
   dataLabel?: string;   // '📊 …'
 }
 const { calcs: suppliedCalcs, prefix, audience, country, lang, topics, dataLink, dataLabel } = Astro.props as Props;
-const calcs = suppliedCalcs.filter((calc) => isDistributablePublicPath(calc.url));
+// Los catálogos locales no pueden depender sólo de los JSON de calcs: desde la
+// consolidación editorial, la mayoría de las herramientas vive dentro de hubs
+// de decisión y aparece en current-tools-index. Antes, si había aunque fuera
+// una calc local, la condición de la página descartaba todos esos hubs y dejaba
+// /{locale}/calculadoras casi vacío (thin content). Unimos ambas fuentes y
+// deduplicamos por URL; así el catálogo siempre refleja la superficie real del
+// país, sin inventar páginas nuevas ni enlazar aliases.
+const indexedHubItems: CalcItem[] = currentTools
+  .filter((tool) => tool.slug.startsWith(`${prefix}/`) && tool.slug !== `${prefix}/calculadoras`)
+  .map((tool) => ({ h1: tool.h1, slug: tool.slug, category: tool.category, url: `/${tool.slug}` }));
+const seenUrls = new Set<string>();
+const calcs = [...suppliedCalcs, ...indexedHubItems]
+  .filter((calc) => isDistributablePublicPath(calc.url))
+  .filter((calc) => !seenUrls.has(calc.url) && seenUrls.add(calc.url));
 
 const CAT: Record<string, { label: string; color: string; icon: string }> = {
   finanzas:         { label: 'Finanzas',       color: '#2563eb', icon: '💰' },

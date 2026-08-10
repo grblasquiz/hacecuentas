@@ -1,0 +1,121 @@
+---
+export interface EditorialSource {
+  name?: string;
+  title?: string;
+  publisher?: string;
+  url?: string;
+  date?: string;
+}
+
+export interface ProfessionalReviewer {
+  name?: string;
+  profession?: string;
+  credential?: string;
+  licenseNumber?: string;
+  profileUrl?: string;
+  reviewedAt?: string;
+}
+
+interface Props {
+  noindex?: boolean;
+  pageType?: string;
+  ymylRisk?: 'low' | 'medium' | 'high' | 'unknown' | string;
+  status?: 'source-backed' | 'automated-checked' | 'editorial-reviewed' | 'pending' | 'unknown' | string;
+  reviewedAt?: string;
+  sources?: EditorialSource[];
+  professionalReviewer?: ProfessionalReviewer | null;
+}
+
+const {
+  noindex = false,
+  pageType,
+  ymylRisk = 'unknown',
+  status = 'unknown',
+  reviewedAt,
+  sources = [],
+  professionalReviewer,
+} = Astro.props;
+
+const validReviewer = Boolean(
+  professionalReviewer?.name &&
+  professionalReviewer?.profession &&
+  professionalReviewer?.credential &&
+  professionalReviewer?.profileUrl &&
+  professionalReviewer?.reviewedAt,
+);
+const isSensitive = ['medium', 'high'].includes(String(ymylRisk));
+const state = validReviewer
+  ? 'Revisión profesional documentada'
+  : status === 'editorial-reviewed'
+    ? 'Revisión editorial documentada'
+    : status === 'source-backed'
+      ? 'Fuentes específicas documentadas'
+      : status === 'automated-checked'
+        ? 'Pruebas automatizadas documentadas'
+        : 'Estado editorial visible en metodología';
+const stateDetail = validReviewer
+  ? `${professionalReviewer?.name} · ${professionalReviewer?.profession}`
+  : status === 'automated-checked'
+    ? 'Las pruebas no reemplazan una revisión profesional.'
+    : isSensitive
+      ? 'Para decisiones personales, consultá a un profesional matriculado.'
+      : 'La autoría y el método están explicados en las páginas editoriales.';
+const formattedDate = reviewedAt
+  ? new Date(`${reviewedAt.slice(0, 10)}T00:00:00Z`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+  : '';
+const pageLabel = pageType === 'calculator' ? 'esta calculadora' : pageType === 'hub' ? 'esta guía' : 'esta página';
+---
+
+{!noindex && (
+  <section class="editorial-trust" aria-labelledby="editorial-trust-title">
+    <div class="editorial-trust__head">
+      <div>
+        <p class="editorial-trust__eyebrow">Transparencia editorial</p>
+        <h2 id="editorial-trust-title">Quién responde por {pageLabel}</h2>
+      </div>
+      <span class="editorial-trust__status" data-state={validReviewer ? 'professional' : isSensitive ? 'sensitive' : 'editorial'}>{state}</span>
+    </div>
+
+    <div class="editorial-trust__grid">
+      <div>
+        <strong>Autor y editor responsable</strong>
+        <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a>
+        <span>Fundador y editor responsable de Hacé Cuentas.</span>
+      </div>
+      <div>
+        <strong>Cómo se verifica</strong>
+        <span>{stateDetail}</span>
+        {formattedDate && <time datetime={reviewedAt}>{formattedDate}</time>}
+      </div>
+      <div>
+        <strong>Fuentes y método</strong>
+        <span>{sources.length > 0 ? `${sources.length} fuente${sources.length === 1 ? '' : 's'} declarada${sources.length === 1 ? '' : 's'}.` : 'La página explica sus supuestos y límites.'}</span>
+        <a href="/metodologia">Ver metodología →</a>
+      </div>
+    </div>
+
+    <div class="editorial-trust__links">
+      <a href="/politica-editorial">Política editorial</a>
+      <a href="/correcciones">Reportar una corrección</a>
+      <a href="/contacto">Contacto editorial</a>
+    </div>
+  </section>
+)}
+
+<style>
+  .editorial-trust { max-width: 1180px; margin: 2rem auto 0; padding: 1.15rem 1.25rem; border: 1px solid var(--border, #e2e8f0); border-radius: var(--radius-lg, 14px); background: color-mix(in srgb, var(--bg-card, #fff) 96%, var(--accent, #2563eb)); color: var(--text, #0f172a); }
+  .editorial-trust__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+  .editorial-trust__eyebrow { margin: 0 0 .25rem; color: var(--accent, #2563eb); font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  .editorial-trust h2 { margin: 0; font-size: 1.05rem; letter-spacing: -.02em; }
+  .editorial-trust__status { border: 1px solid color-mix(in srgb, var(--accent, #2563eb) 22%, var(--border, #e2e8f0)); border-radius: 999px; padding: .35rem .65rem; color: var(--accent-strong, #1e40af); background: var(--accent-soft, #eff6ff); font-size: .72rem; font-weight: 750; white-space: nowrap; }
+  .editorial-trust__status[data-state="sensitive"] { color: var(--warning-text, #b45309); background: var(--warning-soft, #fffbeb); border-color: #f6d58b; }
+  .editorial-trust__status[data-state="professional"] { color: var(--success-text, #15803d); background: var(--success-soft, #f0fdf4); border-color: #bbebc8; }
+  .editorial-trust__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .editorial-trust__grid > div { display: grid; gap: .22rem; min-width: 0; }
+  .editorial-trust__grid strong { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-subtle, #64748b); }
+  .editorial-trust__grid span, .editorial-trust__grid time { color: var(--text-muted, #475569); font-size: .8rem; line-height: 1.45; }
+  .editorial-trust a { color: var(--accent, #2563eb); font-weight: 700; text-decoration: none; }
+  .editorial-trust a:hover { text-decoration: underline; }
+  .editorial-trust__links { display: flex; flex-wrap: wrap; gap: .7rem 1.25rem; margin-top: 1rem; padding-top: .8rem; border-top: 1px solid var(--border, #e2e8f0); font-size: .78rem; }
+  @media (max-width: 720px) { .editorial-trust { margin-inline: 1rem; padding: 1rem; } .editorial-trust__head { display: grid; } .editorial-trust__status { width: fit-content; } .editorial-trust__grid { grid-template-columns: 1fr; gap: .8rem; } }
+</style>
