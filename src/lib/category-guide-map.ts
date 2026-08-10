@@ -17,7 +17,7 @@ export const CATEGORY_TO_GUIDE: Record<string, string> = {
   // Guía pilar dedicada de negocios (pymes/emprendedores/freelancers): precios,
   // márgenes, comisiones de plataformas, costo laboral, métricas de startup.
   // Antes caía en marketing-roi-metricas por falta de guía propia.
-  negocios: 'negocios-e-independientes-2026',
+  negocios: 'marketing-roi-metricas',
   marketing: 'marketing-roi-metricas',
   salud: 'salud-nutricion-fitness',
   // Deportes tiene guía propia (fitness + competición) — 111 calcs; antes
@@ -121,7 +121,6 @@ export const GUIDE_TITLES: Record<string, string> = {
   'vida-cotidiana': 'Vida cotidiana y hogar',
   mascotas: 'Mascotas',
   viajes: 'Viajes y auto',
-  'negocios-e-independientes-2026': 'Negocios e independientes',
   'tecnologia-electronica': 'Tecnología y electrónica',
   'deportes-fitness': 'Deportes y fitness',
   'auto-y-movilidad': 'Auto y movilidad',
@@ -170,7 +169,6 @@ export const GUIDE_TO_CATEGORIES: Record<string, string[]> = {
   'vida-cotidiana': ['vida', 'entretenimiento'],
   mascotas: ['mascotas'],
   viajes: ['viajes'],
-  'negocios-e-independientes-2026': ['negocios', 'marketing'],
   'tecnologia-electronica': ['tecnologia', 'electronica'],
   'deportes-fitness': ['deportes', 'salud'],
   'auto-y-movilidad': ['automotor', 'viajes'],

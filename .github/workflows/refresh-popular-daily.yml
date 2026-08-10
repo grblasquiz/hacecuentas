@@ -39,6 +39,10 @@ permissions:
   contents: write
   issues: write
 
+concurrency:
+  group: content-writers-main
+  cancel-in-progress: false
+
 jobs:
   refresh-popular:
     runs-on: ubuntu-latest
@@ -57,7 +61,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install google-auth google-api-python-client
+        run: pip install google-auth google-api-python-client google-analytics-data
 
       - name: Write GCP credentials
         env:
