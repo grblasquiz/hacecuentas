@@ -22,14 +22,14 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'estudio/contador-de-palabras',
-  title: '¿Cuántas palabras tiene mi trabajo? Contador de palabras, caracteres y páginas',
+  title: 'Contador de palabras y caracteres gratis: texto y páginas',
   description:
-    'Pegá tu texto y mirá cuántas palabras, caracteres, párrafos y páginas tenés, cuánto te falta para el mínimo pedido y cuánto tarda en leerse. Con criterios de conteo APA y de universidades.',
+    'Contá palabras, caracteres, párrafos y páginas gratis. Pegá tu texto, medí cuánto te falta para el objetivo y calculá el tiempo de lectura.',
   silo: 'Estudio',
   siloHref: '/estudio',
 
   eyebrow: 'Herramienta de escritura académica',
-  h1: '¿Cuántas palabras tiene mi trabajo?',
+  h1: 'Contador de palabras: ¿cuántas palabras tiene mi texto?',
   lede:
     'Pegá el texto, poné el mínimo que te pidieron y mirá en una sola pantalla cuánto llevás, cuánto te falta y cuántas páginas ocupa con el formato de tu cátedra.',
   stamps: ['Actualizado 27-07-2026', 'Criterio APA 7ª edición', '9 calculadoras adentro'],

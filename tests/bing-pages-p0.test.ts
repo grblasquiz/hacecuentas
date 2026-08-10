@@ -53,14 +53,14 @@ describe('páginas prioritarias de Bing', () => {
   it('convierte con los valores live de Chile sin proyectar fechas', () => {
     const uf = computeUf({ tipo_conversion: 'uf_a_pesos', monto: 100 });
     const utm = computeUf({ tipo_conversion: 'utm_a_pesos', monto: 5 });
-    expect(uf.valor_unitario).toBe(40_844.79);
-    expect(uf.resultado_conversion).toBe(4_084_479);
+    expect(uf.valor_unitario).toBe(clLive.uf.valor);
+    expect(uf.resultado_conversion).toBe(Math.round(clLive.uf.valor * 100 * 100) / 100);
     const liveDate = new Intl.DateTimeFormat('es-CL', {
       day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Santiago',
     }).format(new Date(clLive.uf.fecha));
     expect(uf.fecha_vigencia).toContain(liveDate);
-    expect(utm.valor_unitario).toBe(71_649);
-    expect(utm.resultado_conversion).toBe(358_245);
+    expect(utm.valor_unitario).toBe(clLive.utm.valor);
+    expect(utm.resultado_conversion).toBe(Math.round(clLive.utm.valor * 5 * 100) / 100);
   });
 
   it('escribe importes en distintas monedas', () => {

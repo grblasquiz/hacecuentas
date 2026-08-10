@@ -139,18 +139,18 @@ def generate_post():
         if brecha_ccl:
             content_html += f'<li><strong>CCL vs oficial</strong>: {brecha_ccl}%</li>'
         content_html += '</ul>'
-        content_html += '<p>Si la brecha está baja (menos del 15%), la presión cambiaria es contenida. Si está sobre el 40%, hay tensión acumulada. Para profundizar, consultá nuestra <a href="/brecha-dolar-blue-mep-ccl-oficial">calculadora de brecha</a> actualizada en tiempo real.</p>'
+        content_html += '<p>Si la brecha está baja (menos del 15%), la presión cambiaria es contenida. Si está sobre el 40%, hay tensión acumulada. Para profundizar, consultá nuestro <a href="/finanzas-personales/dolar">hub del dólar</a> actualizado en tiempo real.</p>'
 
     content_html += f'''
 <h2 id="inflacion">Inflación reciente</h2>
 <p>El IPC mensual de los últimos 6 meses (INDEC):</p>
 {inf_table}
-<p>Si tu ahorro está en pesos, el interés tiene que <strong>superar la inflación</strong> para que realmente rinda. Usá nuestra <a href="/calculadora-inflacion-acumulada-periodo">calculadora de inflación acumulada</a> para ver cuánto perdió tu dinero.</p>
+<p>Si tu ahorro está en pesos, el interés tiene que <strong>superar la inflación</strong> para que realmente rinda. Consultá nuestro <a href="/inflacion-argentina">hub de inflación argentina</a> para ver cuánto perdió tu dinero.</p>
 
 <h2 id="plazo-fijo">Plazo fijo: top 10 bancos</h2>
 <p>Tasas TNA de plazo fijo tradicional a 30 días al {today.strftime('%d de %B').lower()}:</p>
 {pf_table}
-<p>Para simular tu rendimiento exacto con esta tasa, usá la <a href="/calculadora-plazo-fijo">calculadora de plazo fijo</a>. Comparalo con la inflación: si la TNA mensual equivalente es <em>menor</em> al IPC, tu dinero pierde poder adquisitivo aunque el saldo nominal crezca.</p>
+<p>Para simular tu rendimiento exacto con esta tasa, usá el <a href="/inversiones/plazo-fijo">hub de plazo fijo</a>. Comparalo con la inflación: si la TNA mensual equivalente es <em>menor</em> al IPC, tu dinero pierde poder adquisitivo aunque el saldo nominal crezca.</p>
 
 <h2 id="recomendaciones">Qué hacer con tus pesos este mes</h2>
 <p>Regla pragmática para el contexto actual:</p>
@@ -165,10 +165,10 @@ def generate_post():
 <h2 id="calcs">Calculadoras útiles para tu planificación</h2>
 <ul>
 <li><a href="/presupuesto-familiar">Presupuesto familiar 50/30/20</a></li>
-<li><a href="/calculadora-interes-compuesto">Interés compuesto</a></li>
-<li><a href="/calculadora-plazo-fijo">Plazo fijo — rendimiento real</a></li>
-<li><a href="/brecha-dolar-blue-mep-ccl-oficial">Brecha del dólar</a></li>
-<li><a href="/calculadora-inflacion-acumulada-periodo">Inflación acumulada</a></li>
+<li><a href="/inversiones/interes-compuesto">Interés compuesto</a></li>
+<li><a href="/inversiones/plazo-fijo">Plazo fijo — rendimiento real</a></li>
+<li><a href="/finanzas-personales/dolar">Brecha del dólar</a></li>
+<li><a href="/inflacion-argentina">Inflación acumulada</a></li>
 <li><a href="/simulador-jubilacion-anses">Simulador de jubilación ANSES</a></li>
 </ul>
 '''
@@ -189,10 +189,10 @@ def generate_post():
         'heroEmoji': '📊',
         'content': content_html,
         'relatedCalcs': [
-            'brecha-dolar-blue-mep-ccl-oficial',
-            'plazo-fijo',
-            'interes-compuesto',
-            'inflacion-acumulada-periodo',
+            '/finanzas-personales/dolar',
+            '/inversiones/plazo-fijo',
+            '/inversiones/interes-compuesto',
+            '/trabajo/sueldo-vs-inflacion',
         ],
         'faq': [
             {
