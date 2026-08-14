@@ -1,7 +1,6 @@
-# INSTRUCCIONES ChatGPT — 5 notas por hub × top 100 hubs de hacecuentas.com (500 notas)
+# INSTRUCCIONES ChatGPT — 5 notas por hub × top 30 hubs de hacecuentas.com (150 notas)
 
-> Brief de producción en masa (off-page). Generado 2026-08-14 a partir del top 100
-> de hubs por sesiones GA4 desde el lanzamiento (2026-07-27).
+> Brief de producción en masa (off-page). Generado 2026-08-14 a partir del top 30 de hubs por sesiones GA4 desde el lanzamiento (2026-07-27).
 > Para que sumen autoridad real, publicar en dominios con links dofollow
 > (guest posts, blogs propios satélite). Medium/LinkedIn son nofollow: sirven
 > para referral y marca, no para link equity.
@@ -39,9 +38,14 @@ Por cada hub producís **5 notas**, una por cada ángulo fijo:
 ## Proceso
 Cuando te pase un HUB, entregá primero los 5 títulos (uno por ángulo) en 5 líneas. Cuando los apruebe, escribí las notas de a una por mensaje, en el orden de los ángulos. Después paso al hub siguiente.
 
+## Reglas de publicación (para el dueño, no para ChatGPT)
+- **Ritmo**: máximo 10-15 notas publicadas por semana. Nunca todas juntas — una ola de 150 links al mismo dominio en poco tiempo es huella de link scheme.
+- **Destino**: dominios con autoridad real y links dofollow (guest posts genuinos, blogs propios con tráfico). Evitar granjas de dominios nuevos/PBN. Medium y LinkedIn suman referral y marca, no equity.
+- **Orden**: arrancar por los hubs 1-10 de la tabla (concentran ~60% del tráfico).
+
 ---
 
-## Lista de hubs (top 100 por sesiones GA4 desde el 27-jul, en orden de prioridad)
+## Lista de hubs (top 30 por sesiones GA4 desde el 27-jul, en orden de prioridad)
 
 | # | Sesiones | URL |
 |---|---|---|
@@ -75,73 +79,3 @@ Cuando te pase un HUB, entregá primero los 5 títulos (uno por ángulo) en 5 l�
 | 28 | 57 | https://hacecuentas.com/trabajo/seguro-de-desempleo |
 | 29 | 56 | https://hacecuentas.com/construccion/ladrillos |
 | 30 | 56 | https://hacecuentas.com/familia/cuota-alimentaria |
-| 31 | 53 | https://hacecuentas.com/co/trabajo/liquidacion-laboral |
-| 32 | 53 | https://hacecuentas.com/finanzas-personales/dolar |
-| 33 | 53 | https://hacecuentas.com/inversiones/interes-compuesto |
-| 34 | 53 | https://hacecuentas.com/jubilacion/cuanto-voy-a-cobrar |
-| 35 | 52 | https://hacecuentas.com/construccion/pintura |
-| 36 | 52 | https://hacecuentas.com/conversores/longitud |
-| 37 | 49 | https://hacecuentas.com/mx/trabajo/finiquito-y-liquidacion |
-| 38 | 48 | https://hacecuentas.com/trabajo/aguinaldo |
-| 39 | 47 | https://hacecuentas.com/do/trabajo/liquidacion |
-| 40 | 47 | https://hacecuentas.com/mx/trabajo/mi-pension-imss |
-| 41 | 47 | https://hacecuentas.com/trabajo/costo-de-un-empleado |
-| 42 | 47 | https://hacecuentas.com/trabajo/horas-extra |
-| 43 | 44 | https://hacecuentas.com/auto/tramites |
-| 44 | 43 | https://hacecuentas.com/co/impuestos/retencion-en-la-fuente |
-| 45 | 43 | https://hacecuentas.com/mx/trabajo/sueldo-neto |
-| 46 | 42 | https://hacecuentas.com/mascotas/edad-del-gato |
-| 47 | 41 | https://hacecuentas.com/trabajo/vacaciones |
-| 48 | 40 | https://hacecuentas.com/co/impuestos/impuestos-de-mi-negocio |
-| 49 | 36 | https://hacecuentas.com/cocina/temperatura-del-horno |
-| 50 | 35 | https://hacecuentas.com/co/trabajo/sueldo-neto |
-| 51 | 34 | https://hacecuentas.com/salud/grasa-corporal |
-| 52 | 33 | https://hacecuentas.com/do/trabajo/sueldo-neto |
-| 53 | 33 | https://hacecuentas.com/embarazo/dias-fertiles |
-| 54 | 33 | https://hacecuentas.com/hogar/factura-de-luz |
-| 55 | 33 | https://hacecuentas.com/impuestos/bienes-personales |
-| 56 | 32 | https://hacecuentas.com/eventos/bebidas |
-| 57 | 32 | https://hacecuentas.com/fechas/dias-entre-fechas |
-| 58 | 32 | https://hacecuentas.com/jardin/huerta |
-| 59 | 31 | https://hacecuentas.com/negocios/precio-de-venta |
-| 60 | 30 | https://hacecuentas.com/ve/trabajo/liquidacion-lottt |
-| 61 | 30 | https://hacecuentas.com/viajes/valen-millas |
-| 62 | 29 | https://hacecuentas.com/mx/trabajo/costo-de-un-empleado |
-| 63 | 29 | https://hacecuentas.com/py/trabajo/ips |
-| 64 | 28 | https://hacecuentas.com/estudio/contador-de-palabras |
-| 65 | 28 | https://hacecuentas.com/mascotas/edad-del-perro |
-| 66 | 28 | https://hacecuentas.com/py/trabajo/liquidacion-final |
-| 67 | 27 | https://hacecuentas.com/co/impuestos/sanciones-dian |
-| 68 | 27 | https://hacecuentas.com/co/trabajo/independiente-y-honorarios |
-| 69 | 27 | https://hacecuentas.com/familia/asignaciones-anses |
-| 70 | 27 | https://hacecuentas.com/fechas/cuenta-regresiva |
-| 71 | 26 | https://hacecuentas.com/auto/auto-o-uber |
-| 72 | 26 | https://hacecuentas.com/ciencia/presion-y-gases |
-| 73 | 26 | https://hacecuentas.com/conversores/temperatura |
-| 74 | 26 | https://hacecuentas.com/finanzas-personales/prestamo |
-| 75 | 25 | https://hacecuentas.com/cocina/cafe |
-| 76 | 25 | https://hacecuentas.com/conversores/numeros-a-letras |
-| 77 | 25 | https://hacecuentas.com/finanzas-personales/gastos-del-mes |
-| 78 | 25 | https://hacecuentas.com/trabajo/sueldo-vs-inflacion |
-| 79 | 24 | https://hacecuentas.com/embarazo/fecha-de-parto |
-| 80 | 24 | https://hacecuentas.com/eventos/comida |
-| 81 | 24 | https://hacecuentas.com/mx/finanzas/credito-de-vivienda |
-| 82 | 24 | https://hacecuentas.com/ve/trabajo/sueldo-y-recargos |
-| 83 | 23 | https://hacecuentas.com/hogar/climatizacion |
-| 84 | 23 | https://hacecuentas.com/vivienda/credito-hipotecario |
-| 85 | 22 | https://hacecuentas.com/ec/impuestos/impuesto-a-la-renta |
-| 86 | 22 | https://hacecuentas.com/ec/trabajo/licencias-y-pension-alimenticia |
-| 87 | 22 | https://hacecuentas.com/finanzas-personales/salir-de-deudas |
-| 88 | 22 | https://hacecuentas.com/matematica/potencias-y-raices |
-| 89 | 21 | https://hacecuentas.com/impuestos/retenciones |
-| 90 | 21 | https://hacecuentas.com/matematica/probabilidad |
-| 91 | 21 | https://hacecuentas.com/salud/habitos |
-| 92 | 21 | https://hacecuentas.com/viajes/hora-mundial |
-| 93 | 20 | https://hacecuentas.com/eventos/empanadas-y-guarniciones |
-| 94 | 20 | https://hacecuentas.com/jubilacion/cuando-me-jubilo |
-| 95 | 20 | https://hacecuentas.com/tecnologia/gaming |
-| 96 | 20 | https://hacecuentas.com/uy/finanzas/unidades-y-valores |
-| 97 | 19 | https://hacecuentas.com/co/trabajo/costo-de-contratar |
-| 98 | 19 | https://hacecuentas.com/co/vida/recibos-de-servicios |
-| 99 | 19 | https://hacecuentas.com/impuestos/iva |
-| 100 | 19 | https://hacecuentas.com/tecnologia/instalacion-electrica |
