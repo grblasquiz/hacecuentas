@@ -167,8 +167,15 @@ if (existsSync(OUT)) {
     // grande y las fuentes editoriales cayeron más de 80%, preservarlo.
     const catastrophicMigrationDrop = previousCount >= 1_000 && nextCount < previousCount * 0.2;
     if (previousCount > 0 && (nextCount === 0 || catastrophicMigrationDrop)) {
-      finalIndex = viablePrevious;
-      console.log(`calc-compute-index.json: migración hub detectada (${nextCount} fuentes) — preservo ${previousCount} herramientas existentes`);
+      // La migración de hubs conserva los contratos históricos, pero no debe
+      // descartar las fuentes editoriales que todavía existen en content/.
+      // Antes de mezclar, un embed legacy podía quedar publicado como un 200
+      // vacío porque su slug nuevo no entraba al índice preservado.
+      finalIndex = { ...viablePrevious, ...sorted };
+      console.log(
+        `calc-compute-index.json: migración hub detectada (${nextCount} fuentes) — ` +
+          `preservo ${previousCount} herramientas existentes y agrego ${nextCount} fuentes actuales`,
+      );
     }
   } catch {
     // El gate de cantidad de abajo deja visible el fallo.

@@ -97,7 +97,7 @@ export const INFUSIONS: Array<{
 
 export const hub: HubData = {
 slug: 'en/cooking/brewing-and-infusions',
-  title: 'Coffee Ratio, Priming Sugar, Barrel Aging & Infusion Time Calculator',
+  title: 'Coffee Ratio, Priming Sugar & Infusion Time',
   description:
     'How strong it comes out and how long it takes: SCA coffee-to-water ratios, priming sugar for a target carbonation, beer color by the Morey SRM equation, barrel aging time by cask size, and infusion times by ingredient.',
   silo: 'Cooking',

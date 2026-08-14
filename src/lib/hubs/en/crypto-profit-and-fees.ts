@@ -35,7 +35,7 @@ export const HALVING = { blocksPerHalving: 210000, targetBlockMinutes: 10, lastH
 
 export const hub: HubData = {
 slug: 'en/money/crypto-profit-and-fees',
-  title: 'Crypto profit and fee calculator — P&L, cost basis, funding and impermanent loss',
+  title: 'Crypto profit and fees: P&L, cost basis, funding',
   description:
     'Work out what a crypto position actually earned after buy and sell fees: cost basis, net proceeds, total and annualised return, break-even price, the short-term or long-term tax line, plus the cost of stablecoin swaps, bridges, perpetual funding and impermanent loss in a pool.',
   silo: 'Money',

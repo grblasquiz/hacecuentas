@@ -42,7 +42,7 @@ const DISCLAIMER =
 
 export const hub: HubData = {
   slug: 'en/cars/fuel-and-trip-cost',
-  title: 'Road Trip Fuel Cost & Range Calculator: Gas, Stops and A/C',
+  title: 'Road Trip Fuel Cost & Range Calculator',
   description:
     'Work out your tank range in miles, the real fuel cost of a road trip with rest stops, what running the A/C adds every month, and whether CNG beats gasoline for your annual mileage.',
   silo: 'Cars',

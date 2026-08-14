@@ -41,6 +41,24 @@ class HubUrlDetectionTests(unittest.TestCase):
             "https://hacecuentas.com/uy/trabajo/estudio-y-vida-cotidiana",
         )
 
+    def test_deleted_content_is_submitted_even_after_leaving_sitemap(self):
+        old_json = '{"slug":"calculadora-que-ya-no-existe"}'
+        with (
+            patch.object(
+                INDEXNOW.subprocess,
+                "run",
+                side_effect=[
+                    Completed("D\tsrc/content/calcs/old.json\n"),
+                    Completed(old_json),
+                ],
+            ),
+            patch.object(INDEXNOW, "all_sitemap_urls", return_value=set()),
+        ):
+            self.assertEqual(
+                INDEXNOW.urls_from_git_diff("before", "after"),
+                ["https://hacecuentas.com/calculadora-que-ya-no-existe"],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -22,7 +22,7 @@ const DISCLAIMER_MATH =
 
 export const hub: HubData = {
   slug: 'en/math/geometry-trigonometry',
-  title: 'Geometry & Trigonometry Calculator: triangle area, sphere volume, distance, sine and cosine',
+  title: 'Geometry & Trigonometry: area, volume and distance',
   description:
     'Work out the area of a triangle from its three sides with Heron\'s formula, the volume and surface area of a sphere, the distance between two points, the sine, cosine and tangent of an angle, and the conversion between radians and degrees.',
   silo: 'Math',

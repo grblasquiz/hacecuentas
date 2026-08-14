@@ -121,26 +121,42 @@ for (const file of compiledHtmlFiles) {
   if (errors.length >= 50) break;
 }
 
-// Guardrails para los tres warnings recurrentes del auditor de Bing (2026-07):
-// title largo, imágenes de categoría con alt vacío y doble H1 en Mi Hacé Cuentas.
+// Guardrails para los warnings recurrentes del auditor SEO: title largo,
+// imágenes sin alt y páginas indexables sin un H1 server-side. El HTML dentro
+// de scripts/templates no cuenta: puede contener mockups o strings que luego
+// se montan en el navegador y no son señales SEO iniciales.
 for (const file of compiledHtmlFiles) {
   const html = readFileSync(file, 'utf8');
   const relative = file.replace(`${DIST}/`, '');
-  const robots = html.match(/<meta\s+[^>]*name=["']robots["'][^>]*content=["']([^"']+)/i)?.[1] || '';
+  const hasNoindex = [...html.matchAll(/<meta\b[^>]*>/gi)].some(([tag]) =>
+    /\bname=["']robots["']/i.test(tag) &&
+    /\bcontent=["'][^"']*\bnoindex\b[^"']*["']/i.test(tag),
+  );
+  const renderableHtml = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
+  const isIndexable = !hasNoindex;
   const titleRaw = html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] || '';
   const title = decodeHtmlText(titleRaw)
     .replace(/<[^>]+>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
-  if (title && !/\bnoindex\b/i.test(robots) && title.length > SEO_TITLE_MAX_LENGTH) {
+  if (title && isIndexable && title.length > SEO_TITLE_MAX_LENGTH) {
     errors.push(`title largo (${title.length}): ${relative}`);
   }
 
-  if (/^categoria\/[^/]+(?:\/\d+)?\.html$/.test(relative)) {
-    for (const image of html.match(/<img\b[^>]*>/gi) || []) {
-      if (!/\balt=["'][^"']+["']/i.test(image)) {
-        errors.push(`imagen de categoría sin alt descriptivo: ${relative}`);
+  if (isIndexable) {
+    const h1Count = (renderableHtml.match(/<h1\b/gi) || []).length;
+    if (h1Count !== 1) {
+      errors.push(`página indexable debe tener 1 H1 server-side, tiene ${h1Count}: ${relative}`);
+    }
+    for (const image of renderableHtml.match(/<img\b[^>]*>/gi) || []) {
+      // alt="" es válido para imágenes decorativas; lo que no puede faltar es
+      // el atributo, que es lo que reporta el crawler.
+      if (!/\balt\s*=\s*["'][^"']*["']/i.test(image)) {
+        errors.push(`imagen sin atributo alt: ${relative}`);
         break;
       }
     }

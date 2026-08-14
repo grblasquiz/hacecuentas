@@ -41,6 +41,7 @@ const LIVE_SITEMAPS: ReadonlySet<string> = new Set([
   '/sitemap-en.xml',
   '/sitemap-blog.xml',
   '/sitemap-news.xml',
+  '/sitemap-comparaciones.xml',
   '/sitemap-tablas.xml',
   '/sitemap-hubs.xml',
   '/sitemap-iibb.xml',

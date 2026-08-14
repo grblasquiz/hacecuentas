@@ -42,7 +42,7 @@ const liveSitemaps = [
   '/sitemap-priority.xml', '/sitemap-core.xml', '/sitemap-calcs-finanzas.xml',
   '/sitemap-calcs-construccion.xml', '/sitemap-co.xml', '/sitemap-pe.xml', '/sitemap-ec.xml',
   '/sitemap-hubs-recovery.xml',
-  '/sitemap-blog.xml', '/sitemap-news.xml', '/sitemap-tablas.xml', '/sitemap-hubs.xml',
+  '/sitemap-blog.xml', '/sitemap-news.xml', '/sitemap-comparaciones.xml', '/sitemap-tablas.xml', '/sitemap-hubs.xml',
   '/sitemap-iibb.xml', '/sitemap-fresh.xml', '/sitemap-images.xml',
 ];
 const sitemapIndexSource = readFileSync(join(REPO_ROOT, 'public', 'sitemap.xml'), 'utf8');

@@ -79,10 +79,11 @@ def all_sitemap_urls() -> set:
 def urls_from_git_diff(before: str, after: str) -> list:
     """URLs indexables cuyo JSON de contenido cambió entre 2 commits.
 
-    Sólo A/M/R (altas, ediciones, renames): las bajas se cubren con un 301 y Bing
-    las levanta en el recrawl natural (CLAUDE.md §1). Lo que cambió pero no está
-    en el sitemap se descarta y se LOGUEA (nunca en silencio): o es un 301/noindex
-    correcto, o el sitemap quedó viejo → `npm run audit:sitemap`.
+    A/M/R (altas, ediciones, renames) se filtran contra el sitemap actual.
+    D (bajas) se resuelve desde el commit anterior y también se envía: aunque
+    termine en 301/410, IndexNow debe enterarse de que la URL dejó de existir
+    para acelerar la limpieza de su índice. Lo que cambió pero no está en el
+    sitemap se descarta y se LOGUEA (nunca en silencio).
     """
     # `git log` (no `git diff`) para que los archivos salgan en orden de RECENCIA
     # (commit más nuevo primero). Mismo set que `git diff A..B --diff-filter=AMR`,
@@ -90,7 +91,7 @@ def urls_from_git_diff(before: str, after: str) -> list:
     # descarta el bulk viejo. El dedupe preserva ese orden (dict.fromkeys).
     try:
         out = subprocess.run(
-            ['git', 'log', '--name-only', '--diff-filter=AMR', '--pretty=format:',
+            ['git', 'log', '--name-status', '--diff-filter=AMRD', '--pretty=format:',
              f'{before}..{after}', '--',
              *(f'src/content/{d}/*.json' for d in LOCALE_PREFIX),
              # Hubs de decisión: viven en src/lib/hubs/ (no en src/content/) y
@@ -105,20 +106,44 @@ def urls_from_git_diff(before: str, after: str) -> list:
         return []
 
     candidates = []
-    for rel in (ln.strip() for ln in out.splitlines() if ln.strip()):
+    deleted = []
+    for line in (ln.strip() for ln in out.splitlines() if ln.strip()):
+        fields = line.split('\t')
+        if len(fields) >= 2 and re.fullmatch(r'[AMDR]\d*', fields[0]):
+            status = fields[0][0]
+            # For a rename, the last field is the new path. A deleted entry has
+            # only its old path, which we recover from `before` below.
+            rel = fields[-1]
+        else:
+            # Backward-compatible with callers/tests that provide name-only
+            # output instead of `git log --name-status`.
+            status = 'A'
+            rel = line
         parts = rel.split('/')
         path = ROOT / rel
-        if not path.exists():
+        if status != 'D' and not path.exists():
             continue
+        source_text = None
+        if status == 'D':
+            try:
+                source_text = subprocess.run(
+                    ['git', 'show', f'{before}:{rel}'],
+                    cwd=ROOT, capture_output=True, text=True, check=True,
+                ).stdout
+            except subprocess.CalledProcessError:
+                continue
+        else:
+            source_text = path.read_text(encoding='utf-8')
         if rel.startswith('src/lib/hubs/') and rel.endswith('.ts'):
             # src/lib/hubs/<slug>.ts (AR/global) o src/lib/hubs/<locale>/<slug>.ts.
             # El slug dentro del archivo ya es la ruta canónica COMPLETA, incluido
             # el locale cuando corresponde (`uy/trabajo/...`). No anteponer el
             # directorio: produciría rutas inválidas como `/uy/uy/trabajo/...`.
-            m = re.search(r"slug:\s*['\"]([^'\"]+)['\"]", path.read_text(encoding='utf-8'))
+            m = re.search(r"slug:\s*['\"]([^'\"]+)['\"]", source_text)
             if not m:
                 continue
-            candidates.append(f'https://{HOST}/{m.group(1).lstrip("/")}')
+            url = f'https://{HOST}/{m.group(1).lstrip("/")}'
+            (deleted if status == 'D' else candidates).append(url)
             continue
         if len(parts) < 4:
             continue
@@ -126,18 +151,22 @@ def urls_from_git_diff(before: str, after: str) -> list:
         if prefix is None:
             continue
         try:
-            slug = json.loads(path.read_text(encoding='utf-8')).get('slug') or Path(rel).stem
+            slug = json.loads(source_text).get('slug') or Path(rel).stem
         except Exception:
             continue
-        candidates.append(f'https://{HOST}{prefix}/{slug}')
+        url = f'https://{HOST}{prefix}/{slug}'
+        (deleted if status == 'D' else candidates).append(url)
 
     candidates = list(dict.fromkeys(candidates))
+    deleted = list(dict.fromkeys(deleted))
     indexable = all_sitemap_urls()
     urls = [u for u in candidates if u.rstrip('/') in indexable]
     dropped = [u for u in candidates if u.rstrip('/') not in indexable]
+    urls.extend(u for u in deleted if u not in urls)
 
     print(f'[git-changed] {before[:8]}..{after[:8]} → {len(candidates)} contenidos/hubs tocados, '
-          f'{len(urls)} indexables a enviar, {len(dropped)} fuera del sitemap (301/noindex)')
+          f'{len(urls)} URLs a enviar ({len(deleted)} bajas), '
+          f'{len(dropped)} fuera del sitemap (301/noindex)')
     for u in dropped[:15]:
         print(f'  ↩ fuera del sitemap, no se envía: {u}')
     if len(dropped) > 15:
