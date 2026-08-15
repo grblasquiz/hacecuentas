@@ -26,7 +26,7 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'conversores/talles',
-  title: '¿Qué talle soy? — Conversor de talles de ropa, calzado, corpiño y anillo 2026',
+  title: 'Conversor de talles 2026: ropa y calzado AR, US, EU y UK',
   description:
     'Averiguá tu talle con tus medidas en centímetros y velo convertido a AR, US, EU y UK. Ropa y jeans por busto, cintura y cadera; zapatillas por largo del pie; corpiño por contorno y copa; anillo por circunferencia del dedo.',
   silo: 'Conversores',

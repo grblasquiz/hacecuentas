@@ -13,14 +13,14 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'fechas/generaciones',
-  title: '¿De qué generación soy? Tabla por año de nacimiento',
+  title: 'Generaciones por edad 2026: ¿de qué generación soy?',
   description:
     'Descubrí a qué generación pertenecés según tu año de nacimiento. Tabla de generaciones por edad: Baby Boomer, X, Millennial, Z, Alpha y Beta.',
   silo: 'Fechas',
   siloHref: '/fechas',
 
   eyebrow: 'Fechas y calendario',
-  h1: '¿De qué generación soy?',
+  h1: 'Generaciones por edad y año de nacimiento',
   lede:
     'Poné tu año de nacimiento y te decimos de qué generación sos y qué edad cumplís en 2026. Abajo tenés la tabla completa de generaciones por año y edad.',
   stamps: ['Actualizado 07-08-2026', 'Rangos Pew Research · McCrindle', '17 calculadoras adentro'],

@@ -540,6 +540,21 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
         <!-- Article body (con bloques de marca inyectados) -->
         <div class="bp-body prose" set:html={bodyHtml} />
 
+        {post.slug === 'geometria-figuras-y-cuerpos-paso-a-paso-2026' && (
+          <section class="bp-print-sheet" aria-labelledby="geometry-print-title">
+            <p class="bp-eyebrow">Ficha práctica</p>
+            <h2 id="geometry-print-title">Ejercicios resueltos de geometría para imprimir</h2>
+            <p>Intentá cada consigna y después compará tu procedimiento con la solución.</p>
+            <ol>
+              <li><strong>Área y perímetro:</strong> rectángulo de 8 cm por 5 cm. <span>Solución: A = 40 cm²; P = 26 cm.</span></li>
+              <li><strong>Triángulo rectángulo:</strong> catetos de 6 cm y 8 cm. <span>Solución: h = √(6² + 8²) = 10 cm.</span></li>
+              <li><strong>Volumen:</strong> cilindro de radio 3 cm y altura 10 cm. <span>Solución: V = 90π ≈ 282,74 cm³.</span></li>
+              <li><strong>Plano cartesiano:</strong> distancia entre A(1, 2) y B(4, 6). <span>Solución: √((4 − 1)² + (6 − 2)²) = 5.</span></li>
+            </ol>
+            <button type="button" class="bp-print-sheet__button" data-print-geometry>Imprimir ficha de ejercicios</button>
+          </section>
+        )}
+
         {isYmylBottom && (
           <aside class="bp-disclaimer bp-disclaimer--bottom" role="note">
             <p><strong>📌 {ymylCopy.recorda}:</strong> Hacé Cuentas {ymylCopy.registro}. Este contenido es educativo y no sustituye el consejo profesional. Las decisiones de inversión implican riesgo de pérdida de capital y deben tomarse consultando con un profesional matriculado.</p>
@@ -674,6 +689,8 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
 </Layout>
 
 <script>
+  document.querySelector('[data-print-geometry]')?.addEventListener('click', () => window.print());
+
   // ── TOC: highlight de la sección activa + % de lectura ──────────────────────
   (function () {
     const tocLinks = document.querySelectorAll<HTMLAnchorElement>('.bp-toc a, .bp-toc-mobile a');
@@ -1288,6 +1305,18 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
   }
 
   .bp-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+  .bp-print-sheet { margin: 2rem 0; padding: 1.5rem; border: 2px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); }
+  .bp-print-sheet h2 { margin: 0.35rem 0 0.75rem; }
+  .bp-print-sheet li { margin: 0.75rem 0; line-height: 1.55; }
+  .bp-print-sheet li span { display: block; margin-top: 0.2rem; color: var(--text-muted); }
+  .bp-print-sheet__button { padding: 0.7rem 1rem; border: 0; border-radius: var(--radius); background: var(--accent); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  @media print {
+    body * { visibility: hidden !important; }
+    .bp-print-sheet, .bp-print-sheet * { visibility: visible !important; }
+    .bp-print-sheet { position: absolute; inset: 0; margin: 0; border: 0; color: #000; background: #fff; }
+    .bp-print-sheet__button { display: none; }
+  }
 
   /* ── Answer bar responsive ──────────────────────────────────────────────── */
   @media (max-width: 640px) {

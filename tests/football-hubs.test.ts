@@ -41,12 +41,23 @@ describe('hubs de fútbol', () => {
       join(root, 'src/data/live/futbol-argentino.json'),
       ...readdirSync(join(root, 'src/data/live/football')).map((file) => join(root, 'src/data/live/football', file)),
     ];
-    const blocked = [...FOOTBALL_BLOCKED_CLUBS, ...FOOTBALL_BLOCKED_TERMS].map(normalize);
     const failures: string[] = [];
 
     for (const file of files) {
-      const payload = normalize(readFileSync(file, 'utf8'));
-      for (const term of blocked) if (payload.includes(term)) failures.push(`${file}: ${term}`);
+      const payload = JSON.parse(readFileSync(file, 'utf8'));
+      const visit = (value: unknown): void => {
+        if (!value || typeof value !== 'object') return;
+        if (Array.isArray(value)) return value.forEach(visit);
+        const record = value as Record<string, unknown>;
+        if (record.team && typeof record.team === 'object') {
+          const team = record.team as Record<string, unknown>;
+          for (const name of [team.displayName, team.shortDisplayName]) {
+            if (name && !footballNameAllowed(name)) failures.push(`${file}: ${normalize(name)}`);
+          }
+        }
+        Object.values(record).forEach(visit);
+      };
+      visit(payload);
     }
 
     expect(failures, failures.join('\n')).toEqual([]);

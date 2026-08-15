@@ -6,7 +6,7 @@ const sitemap = readFileSync('scripts/generate-sitemap.ts', 'utf8');
 
 describe('SEO canónico del sueldo mínimo de Perú', () => {
   it('responde la consulta y el valor directamente en title, H1 y descripción', () => {
-    expect(source).toContain("const title = 'Sueldo mínimo Perú 2026: S/1.130 al mes'");
+    expect(source).toContain("const title = 'Sueldo mínimo Perú 2026: RMV S/1.130 y neto'");
     expect(source).toContain('<h1>Sueldo mínimo Perú 2026: S/1.130 al mes</h1>');
     expect(source).toContain('El sueldo mínimo en Perú 2026 es de <strong>S/ 1.130 mensuales</strong>');
   });
