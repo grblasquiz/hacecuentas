@@ -6,9 +6,9 @@ const sitemap = readFileSync('scripts/generate-sitemap.ts', 'utf8');
 
 describe('SEO canónico del salario mínimo de México', () => {
   it('responde la consulta y el valor directamente en title, H1 y descripción', () => {
-    expect(source).toContain("const title = 'Salario mínimo México 2026: $315,04 al día'");
+    expect(source).toContain("const title = 'Salario mínimo México 2026: diario, mensual y frontera'");
     expect(source).toContain('<h1>Salario mínimo México 2026: $315,04 diarios</h1>');
-    expect(source).toContain('El salario mínimo en México 2026 es $315,04 diarios');
+    expect(source).toContain('El salario mínimo general 2026 es de <strong>$315,04 diarios</strong>');
   });
 
   it('conserva un único canonical informativo y la fecha de revisión', () => {

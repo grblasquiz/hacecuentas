@@ -15,7 +15,7 @@ describe('calendario Chile 2026', () => {
   });
 
   it('alinea title y H1 con la consulta calendario Chile 2026', () => {
-    expect(page).toContain("const title = 'Calendario Chile 2026: 16 feriados y fines de semana largos'");
+    expect(page).toContain("const title = 'Feriados Chile 2026: calendario e irrenunciables'");
     expect(page).toContain('Calendario Chile <span class="cf-yr">2026</span>: {total} feriados');
   });
 

@@ -10,7 +10,7 @@ const redirects = readFileSync('src/lib/pruning-redirects.ts', 'utf8');
 describe('SEO canónico del salario mínimo de Paraguay', () => {
   it('responde la consulta y el importe en title, H1 y descripción', () => {
     expect(hub).toContain("title: 'Salario mínimo Paraguay 2026: Gs. 3.044.000 y sueldo neto'");
-    expect(hub).toContain('El salario mínimo Paraguay 2026 en guaraníes es Gs. 3.044.000 al mes');
+    expect(hub).toContain('El salario mínimo en Paraguay 2026 es Gs. 3.044.000 al mes');
     expect(experience).toContain('<h1>Salario mínimo Paraguay 2026: Gs. 3.044.000</h1>');
     expect(experience).toContain('el mínimo queda en aproximadamente Gs. 2.770.040 en mano');
   });

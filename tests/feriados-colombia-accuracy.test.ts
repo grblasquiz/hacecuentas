@@ -6,7 +6,7 @@ const component = readFileSync('src/components/generated/FeriadosColombiaExperie
 
 describe('calendario canónico de festivos Colombia 2026', () => {
   it('publica los 18 festivos nacionales y la consulta exacta', () => {
-    expect(page).toContain('Calendario Colombia 2026: 18 festivos y puentes');
+    expect(page).toContain('Festivos Colombia 2026: calendario y próximos puentes');
     expect(component).toContain('<h1>Calendario Colombia 2026: 18 festivos y puentes</h1>');
     expect(component).toContain('18 festivos nacionales');
   });
