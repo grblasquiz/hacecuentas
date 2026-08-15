@@ -55,15 +55,15 @@ const sol = (n: number) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFract
 
 export const hub: HubData = {
   slug: 'pe/impuestos/igv-y-compras',
-  title: 'IGV, detracciones, ITF y compras del exterior en Perú: cuánto impuesto se suma',
+  title: 'IGV Perú 2026, detracciones y tipo de cambio SUNAT',
   description:
-    'Calcula el IGV del 18% de una venta o compra, la detracción del SPOT que te retienen, el ITF que descuenta el banco y los tributos de una compra en Temu, Shein o AliExpress que entra por courier, con el tipo de cambio del día.',
+    'Calcula el IGV 18%, detracciones, ITF y compras del exterior en Perú. Incluye conversión dólar a soles con el tipo de cambio SUNAT de la operación.',
   silo: 'Impuestos',
   siloHref: '/pe/impuestos',
   locale: 'pe',
 
   eyebrow: 'Perú · SUNAT · IGV · SPOT · ITF',
-  h1: '¿Cuánto impuesto se le suma a lo que compro o cobro?',
+  h1: 'IGV, detracciones y tipo de cambio SUNAT: ¿cuánto pago o cobro?',
   lede:
     'El precio que ves casi nunca es el que pagas. Entre el IGV que se suma a la factura, la detracción que el cliente deposita en el Banco de la Nación en vez de pagártela, el ITF que el banco descuenta de cada movimiento y los tributos que el courier te cobra al entregar el paquete, hay cuatro cuentas distintas. Elige cuál es la tuya.',
   stamps: [

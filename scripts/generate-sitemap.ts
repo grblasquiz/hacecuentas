@@ -657,6 +657,11 @@ const priorityUrls: Url[] = [
   prio('/co/datos-salario-minimo-colombia-2026', '0.95', 'weekly'),
   // Segunda oportunidad salarial viva: 15.855 impresiones y CTR 0,4% en Bing.
   prio('/mx/datos-salario-minimo-mexico-2026', '0.9', 'weekly'),
+  // Bing 2026-08: evergreen con muchas impresiones y posición 6-8. Mantenerlas
+  // en la cohorte de rastreo frecuente mientras se consolidan los nuevos snippets.
+  prio('/mx/datos-uma-imss-2026',              '0.9', 'weekly'),
+  prio('/pe/impuestos/igv-y-compras',             '0.9', 'daily', true),
+  prio('/es/impuestos/irpf-nomina',                '0.9', 'weekly'),
   // Oportunidad salarial Perú: 6.101 impresiones, posición 4,85 y CTR 0,7% en Bing.
   // Sólo se distribuye la página informativa canónica, nunca un alias de calculadora.
   prio('/pe/datos-sueldo-minimo-peru-2026', '0.9', 'weekly'),
