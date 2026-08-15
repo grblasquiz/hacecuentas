@@ -1,0 +1,38 @@
+---
+interface Props { category?: string; lang?: string; }
+const { category = '', lang = 'es' } = Astro.props as Props;
+const key = category.toLowerCase();
+type Guide = { title: string; intro: string; steps: string[] };
+const fallback: Guide = {
+  title: 'Convertí el resultado en una decisión',
+  intro: 'El número es un punto de partida. Antes de actuar, revisá supuestos, compará otro escenario y guardá una copia.',
+  steps: ['Confirmá los datos ingresados', 'Probá un escenario alternativo', 'Guardá el cálculo con una fecha', 'Revisá la fuente antes de decidir'],
+};
+const guides: Array<[RegExp, Guide]> = [
+  [/trabaj|sueldo|labor|indemn|vacacion|aguinaldo/, { title: 'Qué revisar antes de usar este monto', intro: 'Contrastalo con tu recibo, convenio y fechas reales. Un concepto omitido puede cambiar el total.', steps: ['Compará con el último recibo', 'Revisá convenio y antigüedad', 'Separá bruto, descuentos y neto', 'Guardá comprobantes y consultá la fuente oficial'] }],
+  [/impuest|fiscal|monotrib|renta|ganancia/, { title: 'Pasá de la estimación al control fiscal', intro: 'Usá el resultado para detectar diferencias; la declaración o el pago final dependen de tu situación documentada.', steps: ['Validá período y jurisdicción', 'Reuní facturas y retenciones', 'Compará contra la declaración previa', 'Confirmá vencimiento y norma vigente'] }],
+  [/finanz|ahorro|credito|prestamo|interes|inversion/, { title: 'Decidí con más de un escenario', intro: 'La tasa o cuota aislada no alcanza: compará costo total, plazo, liquidez y riesgo.', steps: ['Probá una tasa más alta y más baja', 'Compará costo total, no sólo cuota', 'Reservá margen para imprevistos', 'Guardá la alternativa elegida'] }],
+  [/salud|nutric|embarazo|bebe|famil/, { title: 'Usá este resultado como orientación', intro: 'Las estimaciones personales sirven para conversar y hacer seguimiento; no reemplazan una evaluación profesional.', steps: ['Revisá unidades y fecha de medición', 'Evitá interpretar un dato aislado', 'Guardá la evolución, no sólo el valor', 'Consultá si hay síntomas o dudas'] }],
+  [/hogar|vivienda|alquiler|constru|material/, { title: 'Llevá la estimación a un presupuesto real', intro: 'Sumá costos indirectos, margen de variación y cotizaciones antes de comprometerte.', steps: ['Pedí al menos dos cotizaciones', 'Agregá impuestos y costos indirectos', 'Reservá un margen para desvíos', 'Guardá el escenario con su fecha'] }],
+  [/negocio|marketing|venta|precio|margen/, { title: 'Convertí la cuenta en una regla de negocio', intro: 'Documentá el supuesto y definí cuándo volver a calcular para que la decisión siga siendo válida.', steps: ['Separá costos fijos y variables', 'Probá un escenario conservador', 'Definí el umbral para actuar', 'Recalculá cuando cambie precio o volumen'] }],
+];
+let guide = guides.find(([pattern]) => pattern.test(key))?.[1] || fallback;
+if (lang === 'en') guide = { title: 'Turn the result into a decision', intro: 'Check the assumptions, compare another scenario and save a dated copy before acting.', steps: ['Confirm your inputs', 'Test an alternative scenario', 'Save a dated calculation', 'Check the primary source'] };
+if (lang.startsWith('pt')) guide = { title: 'Transforme o resultado em uma decisão', intro: 'Confira as premissas, compare outro cenário e salve uma cópia com data antes de agir.', steps: ['Confirme os dados', 'Teste outro cenário', 'Salve o cálculo com data', 'Confira a fonte oficial'] };
+---
+
+<section class="action-guide" data-action-guide data-nosnippet aria-labelledby="action-guide-title">
+  <div><span>{lang === 'en' ? 'After calculating' : lang.startsWith('pt') ? 'Depois de calcular' : 'Después de calcular'}</span><h3 id="action-guide-title">{guide.title}</h3><p>{guide.intro}</p></div>
+  <ol>{guide.steps.map((step) => <li>{step}</li>)}</ol>
+</section>
+
+<style>
+  .action-guide{display:none;margin:0 0 22px;padding:20px;border:1px solid var(--v2-line,#dbe2df);border-radius:16px;background:linear-gradient(135deg,#f7fbf9,#fffaf0);color:var(--v2-ink,#142033);grid-template-columns:minmax(0,1fr) minmax(280px,1fr);gap:22px}
+  :global(.calc-container:has(.calc-results:not([hidden]))) .action-guide{display:grid}
+  .action-guide span{font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;color:var(--v2-accent-ink,#17624c)}
+  .action-guide h3{margin:5px 0 7px;font-size:19px;letter-spacing:-.025em}.action-guide p{margin:0;font-size:13px;line-height:1.5;color:#586578}
+  .action-guide ol{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px;counter-reset:step}
+  .action-guide li{counter-increment:step;padding:10px 10px 10px 38px;border:1px solid #e1e7e3;border-radius:10px;background:#fff;font-size:12px;line-height:1.35;position:relative}
+  .action-guide li:before{content:counter(step);position:absolute;left:10px;top:9px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#e8f4ef;color:#17624c;font-weight:850;font-size:10px}
+  @media(max-width:720px){.action-guide{grid-template-columns:1fr}.action-guide ol{grid-template-columns:1fr}}
+</style>

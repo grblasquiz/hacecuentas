@@ -77,10 +77,23 @@ const mcpConfigGeneric = 'https://hacecuentas.com/mcp';
       <ul>
         <li><a href="#mcp">Servidor MCP (para LLMs)</a></li>
         <li><a href="#api">API REST (JSON)</a></li>
+        <li><a href="#playground">Playground en vivo</a></li>
         <li><a href="#openapi">OpenAPI / GPT personalizado</a></li>
         <li><a href="#licencia">Licencia y atribución</a></li>
       </ul>
     </nav>
+
+    <section id="playground" class="playground" data-api-playground>
+      <span class="playground-kicker">Probalo ahora</span>
+      <h2>Playground de la API</h2>
+      <p>Este ejemplo llama al endpoint público real. Cambiá los valores y mirá la respuesta JSON que recibiría tu app o agente.</p>
+      <form data-playground-form>
+        <label>Peso (kg)<input name="peso" type="number" min="20" max="400" step="0.1" value="80" required /></label>
+        <label>Altura (cm)<input name="altura" type="number" min="80" max="250" step="0.1" value="180" required /></label>
+        <button type="submit">Ejecutar calculadora →</button>
+      </form>
+      <pre aria-live="polite"><code data-playground-output>Presioná “Ejecutar calculadora”.</code></pre>
+    </section>
 
     <section id="mcp">
       <h2>Servidor MCP — para LLMs</h2>
@@ -155,6 +168,27 @@ const mcpConfigGeneric = 'https://hacecuentas.com/mcp';
   <Footer slot="footer" />
 </Layout>
 
+<script>
+  const root = document.querySelector<HTMLElement>('[data-api-playground]');
+  const form = root?.querySelector<HTMLFormElement>('[data-playground-form]');
+  const output = root?.querySelector<HTMLElement>('[data-playground-output]');
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!output) return;
+    const data = new FormData(form);
+    const params = new URLSearchParams({ peso: String(data.get('peso') || ''), altura: String(data.get('altura') || '') });
+    output.textContent = 'Calculando…';
+    try {
+      const response = await fetch('/api/calc/calculadora-imc/compute?' + params.toString());
+      const json = await response.json();
+      output.textContent = JSON.stringify(json, null, 2);
+      window.hcTrack?.('hc_api_playground_run', { calculator_slug: 'calculadora-imc', source_page: '/desarrolladores' });
+    } catch {
+      output.textContent = 'No se pudo ejecutar. Probá nuevamente.';
+    }
+  });
+</script>
+
 <style>
   .dev {
     max-width: 820px;
@@ -210,6 +244,14 @@ const mcpConfigGeneric = 'https://hacecuentas.com/mcp';
     padding: 0;
     white-space: pre;
   }
+  .playground { margin: 2rem 0; padding: 1.4rem; border: 1px solid #b9d8cc; border-radius: 16px; background: linear-gradient(135deg,#f2fbf7,#fff); }
+  .playground-kicker { color:#087052; font-size:.72rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; }
+  .playground h2 { margin-top:.35rem; }
+  .playground form { display:grid; grid-template-columns:1fr 1fr auto; gap:.7rem; align-items:end; margin:1rem 0; }
+  .playground label { display:grid; gap:.3rem; font-size:.78rem; font-weight:700; }
+  .playground input { width:100%; padding:.7rem; border:1px solid #cbd5d1; border-radius:8px; background:#fff; }
+  .playground button { min-height:43px; padding:0 1rem; border-radius:8px; background:#087052; color:#fff; font-weight:800; }
+  @media(max-width:650px){.playground form{grid-template-columns:1fr}.playground button{width:100%}}
   .dev :not(pre) > code {
     background: var(--surface-alt, #f1f5f9);
     padding: 0.1rem 0.35rem;

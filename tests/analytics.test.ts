@@ -26,6 +26,7 @@ describe('catálogo de eventos', () => {
       'hc_push_view', 'hc_push_subscribe', 'hc_push_dismiss', 'hc_push_denied',
       'hc_push_unsubscribe',
       'hc_dataset_download',
+      'hc_api_playground_run',
     ];
     expect([...HC_EVENTS].sort()).toEqual([...spec].sort());
   });

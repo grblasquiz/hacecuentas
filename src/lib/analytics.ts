@@ -78,6 +78,7 @@ export const HC_EVENTS = [
   'hc_push_unsubscribe',
   // Datos abiertos: click en una descarga first-party CSV/JSON bajo /datos/.
   'hc_dataset_download',
+  'hc_api_playground_run',
 ] as const;
 
 export type HcEvent = (typeof HC_EVENTS)[number];
