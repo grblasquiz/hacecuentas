@@ -1,0 +1,52 @@
+name: Public snapshots refresh
+
+on:
+  schedule:
+    # 08:17 ART. Combustibles, F1 y TC SBS/SUNAT se actualizan sin depender de una Mac local.
+    - cron: '17 11 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: content-writers-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Refresh official public snapshots
+        run: |
+          python3 scripts/fetch-nafta-precios.py
+          node scripts/fetch-sunat-tipo-cambio.mjs
+          node scripts/fetch-formula-1-2026.mjs
+
+      - name: Validate freshness
+        run: |
+          # Reporta cualquier otro dataset vencido, sin impedir que estos tres
+          # snapshots frescos se publiquen (exit 2 es alerta, no error fatal).
+          set +e
+          node --experimental-strip-types scripts/check-stale-data.ts --threshold=0
+          code=$?
+          set -e
+          if [ "$code" = "1" ]; then exit 1; fi
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- src/lib/data/nafta-precios.ts src/data/live/formula-1-2026.json src/content/calcs-pe/calculadora-tipo-de-cambio-sunat-dolar-soles-peru.json; then
+            echo "No changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/data/nafta-precios.ts src/data/live/formula-1-2026.json src/content/calcs-pe/calculadora-tipo-de-cambio-sunat-dolar-soles-peru.json
+          git commit -m "chore(data): refresh combustibles, F1 y TC SUNAT/SBS"
+          git push

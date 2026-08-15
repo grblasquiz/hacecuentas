@@ -225,6 +225,35 @@ function loadCalcsFromFs(): CalcInfo[] {
   return out;
 }
 
+/** Datasets compartidos que no pertenecen a un calc JSON pero alimentan páginas públicas. */
+function loadSharedFromFs(): CalcInfo[] {
+  const now = new Date();
+  const out: CalcInfo[] = [];
+  const fuelFile = join(process.cwd(), 'src/lib/data/nafta-precios.ts');
+  if (existsSync(fuelFile)) {
+    const text = readFileSync(fuelFile, 'utf8');
+    const date = text.match(/actualizado:\s*'([^']+)'/)?.[1];
+    const info = evaluate({
+      slug: 'precios-combustibles-argentina', file: 'src/lib/data/nafta-precios.ts', category: 'automotor',
+      frequency: 'monthly', lastUpdated: date, updateType: 'auto', source: 'Secretaría de Energía',
+      sourceUrl: 'http://datos.energia.gob.ar/dataset/precios-en-surtidor',
+    }, now);
+    if (info) out.push(info);
+  }
+
+  const f1File = join(LIVE_DIR, 'formula-1-2026.json');
+  if (existsSync(f1File)) {
+    const data = JSON.parse(readFileSync(f1File, 'utf8'));
+    const date = typeof data.fetchedAt === 'string' ? data.fetchedAt.slice(0, 10) : undefined;
+    const info = evaluate({
+      slug: 'formula-1-2026', file: 'src/data/live/formula-1-2026.json', category: 'deportes',
+      frequency: 'weekly', lastUpdated: date, updateType: 'auto-live', source: 'OpenF1', sourceUrl: data.source,
+    }, now);
+    if (info) out.push(info);
+  }
+  return out;
+}
+
 /** Fetchea el índice de frescura publicado en prod (public/api/freshness.json).
  *  Modo usado por el workflow de GitHub Actions — no depende del filesystem ni
  *  del checkout de origin (forkeado): la verdad vive en prod (deploy local). */
@@ -298,7 +327,9 @@ function renderMarkdown(stale: CalcInfo[]): string {
 
 async function main() {
   const opts = parseArgs();
-  const stale = opts.fromUrl ? await loadCalcsFromUrl(opts.fromUrl) : loadCalcsFromFs();
+  const stale = opts.fromUrl
+    ? [...await loadCalcsFromUrl(opts.fromUrl), ...loadSharedFromFs()]
+    : [...loadCalcsFromFs(), ...loadSharedFromFs()];
 
   if (opts.json) {
     const out = JSON.stringify({ count: stale.length, threshold: opts.threshold, items: stale }, null, 2);
