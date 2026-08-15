@@ -386,6 +386,17 @@ const inputType = (t: string) =>
               <p class="hcd-empty" data-hcd-cont-empty hidden>Todavía no guardaste cálculos. <a href="/buscar">Elegí una calculadora</a> y va a aparecer acá.</p>
             </section>
 
+            <!-- 5b · Comparador local de cálculos guardados. No sincroniza ni
+                 envía resultados: lee el mismo hc:saved-calcs que Calculator. -->
+            <section class="hcd-sec" data-hcd-compare-section hidden aria-labelledby="hcd-compare-h">
+              <div class="hcd-sec-head">
+                <div><h2 id="hcd-compare-h">Comparar cálculos guardados</h2><p>Elegí hasta tres escenarios y miralos juntos. Todo queda en este navegador.</p></div>
+                <span class="hcd-compare-count" data-hcd-compare-count>0/3</span>
+              </div>
+              <div class="hcd-compare-list" data-hcd-compare-list></div>
+              <div class="hcd-compare-output" data-hcd-compare-output hidden></div>
+            </section>
+
             <!-- 6 · Mi perfil -->
             <section class="hcd-sec" id="mi-perfil" aria-labelledby="hcd-perfil-h">
               <div class="hcd-sec-head">
@@ -901,6 +912,19 @@ const inputType = (t: string) =>
   .hcd-cont-norow { margin: 0; padding: 0.6rem 0.7rem; border-radius: 9px; background: var(--hcd-bg); font-size: 0.75rem; color: var(--hcd-mu); }
   .hcd-cont-cta { margin-top: 0.7rem; font-size: 0.8125rem; font-weight: 650; color: var(--hcd-a); }
   .hcd-cont-cta:hover { text-decoration: underline; }
+  .hcd-compare-count { color: var(--hcd-a); font-size: .8rem; font-weight: 750; }
+  .hcd-compare-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .75rem; }
+  .hcd-compare-option { display: flex; gap: .65rem; align-items: flex-start; padding: .85rem; border: 1px solid var(--hcd-bd); border-radius: 11px; background: var(--hcd-card); cursor: pointer; }
+  .hcd-compare-option:has(input:checked) { border-color: var(--hcd-a); box-shadow: 0 0 0 2px color-mix(in srgb,var(--hcd-a) 15%,transparent); }
+  .hcd-compare-option input { margin-top: .2rem; accent-color: var(--hcd-a); }
+  .hcd-compare-option span { min-width: 0; display: grid; gap: .2rem; }
+  .hcd-compare-option b { color: var(--hcd-tx); font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hcd-compare-option small { color: var(--hcd-mu); font-size: .72rem; }
+  .hcd-compare-output { margin-top: .8rem; padding: 1rem; border-radius: 12px; background: var(--hcd-bg); border: 1px solid var(--hcd-bd); }
+  .hcd-compare-output table { width: 100%; border-collapse: collapse; }
+  .hcd-compare-output th,.hcd-compare-output td { padding: .65rem; text-align: left; border-bottom: 1px solid var(--hcd-bd); font-size: .78rem; }
+  .hcd-compare-output td:last-child { font-family: var(--font-num,inherit); font-weight: 750; color: var(--hcd-tx); }
+  .hcd-compare-output a { font-weight: 700; }
 
   /* ───────── Mi perfil (form heredado) ───────── */
   .hcd-acct { margin-bottom: 1rem; }
@@ -928,6 +952,7 @@ const inputType = (t: string) =>
   /* ───────── Responsive ───────── */
   .hcd-scrim { display: none; }
   @media (max-width: 1180px) {
+    .hcd-compare-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
     .hcd-stats, .hcd-prods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 1060px) {
@@ -964,7 +989,7 @@ const inputType = (t: string) =>
     .hcd-icon-btn, .hcd-burger { width: 44px; height: 44px; }
   }
   @media (max-width: 640px) {
-    .hcd-stats, .hcd-prods, .hcd-cont { grid-template-columns: minmax(0, 1fr); }
+    .hcd-stats, .hcd-prods, .hcd-cont, .hcd-compare-list { grid-template-columns: minmax(0, 1fr); }
     .hcd-sec-head { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
     .hcd-progress-card .hcd-sec-head { flex-direction: row; align-items: center; justify-content: space-between; }
     .hcd-next-item { flex-wrap: wrap; }
@@ -1860,6 +1885,52 @@ const inputType = (t: string) =>
       var e = qs('[data-hcd-favs-empty]');
       if (e) e.hidden = readLS('hc_favs').length > 0;
     }
+    function renderSavedComparison() {
+      var section = qs('[data-hcd-compare-section]');
+      var listEl = qs('[data-hcd-compare-list]');
+      var output = qs('[data-hcd-compare-output]');
+      var countEl = qs('[data-hcd-compare-count]');
+      if (!section || !listEl || !output) return;
+      var saved = readLS('hc:saved-calcs').filter(function (x) {
+        return x && typeof x.nombre === 'string' && typeof x.url === 'string';
+      }).slice(0, 12);
+      section.hidden = saved.length < 2;
+      if (saved.length < 2) return;
+      listEl.innerHTML = '';
+      var selected = [];
+      function drawOutput() {
+        if (countEl) countEl.textContent = selected.length + '/3';
+        output.innerHTML = '';
+        output.hidden = selected.length < 2;
+        if (selected.length < 2) return;
+        var table = document.createElement('table');
+        var body = document.createElement('tbody');
+        selected.forEach(function (idx) {
+          var item = saved[idx];
+          var tr = document.createElement('tr');
+          var name = document.createElement('td');
+          var link = document.createElement('a'); link.href = item.url; link.textContent = item.nombre; name.appendChild(link);
+          var label = document.createElement('td'); label.textContent = item.resultLabel || 'Resultado';
+          var value = document.createElement('td'); value.textContent = item.resultado || '—';
+          tr.appendChild(name); tr.appendChild(label); tr.appendChild(value); body.appendChild(tr);
+        });
+        table.appendChild(body); output.appendChild(table);
+      }
+      saved.forEach(function (item, idx) {
+        var label = document.createElement('label'); label.className = 'hcd-compare-option';
+        var check = document.createElement('input'); check.type = 'checkbox'; check.value = String(idx);
+        var copy = document.createElement('span');
+        var title = document.createElement('b'); title.textContent = item.nombre;
+        var result = document.createElement('small'); result.textContent = (item.resultLabel || 'Resultado') + ': ' + (item.resultado || '—');
+        copy.appendChild(title); copy.appendChild(result); label.appendChild(check); label.appendChild(copy); listEl.appendChild(label);
+        check.addEventListener('change', function () {
+          if (check.checked && selected.length >= 3) { check.checked = false; return; }
+          selected = Array.prototype.slice.call(listEl.querySelectorAll('input:checked')).map(function (el) { return Number(el.value); });
+          drawOutput();
+        });
+      });
+      drawOutput();
+    }
 
     // ── 6 · Badges del sidebar / campana ────────────────────
     function renderAlertsBits() {
@@ -1978,6 +2049,7 @@ const inputType = (t: string) =>
       renderProfileBits();
       renderCont();
       renderFavsEmpty();
+      renderSavedComparison();
     });
     window.addEventListener('hc-profile-change', schedule);
     window.addEventListener('hc-dash-progress', function (e) {
@@ -1995,6 +2067,7 @@ const inputType = (t: string) =>
     renderProfileBits();
     renderCont();
     renderFavsEmpty();
+    renderSavedComparison();
     initSpy();
   })();
 </script>

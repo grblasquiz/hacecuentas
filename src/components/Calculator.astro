@@ -4927,6 +4927,23 @@ const formatFreshnessDate = (iso: string): string => {
     let funnelSuccess = false;
     let funnelAbandonSent = false;
     productTrack('hc_calculator_view');
+    // Retorno propio sin cookies ni identificadores: sólo conserva el día de la
+    // última visita en este navegador. El evento sale una vez por día y clasifica
+    // la ventana de retorno; no envía fechas ni datos personales.
+    try {
+      const today = Math.floor(Date.now() / 86400000);
+      const previous = Number(localStorage.getItem('hc:last-calc-day') || '0');
+      if (previous > 0 && today > previous) {
+        const elapsed = today - previous;
+        const returnWindow = elapsed <= 7 ? 'd1_7' : elapsed <= 30 ? 'd8_30' : 'd31_plus';
+        const emitted = Number(sessionStorage.getItem('hc:return-emitted-day') || '0');
+        if (emitted !== today) {
+          productTrack('hc_return_visit', { return_window: returnWindow });
+          sessionStorage.setItem('hc:return-emitted-day', String(today));
+        }
+      }
+      localStorage.setItem('hc:last-calc-day', String(today));
+    } catch {}
     form.addEventListener('input', () => {
       if (funnelInputStarted) return;
       funnelInputStarted = true;
@@ -6210,6 +6227,25 @@ const formatFreshnessDate = (iso: string): string => {
                 }) || setTimeout(() => {
                   try { cl('event', 'calc_submit'); cl('set', 'calc_slug', slug); } catch {}
                 }, 0);
+              }
+            }
+          } catch {}
+
+          // KPI principal: calculadoras DISTINTAS usadas en la sesión. Los
+          // recálculos del mismo slug no inflan la métrica. Emitimos sólo hitos
+          // accionables para mantener GA4 limpio y poder medir 1 → 2 → 3+.
+          try {
+            const raw = JSON.parse(sessionStorage.getItem('hc:session-calcs') || '[]');
+            const distinct = new Set<string>(Array.isArray(raw) ? raw.filter((v) => typeof v === 'string') : []);
+            distinct.add(slug);
+            const list = Array.from(distinct).slice(-25);
+            sessionStorage.setItem('hc:session-calcs', JSON.stringify(list));
+            const count = list.length;
+            if (count === 2 || count === 3 || count === 5) {
+              const milestoneKey = 'hc:session-depth-' + count;
+              if (sessionStorage.getItem(milestoneKey) !== '1') {
+                sessionStorage.setItem(milestoneKey, '1');
+                productTrack('hc_session_depth', { calculator_count: count });
               }
             }
           } catch {}

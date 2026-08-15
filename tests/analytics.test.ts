@@ -18,6 +18,7 @@ describe('catálogo de eventos', () => {
       'hc_calculator_success', 'hc_calculator_abandoned', 'hc_calculator_validation_error', 'hc_calculator_runtime_error',
       'hc_result_copy', 'hc_result_share', 'hc_result_save', 'hc_result_email_open',
       'hc_result_email_sent', 'hc_formula_expanded', 'hc_related_calculator_clicked',
+      'hc_session_depth', 'hc_return_visit',
       'hc_scenario_viewed', 'hc_next_step_clicked', 'hc_decision_room_clicked', 'hc_decision_room_impression',
       'hc_post_result_scroll', 'hc_post_result_interaction',
       'hc_email_band_view', 'hc_email_band_focus', 'hc_email_band_signup',
@@ -83,6 +84,7 @@ describe('sanitizeAnalyticsParams — garantía anti-PII', () => {
       'calculator_slug', 'calculator_category', 'country', 'input_mode', 'search_term',
       'result_position', 'error_field', 'error_type', 'device_type', 'logged_in', 'source_page',
       'target_slug', 'dataset_file', 'file_extension', 'interaction_type',
+      'calculator_count', 'return_window',
     ]);
   });
 
