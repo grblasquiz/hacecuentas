@@ -32,7 +32,7 @@ field.default = sale;
 calc.dataUpdate = {
   frequency: 'daily',
   lastUpdated: valueDate,
-  updateType: 'auto',
+  updateType: 'auto-api',
   notes: `Valor referencial automático: venta S/ ${sale.toFixed(3)} y compra S/ ${purchase.toFixed(3)}, último día publicado ${valueDate}. Para declarar, usar el valor de la fecha exacta de la operación.`,
   source: 'BCRP — tipo de cambio del sistema bancario SBS',
   sourceUrl: url,
