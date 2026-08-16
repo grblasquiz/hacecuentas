@@ -577,6 +577,7 @@ const DATA_PAGES: DataPage[] = [
   // — España —
   { slug: 'datos-cuota-autonomos-2026', title: 'Cuota de autónomos 2026 (España)', description: 'Tabla por tramos de rendimiento neto (RETA).', category: 'finanzas', tag: 'Datos oficiales 2026' },
   // — LATAM · salarios mínimos por país —
+  { slug: 'datos-salario-minimo-argentina-2026', title: 'Salario mínimo Argentina 2026', description: 'SMVM mensual, por hora y cronograma mes a mes.', category: 'negocios', tag: 'Datos oficiales 2026' },
   { slug: 'datos-salario-minimo-colombia-2026', title: 'Salario mínimo Colombia 2026', description: 'Con auxilio de transporte y aportes de ley.', category: 'negocios', tag: 'Datos oficiales 2026' },
   { slug: 'datos-salario-minimo-mexico-2026', title: 'Salario mínimo México 2026', description: 'Diario, mensual y valor de la UMA.', category: 'negocios', tag: 'Datos oficiales 2026' },
   { slug: 'datos-sueldo-minimo-peru-2026', title: 'Sueldo mínimo Perú 2026', description: 'RMV, UIT y descuentos de ley (tabla).', category: 'negocios', tag: 'Datos oficiales 2026' },

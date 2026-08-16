@@ -662,6 +662,9 @@ const priorityUrls: Url[] = [
   prio('/mx/datos-uma-imss-2026',              '0.9', 'weekly'),
   prio('/pe/impuestos/igv-y-compras',             '0.9', 'daily', true),
   prio('/es/impuestos/irpf-nomina',                '0.9', 'weekly'),
+  // «salario mínimo 2026» AR: 25.596 impresiones en Bing que hoy caían en la
+  // página de Colombia. Página-dato dedicada del SMVM (Res. 9/2025).
+  prio('/datos-salario-minimo-argentina-2026', '0.9', 'weekly'),
   // Oportunidad salarial Perú: 6.101 impresiones, posición 4,85 y CTR 0,7% en Bing.
   // Sólo se distribuye la página informativa canónica, nunca un alias de calculadora.
   prio('/pe/datos-sueldo-minimo-peru-2026', '0.9', 'weekly'),
