@@ -12,7 +12,7 @@ const { variant } = Astro.props;
         <label>Cantidad de salarios mínimos<input id="tpb-co-multiples" type="number" min="0.25" max="10" step="0.25" value="1" /></label>
         <label>Días trabajados en el mes<input id="tpb-co-days" type="number" min="1" max="30" value="30" /></label>
         <label class="tpb__check"><input id="tpb-co-transport" type="checkbox" checked /> Incluir auxilio de transporte si corresponde</label>
-        <div class="tpb__results"><span>Devengado bruto<strong id="tpb-co-gross">—</strong></span><span>Neto orientativo<strong id="tpb-co-net">—</strong></span><span>Prestaciones provisionadas<strong id="tpb-co-benefits">—</strong></span><span>Valor hora desde 15/7<strong id="tpb-co-hour">—</strong></span></div>
+        <div class="tpb__results" aria-live="polite"><span>Devengado bruto<strong id="tpb-co-gross">—</strong></span><span>Neto orientativo<strong id="tpb-co-net">—</strong></span><span>Prestaciones provisionadas<strong id="tpb-co-benefits">—</strong></span><span>Valor hora desde 15/7<strong id="tpb-co-hour">—</strong></span></div>
         <p class="tpb__note">Neto orientativo: descuenta 4% de salud y 4% de pensión sobre el salario. No incluye retención, libranzas ni aportes especiales.</p>
       </div>
     </>}
@@ -96,7 +96,7 @@ const { variant } = Astro.props;
     const q = <T extends Element>(selector: string) => root.querySelector<T>(selector);
     const variant = root.dataset.topBoost;
     if (variant === 'salary-co') {
-      const update = () => { const m=Number(q<HTMLInputElement>('#tpb-co-multiples')?.value||0), d=Number(q<HTMLInputElement>('#tpb-co-days')?.value||0), salary=1750905*m*d/30, eligible=m<=2&&!!q<HTMLInputElement>('#tpb-co-transport')?.checked, transport=eligible?249095*d/30:0, net=salary*.92+transport, benefits=salary*(.0833+.0833+.01+.0417); q('#tpb-co-gross')!.textContent=money(salary+transport,'COP','es-CO'); q('#tpb-co-net')!.textContent=money(net,'COP','es-CO'); q('#tpb-co-benefits')!.textContent=money(benefits,'COP','es-CO'); q('#tpb-co-hour')!.textContent=money(1750905/210,'COP','es-CO'); };
+      const update = () => { const m=Number(q<HTMLInputElement>('#tpb-co-multiples')?.value||0), d=Number(q<HTMLInputElement>('#tpb-co-days')?.value||0), salary=1750905*m*d/30, eligible=m<=2&&!!q<HTMLInputElement>('#tpb-co-transport')?.checked, transport=eligible?249095*d/30:0, net=salary*.92+transport, benefits=(salary+transport)*(.083333+.083333)+salary*(.01+.041667); q('#tpb-co-gross')!.textContent=money(salary+transport,'COP','es-CO'); q('#tpb-co-net')!.textContent=money(net,'COP','es-CO'); q('#tpb-co-benefits')!.textContent=money(benefits,'COP','es-CO'); q('#tpb-co-hour')!.textContent=money(1750905/210,'COP','es-CO'); };
       root.querySelectorAll('input').forEach(el=>el.addEventListener('input',update)); update();
     }
     if (variant === 'retirement') {
