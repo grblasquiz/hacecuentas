@@ -60,6 +60,28 @@ def load_calcs():
     return out
 
 
+def load_hubs():
+    """Rutas de hubs y silos que el template acepta con `/` inicial."""
+    out = set()
+    root = os.path.join(ROOT, 'src', 'lib', 'hubs')
+    for base, _, files in os.walk(root):
+        for name in files:
+            if not name.endswith('.ts') or name in {'registry.ts', 'types.ts'}:
+                continue
+            source = open(os.path.join(base, name)).read()
+            start = re.search(r'export\s+const\s+hub\s*:[^=]+=', source)
+            if not start:
+                continue
+            hub_source = source[start.start():]
+            slug = re.search(r'\bslug:\s*[\'\"]([^\'\"]+)[\'\"]', hub_source)
+            silo = re.search(r'\bsiloHref:\s*[\'\"]([^\'\"]+)[\'\"]', hub_source)
+            if slug:
+                out.add('/' + slug.group(1).lstrip('/'))
+            if silo:
+                out.add(silo.group(1))
+    return out
+
+
 def load_dead():
     """Slugs cuya URL NO vive aunque el JSON siga en el repo: podadas (301 al
     hub) y 410. La poda es intencional — el fix es apuntar a otra calc, nunca
@@ -87,7 +109,7 @@ def load_dead():
     return dead
 
 
-def audit(path, calcs, dead):
+def audit(path, calcs, hubs, dead):
     errs, warns = [], []
     name = os.path.basename(path)
     try:
@@ -127,7 +149,11 @@ def audit(path, calcs, dead):
         errs.append('relatedCalcs vacío → sin CTA ni sidebar')
     for i, s in enumerate(rel):
         cta = ' [CTA PRINCIPAL]' if i == 0 else ''
-        if s not in calcs:
+        if s.startswith('/') and s not in hubs:
+            errs.append(f'relatedCalcs "{s}" NO EXISTE como hub/silo{cta}')
+        elif s.startswith('/'):
+            continue
+        elif s not in calcs:
             errs.append(f'relatedCalcs "{s}" NO EXISTE → se descarta en silencio{cta}')
         elif s in dead:
             errs.append(f'relatedCalcs "{s}" está PODADA → 301 al hub, el JSON existe pero la URL no vive{cta}')
@@ -174,6 +200,7 @@ def audit(path, calcs, dead):
 
 def main():
     calcs = load_calcs()
+    hubs = load_hubs()
     dead = load_dead()
     only = None
     if '--only' in sys.argv:
@@ -185,7 +212,7 @@ def main():
 
     tot_e = tot_w = 0
     for f in files:
-        e, w = audit(os.path.join(BLOG, f), calcs, dead)
+        e, w = audit(os.path.join(BLOG, f), calcs, hubs, dead)
         tot_e += len(e)
         tot_w += len(w)
         if e or w:
