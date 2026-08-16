@@ -112,9 +112,13 @@ async function main() {
   const incremental = Boolean(process.env.INCREMENTAL_CHANGES);
 
   console.log(`[prebuild] mode=${incremental ? 'incremental' : 'full'}`);
+  // Primero materializamos contenido temporal desde su snapshot único. Los
+  // gates que siguen nunca deben leer tablas/FAQ de una versión anterior.
+  await run(task('sync-ipc-derived', 'sync-ipc-derived-content'));
   console.log('[prebuild] fase 1: validate:data + editorial-gate + temporal-gate + fiscal-gate + placeholder-gate + link-guard + regenerate-formula-index + converter-tables + bcra-indices');
   await Promise.all([
     run(task('validate', 'validate-data-updates')),
+    run(task('derived-integrity', 'check-derived-data-consistency')),
     // Bloquea publicación indexable de cualquier calc bajo el piso editorial.
     // La salida segura es completar revisión o marcarla draft/noindex.
     run({ name: 'editorial-gate', cmd: NODE, args: [...FLAGS, 'scripts/quarantine-editorial-risk.ts', '--strict'] }),

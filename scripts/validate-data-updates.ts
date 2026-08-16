@@ -1,5 +1,5 @@
 /**
- * CI guard: valida que cada calc en src/content/calcs/*.json tenga un campo
+ * CI guard: valida cada JSON de los catálogos `src/content/calcs*`.
  * `dataUpdate` bien formado. Corre en prebuild antes de astro build. Si falta
  * o es inválido, corta el build con exit 1 y lista las calcs fallidas.
  *
@@ -10,9 +10,12 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const CALCS_DIR = join(process.cwd(), 'src/content/calcs');
+const CONTENT_DIR = join(process.cwd(), 'src/content');
+const CALCS_DIRS = readdirSync(CONTENT_DIR, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && /^calcs(?:-|$)/.test(entry.name))
+  .map((entry) => ({ name: entry.name, path: join(CONTENT_DIR, entry.name) }));
 
-const VALID_FREQUENCIES = new Set(['never', 'daily', 'weekly', 'monthly', 'biannual', 'yearly']);
+const VALID_FREQUENCIES = new Set(['never', 'daily', 'weekly', 'monthly', 'quarterly', 'biannual', 'yearly', 'annual']);
 const VALID_UPDATE_TYPES = new Set(['manual', 'auto-api', 'auto-scrape', 'auto-llm', 'auto-live']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -41,19 +44,26 @@ function validate(calc: any, slug: string): Issue[] {
     if (!du.source) issues.push({ slug, reason: 'source requerido cuando frequency != never' });
     if (!du.sourceUrl) issues.push({ slug, reason: 'sourceUrl requerido cuando frequency != never' });
   }
+  if (du.updateType === 'auto-live' && (!du.liveSource || typeof du.liveSource !== 'string')) {
+    issues.push({ slug, reason: 'liveSource requerido cuando updateType = auto-live' });
+  }
   return issues;
 }
 
 function main() {
-  const files = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
+  const files = CALCS_DIRS.flatMap((dir) =>
+    readdirSync(dir.path)
+      .filter((file) => file.endsWith('.json'))
+      .map((file) => ({ ...dir, file }))
+  );
   const allIssues: Issue[] = [];
-  for (const f of files) {
-    const slug = f.replace(/\.json$/, '');
+  for (const { name, path, file } of files) {
+    const slug = file.replace(/\.json$/, '');
     try {
-      const calc = JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8'));
+      const calc = JSON.parse(readFileSync(join(path, file), 'utf8'));
       allIssues.push(...validate(calc, slug));
     } catch (err) {
-      allIssues.push({ slug, reason: `JSON inválido: ${(err as Error).message}` });
+      allIssues.push({ slug, reason: `JSON inválido en ${name}/${file}: ${(err as Error).message}` });
     }
   }
 
@@ -74,17 +84,17 @@ function main() {
     process.exit(1);
   }
 
-  console.log(`[validate-data-updates] ✓ ${files.length} calcs OK`);
+  console.log(`[validate-data-updates] ✓ ${files.length} calcs OK en ${CALCS_DIRS.length} catálogos`);
 
   // Warning (non-blocking): calcs con <7 FAQs. La regla de producto (CLAUDE.md)
   // pide mínimo 7 FAQs por calc para cobertura SEO decente. No rompemos el
   // build con las legacy; listamos para que el editor vea el backlog.
   const FAQ_MIN = 7;
   const lowFaq: Array<{ slug: string; count: number }> = [];
-  for (const f of files) {
-    const slug = f.replace(/\.json$/, '');
+  for (const { path, file } of files) {
+    const slug = file.replace(/\.json$/, '');
     try {
-      const calc = JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8'));
+      const calc = JSON.parse(readFileSync(join(path, file), 'utf8'));
       const raw = calc.faqs ?? calc.faq;
       const arr = Array.isArray(raw) ? raw : raw && typeof raw === 'object' ? Object.values(raw) : [];
       if (arr.length < FAQ_MIN) lowFaq.push({ slug, count: arr.length });
