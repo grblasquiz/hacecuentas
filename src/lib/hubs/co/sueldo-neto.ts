@@ -81,7 +81,7 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
   slug: 'co/trabajo/sueldo-neto',
-  title: 'Calculadora de salario neto Colombia 2026: cuánto te queda',
+  title: 'Salario neto Colombia 2026: aportes y sueldo integral',
   description:
     'Calculá tu salario neto en Colombia 2026: salud 4%, pensión 4%, Fondo de Solidaridad y retención en la fuente. Con auxilio de transporte y embargos.',
   silo: 'Trabajo',

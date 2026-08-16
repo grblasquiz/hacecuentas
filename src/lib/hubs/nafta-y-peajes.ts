@@ -47,7 +47,7 @@ const mesLabel = (() => {
 
 export const hub: HubData = {
   slug: 'auto/nafta-y-peajes',
-  title: '¿Cuánta nafta gasto en un viaje? Combustible por km y peajes',
+  title: 'Costo de viaje en auto: nafta, consumo y peajes',
   description:
     'Calculá el costo real de tu viaje en auto: litros de nafta o gasoil con el precio oficial de tu provincia, peajes con y sin Telepase, desgaste del auto y cuánto le toca a cada pasajero. Sirve también para el gasto mensual de ir al trabajo.',
   silo: 'Auto',

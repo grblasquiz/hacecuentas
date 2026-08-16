@@ -267,7 +267,7 @@ export const ORDEN_CONVENIOS = Object.keys(CONVENIOS);
 
 export const hub: HubData = {
   slug: 'trabajo/sueldos-por-convenio',
-  title: '¿Cuánto gana un… según convenio? — Sueldos por CCT 2026',
+  title: 'Sueldos por convenio 2026: escalas y cálculo por CCT',
   description:
     'Elegí tu gremio y mirá el básico de convenio vigente, la antigüedad, los adicionales y el neto de bolsillo. UOCRA, Comercio, Camioneros, UTHGRA, UOM, SMATA, UTA, docentes, salud y más, con la escala de la última paritaria.',
   silo: 'Trabajo',

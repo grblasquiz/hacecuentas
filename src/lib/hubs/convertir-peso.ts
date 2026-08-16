@@ -17,7 +17,7 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'conversores/peso',
-  title: 'Convertir kilos, libras y onzas — conversor de peso exacto',
+  title: 'Conversor kg a libras: kilos, lb y onzas exactas',
   description:
     'Convertí kilogramos, gramos, libras, onzas, stone, quintales y toneladas (métrica, corta y larga) con los factores exactos: 1 libra = 0,45359237 kg. Incluye la diferencia entre onza avoirdupois y onza troy, la de los metales preciosos.',
   silo: 'Conversores',

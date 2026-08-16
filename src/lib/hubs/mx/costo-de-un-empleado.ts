@@ -84,7 +84,7 @@ const ESTADOS = Object.keys(MEXICO_2026.isnPorEstado);
 
 export const hub: HubData = {
   slug: 'mx/trabajo/costo-de-un-empleado',
-  title: 'Factor de integración 2026: SDI y costo patronal en México',
+  title: 'Costo de un empleado México 2026: IMSS, SDI y cuotas',
   description:
     'Calcula el factor de integración 2026, salario diario integrado (SDI) y costo patronal con IMSS, INFONAVIT, ISN y prestaciones en México.',
   silo: 'Trabajo',

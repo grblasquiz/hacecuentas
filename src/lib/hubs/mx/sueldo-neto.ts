@@ -55,7 +55,7 @@ export const SALARIO_MINIMO = {
 
 export const hub: HubData = {
   slug: 'mx/trabajo/sueldo-neto',
-  title: 'Calculadora de sueldo neto México 2026: ISR, IMSS y SDI',
+  title: 'Sueldo neto México 2026: calculá ISR, IMSS y SDI',
   description:
     'Calculá tu sueldo neto en México 2026: ISR del Art. 96, cuota IMSS, subsidio para el empleo y salario diario integrado (SDI) con factor de integración.',
   silo: 'Trabajo',
