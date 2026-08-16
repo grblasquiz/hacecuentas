@@ -4,23 +4,25 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import SalarioMinimoMexico2027Experience from '../../components/generated/SalarioMinimoMexico2027Experience.astro';
-import TopPagesBoost from '../../components/TopPagesBoost.astro';
+import { freeOfferSchema } from '../../lib/offer-schema';
 const canonical = 'https://hacecuentas.com/blog/salario-minimo-mexico-2027-que-se-espera';
 const faq = [
-  { q: '¿Cuánto será el salario mínimo de México en 2027?', a: 'Todavía no existe una cifra oficial. CONASAMI suele resolver el valor hacia el cierre del año anterior.' },
-  { q: '¿La proyección es un dato oficial?', a: 'No. Los porcentajes de la calculadora son escenarios aplicados sobre la base oficial de 2026.' },
-  { q: '¿El aumento será igual en la frontera norte?', a: 'No necesariamente. CONASAMI puede fijar variaciones distintas para el área general y la Zona Libre de la Frontera Norte.' },
+  { q: '¿Cuánto será el salario mínimo de México en 2027?', a: 'Todavía no existe una cifra oficial. CONASAMI fijará el valor hacia el cierre de 2026. Cualquier monto anterior a la resolución es una estimación.' },
+  { q: '¿Cuándo se anunciará el salario mínimo 2027?', a: 'Habitualmente se define en diciembre y entra en vigor el 1 de enero siguiente. La fecha y el monto definitivos dependen del acuerdo y de su publicación oficial.' },
+  { q: '¿La calculadora muestra un dato oficial?', a: 'No. Aplica un porcentaje y, opcionalmente, un MIR hipotético sobre las bases oficiales de 2026 para comparar escenarios.' },
+  { q: '¿El aumento será igual en la frontera norte?', a: 'No necesariamente. CONASAMI puede fijar variaciones distintas para la zona general y la Zona Libre de la Frontera Norte, como ocurrió en 2026.' },
+  { q: '¿Cuál es el salario mínimo vigente en México durante 2026?', a: 'Es de $315.04 diarios en la zona general y $440.87 diarios en la Zona Libre de la Frontera Norte. CONASAMI publicó equivalentes mensuales de $9,582.47 y $13,409.80.' },
+  { q: '¿Salario mínimo y UMA son lo mismo?', a: 'No. El salario mínimo es el piso de pago por jornada laboral y lo fija CONASAMI. La UMA es una unidad de referencia publicada por INEGI para multas, créditos, topes y otras obligaciones.' },
 ];
 const schema = {'@context':'https://schema.org','@graph':[
-  {'@type':'Article',headline:'Salario mínimo México 2027: qué se sabe y qué se espera',description:'Dato oficial, base 2026 y escenarios posibles para el salario mínimo de México en 2027.',datePublished:'2026-07-31',dateModified:'2026-08-04',inLanguage:'es-MX',mainEntityOfPage:canonical,author:{'@type':'Organization',name:'Hacé Cuentas'},publisher:{'@type':'Organization',name:'Hacé Cuentas'}},
-  {'@type':'WebApplication',name:'Simulador de salario mínimo México 2027',url:`${canonical}#escenarios`,applicationCategory:'FinanceApplication',operatingSystem:'Web',offers:{'@type':'Offer',price:'0',priceCurrency:'MXN'}},
+  {'@type':'Article',headline:'Salario mínimo México 2027: qué se sabe y cuándo se define',description:'La cifra oficial 2027 todavía no existe. Consulta las bases oficiales de 2026, fechas, metodología y escenarios para México.',datePublished:'2026-07-31',dateModified:'2026-08-16',inLanguage:'es-MX',mainEntityOfPage:{'@type':'WebPage','@id':canonical},author:{'@type':'Person',name:'Martín Rodríguez',url:'https://hacecuentas.com/autores/martin-rodriguez'},publisher:{'@id':'https://hacecuentas.com/#organization'}},
+  {'@type':'WebApplication',name:'Calculadora de escenarios de salario mínimo México 2027',url:`${canonical}#calculadora`,description:'Calcula escenarios diarios, semanales, quincenales, mensuales y anuales con porcentaje y MIR hipotéticos.',applicationCategory:'FinanceApplication',operatingSystem:'Web',inLanguage:'es-MX',offers:freeOfferSchema({ priceCurrency:'MXN' })},
   {'@type':'FAQPage',mainEntity:faq.map(item=>({'@type':'Question',name:item.q,acceptedAnswer:{'@type':'Answer',text:item.a}}))},
   {'@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Inicio',item:'https://hacecuentas.com/'},{'@type':'ListItem',position:2,name:'México',item:'https://hacecuentas.com/mx'},{'@type':'ListItem',position:3,name:'Salario mínimo 2027',item:canonical}]}
 ]};
 ---
-<Layout title="Salario mínimo México 2027: dato oficial y escenarios" description="¿Cuánto será el salario mínimo México 2027? Todavía no hay cifra oficial. Consultá la base 2026, fechas clave y simulá escenarios general y frontera." canonical={canonical} schema={schema} audience="MX" lang="es-MX" ogType="article" articleSection="Trabajo">
-  <Header />
-  <SalarioMinimoMexico2027Experience />
-  <TopPagesBoost variant="salary-mx" />
-  <Footer />
+<Layout title="Salario mínimo México 2027: cálculo y fecha oficial" description="El salario mínimo México 2027 todavía no está definido. Consulta valores oficiales 2026 y calcula escenarios diarios, mensuales y con MIR." canonical={canonical} schema={schema} audience="MX" lang="es-MX" ogType="article" articleSection="Trabajo" articleAuthor="Martín Rodríguez" articlePublishedTime="2026-07-31" articleModifiedTime="2026-08-16" suppressAutoEnhancements={true}>
+  <Header slot="header" />
+  <SalarioMinimoMexico2027Experience faq={faq} />
+  <Footer slot="footer" />
 </Layout>

@@ -64,6 +64,7 @@ export interface Props {
   editorialReviewedAt?: string;
   editorialSources?: Array<{ name?: string; title?: string; publisher?: string; url?: string; date?: string }>;
   professionalReviewer?: { name?: string; profession?: string; credential?: string; licenseNumber?: string; profileUrl?: string; reviewedAt?: string } | null;
+  suppressAutoEnhancements?: boolean; // experiencias con navegación, engagement y relacionados propios
 }
 
 const {
@@ -98,6 +99,7 @@ const {
   editorialReviewedAt,
   editorialSources = [],
   professionalReviewer,
+  suppressAutoEnhancements = false,
 } = Astro.props;
 
 // La mayoría de los hubs históricos no declaraba pageType aunque ya figure en
@@ -840,7 +842,7 @@ const globalSchema = {
     <ProfileStore />
     <AccessibilityBaseline />
     <HubCalculationTracking />
-    <HubEngagementTools />
+    {!suppressAutoEnhancements && <HubEngagementTools />}
     <DatasetDownloadTracking />
     <slot name="header" />
     <main id="main" tabindex="-1">
@@ -854,8 +856,8 @@ const globalSchema = {
         sources={editorialSources}
         professionalReviewer={professionalReviewer}
       />
-      <SitewideHubDecisionLayer pageTitle={title} modified={articleModifiedTime} noindex={effectiveNoindex} />
-      <HubInterlinking pageTitle={title} noindex={effectiveNoindex} />
+      {!suppressAutoEnhancements && <SitewideHubDecisionLayer pageTitle={title} modified={articleModifiedTime} noindex={effectiveNoindex} />}
+      {!suppressAutoEnhancements && <HubInterlinking pageTitle={title} noindex={effectiveNoindex} />}
     </main>
     <slot name="footer" />
     <HubEmbedMode />
