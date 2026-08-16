@@ -26,8 +26,10 @@ const {
   reviewedOnLabel = 'Última revisión editorial',
 } = Astro.props;
 
+// Una fecha editorial YYYY-MM-DD representa un día civil, no un instante UTC.
+// Usar mediodía local evita que América/Argentina la muestre como el día previo.
 const formattedDate = lastReviewed
-  ? new Date(lastReviewed + (lastReviewed.length === 10 ? 'T00:00:00Z' : '')).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })
+  ? new Date(lastReviewed + (lastReviewed.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })
   : null;
 ---
 

@@ -21,8 +21,10 @@ const num = (n: number) => Math.round(n).toLocaleString('es-AR');
 const pct1 = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 const tasaTxt = (n: number) => n.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '% TNA';
 
-const D_DESDE = '2025-07-14';
-const D_HASTA = '2026-07-14'; // 365 días exactos
+const now = new Date();
+const D_HASTA = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
+const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+const D_DESDE = [oneYearAgo.getFullYear(), String(oneYearAgo.getMonth() + 1).padStart(2, '0'), String(oneYearAgo.getDate()).padStart(2, '0')].join('-');
 const CAPITAL = 5_000_000;
 
 // Tasa anual efectivamente aplicada por el MOTOR para cada opción (derivada, no copiada).
@@ -48,17 +50,20 @@ const jurisdicciones = jurisOpts
   .map((o) => ({ value: o.value, label: o.label, ...tasaDelMotor({ jurisdiccion: o.value }) }));
 
 const init = interesJudicialTasa({
-  capital: CAPITAL, tasaPreset: 'activa_bna_33', jurisdiccion: 'ninguna', fechaDesde: D_DESDE, fechaHasta: D_HASTA,
+  capital: CAPITAL, tasaAnual: 33, tasaPreset: 'manual', jurisdiccion: 'ninguna', fechaDesde: D_DESDE, fechaHasta: D_HASTA,
 });
-const initTasa = tasaDelMotor({ tasaPreset: 'activa_bna_33' }).tasa;
+const initTasa = 33;
 const initPctNum = (init.interesesGenerados / CAPITAL) * 100;
 
+const isoLocal = (d: Date) => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+const daysAgo = (days: number) => { const d = new Date(now); d.setDate(d.getDate() - days); return isoLocal(d); };
+const yearsAgo = (years: number) => { const d = new Date(now); d.setFullYear(d.getFullYear() - years); return isoLocal(d); };
 const plazos: { lbl: string; desde: string }[] = [
-  { lbl: '90 días', desde: '2026-04-15' },
-  { lbl: '180 días', desde: '2026-01-15' },
-  { lbl: '1 año', desde: '2025-07-14' },
-  { lbl: '2 años', desde: '2024-07-14' },
-  { lbl: '3 años', desde: '2023-07-14' },
+  { lbl: '90 días', desde: daysAgo(90) },
+  { lbl: '180 días', desde: daysAgo(180) },
+  { lbl: '1 año', desde: yearsAgo(1) },
+  { lbl: '2 años', desde: yearsAgo(2) },
+  { lbl: '3 años', desde: yearsAgo(3) },
 ];
 const refRows = plazos.map((p) => {
   const r = interesJudicialTasa({ capital: CAPITAL, tasaPreset: 'activa_bna_33', jurisdiccion: 'ninguna', fechaDesde: p.desde, fechaHasta: D_HASTA });
@@ -73,8 +78,19 @@ const tablaAttr = JSON.stringify({
   juris: jurisdicciones.reduce((acc: any, j) => { acc[j.value] = j.tasa; return acc; }, {}),
 });
 
-const faq = calc.faq || [];
-const sources = calc.sources || [];
+const faq = [
+  { q: '¿Qué tasa tengo que ingresar?', a: 'La que surja de la sentencia, resolución, acuerdo o pauta aplicable a tu expediente. La jurisdicción y el fuero, por sí solos, no alcanzan para elegirla.' },
+  { q: '¿La tasa es fija durante todo el período?', a: 'No necesariamente. Muchas tasas bancarias cambian con el tiempo y algunas decisiones ordenan distintos criterios por tramos. Este estimador usa una sola TNA fija: si tu caso tiene tramos, calculalos por separado y validá la liquidación profesional.' },
+  { q: '¿Calcula capitalización de intereses?', a: 'No. Aplica interés simple sobre el capital original. El artículo 770 del Código Civil y Comercial contempla supuestos específicos de capitalización; verificá si existe una orden concreta en tu expediente.' },
+  { q: '¿Qué resolvió la Corte en “Oliva”?', a: 'La CSJN dejó sin efecto el mecanismo de capitalizaciones periódicas aplicado mediante el Acta CNAT 2764 en ese caso. Eso no equivale a una prohibición universal de toda capitalización ni define una tasa para todos los procesos.' },
+  { q: '¿El resultado se puede presentar en un juicio?', a: 'No directamente. Sirve para controlar un escenario simple. Una liquidación judicial puede requerir tasas históricas, varios tramos, capitalizaciones admitidas, pagos parciales, costas y la pauta exacta del expediente.' },
+  { q: '¿Se cuentan días hábiles o corridos?', a: 'La herramienta cuenta días corridos entre las dos fechas. Confirmá que ese sea el criterio aplicable a tu obligación y a la resolución judicial.' },
+];
+const sources = [
+  { name: 'Código Civil y Comercial — intereses, arts. 767 a 771', publisher: 'SAIJ · Ministerio de Justicia', url: 'https://www.saij.gob.ar/docs-f/codigo/Codigo_Civil_y_Comercial_de_la_Nacion.pdf' },
+  { name: 'Oliva, Fabio Omar c/ COMA S.A. — sentencia del 29/02/2024', publisher: 'Corte Suprema de Justicia de la Nación', url: 'https://sjconsulta.csjn.gov.ar/sj/verTomo?tomoId=443' },
+  { name: 'Información al usuario financiero — tasas vigentes', publisher: 'Banco de la Nación Argentina', url: 'https://www.bna.com.ar/Home/InformacionAlUsuarioFinanciero' },
+];
 ---
 
 <div class="cf-page ijt" data-domain="knowledge" data-tasas={tablaAttr}>
@@ -90,9 +106,9 @@ const sources = calc.sources || [];
 
   <header class="cf-hero">
     <div class="cf-hero__main">
-      <p class="cf-kicker"><span aria-hidden="true">⚖️</span> Argentina · Tasa activa BNA · 2026</p>
-      <h1 class="cf-h1">Calculadora de <span class="cf-yr">interés judicial</span></h1>
-      <p class="cf-sub">Actualizá una deuda desde la fecha de mora hasta hoy con la tasa que ordena la doctrina de tu fuero, a interés simple.</p>
+      <p class="cf-kicker"><span aria-hidden="true">⚖️</span> Argentina · Estimación manual · 2026</p>
+      <h1 class="cf-h1">Estimador de <span class="cf-yr">interés judicial</span></h1>
+      <p class="cf-sub">Estimá interés simple con la tasa anual indicada en tu sentencia, resolución o liquidación. La jurisdicción sola no define qué tasa corresponde.</p>
       <ul class="cf-pills">
         <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
         <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
@@ -105,7 +121,7 @@ const sources = calc.sources || [];
         <div class="cf-deco-card">
           <div class="cf-deco-card__label">Dato principal</div>
           <div class="cf-deco-card__value" id="ijt-deco-val">{fmt(init.totalConIntereses)}</div>
-          <div class="cf-deco-card__note">Total reclamable · capital {fmt(CAPITAL)}</div>
+          <div class="cf-deco-card__note">Capital + interés estimado · capital {fmt(CAPITAL)}</div>
         </div>
         <span class="cf-deco-badge ijt-badge">⚖️</span>
       </div>
@@ -130,7 +146,7 @@ const sources = calc.sources || [];
       </div>
 
       <div class="cf-field">
-        <div class="cf-field__row"><label class="cf-label" for="ijt-juris">Jurisdicción</label><span class="cf-hint">Preselecciona la tasa</span></div>
+        <div class="cf-field__row"><label class="cf-label" for="ijt-juris">Jurisdicción (contexto)</label><span class="cf-hint">No define la tasa</span></div>
         <select class="cf-input" id="ijt-juris">
           {jurisOpts.map((o) => <option value={o.value} selected={o.value === 'ninguna'}>{o.label}</option>)}
         </select>
@@ -139,15 +155,16 @@ const sources = calc.sources || [];
       <div class="cf-grid2">
         <div class="cf-field">
           <div class="cf-field__row"><label class="cf-label" for="ijt-preset">Tasa a usar</label></div>
-          <select class="cf-input" id="ijt-preset">
+          <select class="cf-input" id="ijt-preset" aria-describedby="ijt-rate-help">
             {presetOpts.map((o) => <option value={o.value} selected={o.value === 'activa_bna_33'}>{o.label}</option>)}
           </select>
         </div>
-        <div class="cf-field ijt-manual" id="ijt-manual-wrap" hidden>
+        <div class="cf-field ijt-manual" id="ijt-manual-wrap">
           <div class="cf-field__row"><label class="cf-label" for="ijt-manual">Tasa manual anual</label><span class="cf-hint">% TNA</span></div>
-          <input class="cf-input" type="number" id="ijt-manual" value="33" min="0" step="0.5" />
+          <input class="cf-input" type="number" id="ijt-manual" value="33" min="0.01" max="1000" step="0.01" required aria-describedby="ijt-rate-help" />
         </div>
       </div>
+      <p class="cf-help" id="ijt-rate-help">Ingresá la TNA que figure en la pauta aplicable. No reconstruye tasas históricas variables.</p>
 
       <div class="cf-grid2">
         <div class="cf-field">
@@ -160,7 +177,7 @@ const sources = calc.sources || [];
         </div>
       </div>
 
-      <button class="cf-primary" id="ijt-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+      <button class="cf-primary" id="ijt-btn" type="button">Calcular estimación <span aria-hidden="true">→</span></button>
 
       <div class="cf-shortcuts">
         <span class="cf-shortcuts__lbl">Plazos:</span>
@@ -172,7 +189,7 @@ const sources = calc.sources || [];
     <div class="cf-result" id="ijt-result">
       <p class="cf-result__eyebrow">Resultado estimado</p>
       <div class="cf-result__big" id="ijt-big">{fmt(init.totalConIntereses)}</div>
-      <p class="cf-result__biglabel" id="ijt-biglabel">de total reclamable</p>
+      <p class="cf-result__biglabel" id="ijt-biglabel">de capital más interés simple estimado</p>
       <p class="cf-result__sub" id="ijt-sub">Capital {fmt(CAPITAL)} + {fmt(init.interesesGenerados)} de intereses · {num(init.diasTranscurridos)} días</p>
       <div class="cf-tiles cf-tiles--2">
         <div class="cf-tile"><div class="cf-tile__value" id="ijt-t-int">{fmt(init.interesesGenerados)}</div><div class="cf-tile__label">Intereses generados</div></div>
@@ -191,7 +208,7 @@ const sources = calc.sources || [];
 
   <div class="cf-quick">
     <span class="cf-quick__ico" aria-hidden="true">⚡</span>
-    <p class="cf-quick__txt" id="ijt-quick"><strong>Respuesta rápida.</strong> Un capital de {fmt(CAPITAL)} en mora durante {num(init.diasTranscurridos)} días a la tasa activa BNA de referencia devenga <strong>{fmt(init.interesesGenerados)}</strong> de intereses: el total reclamable llega a {fmt(init.totalConIntereses)}.</p>
+    <p class="cf-quick__txt" id="ijt-quick"><strong>Respuesta rápida.</strong> Un capital de {fmt(CAPITAL)} durante {num(init.diasTranscurridos)} días a una TNA manual del {tasaTxt(initTasa)} genera <strong>{fmt(init.interesesGenerados)}</strong> de interés simple. Verificá tasa, tramos y capitalización con el expediente.</p>
     <span class="cf-formula">capital × (tasa ÷ 365) × días</span>
   </div>
 
@@ -236,7 +253,7 @@ const sources = calc.sources || [];
       </div>
       <div class="cf-breakdown">
         <div class="cf-breakdown__big" id="ijt-bd-big">{fmt(init.totalConIntereses)}</div>
-        <p class="ijt-note ijt-note--top">Total reclamable del caso cargado</p>
+        <p class="ijt-note ijt-note--top">Capital más interés simple del escenario cargado</p>
         <div class="cf-brow">
           <span class="cf-brow__lbl">Capital</span>
           <span class="cf-brow__val" id="ijt-bd-cap">{fmt(CAPITAL)}</span>
@@ -253,7 +270,7 @@ const sources = calc.sources || [];
           <span class="cf-brow__bar"><span class="ijt-bar--full" style="width:100%"></span></span>
         </div>
         <div class="cf-breakdown__total">
-          <span>Total reclamable</span>
+          <span>Total estimado</span>
           <strong id="ijt-bd-total">{fmt(init.totalConIntereses)}</strong>
         </div>
         <div class="cf-callout cf-callout--warn ijt-cal">
@@ -272,7 +289,7 @@ const sources = calc.sources || [];
       <div class="cf-step">
         <div class="cf-step__num">1</div>
         <p class="cf-step__title">Ingresá tus datos</p>
-        <p class="cf-step__desc">El capital reclamado y las fechas de mora y de corte. La jurisdicción preselecciona la tasa que ordena la doctrina del fuero.</p>
+        <p class="cf-step__desc">El capital, las fechas y la TNA indicada en la pauta aplicable. La jurisdicción se conserva sólo como contexto.</p>
         <span class="ijt-chip" id="ijt-s1">{fmt(CAPITAL)} · {num(init.diasTranscurridos)} días</span>
       </div>
       <div class="cf-step">
@@ -284,7 +301,7 @@ const sources = calc.sources || [];
       <div class="cf-step">
         <div class="cf-step__num">3</div>
         <p class="cf-step__title">Revisá el resultado</p>
-        <p class="cf-step__desc">Sumamos los intereses al capital. Ese total es el punto de partida para la liquidación que presentás en el expediente.</p>
+        <p class="cf-step__desc">Sumamos los intereses al capital. Es un escenario de control, no una liquidación lista para presentar.</p>
         <span class="ijt-chip" id="ijt-s3">{fmt(init.totalConIntereses)} · +{pct1(initPctNum)}</span>
       </div>
     </div>
@@ -335,7 +352,7 @@ const sources = calc.sources || [];
         <p class="cf-side-eyebrow">Referencia principal</p>
         <p class="ijt-src__title">Tasa activa BNA de referencia</p>
         <div class="ijt-ref__big">{tasaTxt(initTasa)}</div>
-        <p class="cf-side-desc">Es la que aplican por defecto los fueros civil, comercial y laboral de Nación (plenario "Samudio de Martínez", CNCiv, 2009)</p>
+        <p class="cf-side-desc">Escenario manual de ejemplo. No implica que esa tasa corresponda a un expediente ni a todo un fuero.</p>
         <div class="ijt-chips">
           {jurisdicciones.map((j) => <span class="ijt-chip2">{j.value === 'pba' ? 'PBA' : j.value === 'caba' ? 'CABA' : 'Nación'} · {tasaTxt(j.tasa)}</span>)}
         </div>
@@ -368,17 +385,17 @@ const sources = calc.sources || [];
       <div class="ijt-card">
         <p class="cf-eyebrow">Fuentes y metodología</p>
         <h2 class="ijt-card__title">Números que podés defender</h2>
-        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026. Las tasas de referencia siguen la doctrina vigente de cada fuero (Samudio, Barrios, Eiben) y el interés se liquida según los arts. 767 a 771 del Código Civil y Comercial.</p>
+        <p class="cf-side-desc">La herramienta calcula interés simple con la TNA que ingresás. Las fuentes explican el marco normativo, pero no sustituyen la resolución del expediente.</p>
       </div>
       <div class="cf-side-card cf-side-card--dark">
         <p class="cf-side-eyebrow">Fuentes oficiales</p>
         <p class="ijt-src__title">Doctrina y normativa</p>
         <div class="ijt-src">
           {sources.map((s: any) => (
-            <div class="ijt-src__item">
+            <a class="ijt-src__item" href={typeof s === 'string' ? undefined : s.url} target="_blank" rel="nofollow noopener">
               <strong>{typeof s === 'string' ? s : String(s.name || '').split(/[—:(]/)[0].trim()}</strong>
               {typeof s !== 'string' && s.publisher && <span>{s.publisher}</span>}
-            </div>
+            </a>
           ))}
         </div>
         <p class="ijt-src__foot">● Información revisada en julio de 2026</p>
@@ -440,13 +457,9 @@ const sources = calc.sources || [];
       return new Date(p[0], p[1] - 1, p[2]);
     }
 
-    // Tasa efectiva: jurisdicción gana sobre preset; 'manual' usa el input.
+    // La tasa siempre la informa el usuario; la jurisdicción es sólo contexto.
     function tasaActual() {
-      const j = jurisEl.value;
-      if (j && j !== 'ninguna' && T.juris[j] !== undefined) return T.juris[j];
-      const p = presetEl.value;
-      if (p === 'manual') return Number(manualEl.value) || 0;
-      return T.presets[p] !== undefined ? T.presets[p] : 0;
+      return Number(manualEl.value) || 0;
     }
 
     // Réplica de interesJudicialTasa(): interés SIMPLE, sin capitalización.
@@ -458,10 +471,9 @@ const sources = calc.sources || [];
 
     // Estado del propio formulario (qué campos se muestran/habilitan): feedback de UI, no cálculo → sigue en vivo.
     function syncInputLabels() {
-      const usaManual = presetEl.value === 'manual' && (jurisEl.value === 'ninguna' || !jurisEl.value);
-      manualWrap.hidden = !usaManual;
-      // Con jurisdicción elegida, la tasa la manda el fuero: el preset queda inerte.
-      presetEl.disabled = jurisEl.value !== 'ninguna' && !!jurisEl.value;
+      manualWrap.hidden = false;
+      presetEl.value = 'manual';
+      presetEl.disabled = true;
     }
 
     function render() {
@@ -488,10 +500,11 @@ const sources = calc.sources || [];
       $('ijt-t-dias').textContent = num(r.dias);
       $('ijt-t-tasa').textContent = tasaTxt(tasa);
       $('ijt-formula').textContent = fmt(capital) + ' × (' + tasa.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '% ÷ 365) × ' + num(r.dias) + ' días = ' + fmt(r.intereses);
+      $('ijt-quick').innerHTML = '<strong>Respuesta rápida.</strong> Un capital de ' + fmt(capital) + ' durante ' + num(r.dias) + ' días a una TNA manual del ' + tasaTxt(tasa) + ' genera <strong>' + fmt(r.intereses) + '</strong> de interés simple. Verificá tasa, tramos y capitalización con el expediente.';
 
       const dv = $('ijt-deco-val'); if (dv) dv.textContent = fmt(r.total);
       const dn = document.querySelector('.ijt .cf-deco-card__note');
-      if (dn) dn.textContent = 'Total reclamable · capital ' + fmt(capital);
+      if (dn) dn.textContent = 'Capital + interés estimado · capital ' + fmt(capital);
       const di = $('ijt-deco-int'); if (di) di.textContent = pct1(r.pct);
 
       $('ijt-hl-big').textContent = pct1(r.pct);
@@ -512,7 +525,12 @@ const sources = calc.sources || [];
     // El botón Calcular es el único que calcula: tocar un input sólo marca el resultado como vencido.
     const resultEl = $('ijt-result');
     function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
-    function runCalc() { if (render() !== false && resultEl) resultEl.removeAttribute('data-stale'); }
+    function runCalc() {
+      if (render() !== false) {
+        if (resultEl) resultEl.removeAttribute('data-stale');
+        window.dataLayer && window.dataLayer.push({ event: 'calculator_submit', calculator: 'interes_judicial_manual' });
+      }
+    }
 
     capEl.addEventListener('input', function () { capEl.value = fmtThousands(capEl.value); markStale(); });
     jurisEl.addEventListener('change', function () { syncInputLabels(); markStale(); });
@@ -533,7 +551,7 @@ const sources = calc.sources || [];
       const desde = parseFecha(desdeEl.value), hasta = parseFecha(hastaEl.value);
       if (!capital || !tasa || !desde || !hasta || desde > hasta) return '';
       const r = calcular(capital, tasa, desde, hasta);
-      return 'Interés judicial: un capital de ' + fmt(capital) + ' en mora ' + num(r.dias) + ' días a ' + tasaTxt(tasa) + ' devenga ' + fmt(r.intereses) + ' de intereses (' + pct1(r.pct) + ' del capital). Total reclamable: ' + fmt(r.total) + '. Interés simple, estimación orientativa. — hacecuentas.com';
+      return 'Estimación de interés judicial: capital ' + fmt(capital) + ', ' + num(r.dias) + ' días, TNA manual ' + tasaTxt(tasa) + ', interés simple ' + fmt(r.intereses) + ' (' + pct1(r.pct) + '). Capital más interés: ' + fmt(r.total) + '. No es una liquidación judicial. — hacecuentas.com';
     }
     function shareUrl() {
       return location.origin + location.pathname + '?capital=' + digits(capEl.value) + '&juris=' + jurisEl.value + '&preset=' + presetEl.value + '&desde=' + desdeEl.value + '&hasta=' + hastaEl.value;

@@ -9,12 +9,12 @@ import dolarLive from '../../data/live/dolar.json';
  * Arquetipo: CÁLCULO DOMINANTE (sin `cases`; usa `answer`).
  *
  * IMPORTANTE — de dónde sale el valor del m²:
- * NO se hardcodea acá. Se DERIVA llamando a la fórmula real
+ * Se deriva llamando a la fórmula editorial
  * `src/lib/formulas/costo-m2-construccion.ts` con m2 = 1, que es la misma que
  * alimenta a /calculadora-costo-m2-construccion-argentina. Esa fórmula tiene
- * como fuente el índice CAC / CPIC / ICC de INDEC (ver dataUpdate del JSON
- * costo-m2-construccion.json). Cuando se refresque el índice ahí, este hub se
- * actualiza solo: acá no hay ningún número de m² escrito a mano.
+ * costo-m2-construccion.ts. Sus bases USD/m² y multiplicadores zonales son
+ * supuestos editoriales, no valores publicados por INDEC, CAMARCO o CPIC. Los
+ * índices oficiales sirven para seguir variaciones, no para fijar un precio.
  *
  * Lo mismo con el precio del m² de muro: sale de
  * `src/lib/formulas/costo-medianera-muro-lindero.ts`.
@@ -127,17 +127,17 @@ export const hub: HubData = {
   slug: 'construccion/costo-por-m2',
   title: 'Costo del m² de construcción en Argentina 2026: calculadora',
   description:
-    'El costo del m² de construcción en Argentina, hoy: calculá cuánto sale construir por metro cuadrado según categoría (económica, estándar o premium) y zona, con el desglose real de materiales, mano de obra, honorarios y permisos.',
+    'Estimá un rango de costo por m² para construir en Argentina según categoría y zona. Ajustá precio local, superficie computable, adicionales y contingencia.',
   silo: 'Construcción',
   siloHref: '/construccion',
 
   eyebrow: 'Guía y estimación de obra',
   h1: 'Calculadora de costo por m² de construcción 2026',
   lede:
-    'Poné los metros que querés levantar, elegí la categoría de terminación y la zona: te decimos el costo por m², el total de obra y —lo que casi nadie te muestra— en qué se te va la plata.',
+    'Poné los metros, elegí terminación y zona, o cargá una cotización local. Vas a obtener un rango orientativo con supuestos visibles, no un precio cerrado.',
   stamps: [
     'Actualizado 07-08-2026',
-    `Referencia estándar US$${USD_M2_ESTANDAR}/m² (CAC · CPIC · ICC INDEC)`,
+    `Referencia editorial estándar US$${USD_M2_ESTANDAR}/m²`,
     `Pesos calculados al ${FX.label} $${FX.value.toLocaleString('es-AR')} (${FX.date})`,
     '7 calculadoras adentro',
   ],
@@ -146,7 +146,7 @@ export const hub: HubData = {
 
   inputsTitle: 'Contanos qué vas a construir',
   inputsIntro:
-    'Los semicubiertos (galería, cochera, quincho abierto) computan al 50%, igual que en la mayoría de los municipios y en los presupuestos de obra.',
+    'El porcentaje computable de semicubiertos depende del presupuesto y la normativa local. El 50% es editable y funciona sólo como punto de partida.',
   fields: [
     { id: 'cubiertos', label: 'm² cubiertos', suffix: 'm²', value: '120', thousands: true },
     { id: 'semi', label: 'm² semicubiertos (computan al 50%)', type: 'number', min: 0, value: 20 },
@@ -170,11 +170,11 @@ export const hub: HubData = {
     { id: 'cuotas', label: 'En cuántos meses pensás pagar la obra', type: 'number', min: 1, max: 120, value: 24 },
   ],
   fineprint:
-    `Es una estimación de obra llave en mano, sin terreno, sin escritura y sin intereses de financiación. Los costos por m² se manejan en dólares y se pasan a pesos ${
+    `Es una estimación editorial a valores de hoy, no una cotización ni un índice oficial. No incluye terreno, escritura, financiación ni adicionales que no cargues. Las referencias se expresan en dólares y se pasan a pesos ${
       FX.live
         ? `con la cotización del ${FX.label} de venta al ${FX.date}: $${FX.value.toLocaleString('es-AR')} por dólar (fuente DolarAPI, la misma de /dolar-hoy)`
         : `a un dólar estimado de $${FX.value.toLocaleString('es-AR')} (${FX.date}): si el tipo de cambio se movió, ajustá el total en la misma proporción`
-    }. Un presupuesto firmado por tu director de obra manda siempre sobre esta cuenta.`,
+    }. El rango ±15% representa incertidumbre básica y no reemplaza presupuestos por rubro firmados por profesionales y contratistas.`,
 
   chart: {
     type: 'stacked',
@@ -199,8 +199,8 @@ export const hub: HubData = {
     warn: [
       'El terreno NO está incluido: en CABA y GBA norte suele valer tanto o más que la obra',
       'Los valores por m² son de obra nueva llave en mano; una ampliación paga sobrecosto por trabajar sobre lo existente',
-      'La contingencia del 10% no es opcional: casi ninguna obra en Argentina cierra al presupuesto original',
-      'Si financiás en cuotas, el costo se ajusta por índice CAC y la cuota final crece con la inflación',
+      'La contingencia sugerida del 10% es editable y debe adaptarse al avance del proyecto y la calidad del cómputo',
+      'Dividir el total por meses no produce cuotas reales: todo ajuste debe surgir del contrato y su índice pactado',
     ],
     plazo:
       'el permiso de obra tarda entre 2 y 6 meses según el municipio; presentá los planos antes de comprar el primer palet de ladrillos.',
@@ -209,7 +209,7 @@ export const hub: HubData = {
   faq: [
     {
       q: '¿Cuánto sale construir por metro cuadrado en Argentina en 2026?',
-      a: `El costo del m² de construcción para una casa estándar en GBA ronda los <b>US$${USD_M2_ESTANDAR} por m²</b> llave en mano. Una vivienda económica arranca cerca de US$${M2.economica.gba_sur.usd}/m² y una premium supera los US$${M2.premium.gba_sur.usd}/m². En CABA sumá alrededor de un 25% y en Tierra del Fuego hasta un 40% por logística y aislamiento obligatorio.`,
+      a: `Como escenario editorial, una casa estándar en GBA usa una referencia central de <b>US$${USD_M2_ESTANDAR} por m²</b>. La calculadora muestra un rango ±15% y permite reemplazarlo por una cotización local. INDEC y CAMARCO miden variaciones de costos, pero no publican este precio absoluto por categoría y zona.`,
     },
     {
       q: '¿Qué diferencia hay entre construcción económica, estándar y premium?',
@@ -221,11 +221,11 @@ export const hub: HubData = {
     },
     {
       q: '¿Cómo se cuentan los m² semicubiertos y los balcones?',
-      a: 'La práctica de obra y la mayoría de los códigos de edificación municipales computan galerías, cocheras techadas y balcones al 50% de su superficie, porque no llevan cerramientos completos ni todas las instalaciones. Este hub aplica ese 50% automáticamente.',
+      a: 'No existe un único porcentaje válido para todos los presupuestos y municipios. El 50% se ofrece como punto de partida editable: usá el porcentaje de tu cómputo profesional o normativa local.',
     },
     {
       q: '¿Cuánto tengo que pagar de la medianera y cuánto el vecino?',
-      a: `El Código Civil y Comercial (arts. 2006 a 2036) establece que el muro divisorio es común: el lindero está obligado a aportar la mitad del costo. Con precios de referencia de ladrillo hueco 18 cm más revoque, el m² de muro ronda los $${MURO_ARS_M2.toLocaleString('es-AR')}, y en una medianera de 3 metros de alto la mitad que te toca sale de ahí. Acordá el reparto por escrito antes de empezar para poder reclamar el cobro de medianería.`,
+      a: 'El régimen de medianería depende de la ubicación del muro, su antigüedad, uso y documentación. La calculadora principal no presume automáticamente una altura ni que el vecino deba pagar la mitad. Pedí un cómputo específico y asesoramiento antes de incluir un recupero.',
     },
     {
       q: '¿Cuánta tierra tengo que excavar para los cimientos?',
@@ -296,6 +296,6 @@ export const hub: HubData = {
     '/calculadora-proyectos-hogar',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
   audience: 'AR',
 };

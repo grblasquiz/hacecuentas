@@ -19,14 +19,14 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'salud/peso-ideal-imc',
-  title: 'Calculadora de IMC y peso ideal: tabla OMS y rango saludable',
+  title: 'Calculadora de IMC y rango de peso saludable según la OMS',
   description:
-    'Calculá tu IMC y peso ideal según tu altura. Incluye tabla OMS, rango saludable, cintura/altura y comparación de fórmulas. Gratis y privado.',
+    'Calculá tu IMC y un rango de peso saludable según tu altura. Incluye tabla OMS, cintura/altura y fórmulas históricas opcionales. Gratis y privado.',
   silo: 'Salud',
   siloHref: '/salud',
 
   eyebrow: 'Guía y estimación de salud',
-  h1: '¿Estoy en mi peso? Veamos qué dice tu IMC.',
+  h1: 'Calculá tu IMC y entendé su rango saludable',
   lede:
     'Con tu peso y tu altura sale tu IMC, la categoría de la OMS y el rango de kilos orientativo para tu estatura. Si agregás cintura, también calculamos la relación cintura/altura.',
   stamps: ['Revisado 03-08-2026', 'Clasificación OMS para adultos', 'Cálculo privado'],
@@ -40,10 +40,11 @@ export const hub: HubData = {
     { id: 'altura', label: 'Altura', type: 'number', suffix: 'cm', min: 100, max: 250, step: 1, value: 170 },
     {
       id: 'sexo',
-      label: 'Sexo (para las fórmulas de peso ideal)',
+      label: 'Sexo usado por las fórmulas históricas (opcional)',
       type: 'select',
-      value: 'm',
+      value: '',
       options: [
+        { value: '', label: 'Prefiero no indicarlo' },
         { value: 'm', label: 'Masculino' },
         { value: 'f', label: 'Femenino' },
       ],
@@ -98,7 +99,7 @@ export const hub: HubData = {
       'IMC = peso en kg dividido por la altura en metros al cuadrado (fórmula OMS)',
       'Rango saludable estándar: IMC 18,5 a 24,9 — la calculadora lo traduce a kilos para tu altura',
       'En mayores de 65 años el resultado requiere contexto clínico: masa muscular, alimentación, enfermedades y evolución del peso',
-      'Peso ideal por Devine, Robinson y Lorentz, mostrado como rango entre las tres fórmulas',
+      'Referencias históricas de Devine, Robinson y Lorentz, separadas del rango saludable de la OMS',
       'Índice cintura/altura (WHtR): por debajo de 0,5 es lo esperable',
       'La categoría es orientativa y no equivale a un diagnóstico individual',
     ],
@@ -118,11 +119,11 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuánto debería pesar para mi altura?',
-      a: 'Multiplicá tu altura en metros al cuadrado por 18,5 para el mínimo y por 24,9 para el máximo. Para 1,70 m eso da entre 53,5 y 72 kg. El hub te lo calcula solo y además te muestra el peso ideal de las tres fórmulas clásicas.',
+      a: 'Multiplicá tu altura en metros al cuadrado por 18,5 para el mínimo y por 24,9 para el máximo. Para 1,70 m eso da entre 53,5 y 72 kg. Es un rango poblacional orientativo, no una meta individual.',
     },
     {
-      q: '¿Cuál de las fórmulas de peso ideal es la correcta?',
-      a: 'Ninguna es "la correcta": Devine (1974) se usa en farmacología para dosificar, Robinson (1983) en estudios epidemiológicos y Lorentz es la más usada en Europa por su simplicidad. Por eso mostramos las tres y su promedio, y lo comparamos contra el rango de la OMS.',
+      q: '¿Cuál de las fórmulas históricas de peso es la correcta?',
+      a: 'Ninguna define un peso ideal clínico. Devine, Robinson y Lorentz son referencias históricas con finalidades y supuestos distintos. Por eso se muestran por separado y nunca reemplazan el rango de IMC ni una evaluación profesional.',
     },
     {
       q: '¿El IMC es igual para hombres y mujeres?',
@@ -210,7 +211,7 @@ export const hub: HubData = {
     '/calculadora-edad-metabolica',
   ],
 
-  lastReviewed: '2026-08-03',
+  lastReviewed: '2026-08-16',
   audience: 'global',
 };
 

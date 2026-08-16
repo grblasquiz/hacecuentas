@@ -26,7 +26,7 @@ const heightRows = Array.from({ length: 12 }, (_, index) => {
         <nav class="imc-crumbs" aria-label="Migas de pan">
           <a href="/salud">Salud</a><span>/</span><span>Peso ideal e IMC</span>
         </nav>
-        <h1>Calculadora de IMC <br />y peso ideal según <br />tu altura</h1>
+        <h1>Calculadora de IMC <br />y rango saludable según <br />tu altura</h1>
         <p class="imc-lede">
           Calculá tu índice de masa corporal, consultá la tabla de la OMS y conocé
           el rango de peso saludable orientativo para tu estatura.
@@ -90,7 +90,7 @@ const heightRows = Array.from({ length: 12 }, (_, index) => {
 
         <div class="imc-advanced" id="imc-advanced" hidden>
           <label><span>Edad (opcional)</span><span class="imc-input imc-input--small"><input id="imc-age" type="number" placeholder="Ej.: 35" min="18" max="110" /><b>años</b></span></label>
-          <label><span>Sexo (para peso ideal)</span><select id="imc-sex"><option value="">No indicar</option><option value="m">Masculino</option><option value="f">Femenino</option></select></label>
+          <label><span>Sexo usado por las fórmulas históricas</span><select id="imc-sex" aria-describedby="imc-sex-help"><option value="">No indicar</option><option value="m">Masculino</option><option value="f">Femenino</option></select><small id="imc-sex-help">Opcional. Sólo modifica Devine, Robinson, Lorentz y CUN-BAE; no cambia el IMC.</small></label>
           <label><span>Cintura (opcional)</span><span class="imc-input imc-input--small"><input id="imc-waist" type="number" placeholder="Ej.: 85" min="40" max="200" step="0.1" /><b id="imc-waist-unit">cm</b></span></label>
           <p class="imc-measure-help">Medila a mitad de camino entre la última costilla y la parte superior de la cadera, después de exhalar normalmente.</p>
         </div>
@@ -136,7 +136,7 @@ const heightRows = Array.from({ length: 12 }, (_, index) => {
           </article>
           <article>
             <span class="imc-insight-icon imc-insight-icon--blue"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/><path d="m14.5 9.5 5-5M16.5 4.5h3v3"/></svg></span>
-            <div><b>Peso ideal estimado</b><strong id="imc-ideal">—</strong><small id="imc-ideal-copy">Indicá sexo para comparar tres fórmulas.</small></div>
+            <div><b>Referencias históricas</b><strong id="imc-ideal">—</strong><small id="imc-ideal-copy">Indicá sexo si querés comparar tres fórmulas opcionales.</small></div>
           </article>
           <article>
             <span class="imc-insight-icon"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 7.5h18v9H3z"/><path d="M6 7.5v3m3-3v2m3-2v3m3-3v2m3-2v3"/></svg></span>
@@ -256,7 +256,7 @@ const heightRows = Array.from({ length: 12 }, (_, index) => {
       <h2>Qué calculamos y con qué límites</h2>
       <div class="imc-methodology__grid">
         <article><b>IMC y rango OMS</b><p>Usamos peso ÷ altura². El intervalo 18,5–24,9 se convierte a kilos para tu altura; es un tamiz poblacional, no un diagnóstico.</p></article>
-        <article><b>Peso ideal</b><p>Comparamos Devine, Robinson y Lorentz. Son referencias históricas y por eso mostramos cada resultado, no una falsa cifra exacta.</p></article>
+        <article><b>Fórmulas históricas</b><p>Comparamos Devine, Robinson y Lorentz únicamente como referencias. No definen una meta clínica ni un único “peso ideal”.</p></article>
         <article><b>Cintura/altura</b><p>Dividimos cintura por altura. La lectura se muestra como complemento cuando el IMC es menor de 35, siguiendo la guía NICE.</p></article>
         <article><b>Grasa estimada CUN-BAE</b><p>Si indicás edad y sexo, estimamos adiposidad con una ecuación validada en adultos. Su error individual puede ser amplio y no reemplaza una medición clínica.</p></article>
       </div>
@@ -432,7 +432,7 @@ const heightRows = Array.from({ length: 12 }, (_, index) => {
     document.querySelector('#imc-ideal')!.textContent = ideals.length ? `${decimal(idealLow, 0)} – ${decimal(idealHigh, 0)} kg` : '—';
     document.querySelector('#imc-ideal-copy')!.textContent = ideals.length
       ? 'Rango entre Devine, Robinson y Lorentz; no es una meta clínica.'
-      : 'Indicá sexo para comparar tres fórmulas.';
+      : 'Indicá sexo sólo si querés comparar tres fórmulas históricas.';
     const formulas = document.querySelector<HTMLElement>('#imc-formulas');
     if (formulas) formulas.hidden = !(sex || (sex && age));
     document.querySelector('#imc-devine')!.textContent = devine ? `${decimal(devine)} kg` : '—';
@@ -464,7 +464,10 @@ const heightRows = Array.from({ length: 12 }, (_, index) => {
 
   form?.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (calculate(true)) document.querySelector('.imc-results')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (calculate(true)) {
+      window.dataLayer?.push({ event: 'calculator_submit', calculator: 'imc_rango_saludable', units: unitMode });
+      document.querySelector('.imc-results')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   });
   form?.querySelectorAll('input, select').forEach((field) => field.addEventListener('input', () => calculate(false)));
 

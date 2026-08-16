@@ -2,7 +2,7 @@
 
 Score contractual: **10.0/10**
 
-Bloqueos: 0 · avisos: 20 · páginas indexables: 7 calculadoras
+Bloqueos: 0 · avisos: 22 · páginas indexables: 7 calculadoras
 
 Los avisos no inventan evidencia: señalan páginas que todavía pueden mejorar fuentes o trazabilidad. Un revisor profesional sólo cuenta cuando sus credenciales, perfil y fecha son verificables.
 
@@ -14,8 +14,10 @@ Los avisos no inventan evidencia: señalan páginas que todavía pueden mejorar 
 - Aviso: blog:src/content/blog/dormir-mejor-y-habitos-saludables-2026.json:ymyl-post-without-specific-source
 - Aviso: blog:src/content/blog/empezar-a-invertir-cuentas-basicas-2026.json:ymyl-post-without-specific-source
 - Aviso: blog:src/content/blog/entrenar-para-una-carrera-con-numeros-2026.json:ymyl-post-without-specific-source
+- Aviso: blog:src/content/blog/finde-largo-15-agosto-2026.json:ymyl-post-without-specific-source
 - Aviso: blog:src/content/blog/ganar-musculo-con-numeros-2026.json:ymyl-post-without-specific-source
 - Aviso: blog:src/content/blog/imprevistos-laborales-plan-b-2026.json:ymyl-post-without-specific-source
+- Aviso: blog:src/content/blog/inflacion-julio-2026-cuanto-perdiste.json:ymyl-post-without-specific-source
 - Aviso: blog:src/content/blog/informe-financiero-argentina-2026-08.json:ymyl-post-without-specific-source
 - Aviso: blog:src/content/blog/medir-riesgo-antes-de-invertir-2026.json:ymyl-post-without-specific-source
 - Aviso: blog:src/content/blog/ordenar-la-plata-del-mes-2026.json:ymyl-post-without-specific-source

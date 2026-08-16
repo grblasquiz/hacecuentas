@@ -1,5 +1,5 @@
 /**
- * Calculadora de Interés Judicial - Tasa Activa BNA
+ * Estimador de interés judicial con tasa anual informada por el usuario.
  * Interés simple: Capital × (tasa/365) × días
  */
 
@@ -58,7 +58,10 @@ export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudic
   const capital = Number(inputs.capital);
   const juris = JURISDICCIONES[String(inputs.jurisdiccion || '')];
   const preset = juris ? undefined : TASAS_PRESET[String(inputs.tasaPreset || '')];
-  const tasaAnual = juris ? juris.tasa : preset ? preset.tasa : Number(inputs.tasaAnual);
+  const tasaManual = Number(inputs.tasaAnual);
+  // La jurisdicción no determina por sí sola la tasa de un expediente. Una
+  // tasa manual informada expresamente siempre tiene prioridad.
+  const tasaAnual = tasaManual > 0 ? tasaManual : juris ? juris.tasa : preset ? preset.tasa : tasaManual;
   const partsD = String(inputs.fechaDesde || '').split('-').map(Number);
   if (partsD.length !== 3 || partsD.some(isNaN)) throw new Error('Ingresá una fecha desde válida');
   const [yD, mD, dD] = partsD;
@@ -107,20 +110,24 @@ export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudic
   if (pctNum >= 100) insightTone = 'warn';
   else if (pctNum >= 30) insightTone = 'neutral';
   else insightTone = 'good';
-  const fuenteTasa = juris
-    ? `Usé la **${juris.label}** según la doctrina del fuero elegido. ${juris.doctrina} ⚠️ La tasa real varía mes a mes y cada juzgado puede ordenar otra: **verificá la tasa que aplica tu juzgado** antes de liquidar.`
+  const fuenteTasa = tasaManual > 0
+    ? 'Usé la tasa manual informada. Confirmá que coincida con la resolución, sentencia o pauta aplicable a tu expediente.'
+    : juris
+    ? `Usé la **${juris.label}** únicamente como escenario orientativo. ${juris.doctrina} ⚠️ La jurisdicción no determina por sí sola la tasa: **verificá la resolución de tu expediente** antes de liquidar.`
     : preset
       ? `Usé la **${preset.label}**.`
       : 'Usé la tasa manual que ingresaste.';
 
   const insight = {
     title: 'Cuánto pesan los intereses',
-    text: `Sobre un capital de **$${Math.round(capital).toLocaleString('es-AR')}**, en **${diasTranscurridos.toLocaleString('es-AR')} días** (${anios.toFixed(1)} años) se acumulan **$${Math.round(interesesGenerados).toLocaleString('es-AR')}** de intereses, un **${porcentajeTotal}%** del capital. ${fuenteTasa} El total reclamable asciende a **$${Math.round(totalConIntereses).toLocaleString('es-AR')}**.`,
+    text: `Sobre un capital de **$${Math.round(capital).toLocaleString('es-AR')}**, en **${diasTranscurridos.toLocaleString('es-AR')} días** (${anios.toFixed(1)} años) se estiman **$${Math.round(interesesGenerados).toLocaleString('es-AR')}** de intereses, un **${porcentajeTotal}%** del capital. ${fuenteTasa} El capital más este interés simple da **$${Math.round(totalConIntereses).toLocaleString('es-AR')}**; no es una liquidación judicial.`,
     tone: insightTone,
     icon: '⚖️',
   };
 
-  const tasaAplicada = juris
+  const tasaAplicada = tasaManual > 0
+    ? `${String(tasaAnual).replace('.', ',')}% TNA — tasa manual informada`
+    : juris
     ? `${String(tasaAnual).replace('.', ',')}% TNA — ${juris.label}`
     : preset
       ? `${String(tasaAnual).replace('.', ',')}% TNA — ${preset.label}`
