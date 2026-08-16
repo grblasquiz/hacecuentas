@@ -8,7 +8,7 @@ export const hub: HubData = {
   siloHref: '/impuestos',
   eyebrow: 'Nómadas digitales · días · residencia fiscal',
   h1: 'Residencia fiscal para nómadas digitales: ¿dónde pago impuestos?',
-  lede: 'La cantidad de días importa, pero no es lo único. Ordená tus viajes, probá el umbral que estás investigando y mirá cómo cambia la cuenta si dos países reclaman tu residencia.',
+  lede: 'La cantidad de días importa, pero no es lo único. Ordena tus viajes, prueba el umbral que estás investigando y mira cómo cambia la cuenta si dos países reclaman tu residencia.',
   stamps: ['Pantalla de planificación', 'Umbrales editables', '7 cálculos dentro'],
   resultLabel: 'Resultado de tu prueba de residencia',
   cases: {
