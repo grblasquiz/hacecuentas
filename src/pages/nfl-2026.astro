@@ -1,0 +1,422 @@
+---
+// @incremental-standalone — hub NFL 2026 en español (mercado #1: México).
+// Datos: src/data/live/nfl-2026.json vía src/lib/data/nfl-2026-es.ts (cron).
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SportsLiveNav from '../components/SportsLiveNav.astro';
+import { eventTicketOffer } from '../lib/offer-schema';
+import tzScript from '../scripts/nfl-2026-es-tz.js?raw';
+import {
+  nfl,
+  games,
+  regularGames,
+  internationalGames,
+  MX_ZONE,
+  CO_ZONE,
+  AR_ZONE,
+  TZ_OPTIONS,
+  fmtTime,
+  fmtDay,
+  fmtLongDay,
+  dateKey,
+  gameTitle,
+  gameFragment,
+  regularWeekEntries,
+  weekGames,
+  standingsOf,
+  DIVISIONS,
+  DIVISION_ES,
+  COUNTRY_ES,
+} from '../lib/data/nfl-2026-es.ts';
+
+const PAGE_URL = 'https://hacecuentas.com/nfl-2026';
+const now = new Date();
+const todayKey = dateKey(now, MX_ZONE);
+
+// Próximo partido global y tanda siguiente.
+const nextGame = games.find((g) => g.state !== 'post' && new Date(g.date) > now) || games[games.length - 1];
+const upcoming = games.filter((g) => g.state !== 'post' && new Date(g.date) > now);
+const todayGames = games.filter((g) => dateKey(g.date, MX_ZONE) === todayKey);
+const featuredGames = todayGames.length ? todayGames : upcoming.slice(0, 6);
+const isToday = todayGames.length > 0;
+
+// Semana activa (la del próximo partido) para el bloque "esta semana".
+const activeType = Number(nextGame?.seasonType || 1);
+const activeWeek = Number(nextGame?.week || 1);
+const activeWeekGames = games.filter((g) => Number(g.seasonType) === activeType && Number(g.week) === activeWeek);
+const phaseName = activeType === 1 ? 'Pretemporada' : activeType === 3 ? 'Playoffs' : 'Temporada regular';
+const activeWeekLabel = activeType === 2 ? `Semana ${activeWeek}` : nextGame?.weekLabel || phaseName;
+
+// Fechas clave (todas salen del JSON, salvo el Super Bowl LXI, ya publicado
+// en la página inglesa hermana /en/nfl-2026).
+const kickoffGame = regularGames[0];
+const kickoffDayMx = fmtLongDay(kickoffGame.date, MX_ZONE);
+const kickoffTimeMx = fmtTime(kickoffGame.date, MX_ZONE);
+const kickoffTimeCo = fmtTime(kickoffGame.date, CO_ZONE);
+const kickoffTimeAr = fmtTime(kickoffGame.date, AR_ZONE);
+const mexicoGame = internationalGames.find((g) => g.country === 'Mexico');
+const seasonWeeks = regularWeekEntries.length || 18;
+// Rango de la última semana (en hora de México), calculado de los partidos reales.
+const fmtDM = (iso: string) =>
+  new Intl.DateTimeFormat('es-MX', { timeZone: MX_ZONE, day: 'numeric', month: 'short' }).format(new Date(iso)).replace(/\./g, '');
+const lastWeekGames = weekGames(seasonWeeks);
+const lastWeekRange = lastWeekGames.length
+  ? `${fmtDM(lastWeekGames[0].date)} – ${fmtDM(lastWeekGames[lastWeekGames.length - 1].date)}`
+  : '';
+
+// Líderes de división (mini-tabla → página de posiciones).
+const divisionLeaders = (['AFC', 'NFC'] as const).flatMap((conf) =>
+  DIVISIONS.map((div) => standingsOf(conf, div)[0]).filter(Boolean).map((t) => ({ ...t }))
+);
+
+const updatedLabel = new Intl.DateTimeFormat('es-MX', {
+  timeZone: MX_ZONE, day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hour12: false,
+}).format(new Date(nfl.fetchedAt));
+
+const intlCountries = [...new Set(internationalGames.map((g) => COUNTRY_ES[g.country] || g.country))];
+
+// ── SEO ──────────────────────────────────────────────────────────────────────
+const title = 'NFL 2026: calendario, partidos de hoy y resultados en vivo';
+const description =
+  'La temporada 2026 de la NFL: calendario completo, partidos de hoy con horario de México, Colombia y Argentina, resultados y posiciones AFC/NFC.';
+const ogTitle = 'NFL 2026: partidos, horarios LATAM y resultados';
+const keywords = ['nfl 2026','calendario nfl 2026','partidos de hoy nfl','cuándo empieza la nfl','nfl hoy','resultados nfl','horarios nfl méxico','nfl méxico','nfl semana 1','super bowl lxi'];
+const newsKeywords = ['NFL 2026','partidos NFL','calendario NFL','resultados NFL','NFL México','Super Bowl LXI'];
+
+const faqs = [
+  {
+    q: '¿Cuándo empieza la temporada 2026 de la NFL?',
+    a: `La temporada regular arranca con ${kickoffGame.away.name} visitando a ${kickoffGame.home.name} el ${kickoffDayMx} a las ${kickoffTimeMx} hora de México (${kickoffTimeCo} en Colombia y ${kickoffTimeAr} en Argentina). Antes se juega la pretemporada, que abrió el 6 de agosto con el Hall of Fame Game.`,
+  },
+  {
+    q: '¿Qué partidos de la NFL hay hoy?',
+    a: 'En la sección "Partidos de hoy" de esta página aparecen los juegos del día con su horario local; si hoy no hay actividad, mostramos los próximos partidos confirmados. Los marcadores se publican cuando cada partido termina.',
+  },
+  {
+    q: '¿Cuántos partidos y semanas tiene la temporada 2026?',
+    a: `La temporada regular tiene ${nfl.regularSeasonGames} partidos repartidos en ${seasonWeeks} semanas. Cada uno de los 32 equipos juega 17 partidos y descansa una semana (bye week). Después vienen los playoffs y el Super Bowl.`,
+  },
+  {
+    q: '¿A qué hora se juegan los partidos de NFL en México y Latinoamérica?',
+    a: 'La mayoría se juega en domingo en tres ventanas: al mediodía, a media tarde y en la noche (hora de México); Colombia y Perú van una hora adelante y Argentina tres. Además hay partido de jueves (Thursday Night Football) y de lunes (Monday Night Football) cada semana. Con el selector de país de esta página ves cada horario en tu zona.',
+  },
+  {
+    q: '¿La NFL juega en México en 2026?',
+    a: mexicoGame
+      ? `Sí: ${mexicoGame.away.name} vs ${mexicoGame.home.name} en la semana ${mexicoGame.week}, el ${fmtLongDay(mexicoGame.date, MX_ZONE)} a las ${fmtTime(mexicoGame.date, MX_ZONE)} hora de México, en el ${mexicoGame.venue} de ${mexicoGame.city}.`
+      : 'El calendario internacional se confirma con el JSON oficial de la temporada; revisá la sección de juegos internacionales.',
+  },
+  {
+    q: '¿Cuántos juegos internacionales hay en 2026?',
+    a: `La temporada 2026 tiene ${internationalGames.length} juegos internacionales, en ${intlCountries.join(', ')}. Todos figuran más abajo con fecha, sede y horario local.`,
+  },
+  {
+    q: '¿Cuándo y dónde es el Super Bowl LXI?',
+    a: 'El Super Bowl LXI está programado para el domingo 14 de febrero de 2027 en el SoFi Stadium de Inglewood, California. Define al campeón de la temporada 2026.',
+  },
+  {
+    q: '¿Por qué algunos partidos dicen "por confirmar"?',
+    a: 'La NFL usa flex scheduling: en las últimas semanas (sobre todo la 16, la 17 y toda la semana 18) puede mover partidos de horario para televisar los más decisivos. Esos juegos aparecen como "por confirmar" hasta que la liga fija el horario definitivo.',
+  },
+  {
+    q: '¿De dónde salen los datos y cada cuánto se actualizan?',
+    a: `El calendario maestro está verificado contra NFL.com y los cruces, horarios, marcadores finales y posiciones se sincronizan desde ESPN. Última actualización: ${updatedLabel} (hora de México).`,
+  },
+];
+
+const breadcrumb = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Deportes', item: 'https://hacecuentas.com/deportes' },
+    { '@type': 'ListItem', position: 3, name: 'NFL 2026', item: PAGE_URL },
+  ],
+};
+const webPage = {
+  '@type': ['WebPage', 'CollectionPage'],
+  '@id': `${PAGE_URL}#webpage`,
+  url: PAGE_URL,
+  name: 'NFL 2026: calendario, partidos y resultados',
+  description,
+  inLanguage: 'es',
+  dateModified: nfl.fetchedAt,
+  about: { '@type': 'SportsOrganization', name: 'National Football League', url: 'https://www.nfl.com' },
+};
+const NFL_ORGANIZER = { '@type': 'SportsOrganization', name: 'National Football League', url: 'https://www.nfl.com' };
+const NFL_TICKETS = 'https://www.nfl.com/tickets/';
+const EVENT_IMAGE = ['https://hacecuentas.com/og-default.png'];
+const performers = (nfl.teams ?? []).map((t: any) => ({ '@type': 'SportsTeam', name: t.name }));
+const sportsEvent = {
+  '@type': 'SportsEvent',
+  name: 'Temporada 2026 de la NFL',
+  sport: 'American football',
+  description,
+  startDate: '2026-08-06',
+  endDate: '2027-02-14',
+  eventStatus: 'https://schema.org/EventScheduled',
+  image: EVENT_IMAGE,
+  organizer: NFL_ORGANIZER,
+  performer: performers,
+  offers: eventTicketOffer({ url: NFL_TICKETS }),
+  location: { '@type': 'Place', name: 'Estados Unidos y sedes internacionales' },
+  subEvent: regularGames.filter((g) => Number(g.week) === 1).map((g) => ({
+    '@type': 'SportsEvent',
+    name: gameTitle(g),
+    startDate: g.date,
+    description: `${gameTitle(g)}, semana 1 de la temporada 2026 de la NFL, en ${g.venue} (${g.city}).`,
+    eventStatus: 'https://schema.org/EventScheduled',
+    image: EVENT_IMAGE,
+    location: { '@type': 'Place', name: g.venue, address: { '@type': 'PostalAddress', addressLocality: g.city, addressRegion: g.stateCode, addressCountry: g.country } },
+    organizer: NFL_ORGANIZER,
+    performer: [{ '@type': 'SportsTeam', name: g.away.name }, { '@type': 'SportsTeam', name: g.home.name }],
+    competitor: [{ '@type': 'SportsTeam', name: g.away.name }, { '@type': 'SportsTeam', name: g.home.name }],
+    offers: eventTicketOffer({ url: NFL_TICKETS }),
+    url: g.href,
+  })),
+};
+const dataset = {
+  '@type': 'Dataset',
+  name: 'NFL 2026: calendario, resultados y posiciones',
+  description: 'Calendario completo de la temporada 2026 de la NFL con horarios para Latinoamérica, marcadores finales y tabla de posiciones AFC/NFC.',
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  isBasedOn: ['https://www.nfl.com/schedules/', 'https://www.espn.com/nfl/schedule/'],
+  temporalCoverage: '2026-08-06/2027-02-14',
+  dateModified: nfl.fetchedAt,
+  url: PAGE_URL,
+};
+const faqSchema = { '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, webPage, sportsEvent, dataset, faqSchema] };
+
+const gameStatus = (g: any) => (g.state === 'post' ? 'FINAL' : g.timeValid === false ? 'POR CONFIRMAR' : '');
+---
+
+<Layout title={title} description={description} canonical="/nfl-2026" audience="global" domain="life" pageType="data" schema={schema} keywords={keywords} newsKeywords={newsKeywords} ogTitle={ogTitle}>
+  <Header slot="header" />
+  <SportsLiveNav />
+  <div class="nflx" data-nfl-es>
+    <nav class="crumbs" aria-label="Ruta de navegación"><a href="/">Inicio</a><span>/</span><a href="/deportes">Deportes</a><span>/</span><strong>NFL 2026</strong></nav>
+
+    <header class="hero">
+      <p class="hero-kicker"><i></i>{phaseName} · {activeWeekLabel}</p>
+      <h1>NFL 2026: calendario, partidos de hoy y resultados</h1>
+      <p class="hero-sub">
+        Toda la temporada 2026 de la NFL con horarios para México, Colombia, Argentina y el resto de Latinoamérica.
+        Kickoff: <strong>{kickoffDayMx}</strong>, {kickoffGame.away.name} vs {kickoffGame.home.name}.
+      </p>
+      <dl class="hero-stats">
+        <div><dt>32</dt><dd>equipos</dd></div>
+        <div><dt>{seasonWeeks}</dt><dd>semanas</dd></div>
+        <div><dt>{nfl.regularSeasonGames}</dt><dd>partidos</dd></div>
+        <div><dt>{internationalGames.length}</dt><dd>internacionales</dd></div>
+      </dl>
+    </header>
+
+    <div class="tzbar">
+      <label for="nfl-tz">Ver horarios en</label>
+      <select id="nfl-tz" data-tz-select>
+        {TZ_OPTIONS.map((z) => <option value={z.tz} data-name={z.name}>{z.flag} {z.label}</option>)}
+      </select>
+      <small>Horarios en hora de <span data-tz-name>México</span> · se convierten al país que elijas</small>
+    </div>
+
+    <section aria-labelledby="hoy-h">
+      <h2 id="hoy-h">{isToday ? 'Partidos de hoy' : 'Próximos partidos'}</h2>
+      {!isToday && <p class="muted">Hoy no hay partidos programados. El siguiente kickoff es el <strong data-nflt="daytime" data-utc={nextGame.date} data-tbd={nextGame.timeValid === false ? '1' : undefined}>{fmtDay(nextGame.date)} · {nextGame.timeValid === false ? 'por confirmar' : fmtTime(nextGame.date)}</strong> (hora de <span data-tz-name>México</span>).</p>}
+      <div class="cards">
+        {featuredGames.map((g) => {
+          const st = gameStatus(g);
+          return (
+            <article class:list={['card', { played: g.state === 'post' }]} id={gameFragment(g)}>
+              <p class="card-top"><span class="badge">{g.weekLabel}</span>{st && <span class:list={['st', { final: g.state === 'post' }]}>{st}</span>}</p>
+              <div class="teams">
+                <span class="team"><img src={g.away.logo} alt="" width="28" height="28" loading="lazy" /><span>{g.away.shortName}</span><b>{g.state === 'post' ? g.away.score : ''}</b></span>
+                <span class="team"><img src={g.home.logo} alt="" width="28" height="28" loading="lazy" /><span>{g.home.shortName}</span><b>{g.state === 'post' ? g.home.score : ''}</b></span>
+              </div>
+              <p class="card-meta">
+                {g.state === 'post'
+                  ? <span>Final · {fmtDay(g.date)}</span>
+                  : <span data-nflt="daytime" data-utc={g.date} data-tbd={g.timeValid === false ? '1' : undefined}>{g.timeValid === false ? `${fmtDay(g.date)} · por confirmar` : `${fmtDay(g.date)} · ${fmtTime(g.date)}`}</span>}
+                <small>{[g.venue, g.city].filter(Boolean).join(' · ')}{g.broadcasts?.length ? ` · ${g.broadcasts.join(' / ')}` : ''}</small>
+              </p>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+
+    <section aria-labelledby="semana-h">
+      <div class="sec-head">
+        <h2 id="semana-h">{phaseName}: {activeWeekLabel}</h2>
+        <a class="btn" href="/calendario-nfl-2026-semana-a-semana">Ver calendario completo semana a semana →</a>
+      </div>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Día</th><th>Partido</th><th>Hora (<span data-tz-name>México</span>)</th><th>TV</th><th>Sede</th></tr></thead>
+          <tbody>
+            {activeWeekGames.map((g) => (
+              <tr>
+                <td><span data-nflt="day" data-utc={g.date} data-tbd={g.timeValid === false ? '1' : undefined}>{fmtDay(g.date)}</span></td>
+                <td class="match"><img src={g.away.logo} alt="" width="20" height="20" loading="lazy" />{g.away.abbr} <i>en</i> <img src={g.home.logo} alt="" width="20" height="20" loading="lazy" />{g.home.abbr}{g.state === 'post' && <b> · {g.away.score}-{g.home.score}</b>}</td>
+                <td>{g.state === 'post' ? 'Final' : g.timeValid === false ? 'Por confirmar' : <span data-nflt="time" data-utc={g.date}>{fmtTime(g.date)}</span>}</td>
+                <td>{g.broadcasts?.join(' / ') || '—'}</td>
+                <td>{[g.venue, g.city].filter(Boolean).join(', ')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="fechas-h">
+      <h2 id="fechas-h">Fechas clave de la temporada</h2>
+      <ol class="keydates">
+        <li><time>6 ago</time><span><b>Hall of Fame Game</b><small>Arrancó la pretemporada en Canton, Ohio</small></span></li>
+        <li><time>{fmtDay(kickoffGame.date)}</time><span><b>Kickoff de la temporada</b><small>{kickoffGame.away.name} vs {kickoffGame.home.name} · {kickoffTimeMx} MX / {kickoffTimeCo} CO / {kickoffTimeAr} AR</small></span></li>
+        {mexicoGame && <li><time>{fmtDay(mexicoGame.date)}</time><span><b>Juego en México</b><small>{mexicoGame.away.abbr} vs {mexicoGame.home.abbr} · {mexicoGame.venue}, {mexicoGame.city}</small></span></li>}
+        {lastWeekRange && <li><time>{lastWeekRange}</time><span><b>Semana {seasonWeeks}: cierre de la fase regular</b><small>Horarios por confirmar (flex scheduling)</small></span></li>}
+        <li class="final"><time>14 feb 2027</time><span><b>Super Bowl LXI</b><small>SoFi Stadium · Inglewood, California</small></span></li>
+      </ol>
+    </section>
+
+    <section aria-labelledby="intl-h">
+      <h2 id="intl-h">Los {internationalGames.length} juegos internacionales de 2026</h2>
+      <p class="muted">La NFL visita {intlCountries.join(', ')}. Horarios en hora de <span data-tz-name>México</span>.</p>
+      <div class="cards intl">
+        {internationalGames.map((g) => (
+          <article class="card" id={gameFragment(g)}>
+            <p class="card-top"><span class="badge">Semana {g.week} · {COUNTRY_ES[g.country] || g.country}</span></p>
+            <p class="intl-teams">{g.away.abbr} <i>vs</i> {g.home.abbr}</p>
+            <p class="card-meta">
+              <span data-nflt="daytime" data-utc={g.date}>{fmtDay(g.date)} · {fmtTime(g.date)}</span>
+              <small>{g.venue} · {g.city}</small>
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section aria-labelledby="pos-h">
+      <div class="sec-head">
+        <h2 id="pos-h">Líderes de división</h2>
+        <a class="btn" href="/posiciones-nfl-2026">Ver la tabla de posiciones completa →</a>
+      </div>
+      <div class="twrap">
+        <table>
+          <thead><tr><th>Equipo</th><th>Conferencia</th><th>División</th><th>G</th><th>P</th><th>E</th><th>PCT</th></tr></thead>
+          <tbody>
+            {divisionLeaders.map((t) => (
+              <tr>
+                <td class="match"><img src={t.logo} alt="" width="20" height="20" loading="lazy" />{t.team}</td>
+                <td>{t.conference}</td>
+                <td>{DIVISION_ES[t.division] || t.division}</td>
+                <td>{t.wins}</td><td>{t.losses}</td><td>{t.ties}</td><td>{t.pct}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="muted"><small>Antes del kickoff la tabla refleja resultados de pretemporada; desde la semana 1 muestra sólo temporada regular.</small></p>
+    </section>
+
+    <section class="seo-block" aria-labelledby="about-h">
+      <h2 id="about-h">La temporada 2026 de la NFL, explicada</h2>
+      <p>
+        La <strong>temporada 2026 de la NFL</strong> tiene 32 equipos, {nfl.regularSeasonGames} partidos de temporada regular y {seasonWeeks} semanas de calendario,
+        más {internationalGames.length} juegos internacionales{mexicoGame ? ` (incluido uno en el ${mexicoGame.venue} de ${mexicoGame.city})` : ''} y el camino al <strong>Super Bowl LXI</strong>.
+        Esta página muestra los partidos de hoy, el calendario de la semana y los resultados finales, con horarios convertidos a tu país.
+        Para la agenda completa jornada por jornada está el <a href="/calendario-nfl-2026-semana-a-semana">calendario semana a semana con horarios de México, Colombia y Argentina</a>,
+        y para la carrera por los playoffs, la <a href="/posiciones-nfl-2026">tabla de posiciones de la AFC y la NFC</a>.
+      </p>
+    </section>
+
+    <section aria-labelledby="faq-h" class="faq">
+      <h2 id="faq-h">Preguntas frecuentes sobre la NFL 2026</h2>
+      {faqs.map((f) => (
+        <details><summary>{f.q}</summary><p>{f.a}</p></details>
+      ))}
+    </section>
+
+    <nav class="more" aria-label="Más deporte en Hacé Cuentas">
+      <a href="/calendario-nfl-2026-semana-a-semana"><small>NFL</small><strong>Calendario semana a semana</strong></a>
+      <a href="/posiciones-nfl-2026"><small>NFL</small><strong>Posiciones AFC y NFC</strong></a>
+      <a href="/nba-2026"><small>BÁSQUET</small><strong>NBA hoy: partidos y posiciones</strong></a>
+      <a href="/fixture-mundial-2026"><small>FÚTBOL</small><strong>Así terminó el Mundial 2026</strong></a>
+      <a href="/en/nfl-2026"><small>ENGLISH</small><strong>2026 NFL schedule (in English)</strong></a>
+      <a href="/deportes"><small>HUB</small><strong>Todas las calculadoras de deportes</strong></a>
+    </nav>
+
+    <p class="source">
+      Calendario verificado con <a href="https://www.nfl.com/schedules/2026/" target="_blank" rel="noopener">NFL.com</a>.
+      Cruces, horarios, marcadores finales y posiciones: ESPN. Actualizado el {updatedLabel} (hora de México).
+    </p>
+  </div>
+  <Footer slot="footer" />
+</Layout>
+
+<script is:inline set:html={tzScript}></script>
+
+<style>
+  .nflx { margin: 0 auto; max-width: 1080px; padding: 0 16px 48px; }
+  .crumbs { align-items: center; color: var(--text-muted, #667); display: flex; font-size: 12px; gap: 8px; padding: 14px 0; }
+  .crumbs a { color: inherit; }
+  .hero { padding: 8px 0 4px; }
+  .hero-kicker { align-items: center; color: #0b6e4f; display: flex; font-size: 12px; font-weight: 800; gap: 8px; letter-spacing: .08em; margin: 0; text-transform: uppercase; }
+  .hero-kicker i { background: #0b6e4f; border-radius: 50%; box-shadow: 0 0 0 4px rgba(11,110,79,.15); height: 8px; width: 8px; }
+  .hero h1 { font-size: clamp(28px, 4.5vw, 40px); letter-spacing: -.02em; line-height: 1.1; margin: 10px 0; }
+  .hero-sub { font-size: 16px; line-height: 1.6; margin: 0; max-width: 760px; }
+  .hero-stats { display: flex; flex-wrap: wrap; gap: 22px; margin: 20px 0 0; }
+  .hero-stats div { border-left: 3px solid #d8dee6; padding-left: 10px; }
+  .hero-stats dt { font-size: 22px; font-weight: 900; }
+  .hero-stats dd { color: var(--text-muted, #667); font-size: 11px; font-weight: 700; letter-spacing: .08em; margin: 0; text-transform: uppercase; }
+  .tzbar { align-items: center; background: var(--surface-alt, #f2f5f8); border: 1px solid var(--border, #dde3ea); border-radius: 10px; display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0; padding: 12px 14px; }
+  .tzbar label { font-size: 13px; font-weight: 700; }
+  .tzbar select { border: 1px solid var(--border, #c6cfd9); border-radius: 8px; font: inherit; font-size: 14px; padding: 8px 10px; }
+  .tzbar small { color: var(--text-muted, #667); }
+  section { margin-top: 40px; }
+  h2 { font-size: clamp(21px, 3vw, 26px); letter-spacing: -.01em; margin: 0 0 14px; }
+  .sec-head { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+  .btn { background: #10243a; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 700; padding: 9px 13px; text-decoration: none; }
+  .muted { color: var(--text-muted, #667); }
+  .cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+  .card { background: var(--surface, #fff); border: 1px solid var(--border, #dde3ea); border-radius: 12px; padding: 14px; }
+  .card.played { background: var(--surface-alt, #f7f9fb); }
+  .card-top { align-items: center; display: flex; gap: 8px; justify-content: space-between; margin: 0 0 10px; }
+  .badge { color: var(--text-muted, #667); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .st { border-radius: 5px; background: #fff3e0; color: #8a4b00; font-size: 10px; font-weight: 800; padding: 3px 6px; }
+  .st.final { background: #e5efe9; color: #0b6e4f; }
+  .teams { display: grid; gap: 8px; }
+  .team { align-items: center; display: flex; font-weight: 700; gap: 8px; }
+  .team img { object-fit: contain; }
+  .team b { font-size: 18px; margin-left: auto; }
+  .card-meta { border-top: 1px solid var(--border, #eef1f5); display: grid; gap: 3px; font-size: 13px; font-weight: 600; margin: 10px 0 0; padding-top: 9px; }
+  .card-meta small { color: var(--text-muted, #667); font-weight: 500; }
+  .intl-teams { font-size: 21px; font-weight: 900; margin: 4px 0 8px; }
+  .intl-teams i { color: var(--text-muted, #99a); font-size: 12px; font-style: normal; }
+  .twrap { border: 1px solid var(--border, #dde3ea); border-radius: 12px; margin-top: 14px; overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 14px; min-width: 640px; width: 100%; }
+  th { background: var(--surface-alt, #f2f5f8); font-size: 11px; letter-spacing: .05em; text-align: left; text-transform: uppercase; }
+  th, td { border-bottom: 1px solid var(--border, #eef1f5); padding: 9px 12px; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .match { align-items: center; display: flex; font-weight: 700; gap: 6px; white-space: nowrap; }
+  .match img { object-fit: contain; }
+  .match i { color: var(--text-muted, #99a); font-size: 11px; font-style: normal; }
+  .keydates { display: grid; gap: 10px; list-style: none; margin: 0; padding: 0; }
+  .keydates li { align-items: center; background: var(--surface, #fff); border: 1px solid var(--border, #dde3ea); border-radius: 10px; display: flex; gap: 16px; padding: 13px 16px; }
+  .keydates li.final { background: #10243a; border-color: #10243a; color: #fff; }
+  .keydates time { font-size: 15px; font-weight: 900; min-width: 86px; white-space: nowrap; }
+  .keydates span { display: grid; }
+  .keydates small { color: var(--text-muted, #778); }
+  .keydates .final small { color: #b8c6d6; }
+  .seo-block p { font-size: 15px; line-height: 1.75; max-width: 860px; }
+  .faq details { border-bottom: 1px solid var(--border, #dde3ea); }
+  .faq summary { cursor: pointer; font-weight: 700; padding: 13px 0; }
+  .faq details p { line-height: 1.7; margin: 0 0 14px; }
+  .more { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 40px; }
+  .more a { background: var(--surface-alt, #f2f5f8); border: 1px solid var(--border, #dde3ea); border-radius: 10px; display: grid; gap: 4px; padding: 14px; text-decoration: none; }
+  .more small { color: #0b6e4f; font-size: 10px; font-weight: 900; letter-spacing: .1em; }
+  .source { color: var(--text-muted, #778); font-size: 12px; margin-top: 30px; }
+</style>

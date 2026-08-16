@@ -614,6 +614,10 @@ const priorityUrls: Url[] = [
   prio('/futbol-hoy',                        '0.95', 'daily',  true),
   ...['/mx/futbol-mexicano-hoy','/co/futbol-colombiano-hoy','/cl/futbol-chileno-hoy','/pe/futbol-peruano-hoy','/ec/futbol-ecuatoriano-hoy','/ve/futbol-venezolano-hoy','/py/futbol-paraguayo-hoy','/uy/futbol-uruguayo-hoy','/es/futbol-espanol-hoy','/pt/futebol-brasileiro-hoje','/pt-pt/futebol-portugues-hoje','/en/football-today'].map(path => prio(path, '0.9', 'daily', true)),
   prio('/en/nfl-2026',                       '0.9',  'daily',  true),
+  // Superficie NFL 2026 en español (ola temporada sep-2026 → feb-2027, mercado #1 MX).
+  prio('/nfl-2026',                          '0.95', 'daily',  true),
+  prio('/calendario-nfl-2026-semana-a-semana','0.9', 'weekly', true),
+  prio('/posiciones-nfl-2026',               '0.9',  'daily',  true),
   prio('/alertas',                           '0.8',  'monthly'),
   prio('/valores-bcra',                      '0.9',  'daily',  true),
   prio('/cuanto-perdio-tu-sueldo',           '0.95', 'daily',  true),

@@ -1,0 +1,222 @@
+---
+// @incremental-standalone — tabla de posiciones NFL 2026 (AFC y NFC) en español.
+// Datos: standings del snapshot src/data/live/nfl-2026.json (ESPN, vía cron).
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SportsLiveNav from '../components/SportsLiveNav.astro';
+import {
+  nfl,
+  regularGames,
+  MX_ZONE,
+  fmtLongDay,
+  standingsOf,
+  DIVISIONS,
+  DIVISION_ES,
+} from '../lib/data/nfl-2026-es.ts';
+
+const PAGE_URL = 'https://hacecuentas.com/posiciones-nfl-2026';
+
+const playedRegular = regularGames.filter((g) => g.state === 'post').length;
+const seasonStarted = playedRegular > 0;
+const kickoffGame = regularGames[0];
+const kickoffDayMx = fmtLongDay(kickoffGame.date, MX_ZONE);
+
+const updatedLabel = new Intl.DateTimeFormat('es-MX', {
+  timeZone: MX_ZONE, day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', hour12: false,
+}).format(new Date(nfl.fetchedAt));
+
+const conferences = (['AFC', 'NFC'] as const).map((conf) => ({
+  name: conf,
+  divisions: DIVISIONS.map((div) => ({
+    key: div,
+    label: DIVISION_ES[div] || div,
+    teams: standingsOf(conf, div),
+  })),
+}));
+
+// ── SEO ──────────────────────────────────────────────────────────────────────
+const title = 'Posiciones NFL 2026: tabla de la AFC y la NFC actualizada';
+const description =
+  'Tabla de posiciones de la NFL 2026: las 8 divisiones de la AFC y la NFC con victorias, derrotas, empates y porcentaje, actualizada tras cada jornada.';
+const ogTitle = 'Posiciones NFL 2026: AFC y NFC al día';
+const keywords = ['posiciones nfl','tabla nfl 2026','standings nfl','posiciones afc','posiciones nfc','tabla de posiciones nfl 2026','clasificación nfl','playoffs nfl 2026'];
+const newsKeywords = ['posiciones NFL','tabla NFL 2026','AFC','NFC','playoffs NFL'];
+
+const faqs = [
+  {
+    q: '¿Cómo se ordena la tabla de posiciones de la NFL?',
+    a: 'Cada división ordena a sus 4 equipos por porcentaje de victorias (PCT), que se calcula con victorias, derrotas y empates. El líder de división asegura lugar en playoffs sin importar su récord frente a otras divisiones.',
+  },
+  {
+    q: '¿Qué significan las columnas G, P, E y PCT?',
+    a: 'G son partidos ganados, P perdidos y E empatados (en la NFL el empate existe: si el tiempo extra de temporada regular termina igualado, queda empate). PCT es el porcentaje de victorias, donde un empate cuenta como media victoria.',
+  },
+  {
+    q: '¿Cómo se clasifica a los playoffs de la NFL?',
+    a: 'Clasifican 7 equipos por conferencia: los 4 campeones de división más los 3 mejores récords restantes (wild cards). El mejor de cada conferencia descansa la primera ronda; del resto salen los cruces de comodines rumbo al Super Bowl LXI.',
+  },
+  {
+    q: '¿Qué son la AFC y la NFC?',
+    a: 'La NFL se divide en dos conferencias de 16 equipos: la American Football Conference (AFC) y la National Football Conference (NFC). Cada una tiene 4 divisiones de 4 equipos: Este, Norte, Sur y Oeste. Los campeones de cada conferencia juegan el Super Bowl.',
+  },
+  {
+    q: '¿Qué pasa si dos equipos empatan en porcentaje?',
+    a: 'La NFL aplica criterios de desempate en orden: enfrentamientos directos, récord dentro de la división, récord contra rivales comunes, récord de conferencia y otras métricas hasta romper el empate. Por eso dos equipos con el mismo PCT pueden aparecer en distinto orden.',
+  },
+  {
+    q: '¿Cada cuánto se actualiza esta tabla?',
+    a: `Las posiciones se sincronizan desde ESPN después de cada jornada; el snapshot actual es del ${updatedLabel} (hora de México). Los marcadores de cada partido están en el hub NFL 2026.`,
+  },
+  {
+    q: seasonStarted ? '¿Cuántos partidos de temporada regular se jugaron?' : '¿Por qué la tabla puede mostrar récords antes del kickoff?',
+    a: seasonStarted
+      ? `Ya se jugaron ${playedRegular} de los ${nfl.regularSeasonGames} partidos de la temporada regular. La tabla refleja únicamente esos resultados.`
+      : `Antes del arranque de la temporada regular (${kickoffDayMx}) la fuente puede mostrar récords de pretemporada, que no cuentan para los playoffs. Desde la semana 1 la tabla refleja sólo partidos oficiales.`,
+  },
+  {
+    q: '¿El líder de la tabla va directo al Super Bowl?',
+    a: 'No: el Super Bowl LXI (14 de febrero de 2027, SoFi Stadium) lo juegan los campeones de cada conferencia tras los playoffs. Terminar con el mejor récord sólo da ventaja de localía y el descanso de la primera ronda.',
+  },
+];
+
+const breadcrumb = {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: 'NFL 2026', item: 'https://hacecuentas.com/nfl-2026' },
+    { '@type': 'ListItem', position: 3, name: 'Posiciones', item: PAGE_URL },
+  ],
+};
+const webPage = {
+  '@type': ['WebPage', 'CollectionPage'],
+  '@id': `${PAGE_URL}#webpage`,
+  url: PAGE_URL,
+  name: 'Posiciones NFL 2026: AFC y NFC',
+  description,
+  inLanguage: 'es',
+  dateModified: nfl.fetchedAt,
+  about: { '@type': 'SportsOrganization', name: 'National Football League', url: 'https://www.nfl.com' },
+};
+const dataset = {
+  '@type': 'Dataset',
+  name: 'Tabla de posiciones NFL 2026 (AFC y NFC)',
+  description,
+  license: 'https://creativecommons.org/licenses/by/4.0/',
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  isBasedOn: 'https://www.espn.com/nfl/standings',
+  dateModified: nfl.fetchedAt,
+  url: PAGE_URL,
+};
+const faqSchema = { '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, webPage, dataset, faqSchema] };
+---
+
+<Layout title={title} description={description} canonical="/posiciones-nfl-2026" audience="global" domain="life" pageType="data" schema={schema} keywords={keywords} newsKeywords={newsKeywords} ogTitle={ogTitle}>
+  <Header slot="header" />
+  <SportsLiveNav />
+  <div class="nflp">
+    <nav class="crumbs" aria-label="Ruta de navegación"><a href="/">Inicio</a><span>/</span><a href="/deportes">Deportes</a><span>/</span><a href="/nfl-2026">NFL 2026</a><span>/</span><strong>Posiciones</strong></nav>
+
+    <header class="hero">
+      <h1>Posiciones NFL 2026: tabla de la AFC y la NFC</h1>
+      <p class="hero-sub">
+        Las 8 divisiones con victorias (G), derrotas (P), empates (E), porcentaje (PCT) y racha, actualizadas tras cada jornada.
+        {!seasonStarted && <span> La temporada regular arranca el <strong>{kickoffDayMx}</strong>; hasta entonces la fuente puede mostrar récords de pretemporada.</span>}
+      </p>
+      <p class="hero-links">
+        <a class="btn" href="/nfl-2026">← Hub NFL 2026: partidos de hoy</a>
+        <a class="btn ghost" href="/calendario-nfl-2026-semana-a-semana">Calendario semana a semana</a>
+      </p>
+    </header>
+
+    {conferences.map((conf) => (
+      <section aria-labelledby={`conf-${conf.name}`}>
+        <h2 id={`conf-${conf.name}`}>{conf.name} — {conf.name === 'AFC' ? 'American Football Conference' : 'National Football Conference'}</h2>
+        <div class="divgrid">
+          {conf.divisions.map((div) => (
+            <div class="twrap">
+              <h3>{conf.name} {div.label}</h3>
+              <table>
+                <thead><tr><th>Equipo</th><th>G</th><th>P</th><th>E</th><th>PCT</th><th>Racha</th></tr></thead>
+                <tbody>
+                  {div.teams.map((t) => (
+                    <tr>
+                      <td class="team"><img src={t.logo} alt="" width="22" height="22" loading="lazy" />{t.team}</td>
+                      <td>{t.wins}</td>
+                      <td>{t.losses}</td>
+                      <td>{t.ties}</td>
+                      <td>{t.pct}</td>
+                      <td>{t.streak || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <section class="seo-block" aria-labelledby="about-h">
+      <h2 id="about-h">Cómo leer la tabla de la NFL</h2>
+      <p>
+        La <strong>tabla de posiciones de la NFL 2026</strong> se arma por división: 4 equipos en cada una de las 8 divisiones de la AFC y la NFC.
+        Clasifican a playoffs 7 equipos por conferencia (4 campeones de división y 3 wild cards) rumbo al <strong>Super Bowl LXI</strong>.
+        Los resultados que alimentan esta tabla salen del <a href="/nfl-2026">hub NFL 2026 con los partidos de hoy</a>, y el fixture completo está en el
+        <a href="/calendario-nfl-2026-semana-a-semana">calendario semana a semana con horarios de México, Colombia y Argentina</a>.
+      </p>
+    </section>
+
+    <section aria-labelledby="faq-h" class="faq">
+      <h2 id="faq-h">Preguntas frecuentes sobre las posiciones</h2>
+      {faqs.map((f) => (
+        <details><summary>{f.q}</summary><p>{f.a}</p></details>
+      ))}
+    </section>
+
+    <nav class="more" aria-label="Más deporte en Hacé Cuentas">
+      <a href="/nfl-2026"><small>NFL</small><strong>Partidos de hoy y resultados</strong></a>
+      <a href="/calendario-nfl-2026-semana-a-semana"><small>NFL</small><strong>Calendario semana a semana</strong></a>
+      <a href="/nba-2026"><small>BÁSQUET</small><strong>NBA hoy: partidos y posiciones</strong></a>
+      <a href="/deportes"><small>HUB</small><strong>Todas las calculadoras de deportes</strong></a>
+    </nav>
+
+    <p class="source">
+      Posiciones sincronizadas desde ESPN; calendario verificado con NFL.com. Actualizado el {updatedLabel} (hora de México).
+    </p>
+  </div>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .nflp { margin: 0 auto; max-width: 1080px; padding: 0 16px 48px; }
+  .crumbs { align-items: center; color: var(--text-muted, #667); display: flex; flex-wrap: wrap; font-size: 12px; gap: 8px; padding: 14px 0; }
+  .crumbs a { color: inherit; }
+  .hero h1 { font-size: clamp(27px, 4.3vw, 38px); letter-spacing: -.02em; line-height: 1.12; margin: 6px 0 10px; }
+  .hero-sub { font-size: 16px; line-height: 1.65; margin: 0; max-width: 820px; }
+  .hero-links { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 0; }
+  .btn { background: #10243a; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 700; padding: 9px 13px; text-decoration: none; }
+  .btn.ghost { background: transparent; border: 1px solid #10243a; color: #10243a; }
+  section { margin-top: 38px; }
+  h2 { font-size: clamp(20px, 2.8vw, 25px); letter-spacing: -.01em; margin: 0 0 14px; }
+  h3 { background: var(--surface-alt, #f2f5f8); border-bottom: 1px solid var(--border, #dde3ea); font-size: 14px; margin: 0; padding: 10px 12px; }
+  .divgrid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  .twrap { border: 1px solid var(--border, #dde3ea); border-radius: 12px; overflow: hidden; overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 13.5px; width: 100%; }
+  th { background: var(--surface-alt, #f7f9fb); font-size: 11px; letter-spacing: .05em; text-align: left; text-transform: uppercase; }
+  th, td { border-bottom: 1px solid var(--border, #eef1f5); padding: 8px 11px; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .team { align-items: center; display: flex; font-weight: 700; gap: 8px; white-space: nowrap; }
+  .team img { object-fit: contain; }
+  .seo-block p { font-size: 15px; line-height: 1.75; max-width: 880px; }
+  .faq details { border-bottom: 1px solid var(--border, #dde3ea); }
+  .faq summary { cursor: pointer; font-weight: 700; padding: 13px 0; }
+  .faq details p { line-height: 1.7; margin: 0 0 14px; }
+  .more { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top: 40px; }
+  .more a { background: var(--surface-alt, #f2f5f8); border: 1px solid var(--border, #dde3ea); border-radius: 10px; display: grid; gap: 4px; padding: 14px; text-decoration: none; }
+  .more small { color: #0b6e4f; font-size: 10px; font-weight: 900; letter-spacing: .1em; }
+  .source { color: var(--text-muted, #778); font-size: 12px; margin-top: 30px; }
+</style>
