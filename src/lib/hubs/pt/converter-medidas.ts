@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/matematica/converter-medidas',
-  title: "Como converto esta medida sem errar? | Hacé Cuentas",
-  description: "Hub de decisão com 4 cálculos: Medida de Pneu: Calcule o Diâmetro Real; Calculadora: Quintal Métrico para Tonelada; Conversão de Torque: Nm, lb·ft e kg·m; Conversão de velocidade: km/h ↔ mph ↔ nós.",
+  title: "Conversor de torque, velocidade e medida de pneu",
+  description: "Conversores de medidas: torque em Nm, lb·ft e kg·m, velocidade em km/h, mph e nós, diâmetro real do pneu e quintal métrico para tonelada, numa página só.",
   silo: "Conversores",
   siloHref: '/pt/matematica',
   locale: 'pt',
   eyebrow: "Brasil · Conversores",
-  h1: "Como converto esta medida sem errar?",
+  h1: "Como converter torque, velocidade e medidas sem errar",
   lede: "Escolha o seu caso e preencha apenas os campos correspondentes. Este hub preserva as 4 fórmulas originais e reúne a decisão numa só página.",
   stamps: ['4 calculadoras incluídas', 'Fórmulas originais reutilizadas', 'Revisto em 28/07/2026'],
   resultLabel: "Seu resultado",
@@ -276,5 +276,5 @@ export const hub: HubData = {
     '/pt/conversao-torque-nm-lb-ft-kgm', // Absorbida como caso calculable con formulaId conversion-torque-nm-lb-ft-kgm.
     '/pt/conversao-velocidade-kmh-mph-nos', // Absorbida como caso calculable con formulaId conversion-velocidad-kmh-mph-nudos.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

@@ -2,8 +2,8 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/vida/treino-e-desempenho',
-  title: "Quanto devo treinar e qual é o meu resultado? | Hacé Cuentas",
-  description: "Hub de decisão com 11 cálculos: 1RM agachamento: calcule seu máximo; 1RM Levantamento Terra: Calcule seu Máximo Estimado; Calculadora de 1RM no Supino; IMC 2026: Calcule e Veja sua Classificação pela Tabela OMS; Calculadora de Macros: Cutting, Manutenção e Bulking; TMB Mifflin-St Jeor: calcule sua Taxa Metabólica Basal; Pace Natação 100m; Calculadora de pontos para subir de categoria no pádel (APT/AAP); Projeção de Tempo na Meia Maratona pelo seu 10K; Calculadora de média de pontos por partida no rugby; Ritmo ajustado trail running con desnivel: calculadora Naismith.",
+  title: "Calculadora de 1RM, IMC, macros e pace: treino e resultado",
+  description: "Calcule seu 1RM no supino, agachamento e terra, IMC pela tabela da OMS, macros para cutting ou bulking, TMB e pace de natação e corrida, numa página só.",
   silo: "Treino e desempenho",
   siloHref: '/pt/vida',
   locale: 'pt',
@@ -837,5 +837,5 @@ export const hub: HubData = {
     '/pt/rugby-handicap-pontos-descenso-media', // Absorbida como caso calculable con formulaId rugby-handicap-puntos-descenso-promedio.
     '/pt/trail-running-desnivel-ritmo-ajustado', // Absorbida como caso calculable con formulaId trail-running-desnivel-ritmo-ajustado.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

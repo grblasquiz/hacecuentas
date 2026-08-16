@@ -34,9 +34,9 @@ const usd = (n: number) =>
 
 export const hub: HubData = {
   slug: 'ec/trabajo/sueldo-neto',
-  title: 'Sueldo neto en Ecuador: cuánto te queda y cuánto le cuesta a la empresa',
+  title: 'Sueldo neto Ecuador 2026: aporte IESS 9,45% y costo patronal',
   description:
-    'Calcula tu sueldo neto en Ecuador con el aporte personal al IESS del 9,45%, suma horas suplementarias, extraordinarias y recargo nocturno, y mira del otro lado el costo laboral total del empleador con aporte patronal, décimos, vacaciones y fondos de reserva.',
+    'Calculá tu sueldo neto en Ecuador 2026: aporte personal al IESS del 9,45%, horas suplementarias y extraordinarias, y el costo laboral total del empleador.',
   silo: 'Trabajo',
   siloHref: '/ec/trabajo',
   locale: 'ec',
@@ -311,5 +311,5 @@ export const hub: HubData = {
     '/ec/calculadora-recargo-nocturno-ecuador',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

@@ -2,8 +2,8 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'en/money/family-budget-and-big-expenses',
-  title: "How much can my family afford? | Hacé Cuentas",
-  description: "Decision hub with 6 calculations: 50/30/20 Family Budget Rule; Baby Shower Budget Calculator — Cost Per Guest Breakdown; Back-to-School Budget Calculator 2026; Discount Calculator — Percent Off & Stacked Deals; How Much Does Private University Cost in Argentina?; Bank Safe Deposit Box Costs by Size & Type.",
+  title: "50/30/20 Family Budget and Big Expenses Calculator",
+  description: "Run the 50/30/20 family budget rule, baby shower and back-to-school budgets, stacked discounts and private university costs — all on one single page.",
   silo: "Family budget",
   siloHref: '/en/money',
   locale: 'en',
@@ -615,5 +615,5 @@ export const hub: HubData = {
     '/en/itba-utdt-costo-carrera-anual-privada', // Absorbida como caso calculable con formulaId itba-utdt-costo-carrera-anual-privada.
     '/en/safe-deposit-box-bank-cost-comparison', // Absorbida como caso calculable con formulaId caja-seguridad-banco-comparativa-mensual.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

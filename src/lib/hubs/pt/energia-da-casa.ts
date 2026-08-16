@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/casa/energia-da-casa',
-  title: "Quanto de energia minha casa consome? | Hacé Cuentas",
-  description: "Hub de decisão com 3 cálculos: Consumo de Geladeira em kWh (Gasto Anual); Calculadora de conta de luz (kWh e bandeira tarifária); ¿Cuánto ahorrás cambiando a electrodoméstico A+++?.",
+  title: "Consumo de energia da casa: geladeira, kWh e conta de luz",
+  description: "Calcule o consumo da geladeira em kWh, a conta de luz com bandeira tarifária e quanto você economiza trocando por um eletrodoméstico A+++, numa página.",
   silo: "Energia da casa",
   siloHref: '/pt/casa',
   locale: 'pt',
   eyebrow: "Brasil · Energia da casa",
-  h1: "Quanto de energia minha casa consome?",
+  h1: "Quanto de energia minha casa consome e quanto custa na conta de luz?",
   lede: "Escolha o seu caso e preencha apenas os campos correspondentes. Este hub preserva as 3 fórmulas originais e reúne a decisão numa só página.",
   stamps: ['3 calculadoras incluídas', 'Fórmulas originais reutilizadas', 'Revisto em 28/07/2026'],
   resultLabel: "Seu resultado",
@@ -334,5 +334,5 @@ export const hub: HubData = {
     '/pt/conta-de-luz-kwh-bandeira-tarifaria', // Absorbida como caso calculable con formulaId conta-de-luz-kwh-bandeira-tarifaria.
     '/pt/economia-eletrodomestico-eficiencia', // Absorbida como caso calculable con formulaId energia-electrodomestico-etiqueta-eficiencia.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'co/vida/documentos-y-pasaporte',
-  title: "¿Cuánto cuesta y cuánto dura mi documento? | Hacé Cuentas",
-  description: "Hub de decisión con 2 cálculos: Calculadora del costo del pasaporte colombiano 2026; Cédula de Ciudadanía Colombia: costos, plazos y validez.",
+  title: "Pasaporte y cédula Colombia 2026: costo, plazos y vigencia",
+  description: "Cuánto cuesta el pasaporte colombiano 2026 y la cédula de ciudadanía: precio, plazos de entrega y vigencia de cada documento, en una sola página.",
   silo: "Documentos en Colombia",
   siloHref: '/co/vida',
   locale: 'co',
   eyebrow: "Colombia · Documentos en Colombia",
-  h1: "¿Cuánto cuesta y cuánto dura mi documento?",
+  h1: "¿Cuánto cuestan y cuánto duran el pasaporte y la cédula en Colombia?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -331,5 +331,5 @@ export const hub: HubData = {
     '/co/calculadora-costo-pasaporte-colombia-2026-departamento', // Absorbida como caso calculable con formulaId costo-pasaporte-colombia-2026.
     '/co/calculadora-curp-colombia-cedula-ciudadania-extranjeria-validez', // Absorbida como caso calculable con formulaId curp-colombia-cedula-ciudadania-extranjeria-validez.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

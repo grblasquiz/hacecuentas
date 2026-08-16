@@ -50,9 +50,9 @@ const sol = (n: number) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFract
 
 export const hub: HubData = {
   slug: 'pe/impuestos/renta-de-personas',
-  title: 'Impuesto a la renta de personas en Perú: cuánto pagas según tu categoría',
+  title: 'Impuesto a la renta Perú 2026: cuánto pagas por categoría',
   description:
-    'Calcula tu impuesto a la renta en el Perú por categoría: quinta en planilla, cuarta por honorarios, primera por alquiler y segunda por ganancia de capital. Con la UIT vigente, la deducción de 7 UIT, la adicional de 3 UIT y la escala del Art. 53 de la LIR.',
+    'Calculá tu impuesto a la renta en el Perú 2026 por categoría: quinta, cuarta, primera y segunda, con la UIT vigente y la deducción de 7 UIT de la LIR.',
   silo: 'Impuestos',
   siloHref: '/pe/impuestos',
   locale: 'pe',
@@ -294,5 +294,5 @@ export const hub: HubData = {
     '/pe/calculadora-intereses-moratorios-sunat-peru',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

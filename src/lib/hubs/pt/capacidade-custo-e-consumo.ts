@@ -2,8 +2,8 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/vida/capacidade-custo-e-consumo',
-  title: "Quanto custa, consome ou demora minha tecnologia? | Hacé Cuentas",
-  description: "Hub de decisão com 11 cálculos: Calculadora de bitrate para streaming (YouTube, Twitch, Kick); Autonomia de Bateria em Horas (Ah e Watts); Claude vs Gemini vs GPT-4o: Comparação de Preço por Token; CO₂ por E-mail: Quanto Emite uma Mensagem com e sem Anexo; Quanto custa o Midjourney por mês?; Quanto papel você economiza imprimindo frente e verso?; PC Gamer Preço e Orçamento por FPS; Calcular ângulo do servo a partir do pulso PWM; Passos por Revolução e Microstepping: NEMA 17, NEMA 23 e Drivers A4988; Custo API OpenAI: Tokens ChatGPT e GPT-4; Quanto Tempo Demora uma Transferência USB?.",
+  title: "Custo por token, bitrate de streaming e bateria em horas",
+  description: "Custo de API por token (ChatGPT, Claude, Gemini), bitrate para streaming, autonomia de bateria em horas, PC gamer por FPS e tempo de transferência USB.",
   silo: "Tecnologia",
   siloHref: '/pt/vida',
   locale: 'pt',
@@ -733,5 +733,5 @@ export const hub: HubData = {
     '/pt/tokens-openai-gpt-custo-mensal', // Absorbida como caso calculable con formulaId tokens-openai-gpt-costo-uso-mensual.
     '/pt/velocidade-usb-transferencia-arquivo', // Absorbida como caso calculable con formulaId velocidad-usb-transferencia-archivo.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

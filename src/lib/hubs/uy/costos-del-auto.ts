@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'uy/finanzas/costos-del-auto',
-  title: "¿Cuánto cuesta tener y usar el auto? | Hacé Cuentas",
-  description: "Hub de decisión con 2 cálculos: Calculadora de Costo de Viaje en Auto — Nafta y Peajes (Uruguay 2026); Calculadora de Patente de Rodados — Uruguay 2026 (SUCIVE).",
+  title: "Patente SUCIVE y costo de viaje en auto, Uruguay 2026",
+  description: "Calculadora de patente de rodados SUCIVE Uruguay 2026 y del costo de un viaje en auto con nafta y peajes: elegí tu caso y hacé la cuenta completa.",
   silo: "Costos del auto",
   siloHref: '/uy/finanzas',
   locale: 'uy',
   eyebrow: "Uruguay · Costos del auto",
-  h1: "¿Cuánto cuesta tener y usar el auto?",
+  h1: "¿Cuánto cuesta tener y usar el auto en Uruguay?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -224,5 +224,5 @@ export const hub: HubData = {
     '/uy/calculadora-costo-viaje-nafta-uruguay', // Absorbida como caso calculable con formulaId calculadora-costo-viaje-nafta-uruguay.
     '/uy/calculadora-patente-rodados-uruguay', // Absorbida como caso calculable con formulaId patente-rodados-uruguay.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

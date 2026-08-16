@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'py/finanzas/presupuesto-familiar-y-viajes',
-  title: "¿Cuánto necesito por mes o para el viaje? | Hacé Cuentas",
-  description: "Hub de decisión con 3 cálculos: Calculadora de cuota alimentaria — Paraguay (orientativa); Calculadora de gasto en colectivo — Paraguay (mensual); Calculadora de presupuesto — Mundial 2026 desde Paraguay.",
+  title: "Cuota alimentaria y presupuesto familiar en Paraguay 2026",
+  description: "Calculadora de cuota alimentaria orientativa en Paraguay, gasto mensual en colectivo y presupuesto para seguir el Mundial 2026 desde Paraguay.",
   silo: "Presupuesto familiar",
   siloHref: '/py/finanzas',
   locale: 'py',
   eyebrow: "Paraguay · Presupuesto familiar",
-  h1: "¿Cuánto necesito por mes o para el viaje?",
+  h1: "¿Cuánto necesito por mes o para el viaje en Paraguay?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 3 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['3 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -271,5 +271,5 @@ export const hub: HubData = {
     '/py/calculadora-gasto-mensual-transporte-publico-paraguay', // Absorbida como caso calculable con formulaId gasto-mensual-transporte-publico-paraguay.
     '/py/calculadora-presupuesto-viaje-mundial-2026-paraguay', // Absorbida como caso calculable con formulaId presupuesto-viaje-mundial-2026-paraguay.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

@@ -65,15 +65,15 @@ const pct = (n: number) => n.toFixed(2).replace('.', ',') + '%';
 
 export const hub: HubData = {
   slug: 'co/finanzas/comprar-vivienda',
-  title: 'Comprar vivienda Colombia: cuota, gastos notariales y registro',
+  title: 'Comprar vivienda en Colombia 2026: cuota, gastos y registro',
   description:
-    'Cuota inicial, tope legal de la primera cuota sobre tu ingreso familiar, crédito en UVR o en pesos, subsidio Mi Casa Ya, los gastos notariales y de registro de la compraventa en Colombia 2026 —con beneficencia y quién paga cada uno—, y la comparación entre arrendar y comprar a diez años.',
+    'Calculá la compra de vivienda en Colombia 2026: cuota inicial, crédito en UVR o pesos, subsidio Mi Casa Ya y gastos notariales y de registro.',
   silo: 'Finanzas',
   siloHref: '/co/finanzas',
   locale: 'co',
 
   eyebrow: 'Colombia · crédito hipotecario · Ley 546 de 1999',
-  h1: '¿Me alcanza para comprar y cuánto termino pagando?',
+  h1: '¿Me alcanza para comprar vivienda en Colombia y cuánto termino pagando?',
   lede:
     'Comprar vivienda tiene tres números que deciden todo: cuánta cuota inicial juntás, cuánta cuota aguanta tu ingreso familiar y cuánto suman los gastos de cierre que nadie te cuenta hasta la firma. Esta cuenta los pone los tres juntos, respeta el tope legal de la primera cuota y te muestra el costo total del crédito.',
   stamps: [
@@ -411,5 +411,5 @@ export const hub: HubData = {
     '/co/calculadora-coste-arriendo-vs-comprar-colombia-10-anos',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
 };

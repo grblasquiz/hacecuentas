@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'py/trabajo/dias-y-notas',
-  title: "¿Cuántos días o qué promedio tengo? | Hacé Cuentas",
-  description: "Hub de decisión con 2 cálculos: Calculadora de días hábiles — Paraguay 2026 (con feriados); Calculadora de promedio de notas — Paraguay (MEC, 1 a 5).",
+  title: "Días hábiles y feriados Paraguay 2026 y promedio de notas",
+  description: "Calculadora de días hábiles con los feriados de Paraguay 2026 y calculadora de promedio de notas del MEC en escala 1 a 5, reunidas en una sola página.",
   silo: "Días y notas",
   siloHref: '/py/trabajo',
   locale: 'py',
   eyebrow: "Paraguay · Días y notas",
-  h1: "¿Cuántos días o qué promedio tengo?",
+  h1: "¿Cuántos días hábiles hay o qué promedio tengo en Paraguay?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -172,5 +172,5 @@ export const hub: HubData = {
     '/py/calculadora-dias-habiles-feriados-paraguay-2026', // Absorbida como caso calculable con formulaId dias-habiles-feriados-paraguay-2026.
     '/py/calculadora-promedio-notas-paraguay', // Absorbida como caso calculable con formulaId promedio-notas-paraguay.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

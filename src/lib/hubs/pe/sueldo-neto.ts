@@ -38,9 +38,9 @@ const sol = (n: number) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFract
 
 export const hub: HubData = {
   slug: 'pe/trabajo/sueldo-neto',
-  title: 'Sueldo neto en Perú: cuánto te queda en mano y cuánto cuesta a la empresa',
+  title: 'Calculadora de sueldo neto Perú 2026: AFP, ONP y quinta',
   description:
-    'Calcula tu sueldo neto en el Perú con los descuentos reales de AFP u ONP y la retención de renta de quinta categoría, y mira del otro lado cuánto le cuesta ese sueldo al empleador con EsSalud, CTS, gratificaciones y vacaciones.',
+    'Calculá tu sueldo neto en el Perú 2026: descuento de AFP u ONP, retención de quinta categoría y costo empleador con EsSalud, CTS y gratificaciones.',
   silo: 'Trabajo',
   siloHref: '/pe/trabajo',
   locale: 'pe',
@@ -260,5 +260,5 @@ export const hub: HubData = {
     '/pe/calculadora-costo-laboral-total-empleador-peru',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

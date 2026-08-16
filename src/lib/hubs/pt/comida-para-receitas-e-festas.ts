@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/vida/comida-para-receitas-e-festas',
-  title: "Quanto de comida eu preciso preparar? | Hacé Cuentas",
-  description: "Hub de decisão com 10 cálculos: Quantidade de Bolo de Casamento por Convidado; Quanto Café Moído por Xícara (por Método de Preparo); Quanto chocolate preciso para fazer bombons caseiros?; Conversão de Colher de Chá para Gramas — Sal, Açúcar, Especiarias; Conversor Cups para Gramas — Farinha, Açúcar, Óleo e 18 Ingredientes; Gramas de Carne por Pessoa no Churrasco; Calculadora de Porções de Bolo por Tamanho da Forma; Porções de sushi por pessoa; Quantos Hambúrgueres por Pessoa para uma Festa?; Tempos de cozimento de verduras no vapor e em água fervente.",
+  title: "Churrasco: gramas de carne por pessoa e porções de festa",
+  description: "Gramas de carne por pessoa no churrasco, porções de bolo por forma, hambúrgueres e sushi por convidado e conversor de cups para gramas nas receitas.",
   silo: "Receitas e festas",
   siloHref: '/pt/vida',
   locale: 'pt',
   eyebrow: "Brasil · Receitas e festas",
-  h1: "Quanto de comida eu preciso preparar?",
+  h1: "Quanto de comida preciso preparar para a festa ou a receita?",
   lede: "Escolha o seu caso e preencha apenas os campos correspondentes. Este hub preserva as 10 fórmulas originais e reúne a decisão numa só página.",
   stamps: ['10 calculadoras incluídas', 'Fórmulas originais reutilizadas', 'Revisto em 28/07/2026'],
   resultLabel: "Seu resultado",
@@ -971,5 +971,5 @@ export const hub: HubData = {
     '/pt/quantidade-hamburguer-churrasco-aniversario', // Absorbida como caso calculable con formulaId cantidad-hamburguesas-parrilla-cumpleanos.
     '/pt/tempos-cozimento-verduras-vapor-cozido', // Absorbida como caso calculable con formulaId tiempos-coccion-verduras-al-vapor-hervido.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

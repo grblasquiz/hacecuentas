@@ -57,9 +57,9 @@ const brl = (n: number) =>
 
 export const hub: HubData = {
   slug: 'pt/trabalho/salario-liquido',
-  title: 'Salário líquido CLT: quanto cai na conta depois dos descontos?',
+  title: 'Salário líquido CLT 2026: quanto cai na conta após descontos',
   description:
-    'Simule seu holerite completo: INSS progressivo, IRRF com o redutor vigente e dedução por dependente, adicional noturno, insalubridade ou periculosidade, DSR, vale-transporte, pensão alimentícia e margem do consignado.',
+    'Calculadora de salário líquido CLT 2026: INSS progressivo, IRRF com redutor e dependentes, adicional noturno, DSR, vale-transporte e consignado.',
   silo: 'Trabalho',
   siloHref: '/pt/trabalho',
   locale: 'pt',
@@ -392,5 +392,5 @@ export const hub: HubData = {
     '/pt/calculadora-de-horas-soma-banco-horas-jornada',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

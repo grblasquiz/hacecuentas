@@ -47,9 +47,9 @@ const pct = (n: number) => Math.round(n * 100) + '%';
 
 export const hub: HubData = {
   slug: 'co/trabajo/horas-extras-y-recargos',
-  title: 'Horas extras y recargo dominical y festivo Colombia 2026',
+  title: 'Horas extras Colombia 2026: recargo nocturno y dominical',
   description:
-    'Calculadora de horas extras Colombia 2026: hora extra diurna, nocturna, recargo nocturno desde las 19:00 y recargo dominical y festivo, con las dos transiciones de 2026: jornada de 42 horas desde el 15 de julio y recargo dominical del 90% desde el 1 de julio.',
+    'Calculadora de horas extras Colombia 2026: hora extra diurna y nocturna, recargo nocturno desde las 19:00 y recargo dominical y festivo del 90% desde julio.',
   silo: 'Trabajo',
   siloHref: '/co/trabajo',
   locale: 'co',
@@ -314,5 +314,5 @@ export const hub: HubData = {
     '/co/calculadora-festivos-colombia-2026-calendario-puentes',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
 };

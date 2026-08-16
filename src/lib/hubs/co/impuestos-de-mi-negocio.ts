@@ -43,15 +43,15 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
 slug: 'co/impuestos/impuestos-de-mi-negocio',
-  title: 'Impuestos de tu negocio: IVA, ICA por municipio, RST y renta',
+  title: 'Impuestos de un negocio en Colombia 2026: IVA, ICA y renta',
   description:
-    'Qué impuestos paga tu negocio en Colombia según cómo estés inscrito: IVA del 19% y tarifas diferenciales, la diferencia entre exento y excluido, zonas de frontera, el impuesto de industria y comercio (ICA) por municipio con las tarifas por mil de Bogotá, Medellín y Cali, Régimen Simple de Tributación y renta de sociedades al 35%.',
+    'Qué impuestos paga tu negocio en Colombia 2026: IVA del 19%, ICA por municipio, Régimen Simple de Tributación y renta. Elegí tu caso y calculá cada uno.',
   silo: 'Impuestos',
 siloHref: '/co/impuestos',
   locale: 'co',
 
   eyebrow: 'Colombia · DIAN y hacienda municipal · negocios',
-  h1: 'Tengo un negocio: ¿qué impuestos me tocan?',
+  h1: 'Tengo un negocio en Colombia: ¿qué impuestos me tocan?',
   lede:
     'No hay un solo impuesto: hay tres frentes distintos que se pagan a entidades distintas. El IVA que recaudás para la DIAN, el ICA que le pagás a tu municipio y el impuesto sobre la renta o la cuota del Régimen Simple. Esta cuenta te muestra los tres juntos según cómo estés inscrito.',
   stamps: [
@@ -337,5 +337,5 @@ siloHref: '/co/impuestos',
     '/co/calculadora-costo-vender-online-colombia-2026',
   ],
 
-lastReviewed: '2026-08-07',
+lastReviewed: '2026-08-16',
 };

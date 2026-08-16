@@ -48,14 +48,14 @@ export const VIVIENDA_MX = {
 
 export const hub: HubData = {
   slug: 'mx/finanzas/credito-de-vivienda',
-  title: 'Crédito Infonavit: cuánto te presta y cuánto te descuentan',
+  title: 'Crédito Infonavit 2026: cuánto te presta y cuánto pagas',
   description:
-    'Estima tu precalificación y monto máximo de Infonavit, cuánto te descuentan del sueldo vía nómina por tu crédito, el escenario FOVISSSTE con subcuenta, la hipoteca bancaria con enganche y seguros, y cuánto ahorro tienes en tu Subcuenta de Vivienda.',
+    'Calculá tu crédito Infonavit 2026: precalificación, monto máximo, descuento vía nómina, escenario Fovissste y la hipoteca bancaria con enganche, en México.',
   silo: 'Finanzas',
   siloHref: '/mx/finanzas',
 
   eyebrow: 'México · Vivienda',
-  h1: '¿Cuánto me presta Infonavit, Fovissste o el banco y cuánto pago al mes?',
+  h1: '¿Cuánto me presta Infonavit, Fovissste o el banco en México y cuánto pago al mes?',
   lede:
     'La casa se decide con dos números: cuánto te prestan y cuánto te va a doler cada mes. Cambian según de dónde venga el crédito, cuánto llevas en tu subcuenta y qué plazo aceptes. Elige tu caso y compara.',
   stamps: [
@@ -421,6 +421,6 @@ export const hub: HubData = {
     '/calculadora-devolucion-ahorro-infonavit-subcuenta-vivienda-mexico',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
   locale: 'mx',
 };

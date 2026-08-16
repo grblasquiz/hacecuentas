@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'en/cars/titles-registration-and-transfer',
-  title: "What will it cost to title, register or transfer my car? | Hacé Cuentas",
-  description: "Decision hub with 3 calculations: New Car Registration Fee (DNRPA) in Argentina 2026; Transfer Your Car Registration to Another Province; Used Car Transfer Cost.",
+  title: "Car Registration and Transfer Costs in Argentina 2026",
+  description: "Estimate new car registration fees (DNRPA) in Argentina 2026, the cost of transferring a used car and moving your registration to another province.",
   silo: "Car paperwork",
   siloHref: '/en/cars',
   locale: 'en',
   eyebrow: "United States · Car paperwork",
-  h1: "What will it cost to title, register or transfer my car?",
+  h1: "What will it cost to title, register or transfer my car in Argentina?",
   lede: "Choose your case and fill in only its fields. This hub keeps all 3 original formulas and brings the decision into one page.",
   stamps: ['3 calculators included', 'Original formulas reused', 'Reviewed July 28, 2026'],
   resultLabel: "Your result",
@@ -358,5 +358,5 @@ export const hub: HubData = {
     '/en/transfer-car-registration-province', // Absorbida como caso calculable con formulaId titularidad-caratular-auto-trasladar-provincia.
     '/en/used-car-transfer-cost', // Absorbida como caso calculable con formulaId costo-transferencia-auto-0km-usado.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

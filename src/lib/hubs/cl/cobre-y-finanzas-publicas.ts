@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'cl/impuestos/cobre-y-finanzas-publicas',
-  title: "¿Cómo impacta el precio del cobre en los ingresos fiscales? | Hacé Cuentas",
-  description: "Hub de decisión con 1 cálculos: Calculadora de impacto fiscal del precio del cobre en Chile.",
+  title: "Precio del cobre en Chile: impacto en los ingresos fiscales",
+  description: "Calculadora del impacto fiscal del precio del cobre en Chile: cuánto cambian los ingresos del Estado cuando el precio internacional sube o baja.",
   silo: "Cobre y finanzas públicas",
   siloHref: '/cl/impuestos',
   locale: 'cl',
   eyebrow: "Chile · Cobre y finanzas públicas",
-  h1: "¿Cómo impacta el precio del cobre en los ingresos fiscales?",
+  h1: "¿Cómo impacta el precio del cobre en los ingresos fiscales de Chile?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva la fórmula original y reúne la decisión en una sola página.",
   stamps: ['1 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -177,5 +177,5 @@ export const hub: HubData = {
   replaces: [
     '/cl/calculadora-cobre-precio-bolsa-chile-impacto-fiscal-codelco', // Absorbida como caso calculable con formulaId cobre-precio-bolsa-chile-impacto-fiscal-codelco.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

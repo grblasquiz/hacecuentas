@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 've/vida/salud-estudio-y-tramites',
-  title: "¿Qué número necesito para mi salud, estudio o trámite? | Hacé Cuentas",
-  description: "Hub de decisión con 3 cálculos: Calculadora de calorías diarias (gasto energético); Costo del pasaporte y la prórroga (SAIME) en bolívares; Calculadora de promedio de notas e índice académico (escala 0-20).",
+  title: "Pasaporte SAIME, promedio de notas y calorías — Venezuela",
+  description: "Costo del pasaporte y la prórroga del SAIME en bolívares, promedio de notas e índice académico en escala 0-20 y calorías diarias, para Venezuela.",
   silo: "Salud, estudio y trámites",
   siloHref: '/ve/vida',
   locale: 've',
   eyebrow: "Venezuela · Salud, estudio y trámites",
-  h1: "¿Qué número necesito para mi salud, estudio o trámite?",
+  h1: "¿Qué número necesito para mi salud, estudio o trámite en Venezuela?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 3 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['3 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -272,5 +272,5 @@ export const hub: HubData = {
     '/ve/calculadora-costo-pasaporte-saime-venezuela', // Absorbida como caso calculable con formulaId costo-pasaporte-saime-venezuela.
     '/ve/calculadora-promedio-notas-20-puntos-venezuela', // Absorbida como caso calculable con formulaId calculadora-promedio-notas-20-puntos-venezuela.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

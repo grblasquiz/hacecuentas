@@ -55,14 +55,14 @@ export const SALARIO_MINIMO = {
 
 export const hub: HubData = {
   slug: 'mx/trabajo/sueldo-neto',
-  title: 'Sueldo neto y salario diario integrado (SDI) en México',
+  title: 'Calculadora de sueldo neto México 2026: ISR, IMSS y SDI',
   description:
-    'Calcula tu sueldo neto en México con la tarifa de ISR del Art. 96 de la LISR, la cuota obrera del IMSS, el subsidio para el empleo y el Infonavit, y entiende cómo se arma tu salario diario integrado (SDI) con el factor de integración. Incluye el camino inverso de neto a bruto, el sueldo por hora y la comparación contra el salario mínimo.',
+    'Calculá tu sueldo neto en México 2026: ISR del Art. 96, cuota IMSS, subsidio para el empleo y salario diario integrado (SDI) con factor de integración.',
   silo: 'Trabajo',
   siloHref: '/mx/trabajo',
 
   eyebrow: 'México · nómina y descuentos',
-  h1: '¿Cuánto me queda del sueldo en mano y cuál es mi salario diario integrado?',
+  h1: '¿Cuánto me queda del sueldo en mano en México y cuál es mi salario diario integrado?',
   lede:
     'De tu bruto salen el ISR y la cuota obrera del IMSS, y si traes crédito, el Infonavit. En sueldos bajos el subsidio para el empleo puede borrar el ISR completo. Pon tu sueldo, elige tu caso y mira el recibo por dentro.',
   stamps: [
@@ -345,6 +345,6 @@ export const hub: HubData = {
     '/trabajo/sueldo-neto-mexico',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
   locale: 'mx',
 };

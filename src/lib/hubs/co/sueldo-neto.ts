@@ -81,15 +81,15 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
   slug: 'co/trabajo/sueldo-neto',
-  title: 'Sueldo neto en Colombia: cuánto te queda en mano después de descuentos',
+  title: 'Calculadora de salario neto Colombia 2026: cuánto te queda',
   description:
-    'Calculá cuánto te queda del sueldo en Colombia: salud 4%, pensión 4%, Fondo de Solidaridad Pensional con su escala real y retención en la fuente del art. 383 ET. Incluye auxilio de transporte, salario integral, aprendiz SENA y cuánto te pueden embargar.',
+    'Calculá tu salario neto en Colombia 2026: salud 4%, pensión 4%, Fondo de Solidaridad y retención en la fuente. Con auxilio de transporte y embargos.',
   silo: 'Trabajo',
   siloHref: '/co/trabajo',
   locale: 'co',
 
   eyebrow: 'Colombia · nómina y descuentos de ley',
-  h1: '¿Cuánto me queda en mano del sueldo?',
+  h1: '¿Cuánto me queda en mano del salario en Colombia?',
   lede:
     'De tu salario salen siempre 4% de salud y 4% de pensión. Arriba de 4 salarios mínimos se suma el Fondo de Solidaridad, y si tu base depurada es alta aparece la retención en la fuente. Poné tu sueldo y mirá el desprendible completo, con el auxilio de transporte y el tope de lo que te pueden embargar.',
   stamps: [
@@ -381,5 +381,5 @@ export const hub: HubData = {
     '/trabajo/sueldo-neto-colombia',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

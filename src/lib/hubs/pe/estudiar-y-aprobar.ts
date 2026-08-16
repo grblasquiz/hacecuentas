@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pe/estudio/estudiar-y-aprobar',
-  title: "¿Cuánto cuesta estudiar y qué nota necesito? | Hacé Cuentas",
-  description: "Hub de decisión con 2 cálculos: ¿Cuánto cuesta estudiar en una universidad privada en Perú? (2026); Calculadora de Promedio Ponderado Universitario — Perú (escala 0-20).",
+  title: "Universidad privada en Perú 2026: costo y promedio ponderado",
+  description: "Cuánto cuesta estudiar en una universidad privada en el Perú 2026 y calculadora de promedio ponderado universitario en escala de 0 a 20, en una página.",
   silo: "Estudiar en Perú",
   siloHref: '/pe/estudio',
   locale: 'pe',
   eyebrow: "Perú · Estudiar en Perú",
-  h1: "¿Cuánto cuesta estudiar y qué nota necesito?",
+  h1: "¿Cuánto cuesta estudiar en el Perú y qué nota necesito?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -209,5 +209,5 @@ export const hub: HubData = {
     '/pe/calculadora-costo-universidad-privada-peru', // Absorbida como caso calculable con formulaId costo-universidad-privada-peru.
     '/pe/calculadora-promedio-ponderado-universidad-peru', // Absorbida como caso calculable con formulaId promedio-ponderado-universidad-peru.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/vida/aprender-e-passar',
-  title: "Quanto preciso estudar ou tirar para passar? | Hacé Cuentas",
-  description: "Hub de decisão com 7 cálculos: Qual aplicativo de idiomas é melhor para o seu nível?; Quantas Aulas de Idioma por Semana Você Precisa?; Calculadora de Regularidade CBC UBA: Regular ou Livre?; Média escolar do ensino médio: aprovação, recuperação ou reprovação; Calculadora: quanto preciso para passar; Calculadora de média ponderada do ENEM (nota de corte do SiSU); Podcasts para aprender idiomas.",
+  title: "Média do ENEM, nota para passar e média escolar",
+  description: "Calculadora de média ponderada do ENEM (nota de corte do SiSU), média escolar do ensino médio, quanto preciso para passar e aulas de idiomas por semana.",
   silo: "Estudos",
   siloHref: '/pt/vida',
   locale: 'pt',
   eyebrow: "Brasil · Estudos",
-  h1: "Quanto preciso estudar ou tirar para passar?",
+  h1: "Quanto preciso tirar para passar: ENEM, escola e idiomas",
   lede: "Escolha o seu caso e preencha apenas os campos correspondentes. Este hub preserva as 7 fórmulas originais e reúne a decisão numa só página.",
   stamps: ['7 calculadoras incluídas', 'Fórmulas originais reutilizadas', 'Revisto em 28/07/2026'],
   resultLabel: "Seu resultado",
@@ -543,5 +543,5 @@ export const hub: HubData = {
     '/pt/media-ponderada-enem-nota-corte-sisu', // Absorbida como caso calculable con formulaId media-ponderada-enem-nota-corte-sisu.
     '/pt/podcasts-aprender-idioma-minutos-dia', // Absorbida como caso calculable con formulaId podcasts-aprender-idioma-minutos-diarios.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

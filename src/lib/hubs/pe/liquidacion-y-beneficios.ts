@@ -33,15 +33,15 @@ const sol = (n: number) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFract
 
 export const hub: HubData = {
   slug: 'pe/trabajo/liquidacion-y-beneficios',
-  title: 'Liquidación de beneficios sociales en Perú: cuánto te tienen que pagar al salir',
+  title: 'Liquidación de beneficios sociales Perú 2026: CTS trunca',
   description:
-    'Calcula tu liquidación al terminar el vínculo laboral en el Perú: CTS trunca, gratificación trunca con la bonificación de la Ley 30334, vacaciones truncas e indemnización por despido arbitrario, con el tope de 12 remuneraciones.',
+    'Calculá tu liquidación en el Perú 2026: CTS trunca, gratificación trunca con bonificación de la Ley 30334, vacaciones truncas e indemnización por despido.',
   silo: 'Trabajo',
   siloHref: '/pe/trabajo',
   locale: 'pe',
 
   eyebrow: 'Perú · régimen laboral privado · D.S. 003-97-TR',
-  h1: 'Me voy o me despiden: ¿cuánto me tienen que pagar?',
+  h1: 'Me voy o me despiden en el Perú: ¿cuánto me tienen que pagar?',
   lede:
     'La liquidación no es un solo número: son cuatro conceptos que se suman y uno que solo aparece si el cese fue arbitrario. La CTS, la gratificación y las vacaciones truncas te corresponden siempre, renuncies o te despidan. La indemnización, en cambio, depende de por qué terminó el vínculo, y ahí es donde la mayoría de la gente cobra de menos.',
   stamps: [
@@ -340,5 +340,5 @@ export const hub: HubData = {
     '/pe/calculadora-vacaciones-truncas-peru',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

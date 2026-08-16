@@ -82,15 +82,15 @@ const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
 
 export const hub: HubData = {
   slug: 'cl/trabajo/sueldo-liquido',
-  title: 'Sueldo líquido en Chile: cuánto te queda del bruto después de los descuentos',
+  title: 'Calcular sueldo líquido Chile 2026: AFP, salud y descuentos',
   description:
-    'Calcula tu sueldo líquido en Chile con los descuentos reales: AFP (10% + comisión), salud 7% Fonasa o el precio de tu plan Isapre, seguro de cesantía 0,6% e Impuesto Único de Segunda Categoría. También al revés: qué bruto pedir para un líquido, y cuánto vale tu hora o un mes incompleto.',
+    'Calculá tu sueldo líquido en Chile 2026: AFP 10% más comisión, salud 7% Fonasa o Isapre, seguro de cesantía 0,6% e Impuesto Único de Segunda Categoría.',
   silo: 'Trabajo',
   siloHref: '/cl/trabajo',
   locale: 'cl',
 
   eyebrow: 'Chile · liquidación de sueldo',
-  h1: '¿Cuánto me queda líquido del sueldo bruto?',
+  h1: '¿Cuánto me queda líquido del sueldo bruto en Chile?',
   lede:
     'De tu bruto salen cuatro descuentos: AFP, salud, seguro de cesantía e Impuesto Único de Segunda Categoría. Pon tu sueldo, elige tu AFP y tu sistema de salud y mira el desglose peso por peso. Si lo que tienes es el líquido y quieres saber qué bruto negociar, cambia el caso más abajo.',
   stamps: [
@@ -380,5 +380,5 @@ export const hub: HubData = {
     '/trabajo/sueldo-neto-chile',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

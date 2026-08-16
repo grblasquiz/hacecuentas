@@ -80,15 +80,15 @@ const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
 
 export const hub: HubData = {
   slug: 'cl/trabajo/me-quedo-sin-trabajo',
-  title: 'Finiquito en Chile: cuánta plata te corresponde según la causal',
+  title: 'Finiquito Chile 2026: cuánto te corresponde según la causal',
   description:
-    'Calcula tu finiquito completo en Chile: indemnización por años de servicio con el tope de 90 UF del Art. 172, mes de aviso previo, vacaciones proporcionales, sueldo pendiente y los giros del seguro de cesantía. Con los recargos del Art. 168 si el despido fue injustificado.',
+    'Calculá tu finiquito en Chile 2026: indemnización por años de servicio con tope de 90 UF, mes de aviso, vacaciones proporcionales y seguro de cesantía.',
   silo: 'Trabajo',
   siloHref: '/cl/trabajo',
   locale: 'cl',
 
   eyebrow: 'Chile · término de contrato',
-  h1: 'Me quedé sin trabajo: ¿cuánta plata me corresponde?',
+  h1: 'Me quedé sin trabajo en Chile: ¿cuánta plata me corresponde?',
   lede:
     'Lo que te tienen que pagar depende de la causal con la que te sacaron. Elige tu caso y mira el finiquito completo: indemnización por años de servicio, mes de aviso previo, vacaciones proporcionales y sueldo pendiente, más lo que puedes girar del seguro de cesantía.',
   stamps: [
@@ -376,5 +376,5 @@ export const hub: HubData = {
     '/calculadora-retiro-seguro-cesantia-cic-afc-chile-giros',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

@@ -2,8 +2,8 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/vida/decisoes-e-calculos-do-dia-a-dia',
-  title: "Qual é o número para decidir melhor no dia a dia? | Hacé Cuentas",
-  description: "Hub de decisão com 3 cálculos: Calculadora de sódio diário na dieta DASH (hipertensão); Variação de ELO do Xadrez; Proteína Vegana Completa: Combinação de Aminoácidos.",
+  title: "Sódio na dieta DASH, ELO do xadrez e proteína vegana",
+  description: "Calculadora de sódio diário na dieta DASH, variação de ELO no xadrez e combinação de aminoácidos para proteína vegana completa, numa página só.",
   silo: "Cálculos do dia a dia",
   siloHref: '/pt/vida',
   locale: 'pt',
@@ -389,5 +389,5 @@ export const hub: HubData = {
     '/pt/elo-xadrez-vitoria-derrota-variacao', // Absorbida como caso calculable con formulaId elo-ajedrez-ganado-perdido-variacion.
     '/pt/proteina-vegana-completa-combinacao-aminoacidos', // Absorbida como caso calculable con formulaId vegana-proteina-completa-combinacion-aminoacidos.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

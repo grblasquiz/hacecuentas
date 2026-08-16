@@ -76,15 +76,15 @@ const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
 
 export const hub: HubData = {
 slug: 'cl/trabajo/trabajo-a-honorarios',
-  title: 'Boleta de honorarios en Chile: cuánto te retienen y cuánto te cotizan',
+  title: 'Boleta de honorarios Chile 2026: retención y cotizaciones',
   description:
-    'Calcula la retención de tu boleta de honorarios con la tasa vigente de la gradualidad de la Ley 21.133, el bruto que tienes que boletear para recibir un líquido determinado, y la cotización previsional obligatoria anual sobre el 80% de tus rentas.',
+    'Calculá la retención de tu boleta de honorarios en Chile 2026 con la tasa vigente de la Ley 21.133 y la cotización obligatoria sobre el 80% de tus rentas.',
   silo: 'Trabajo',
   siloHref: '/cl/trabajo',
   locale: 'cl',
 
   eyebrow: 'Chile · trabajador independiente',
-  h1: '¿Cuánto me queda emitiendo boletas de honorarios?',
+  h1: '¿Cuánto me queda emitiendo boletas de honorarios en Chile?',
   lede:
     'Cuando emites una boleta te retienen un porcentaje que sube todos los años, y en abril esa retención se va casi entera a pagar tus cotizaciones antes de convertirse en devolución. Acá calculas las dos cosas: lo que recibes hoy y lo que te van a cotizar sobre el 80% de lo que boleteaste.',
   stamps: [
@@ -343,5 +343,5 @@ slug: 'cl/trabajo/trabajo-a-honorarios',
     '/calculadora-aporte-trabajador-honorarios-chile-cotizacion-obligatoria',
   ],
 
-lastReviewed: '2026-07-28',
+lastReviewed: '2026-08-16',
 };

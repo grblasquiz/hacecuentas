@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'ec/hogar/comida-salud-y-construccion',
-  title: "¿Cuánto necesito para mi salud, cocina o construcción? | Hacé Cuentas",
-  description: "Hub de decisión con 3 cálculos: Calculadora de calorías diarias — Ecuador; Calculadora de Costo de Construcción por m² 2026; Convertir tazas a gramos (y viceversa) por ingrediente — Ecuador.",
+  title: "Calorías, costo de construcción y medidas de cocina, Ecuador",
+  description: "Calculadora de calorías diarias, costo de construcción por m² 2026 y conversor de tazas a gramos para Ecuador, reunidos en una sola página de decisión.",
   silo: "Cuentas del hogar",
   siloHref: '/ec/hogar',
   locale: 'ec',
   eyebrow: "Ecuador · Cuentas del hogar",
-  h1: "¿Cuánto necesito para mi salud, cocina o construcción?",
+  h1: "¿Cuánto necesito para mi salud, cocina o construcción en Ecuador?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 3 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['3 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -393,5 +393,5 @@ export const hub: HubData = {
     '/ec/calculadora-costo-construccion-m2-ecuador', // Absorbida como caso calculable con formulaId costo-construccion-m2-ecuador.
     '/ec/conversor-tazas-a-gramos-cocina-ecuador', // Absorbida como caso calculable con formulaId conversion-medidas-cocina-tazas-gramos.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

@@ -2,12 +2,12 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'auto/importar-y-nacionalizar',
-  title: '¿Me conviene importar y nacionalizar un auto? | Hacé Cuentas',
-  description: 'Compara el costo completo de importar y nacionalizar un auto frente a comprarlo localmente: flete, impuestos, homologación, registro y puesta en calle.',
+  title: 'Importar y nacionalizar un auto en Argentina: costo total',
+  description: 'Compará el costo total de importar y nacionalizar un auto en Argentina frente a comprarlo acá: flete, aranceles, homologación, registro y puesta en calle.',
   silo: 'Auto',
   siloHref: '/auto',
   eyebrow: 'Importación · nacionalización · costo total',
-  h1: '¿Me conviene importar y nacionalizar un auto?',
+  h1: '¿Me conviene importar y nacionalizar un auto en Argentina?',
   lede: 'El precio del vehículo es solo el comienzo. Sumá flete, seguro, aranceles, impuestos, puerto, homologación y registro para saber cuánto termina costando antes de decidir.',
   stamps: ['Estimación en dólares', 'Costo nacionalizado completo', '7 cálculos dentro'],
   resultLabel: 'Costo estimado del auto importado',
@@ -53,6 +53,6 @@ export const hub: HubData = {
     { name: 'Sistema Armonizado de clasificación', url: 'https://www.wcoomd.org/en/topics/nomenclature/overview/what-is-the-harmonized-system.aspx', publisher: 'World Customs Organization' },
   ],
   replaces: [],
-  lastReviewed: '2026-08-09',
+  lastReviewed: '2026-08-16',
   audience: 'AR',
 };

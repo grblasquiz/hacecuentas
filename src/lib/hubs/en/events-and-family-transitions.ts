@@ -2,8 +2,8 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'en/family/events-and-family-transitions',
-  title: "What should I budget for this family event or change? | Hacé Cuentas",
-  description: "Decision hub with 3 calculations: Estimate Your Divorce Settlement Costs; Ring Size Calculator: Convert mm to US, UK & EU; Stages of Grief After Family Loss.",
+  title: "Divorce Costs, Ring Size and Family Event Budgets",
+  description: "Estimate divorce settlement costs, convert ring sizes between mm, US, UK and EU, and plan the budget for big family events and changes, all on one page.",
   silo: "Family events and transitions",
   siloHref: '/en/family',
   locale: 'en',
@@ -224,5 +224,5 @@ export const hub: HubData = {
     '/en/ring-size-finger', // Absorbida como caso calculable con formulaId talla-anillo-dedo.
     '/en/stages-of-grief-family-loss', // Absorbida como caso calculable con formulaId etapas-duelo-perdida-familiar-meses.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

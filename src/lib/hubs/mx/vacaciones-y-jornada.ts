@@ -44,14 +44,14 @@ export const UMA_DIARIA_MX = MEXICO_2026.uma.diaria;
 
 export const hub: HubData = {
   slug: 'mx/trabajo/vacaciones-y-jornada',
-  title: 'Vacaciones, horas extra y jornada en México: días, pago y calendario',
+  title: 'Vacaciones y horas extra México 2026: días, pago y jornada',
   description:
-    'Cuántos días de vacaciones te tocan según tu antigüedad con la reforma de vacaciones dignas, cuánto se paga la prima vacacional, cómo se calculan las horas extra dobles y triples y cuándo baja tu jornada a 40 horas semanales.',
+    'Cuántos días de vacaciones te tocan en México 2026 con la reforma de vacaciones dignas, prima vacacional, horas extra dobles y triples y jornada de 40 h.',
   silo: 'Trabajo',
   siloHref: '/mx/trabajo',
 
   eyebrow: 'México · tiempo de trabajo',
-  h1: '¿Cuántos días de vacaciones me tocan y cuánto valen mis horas extra?',
+  h1: '¿Cuántos días de vacaciones me tocan en México y cuánto valen mis horas extra?',
   lede:
     'La reforma de vacaciones dignas subió el primer año a 12 días y la reducción de jornada baja dos horas por año hasta llegar a 40 en 2030. Elige qué necesitas calcular y pon tu antigüedad y tu salario.',
   stamps: [
@@ -320,6 +320,6 @@ export const hub: HubData = {
     '/calculadora-jornada-40-horas-mexico-calendario-gradual-2027-2030',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
   locale: 'mx',
 };

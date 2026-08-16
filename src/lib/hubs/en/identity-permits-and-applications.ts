@@ -2,8 +2,8 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'en/life/identity-permits-and-applications',
-  title: "What will this permit or application cost? | Hacé Cuentas",
-  description: "Decision hub with 6 calculations: Auto Debt-Free Certificate Cost; Driver License Cost by Category; Food Handler Permit Cost in Argentina; Foreign Residency & ID Cost Calculator; UBA CBC Regular vs Libre Status Calculator; Total Cost of a US B1/B2 Tourist Visa — Full Breakdown.",
+  title: "US Visa, Driver License and Permit Costs Calculator",
+  description: "Estimate the total cost of a US B1/B2 tourist visa, a driver license by category, foreign residency and ID paperwork and other permits, all on one page.",
   silo: "Permits and applications",
   siloHref: '/en/life',
   locale: 'en',
@@ -382,5 +382,5 @@ export const hub: HubData = {
     '/en/uba-cbc-requirements', // Absorbida como caso calculable con formulaId cbc-uba-materias-regularidad-requisitos.
     '/en/us-b1-b2-tourist-visa-cost', // Absorbida como caso calculable con formulaId visa-turismo-usa-ee-uu-costo-b1-b2.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

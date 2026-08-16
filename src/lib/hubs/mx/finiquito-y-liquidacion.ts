@@ -55,14 +55,14 @@ export const FACTOR_MENSUAL = MEXICO_2026.salarioMinimo.factorMensual;
 
 export const hub: HubData = {
   slug: 'mx/trabajo/finiquito-y-liquidacion',
-  title: 'Finiquito y liquidación en México: cuánto te tienen que pagar',
+  title: 'Finiquito y liquidación México 2026: cuánto te deben pagar',
   description:
-    'Calcula tu finiquito o tu liquidación en México según la LFT: partes proporcionales, tres meses de indemnización, 20 días por año, prima de antigüedad de 12 días por año con el tope de 2 salarios mínimos y el ISR de la separación con la exención de 90 UMA por año.',
+    'Calculadora de finiquito y liquidación en México 2026: partes proporcionales, 3 meses de indemnización, 20 días por año y prima de antigüedad según LFT.',
   silo: 'Trabajo',
   siloHref: '/mx/trabajo',
 
   eyebrow: 'México · fin de la relación laboral',
-  h1: 'Me despiden o renuncio: ¿cuánto me tienen que pagar?',
+  h1: 'Me despiden o renuncio en México: ¿cuánto me tienen que pagar?',
   lede:
     'El finiquito son tus partes proporcionales y siempre te toca, renuncies o te corran. La liquidación es la indemnización que se suma solo si el despido fue injustificado. Elige tu caso y mira concepto por concepto qué te deben, ya con el ISR descontado.',
   stamps: [
@@ -329,6 +329,6 @@ export const hub: HubData = {
     '/calculadora-isr-finiquito-liquidacion-mexico-2026',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
   locale: 'mx',
 };

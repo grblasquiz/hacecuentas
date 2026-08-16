@@ -65,15 +65,15 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
   slug: 'co/trabajo/liquidacion-laboral',
-  title: 'Liquidación laboral Colombia: empleada doméstica por días 2026',
+  title: 'Liquidación laboral Colombia 2026: calculá cuánto te deben',
   description:
-    'Calculá tu liquidación en Colombia 2026: cesantías, intereses del 12%, prima, vacaciones e indemnización del art. 64 CST. Cubre renuncia, despido sin justa causa, contrato a término fijo y la liquidación de empleada doméstica por días, con la sanción moratoria del art. 65.',
+    'Calculadora de liquidación laboral Colombia 2026: cesantías, intereses del 12%, prima, vacaciones e indemnización. Incluye empleada doméstica por días.',
   silo: 'Trabajo',
   siloHref: '/co/trabajo',
   locale: 'co',
 
   eyebrow: 'Colombia · CST y Ley 50 de 1990',
-  h1: 'Me voy o me echan: ¿cuánto me tienen que liquidar? (también la liquidación de empleada doméstica por días)',
+  h1: 'Me voy o me echan en Colombia: ¿cuánto me tienen que liquidar?',
   lede:
     'Las prestaciones sociales se deben siempre, renuncies o te despidan: cesantías, intereses del 12%, prima y vacaciones se causan por el tiempo que trabajaste. Lo que cambia con el motivo de la salida es la indemnización. Poné tus fechas y mirá el total, concepto por concepto.',
   stamps: [
@@ -386,5 +386,5 @@ export const hub: HubData = {
     '/co/calculadora-prestaciones-empleada-domestica-colombia-2026',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
 };

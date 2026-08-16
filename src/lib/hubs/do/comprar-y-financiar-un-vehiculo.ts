@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'do/finanzas/comprar-y-financiar-un-vehiculo',
-  title: "¿Cuánto cuesta importar y financiar el vehículo? | Hacé Cuentas",
-  description: "Hub de decisión con 2 cálculos: Calculadora de impuestos de importación de vehículo — República Dominicana; Calculadora de préstamo de vehículo en República Dominicana: cuota, inicial y total.",
+  title: "Importar y financiar un vehículo en República Dominicana",
+  description: "Calculá los impuestos de importación de un vehículo en República Dominicana y la cuota del préstamo: inicial, total a pagar y costo completo del carro.",
   silo: "Comprar un vehículo",
   siloHref: '/do/finanzas',
   locale: 'do',
   eyebrow: "República Dominicana · Comprar un vehículo",
-  h1: "¿Cuánto cuesta importar y financiar el vehículo?",
+  h1: "¿Cuánto cuesta importar y financiar el vehículo en República Dominicana?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -245,5 +245,5 @@ export const hub: HubData = {
     '/do/calculadora-impuestos-importacion-vehiculo-republica-dominicana', // Absorbida como caso calculable con formulaId impuestos-importacion-vehiculo-republica-dominicana.
     '/do/calculadora-prestamo-vehiculo-cuota-republica-dominicana', // Absorbida como caso calculable con formulaId prestamo-vehiculo-cuota-republica-dominicana.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

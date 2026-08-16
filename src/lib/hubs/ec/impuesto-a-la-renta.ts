@@ -68,9 +68,9 @@ const usd = (n: number) =>
 
 export const hub: HubData = {
   slug: 'ec/impuestos/impuesto-a-la-renta',
-  title: 'Impuesto a la renta en Ecuador: cuánto pagas y cuánto te retienen',
+  title: 'Impuesto a la renta Ecuador 2026: tabla SRI y retenciones',
   description:
-    'Calcula tu impuesto a la renta en Ecuador con la tabla vigente del SRI: retención en la fuente en relación de dependencia, honorarios profesionales, rebaja por gastos personales con tope en canastas básicas, y multa e interés si te atrasaste con la declaración.',
+    'Calculá tu impuesto a la renta en Ecuador 2026 con la tabla vigente del SRI: retención en relación de dependencia, honorarios y rebaja por gastos.',
   silo: 'Impuestos',
   siloHref: '/ec/impuestos',
   locale: 'ec',
@@ -317,5 +317,5 @@ export const hub: HubData = {
     '/ec/calculadora-multa-interes-mora-sri-ecuador',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

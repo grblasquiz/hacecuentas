@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/casa/plantar-e-reduzir-impacto',
-  title: "Quando plantar e qual é o impacto da minha escolha? | Hacé Cuentas",
-  description: "Hub de decisão com 5 cálculos: Calendário de Plantio do Hemisfério Sul: O que Semear Mês a Mês; Calculadora de colheita esperada da horta (kg/m²); Pegada de carbono do casamento ou evento: calcule e compense; Quando Podar Roseiras — por Zona Climática; Tempo de Biodegradação de Materiais: calculadora + tabela completa.",
+  title: "Calendário de plantio mês a mês e colheita da horta",
+  description: "Calendário de plantio do hemisfério sul mês a mês, colheita esperada da horta em kg/m², poda de roseiras por zona e pegada de carbono do seu evento.",
   silo: "Jardim e ambiente",
   siloHref: '/pt/casa',
   locale: 'pt',
   eyebrow: "Brasil · Jardim e ambiente",
-  h1: "Quando plantar e qual é o impacto da minha escolha?",
+  h1: "Quando plantar e quanto colher da horta?",
   lede: "Escolha o seu caso e preencha apenas os campos correspondentes. Este hub preserva as 5 fórmulas originais e reúne a decisão numa só página.",
   stamps: ['5 calculadoras incluídas', 'Fórmulas originais reutilizadas', 'Revisto em 28/07/2026'],
   resultLabel: "Seu resultado",
@@ -459,5 +459,5 @@ export const hub: HubData = {
     '/pt/quando-podar-rosa', // Absorbida como caso calculable con formulaId podar-rosal-cuando-fecha.
     '/pt/tempo-biodegradacao-material', // Absorbida como caso calculable con formulaId biodegradacion-residuo-tiempo.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

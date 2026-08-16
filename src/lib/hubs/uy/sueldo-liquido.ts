@@ -39,15 +39,15 @@ const uyu = (n: number) => '$U ' + new Intl.NumberFormat('de-DE', { maximumFract
 
 export const hub: HubData = {
   slug: 'uy/trabajo/sueldo-liquido',
-  title: 'Sueldo líquido en Uruguay: del nominal a lo que cobrás en mano',
+  title: 'Sueldo líquido Uruguay 2026: BPS, IRPF y qué te queda',
   description:
-    'Calculá tu sueldo líquido en Uruguay con los aportes BPS reales (montepío 15%, FONASA 3–8%, FRL 0,1%) y el IRPF por franjas en BPC. Incluye jornal, valor hora, horas extra y el costo total para el empleador.',
+    'Calculá tu sueldo líquido en Uruguay 2026: aportes BPS (montepío 15%, FONASA, FRL) e IRPF por franjas en BPC. Con jornal, valor hora y horas extra.',
   silo: 'Trabajo',
   siloHref: '/uy/trabajo',
   locale: 'uy',
 
   eyebrow: 'Uruguay · BPS · DGI',
-  h1: 'De tu sueldo nominal, ¿cuánto te queda realmente en mano?',
+  h1: 'De tu sueldo nominal en Uruguay, ¿cuánto te queda realmente en mano?',
   lede:
     'El nominal del contrato no es lo que cobrás. Entre el montepío jubilatorio, el FONASA que cambia según tu familia a cargo, el FRL y el IRPF por franjas en BPC, el descuento va del 18% a más del 35%. Esta cuenta arma tu recibo entero, línea por línea, y también te dice cuánto vale tu hora y cuánto le cuesta tu puesto al empleador.',
   stamps: [
@@ -306,5 +306,5 @@ export const hub: HubData = {
     '/uy/calculadora-irpf-anual-devolucion-uruguay',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

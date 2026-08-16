@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'uy/finanzas/cuotas-y-prestamos',
-  title: "¿Cuánto voy a pagar por mes? | Hacé Cuentas",
-  description: "Hub de decisión con 2 cálculos: Calculadora de cuota de crédito hipotecario en UI — Uruguay 2026; Calculadora de cuota de préstamo personal — Uruguay 2026.",
+  title: "Cuota de préstamo e hipoteca en UI, Uruguay 2026",
+  description: "Calculá la cuota de tu crédito hipotecario en UI y de un préstamo personal en Uruguay 2026: cuánto vas a pagar por mes, antes de firmar con el banco.",
   silo: "Préstamos en Uruguay",
   siloHref: '/uy/finanzas',
   locale: 'uy',
   eyebrow: "Uruguay · Préstamos en Uruguay",
-  h1: "¿Cuánto voy a pagar por mes?",
+  h1: "¿Cuánto voy a pagar por mes por el préstamo en Uruguay?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -179,5 +179,5 @@ export const hub: HubData = {
     '/uy/calculadora-cuota-credito-hipotecario-ui-uruguay', // Absorbida como caso calculable con formulaId calculadora-cuota-credito-hipotecario-ui-uruguay.
     '/uy/calculadora-cuota-prestamo-uruguay', // Absorbida como caso calculable con formulaId calculadora-cuota-prestamo-uruguay.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

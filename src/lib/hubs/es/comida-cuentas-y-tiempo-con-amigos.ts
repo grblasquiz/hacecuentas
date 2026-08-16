@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'es/vida/comida-cuentas-y-tiempo-con-amigos',
-  title: "¿Cuánto necesitamos para comer, pagar y organizar el plan? | Hacé Cuentas",
-  description: "Hub de decisión con 6 cálculos: Calculadora de bebidas para evento o fiesta — España; Calculadora de carne para barbacoa por persona — España; Calculadora de maratón de serie — cuánto tardas en verla entera; Calculadora de propinas en España: cuánto dejar y cuánto pone cada uno; Calculadora para dividir gastos entre amigos — España; Convertir tazas a gramos (y viceversa) por ingrediente — España.",
+  title: "Dividir gastos, propinas y barbacoa por persona en España",
+  description: "Calculadoras para el plan con amigos en España: dividir gastos, propinas, carne para la barbacoa y bebidas por persona, y tazas a gramos para la receta.",
   silo: "Planes con amigos",
   siloHref: '/es/vida',
   locale: 'es',
   eyebrow: "España · Planes con amigos",
-  h1: "¿Cuánto necesitamos para comer, pagar y organizar el plan?",
+  h1: "¿Cuánto necesitamos para comer, pagar y organizar el plan entre amigos en España?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 6 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['6 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -635,5 +635,5 @@ export const hub: HubData = {
     '/es/calculadora-dividir-gastos-cuenta-amigos-espana', // Absorbida como caso calculable con formulaId split-gastos-grupo-amigos.
     '/es/conversor-tazas-a-gramos-cocina-espana', // Absorbida como caso calculable con formulaId conversion-medidas-cocina-tazas-gramos.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

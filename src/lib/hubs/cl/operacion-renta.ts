@@ -90,15 +90,15 @@ const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
 
 export const hub: HubData = {
 slug: 'cl/impuestos/operacion-renta',
-  title: 'Operación Renta en Chile: cuánto te devuelven o cuánto tienes que pagar',
+  title: 'Operación Renta 2026 Chile: te devuelven o tienes que pagar',
   description:
-    'Calcula tu Impuesto Global Complementario con la tabla en UTA del Art. 52 de la Ley de la Renta, mira si te queda devolución o cargo, y estima el efecto de tus honorarios, tus rentas de capital, tus ganancias en criptomonedas y tu APV.',
+    'Calculá tu Impuesto Global Complementario en la Operación Renta 2026: tabla en UTA del Art. 52, devolución o cargo, honorarios, cripto y APV en Chile.',
   silo: 'Impuestos',
   siloHref: '/cl/impuestos',
   locale: 'cl',
 
   eyebrow: 'Chile · SII · Formulario 22',
-  h1: '¿Me devuelven o tengo que pagar en la Operación Renta?',
+  h1: '¿Me devuelven o pago en la Operación Renta en Chile?',
   lede:
     'En abril el SII junta todas tus rentas del año y las mide contra una sola escala. Si te retuvieron de más, te devuelven; si te retuvieron de menos, pagas. Elige tu caso, pon lo que ganaste y mira el resultado con el tramo exacto de la tabla en UTA.',
   stamps: [
@@ -443,5 +443,5 @@ slug: 'cl/impuestos/operacion-renta',
     '/calculadora-apv-beneficio-tributario-chile-regimen-a-b',
   ],
 
-lastReviewed: '2026-07-28',
+lastReviewed: '2026-08-16',
 };

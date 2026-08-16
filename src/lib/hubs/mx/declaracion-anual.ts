@@ -34,14 +34,14 @@ export const ANUAL_MX = {
 
 export const hub: HubData = {
   slug: 'mx/impuestos/declaracion-anual',
-  title: 'Declaración anual SAT: ¿me toca declarar y cuánto me devuelven?',
+  title: 'Declaración anual SAT 2026: quién declara y cuánto devuelven',
   description:
-    'Calcula tu ISR anual con la tarifa del Art. 152, compáralo contra lo que te retuvieron y estima tu saldo a favor. Incluye el tope global de deducciones personales y las colegiaturas, que van aparte.',
+    'Calculá tu declaración anual SAT 2026: ISR anual con la tarifa del Art. 152, deducciones personales, colegiaturas y tu saldo a favor estimado en México.',
   silo: 'Impuestos',
   siloHref: '/mx/impuestos',
 
   eyebrow: 'México · Declaración anual',
-  h1: '¿Me toca declarar y cuánto me devuelven?',
+  h1: '¿Me toca declarar en el SAT y cuánto me devuelven?',
   lede:
     'La devolución no depende de cuántas facturas juntaste, sino de la diferencia entre el ISR que realmente te tocaba y el que ya te retuvieron. Elige tu caso y calcula los tres números que definen el resultado.',
   stamps: [
@@ -314,6 +314,6 @@ export const hub: HubData = {
     '/calculadora-tope-deducciones-personales-2026-mexico',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
   locale: 'mx',
 };

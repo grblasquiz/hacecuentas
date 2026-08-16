@@ -2,8 +2,8 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/matematica/resolver-contas',
-  title: "Como resolvo esta conta de ciência ou matemática? | Hacé Cuentas",
-  description: "Hub de decisão com 9 cálculos: Energía Cinética: Calculadora Ec = ½mv²; Calculadora de Diluição — Fórmula C1V1 = C2V2; Queda Livre — Distância e Altura por Tempo; Empuxo de Arquimedes — Calcule a Força de Empuxo (E = ρ × V × g); Calculadora de Integral Indefinida de Polinômio; MDC e MMC de dois números — Máximo Divisor Comum e Mínimo Múltiplo Comum; Converter Gramas em Moles (n = m ÷ M); Paralaxe para Parsecs: Calculadora de Distância Estelar; Calculadora de Regra de Três.",
+  title: "Regra de três, MDC e MMC, diluição e queda livre",
+  description: "Calculadoras de regra de três, MDC e MMC, diluição C1V1=C2V2, energia cinética, queda livre, empuxo de Arquimedes e gramas em moles, numa página só.",
   silo: "Ciência e matemática",
   siloHref: '/pt/matematica',
   locale: 'pt',
@@ -643,5 +643,5 @@ export const hub: HubData = {
     '/pt/paralaxe-distancia-em-parsec', // Absorbida como caso calculable con formulaId paralaje-distancia-estrella-parsec.
     '/pt/regra-de-tres-simples-composta-direta-inversa', // Absorbida como caso calculable con formulaId regra-de-tres-simples-composta-direta-inversa.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'co/finanzas/vuelos-millas-y-tiempo',
-  title: "¿Cuánto cuesta el vuelo y cuánto valen mis millas? | Hacé Cuentas",
-  description: "Hub de decisión con 3 cálculos: Calculá a qué hora termina un programa de RCN; Calculadora de tasas aeropuerto y impuestos en vuelos desde Colombia; Calculadora para decidir si conviene usar LifeMiles o pagar en efectivo.",
+  title: "Millas LifeMiles y tasas de aeropuerto en Colombia",
+  description: "Calculá si conviene pagar el vuelo con millas LifeMiles o en efectivo y cuánto suman las tasas de aeropuerto e impuestos en vuelos desde Colombia.",
   silo: "Vuelos y millas",
   siloHref: '/co/finanzas',
   locale: 'co',
   eyebrow: "Colombia · Vuelos y millas",
-  h1: "¿Cuánto cuesta el vuelo y cuánto valen mis millas?",
+  h1: "¿Cuánto cuesta el vuelo desde Colombia y cuánto valen mis millas?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 3 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['3 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -303,5 +303,5 @@ export const hub: HubData = {
     '/co/calculadora-impuestos-aerolineas-tasa-aeropuerto-colombia-internacional', // Absorbida como caso calculable con formulaId impuestos-aerolineas-tasa-aeropuerto-colombia-internacional.
     '/co/calculadora-millas-lifemiles-avianca-colombia-2026', // Absorbida como caso calculable con formulaId millas-lifemiles-avianca-colombia-2026.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

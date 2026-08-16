@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'py/vivienda/organizar-un-evento',
-  title: "¿Cuánto comprar para el evento? | Hacé Cuentas",
-  description: "Hub de decisión con 2 cálculos: Calculadora de bebidas para evento o fiesta — Paraguay; Calculadora de carne para asado por persona — Paraguay.",
+  title: "Cuánta carne y bebida por persona para un asado, Paraguay",
+  description: "Calculá cuánta carne por persona necesitás para el asado y cuántas bebidas comprar para tu evento o fiesta en Paraguay, todo en una sola página.",
   silo: "Eventos en Paraguay",
   siloHref: '/py/vivienda',
   locale: 'py',
   eyebrow: "Paraguay · Eventos en Paraguay",
-  h1: "¿Cuánto comprar para el evento?",
+  h1: "¿Cuánto comprar para el asado o el evento en Paraguay?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -242,5 +242,5 @@ export const hub: HubData = {
     '/py/calculadora-bebidas-por-invitado-evento-paraguay', // Absorbida como caso calculable con formulaId bebidas-evento-litros-por-persona.
     '/py/calculadora-carne-asado-kg-por-persona-paraguay', // Absorbida como caso calculable con formulaId carne-asado-kg-por-persona.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

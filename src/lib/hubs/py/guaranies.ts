@@ -60,15 +60,15 @@ const dec = (n: number) => n.toLocaleString('de-DE', { minimumFractionDigits: 2,
 
 export const hub: HubData = {
   slug: 'py/finanzas/guaranies',
-  title: 'Guaraníes: dólar, euro y peso hoy, remesas, plazo fijo e inflación',
+  title: 'Dólar hoy en Paraguay: cotización en guaraníes y remesas',
   description:
-    'Cuántos guaraníes te dan por tus dólares, euros o pesos argentinos, cuánto llega realmente de una remesa después de comisión y spread, cuánto rinde un plazo fijo con el IRP del 8% y cuánto se licuó tu plata por inflación.',
+    'Cotización del dólar, euro y peso argentino en guaraníes hoy: cuánto llega de una remesa, cuánto rinde un plazo fijo y cuánto se licuó por inflación.',
   silo: 'Finanzas',
   siloHref: '/py/finanzas',
   locale: 'py',
 
   eyebrow: 'Paraguay · BCP · cotización de referencia',
-  h1: '¿Cuánto vale tu plata en guaraníes?',
+  h1: '¿Cuánto vale tu plata en guaraníes hoy?',
   lede:
     'Cambiar, recibir del exterior, poner a plazo fijo o simplemente ver si tu plata sigue valiendo lo mismo son cuatro versiones de la misma pregunta. Esta cuenta las resuelve con la cotización de referencia del BCP y el IPC del último período publicado.',
   stamps: [
@@ -368,5 +368,5 @@ export const hub: HubData = {
     '/py/calculadora-actualizacion-inflacion-ipc-paraguay',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

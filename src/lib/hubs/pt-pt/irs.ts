@@ -71,9 +71,9 @@ export const PRAZOS = {
 
 export const hub: HubData = {
   slug: 'pt-pt/impostos/irs',
-  title: 'IRS em Portugal: quanto pago, quanto me devolvem e quando recebo',
+  title: 'IRS 2026 em Portugal: quanto paga e quando é reembolsado',
   description:
-    'Simule o IRS do ano com os escalões em vigor: saldo a pagar ou a reembolsar, tributação conjunta ou separada dos casados, mais-valias de ações e cripto a 28 %, recibos verdes e a janela real do reembolso.',
+    'Simule o IRS 2026 em Portugal com os escalões em vigor: saldo a pagar ou reembolso, tributação conjunta ou separada, mais-valias a 28% e recibos verdes.',
   silo: 'Impostos',
   siloHref: '/pt-pt/impostos',
   locale: 'pt-pt',
@@ -385,5 +385,5 @@ export const hub: HubData = {
     '/pt-pt/calculadora-recibos-verdes-trabalhador-independente-portugal',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

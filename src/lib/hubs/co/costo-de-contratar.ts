@@ -79,15 +79,15 @@ const pct = (n: number) => (n * 100).toLocaleString('es-CO', { maximumFractionDi
 
 export const hub: HubData = {
   slug: 'co/trabajo/costo-de-contratar',
-  title: 'Cuánto cuesta contratar y aportes ARL por riesgo, Colombia',
+  title: 'Costo de contratar en Colombia 2026: nómina, ARL y aportes',
   description:
-    'Calculá lo que de verdad te cuesta un empleado en Colombia: factor prestacional, seguridad social, aportes ARL por nivel de riesgo (tarifas clase I a V, los paga el empleador, no el empleado), caja de compensación, exoneración del art. 114-1 ET, costo por hora y cuánto vale despedirlo.',
+    'Cuánto cuesta contratar un empleado en Colombia 2026: prestaciones, seguridad social, ARL por nivel de riesgo, caja de compensación y costo de nómina.',
   silo: 'Trabajo',
   siloHref: '/co/trabajo',
   locale: 'co',
 
   eyebrow: 'Colombia · lado empleador · nómina',
-  h1: '¿Cuánto me cuesta de verdad tener un empleado? Nómina, prestaciones y aportes ARL por nivel de riesgo',
+  h1: '¿Cuánto me cuesta de verdad un empleado en Colombia? Nómina, prestaciones y ARL',
   lede:
     'El sueldo que acordás no es lo que pagás. Encima van prestaciones, seguridad social, ARL, caja de compensación y parafiscales, y todo eso cambia según seas persona jurídica o natural, cuánto gane el trabajador y de qué clase de riesgo sea la actividad. Acá sale el costo mensual cargado, el costo por hora y lo que vale terminar el contrato.',
   stamps: [
@@ -384,5 +384,5 @@ export const hub: HubData = {
     '/co/calculadora-costo-despido-empleador-colombia-2026',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
 };

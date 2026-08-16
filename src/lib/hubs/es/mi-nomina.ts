@@ -23,9 +23,9 @@ const DISCLAIMER_FISCAL =
 
 export const hub: HubData = {
   slug: 'es/trabajo/mi-nomina',
-  title: 'Sueldo convenio hostelería y comercio 2026 — Nómina España',
+  title: 'Calculadora de nómina España 2026: neto, convenio y pagas',
   description:
-    'Comprueba si tu nómina cuadra: sueldo del convenio de hostelería y comercio 2026 por categoría y nivel, valor real de la hora extra, paga extra y prorrateo, días de vacaciones y lo que le cuestas a la empresa.',
+    'Calcula tu nómina en España 2026: sueldo del convenio de hostelería y comercio por categoría, hora extra, pagas extra prorrateadas y coste de empresa.',
   silo: 'Trabajo',
   siloHref: '/es/trabajo',
 
@@ -340,7 +340,7 @@ export const hub: HubData = {
     '/calculadora-coste-trabajador-empresa-seguridad-social-espana',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
   audience: 'global',
   locale: 'es',
 };

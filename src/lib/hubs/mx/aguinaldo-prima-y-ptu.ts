@@ -60,14 +60,14 @@ export const UMA = { diaria: MEXICO_2026.uma.diaria, mensual: MEXICO_2026.uma.me
 
 export const hub: HubData = {
   slug: 'mx/trabajo/aguinaldo-prima-y-ptu',
-  title: 'Aguinaldo, prima vacacional y PTU en México: cuánto te toca y cuánto te retienen',
+  title: 'Aguinaldo, prima y PTU México 2026: cuánto te toca',
   description:
-    'Calcula tu aguinaldo, tu prima vacacional, tu PTU, la prima dominical y el valor de tus vales y fondo de ahorro en México, con las exenciones de ISR en UMA del Art. 93 de la LISR y el método de tasa efectiva del reglamento.',
+    'Calculá tu aguinaldo 2026, prima vacacional y PTU en México con las exenciones de ISR en UMA del Art. 93 de la LISR y el método de tasa efectiva.',
   silo: 'Trabajo',
   siloHref: '/mx/trabajo',
 
   eyebrow: 'México · prestaciones y su ISR',
-  h1: '¿Cuánto me toca de aguinaldo, prima vacacional y PTU?',
+  h1: '¿Cuánto me toca de aguinaldo, prima vacacional y PTU en México?',
   lede:
     'Estas prestaciones no se gravan como el sueldo: cada una trae su propia exención medida en UMA, y el ISR se calcula sobre el excedente con la tasa efectiva de tu sueldo. Elige la prestación que quieres calcular y mira cuánto queda exento y cuánto acaba en el SAT.',
   stamps: [
@@ -384,6 +384,6 @@ export const hub: HubData = {
     '/calculadora-fondo-ahorro-vales-despensa-mexico-2026',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
   locale: 'mx',
 };

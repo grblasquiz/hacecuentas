@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt-pt/financas/impostos-do-automovel',
-  title: "Quanto vou pagar de ISV e IUC? | Hacé Cuentas",
-  description: "Hub de decisão com 2 cálculos: Simulador de ISV — Importar e Legalizar um Carro em Portugal 2026; Calculadora de IUC: quanto pago de selo do carro?.",
+  title: "ISV e IUC 2026: quanto paga pelo carro em Portugal",
+  description: "Simulador de ISV para importar e legalizar um carro em Portugal 2026 e calculadora de IUC: quanto paga de selo do carro por ano, antes de comprar.",
   silo: "Impostos do automóvel",
   siloHref: '/pt-pt/financas',
   locale: 'pt-pt',
   eyebrow: "Portugal · Impostos do automóvel",
-  h1: "Quanto vou pagar de ISV e IUC?",
+  h1: "Quanto vou pagar de ISV e IUC em Portugal?",
   lede: "Escolha o seu caso e preencha apenas os campos correspondentes. Este hub preserva as 2 fórmulas originais e reúne a decisão numa só página.",
   stamps: ['2 calculadoras incluídas', 'Fórmulas originais reutilizadas', 'Revisto em 28/07/2026'],
   resultLabel: "Seu resultado",
@@ -202,5 +202,5 @@ export const hub: HubData = {
     '/pt-pt/calculadora-isv-importacao-carro-portugal', // Absorbida como caso calculable con formulaId calculadora-isv-importacao-carro-portugal.
     '/pt-pt/calculadora-iuc-portugal', // Absorbida como caso calculable con formulaId calculadora-iuc-portugal.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

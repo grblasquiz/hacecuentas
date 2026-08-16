@@ -53,9 +53,9 @@ const gs = (n: number) => 'Gs. ' + Math.round(n).toLocaleString('de-DE');
 
 export const hub: HubData = {
   slug: 'py/trabajo/sueldo-neto',
-  title: 'Salario mínimo Paraguay 2026: Gs. 3.044.000 y sueldo neto',
+  title: 'Salario mínimo Paraguay 2026: jornal diario y sueldo neto',
   description:
-    'El salario mínimo en Paraguay 2026 es Gs. 3.044.000 al mes y el jornal Gs. 117.077. Calculá cuánto queda después del IPS 9%.',
+    'El salario mínimo en Paraguay 2026 es Gs. 3.044.000 al mes y el jornal diario Gs. 117.077. Calculá tu sueldo neto con el descuento del IPS del 9%.',
   silo: 'Trabajo',
   siloHref: '/py/trabajo',
   locale: 'py',
@@ -334,5 +334,5 @@ export const hub: HubData = {
     '/py/calculadora-empleada-domestica-paraguay',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
 };

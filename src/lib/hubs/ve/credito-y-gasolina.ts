@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 've/finanzas/credito-y-gasolina',
-  title: "¿Cuánto pago y cuánto ahorro cada mes? | Hacé Cuentas",
-  description: "Hub de decisión con 2 cálculos: Calculadora de crédito de nómina (credinómina): cuota y capacidad de pago; Cupo de gasolina subsidiada en Venezuela: litros y ahorro mensual.",
+  title: "Credinómina y cupo de gasolina subsidiada en Venezuela",
+  description: "Calculá la cuota de un crédito de nómina (credinómina) y los litros y el ahorro mensual del cupo de gasolina subsidiada en Venezuela, en una página.",
   silo: "Crédito y gasolina",
   siloHref: '/ve/finanzas',
   locale: 've',
   eyebrow: "Venezuela · Crédito y gasolina",
-  h1: "¿Cuánto pago y cuánto ahorro cada mes?",
+  h1: "¿Cuánto pago de crédito y cuánto ahorro en gasolina en Venezuela?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -169,5 +169,5 @@ export const hub: HubData = {
     '/ve/calculadora-credito-nomina-bdv-venezuela', // Absorbida como caso calculable con formulaId calculadora-credito-nomina-bdv-venezuela.
     '/ve/calculadora-cupo-gasolina-subsidiada-venezuela', // Absorbida como caso calculable con formulaId calculadora-cupo-gasolina-subsidiada-venezuela.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

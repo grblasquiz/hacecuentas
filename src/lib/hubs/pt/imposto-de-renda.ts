@@ -92,9 +92,9 @@ const brl = (n: number) =>
 
 export const hub: HubData = {
   slug: 'pt/dinheiro/imposto-de-renda',
-  title: 'Imposto de renda: preciso declarar, quanto pago e quando cai a restituição?',
+  title: 'Imposto de Renda 2026: quem declara e quanto paga ou recebe',
   description:
-    'Simplificada ou completa, quanto sobra de imposto a pagar ou a restituir, em que lote você cai, IR de swing trade e day trade na B3 e DARF de cripto — tudo com a tabela vigente e o artigo de lei de cada regra.',
+    'Simule o Imposto de Renda 2026: declaração simplificada ou completa, imposto a pagar ou restituir, lotes da restituição, day trade na B3 e DARF de cripto.',
   silo: 'Dinheiro',
   siloHref: '/pt/dinheiro',
   locale: 'pt',
@@ -431,5 +431,5 @@ export const hub: HubData = {
     '/pt/darf-cripto-15-porcento-ganho-35k-mensal',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

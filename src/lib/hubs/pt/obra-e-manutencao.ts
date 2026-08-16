@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pt/casa/obra-e-manutencao',
-  title: "Quanto material e dinheiro preciso para a casa? | Hacé Cuentas",
-  description: "Hub de decisão com 7 cálculos: Aço por m² de Laje — Calculadora + Tabela de Referência; kW por m² para aquecimento: tabela por isolamento e tamanho; Calculadora de Custo de Obra por m² (CUB); Quanto de Brita para Drenagem em Vasos; Mudança: custo frete + embalagem; Quanto Mulch Preciso? Volume e Peso por Área e Espessura; Calculadora de tijolos por m² de parede.",
+  title: "Custo de obra por m² (CUB), tijolos e aço por m² de laje",
+  description: "Calculadoras de obra: custo por m² com o CUB, tijolos por m² de parede, aço por m² de laje, brita para drenagem e custo de mudança com frete e embalagem.",
   silo: "Obra e manutenção",
   siloHref: '/pt/casa',
   locale: 'pt',
   eyebrow: "Brasil · Obra e manutenção",
-  h1: "Quanto material e dinheiro preciso para a casa?",
+  h1: "Quanto de material e dinheiro preciso para a obra da casa?",
   lede: "Escolha o seu caso e preencha apenas os campos correspondentes. Este hub preserva as 7 fórmulas originais e reúne a decisão numa só página.",
   stamps: ['7 calculadoras incluídas', 'Fórmulas originais reutilizadas', 'Revisto em 28/07/2026'],
   resultLabel: "Seu resultado",
@@ -477,5 +477,5 @@ export const hub: HubData = {
     '/pt/mulch-espessura-quantidade', // Absorbida como caso calculable con formulaId mulching-espesor-cantidad.
     '/pt/parede-tijolos-m2', // Absorbida como caso calculable con formulaId pared-ladrillos-metros-m2.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

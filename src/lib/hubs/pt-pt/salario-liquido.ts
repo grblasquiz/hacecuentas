@@ -76,15 +76,15 @@ export const AJUDAS = {
 
 export const hub: HubData = {
   slug: 'pt-pt/trabalho/salario-liquido',
-  title: 'Salário líquido em Portugal: quanto recebo mesmo ao fim do mês?',
+  title: 'Salário líquido Portugal 2026: IRS e Segurança Social',
   description:
-    'Do bruto ao líquido em mão: 11 % de Segurança Social, retenção de IRS pelos escalões em vigor, subsídio de refeição isento, ajudas de custo, valor da sua hora e subsídios de férias e de Natal.',
+    'Calcule o salário líquido em Portugal 2026: 11% de Segurança Social, retenção de IRS pelos escalões em vigor, subsídio de refeição e subsídios de férias.',
   silo: 'Trabalho',
   siloHref: '/pt-pt/trabalho',
   locale: 'pt-pt',
 
   eyebrow: 'Portugal · continente · recibo de vencimento',
-  h1: 'Quanto é que recebe mesmo ao fim do mês.',
+  h1: 'Quanto é que recebe mesmo ao fim do mês em Portugal.',
   lede:
     'O bruto do contrato não é o que entra na conta. Esta calculadora desconta a Segurança Social e a retenção de IRS, soma o subsídio de refeição e as ajudas de custo que são isentos, e mostra-lhe o valor da sua hora e quanto sobra dos subsídios de férias e de Natal.',
   stamps: [
@@ -386,5 +386,5 @@ export const hub: HubData = {
     '/pt-pt/simulador-ajudas-de-custo-portugal-2026',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

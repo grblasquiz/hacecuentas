@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'uy/finanzas/cuentas-y-compras',
-  title: "¿Cuánto termino pagando? | Hacé Cuentas",
-  description: "Hub de decisión con 2 cálculos: Calculadora de Compras en el Exterior / Courier — Uruguay 2026; Calculadora de Factura de UTE — Consumo Eléctrico (Uruguay 2026).",
+  title: "Compras courier y factura de UTE en Uruguay 2026",
+  description: "Calculá cuánto pagás por compras en el exterior por courier en Uruguay 2026 y cuánto viene la factura de UTE según tu consumo, en una sola página.",
   silo: "Cuentas y compras",
   siloHref: '/uy/finanzas',
   locale: 'uy',
   eyebrow: "Uruguay · Cuentas y compras",
-  h1: "¿Cuánto termino pagando?",
+  h1: "¿Cuánto termino pagando por la compra o la factura en Uruguay?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva las 2 fórmulas originales y reúne la decisión en una sola página.",
   stamps: ['2 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -163,5 +163,5 @@ export const hub: HubData = {
     '/uy/calculadora-compras-exterior-courier-uruguay', // Absorbida como caso calculable con formulaId compras-exterior-courier-uruguay.
     '/uy/calculadora-factura-ute-consumo-electrico-uruguay', // Absorbida como caso calculable con formulaId calculadora-factura-ute-consumo-electrico-uruguay.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

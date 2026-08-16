@@ -41,15 +41,15 @@ const gs = (n: number) => 'Gs. ' + Math.round(n).toLocaleString('de-DE');
 
 export const hub: HubData = {
   slug: 'py/trabajo/liquidacion-final',
-  title: 'Liquidación final en Paraguay: indemnización, preaviso, aguinaldo y vacaciones',
+  title: 'Liquidación final Paraguay 2026: indemnización y preaviso',
   description:
-    'Cuánto te tienen que pagar al terminar el trabajo en Paraguay: indemnización de 15 jornales por año, doble indemnización con 10 años de antigüedad, preaviso del art. 87, aguinaldo proporcional y vacaciones no gozadas.',
+    'Calculá tu liquidación final en Paraguay 2026: indemnización de 15 jornales por año, preaviso del art. 87, aguinaldo proporcional y vacaciones no gozadas.',
   silo: 'Trabajo',
   siloHref: '/py/trabajo',
   locale: 'py',
 
   eyebrow: 'Paraguay · Código del Trabajo · Ley 213/93',
-  h1: 'Te vas del trabajo: ¿cuánto te tienen que pagar?',
+  h1: 'Te vas del trabajo en Paraguay: ¿cuánto te tienen que pagar?',
   lede:
     'La liquidación final cambia por completo según cómo termine la relación. Con tu sueldo y tu fecha de ingreso, la cuenta arma los cuatro conceptos —indemnización, preaviso, aguinaldo proporcional y vacaciones— y te dice cuáles corresponden en tu caso.',
   stamps: [
@@ -295,5 +295,5 @@ export const hub: HubData = {
     '/py/calculadora-antiguedad-laboral-paraguay',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

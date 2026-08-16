@@ -36,9 +36,9 @@ const brl = (n: number) =>
 
 export const hub: HubData = {
   slug: 'pt/trabalho/rescisao-clt',
-  title: 'Rescisão CLT: quanto vou receber ao ser demitido?',
+  title: 'Rescisão CLT 2026: quanto vou receber ao ser demitido',
   description:
-    'Calcule sua rescisão completa: saldo de salário, aviso prévio proporcional, 13º e férias proporcionais + 1/3, férias vencidas, multa de 40% do FGTS e quantas parcelas de seguro-desemprego você tem direito.',
+    'Calculadora de rescisão CLT 2026: saldo de salário, aviso prévio proporcional, 13º e férias + 1/3, multa de 40% do FGTS e parcelas do seguro-desemprego.',
   silo: 'Trabalho',
   siloHref: '/pt/trabalho',
   locale: 'pt',
@@ -335,5 +335,5 @@ export const hub: HubData = {
     '/pt/seguro-desemprego-valor-parcelas-trabalhador-clt',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

@@ -92,15 +92,15 @@ const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-CL');
 
 export const hub: HubData = {
 slug: 'cl/trabajo/horas-extra-y-recargos',
-  title: 'Horas extra, festivos y semana corrida en Chile: cuánto te tienen que pagar de más',
+  title: 'Horas extra Chile 2026: recargo, festivos y semana corrida',
   description:
-    'Calcula el valor de tu hora ordinaria con la jornada de 42 horas, las horas extra con el recargo del 50%, el feriado irrenunciable trabajado, la semana corrida por remuneración variable y cuánto te llega líquido de un bono de cumplimiento.',
+    'Calculadora de horas extra en Chile 2026: valor hora con jornada de 42 horas, recargo del 50%, feriado irrenunciable trabajado y semana corrida.',
   silo: 'Trabajo',
   siloHref: '/cl/trabajo',
   locale: 'cl',
 
   eyebrow: 'Chile · Código del Trabajo',
-  h1: '¿Cuánto me tienen que pagar de más este mes?',
+  h1: '¿Cuánto me tienen que pagar de más este mes en Chile?',
   lede:
     'Horas extra, un festivo que te hicieron trabajar, los domingos de la semana corrida o un bono de cumplimiento: todo lo que se suma al sueldo base se calcula distinto. Elige tu caso, pon tu sueldo y mira el número exacto con el artículo que lo respalda.',
   stamps: [
@@ -462,5 +462,5 @@ slug: 'cl/trabajo/horas-extra-y-recargos',
     '/calculadora-bono-cumplimiento-laboral-chile-pago-empresa',
   ],
 
-lastReviewed: '2026-07-28',
+lastReviewed: '2026-08-16',
 };

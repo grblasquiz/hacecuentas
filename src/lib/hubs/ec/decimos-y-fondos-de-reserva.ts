@@ -30,9 +30,9 @@ const usd = (n: number) =>
 
 export const hub: HubData = {
   slug: 'ec/trabajo/decimos-y-fondos-de-reserva',
-  title: 'Décimos, fondos de reserva y vacaciones en Ecuador: cuánto te toca y cuándo se cobra',
+  title: 'Décimos y fondos de reserva Ecuador 2026: cuánto te toca',
   description:
-    'Calcula el décimo tercero, el décimo cuarto según tu región (Costa e Insular hasta el 15 de marzo, Sierra y Amazonía hasta el 15 de agosto), los fondos de reserva del 8,33% y las vacaciones del art. 69, con el SBU vigente.',
+    'Calculá el décimo tercero y décimo cuarto sueldo en Ecuador 2026 por región, los fondos de reserva del 8,33% y tus vacaciones, con el SBU vigente.',
   silo: 'Trabajo',
   siloHref: '/ec/trabajo',
   locale: 'ec',
@@ -280,5 +280,5 @@ export const hub: HubData = {
     '/ec/calculadora-vacaciones-ecuador',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

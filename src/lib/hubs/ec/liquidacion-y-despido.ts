@@ -36,15 +36,15 @@ const usd = (n: number) =>
 
 export const hub: HubData = {
   slug: 'ec/trabajo/liquidacion-y-despido',
-  title: 'Liquidación y despido en Ecuador: cuánto te tienen que pagar al salir',
+  title: 'Liquidación por despido en Ecuador 2026: cuánto te deben',
   description:
-    'Calcula tu finiquito en Ecuador según cómo salgas: renuncia, despido intempestivo (art. 188), visto bueno o desahucio (art. 185). Incluye décimos proporcionales, vacaciones no gozadas, indemnización, bonificación y el fondo de cesantía del IESS.',
+    'Calculá tu liquidación en Ecuador 2026: despido intempestivo, visto bueno o desahucio, décimos proporcionales, vacaciones e indemnización del art. 188.',
   silo: 'Trabajo',
   siloHref: '/ec/trabajo',
   locale: 'ec',
 
   eyebrow: 'Ecuador · fin de la relación laboral · Código del Trabajo',
-  h1: 'Salgo de la empresa: ¿cuánto me tienen que liquidar?',
+  h1: 'Salgo de la empresa en Ecuador: ¿cuánto me tienen que liquidar?',
   lede:
     'Todos los que se van cobran lo mismo por un lado —los décimos proporcionales y las vacaciones que no gozaron— y muy distinto por el otro. Lo que cambia el número final es la causa de la salida: si renunciaste, si te despidieron sin causa, si hubo visto bueno o si alguna de las partes notificó el desahucio. Y aparte de todo eso está tu fondo de cesantía en el IESS, que no lo paga la empresa.',
   stamps: [
@@ -283,5 +283,5 @@ export const hub: HubData = {
     '/ec/calculadora-antiguedad-laboral-ecuador',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

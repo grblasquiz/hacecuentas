@@ -45,15 +45,15 @@ const dop = (n: number) => 'RD$ ' + Math.round(n).toLocaleString('de-DE');
 
 export const hub: HubData = {
   slug: 'do/trabajo/sueldo-neto',
-  title: 'Sueldo neto República Dominicana: cuánto te queda después de TSS e ISR',
+  title: 'Sueldo neto República Dominicana 2026: TSS e ISR',
   description:
-    'Calculá tu salario neto en RD$: descuentos de AFP 2,87% y SFS 3,04%, retención de ISR por la escala de la DGII, valor de la hora, horas extra al 35% y recargo nocturno del 15%.',
+    'Calculá tu salario neto en RD$ 2026: AFP 2,87%, SFS 3,04%, retención de ISR por la escala de la DGII, horas extra al 35% y recargo nocturno del 15%.',
   silo: 'Trabajo',
   siloHref: '/do/trabajo',
   locale: 'do',
 
   eyebrow: 'República Dominicana · TSS y DGII · nómina',
-  h1: 'De tu salario bruto a lo que cobrás en mano.',
+  h1: 'De tu salario bruto en República Dominicana a lo que cobrás en mano.',
   lede:
     'Una sola cuenta con todo lo que mueve tu boleta: los descuentos de la TSS (AFP y SFS), la retención del ISR según la escala de la DGII, el valor de tu hora con el divisor de nómina dominicano y lo que suman las horas extra y la nocturnidad.',
   stamps: [
@@ -291,5 +291,5 @@ export const hub: HubData = {
     '/do/calculadora-dias-laborables-feriados-republica-dominicana',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

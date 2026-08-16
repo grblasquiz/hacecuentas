@@ -25,15 +25,15 @@ const dop = (n: number) => 'RD$ ' + Math.round(n).toLocaleString('de-DE');
 
 export const hub: HubData = {
   slug: 'do/trabajo/regalia-y-bonificacion',
-  title: 'Regalía pascual y bonificación República Dominicana: cuánto te toca',
+  title: 'Regalía pascual 2026 República Dominicana: cuánto te toca',
   description:
-    'Calculá tu regalía pascual (doble sueldo de Navidad) completa o proporcional y el tope de tu bonificación por participación en los beneficios, con los arts. 219 y 223 del Código de Trabajo.',
+    'Calculá tu regalía pascual 2026 (doble sueldo) completa o proporcional y el tope de tu bonificación en República Dominicana, según el Código de Trabajo.',
   silo: 'Trabajo',
   siloHref: '/do/trabajo',
   locale: 'do',
 
   eyebrow: 'República Dominicana · arts. 219 y 223 · Ley 16-92',
-  h1: 'Lo que cobrás además del sueldo: regalía y bonificación.',
+  h1: 'Lo que cobrás además del sueldo en República Dominicana: regalía y bonificación.',
   lede:
     'La regalía pascual es un derecho de todos y se paga antes del 20 de diciembre; la bonificación depende de que la empresa haya tenido utilidades y tiene un tope en días de salario. Acá salen las dos cuentas juntas, con sus topes y sus plazos.',
   stamps: [
@@ -280,5 +280,5 @@ export const hub: HubData = {
     '/do/calculadora-bonificacion-republica-dominicana',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

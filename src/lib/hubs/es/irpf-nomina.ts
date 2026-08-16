@@ -24,14 +24,14 @@ const DISCLAIMER_FISCAL =
 
 export const hub: HubData = {
   slug: 'es/impuestos/irpf-nomina',
-  title: 'Calculadora IRPF 2026 España: retención y sueldo neto',
+  title: 'Cálculo IRPF 2026: cuánto te retienen en la nómina, España',
   description:
-    'Calcula la retención de IRPF 2026 de tu nómina con el algoritmo de la AEAT, tu comunidad y situación familiar. Estima sueldo neto y resultado de Renta.',
+    'Cálculo de la retención de IRPF 2026 de tu nómina con el algoritmo de la AEAT, la escala autonómica de tu comunidad y tu situación familiar, en España.',
   silo: 'Impuestos',
   siloHref: '/es/impuestos',
 
   eyebrow: 'Guía y estimación fiscal',
-  h1: 'Calculadora IRPF 2026: ¿cuánto te retienen y cuánto te queda neto?',
+  h1: 'De tu sueldo bruto en España, ¿cuánto te retienen de IRPF y cuánto te queda?',
   lede:
     'El IRPF español se paga a medias entre el Estado y tu comunidad autónoma: la escala estatal es igual para todos y la autonómica cambia según dónde tengas la residencia habitual. Encima, lo que te descuentan cada mes no es el impuesto final, sino un anticipo que la empresa calcula con el algoritmo de retenciones. De la diferencia entre ambas cosas sale que la declaración te salga a devolver o a pagar.',
   stamps: [
@@ -289,7 +289,7 @@ export const hub: HubData = {
     '/trabajo/sueldo-neto-espana',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
   audience: 'global',
   locale: 'es',
 };

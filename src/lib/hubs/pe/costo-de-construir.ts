@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'pe/hogar/costo-de-construir',
-  title: "¿Cuánto cuesta construir mi casa? | Hacé Cuentas",
-  description: "Hub de decisión con 1 cálculos: Calculadora de Costo de Construcción por m² 2026.",
+  title: "Cuánto cuesta construir una casa en Perú 2026: costo por m2",
+  description: "Calculadora de costo de construcción por m² 2026: estimá cuánto cuesta construir tu casa en el Perú y armá el presupuesto antes de empezar la obra.",
   silo: "Construir en Perú",
   siloHref: '/pe/hogar',
   locale: 'pe',
   eyebrow: "Perú · Construir en Perú",
-  h1: "¿Cuánto cuesta construir mi casa?",
+  h1: "¿Cuánto cuesta construir mi casa en el Perú?",
   lede: "Elige tu caso y completa sólo sus campos. Este hub conserva la fórmula original y reúne la decisión en una sola página.",
   stamps: ['1 calculadoras adentro', 'Fórmulas originales reutilizadas', 'Revisado el 28/07/2026'],
   resultLabel: "Tu resultado",
@@ -121,5 +121,5 @@ export const hub: HubData = {
   replaces: [
     '/pe/calculadora-costo-construccion-m2-peru', // Absorbida como caso calculable con formulaId costo-construccion-m2-peru.
   ],
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };

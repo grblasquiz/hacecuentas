@@ -2,13 +2,13 @@ import type { HubData } from '../types';
 
 export const hub: HubData = {
   slug: 'impuestos/residencia-fiscal-nomadas-digitales',
-  title: 'Residencia fiscal para nómadas digitales | Días y países',
-  description: 'Organiza tus días, compara umbrales de residencia fiscal y estima la diferencia de impuestos sobre ingresos del exterior antes de consultar a un profesional.',
+  title: 'Residencia fiscal para nómadas digitales: regla de 183 días',
+  description: 'Ordená tus días de viaje, compará umbrales de residencia fiscal por país —como la regla de 183 días— y estimá impuestos sobre ingresos del exterior.',
   silo: 'Impuestos',
   siloHref: '/impuestos',
   eyebrow: 'Nómadas digitales · días · residencia fiscal',
-  h1: 'Residencia fiscal para nómadas digitales',
-  lede: 'La cantidad de días importa, pero no es lo único. Ordena tus viajes, prueba el umbral que estás investigando y mira cómo cambia la cuenta si dos países reclaman tu residencia.',
+  h1: 'Residencia fiscal para nómadas digitales: ¿dónde pago impuestos?',
+  lede: 'La cantidad de días importa, pero no es lo único. Ordená tus viajes, probá el umbral que estás investigando y mirá cómo cambia la cuenta si dos países reclaman tu residencia.',
   stamps: ['Pantalla de planificación', 'Umbrales editables', '7 cálculos dentro'],
   resultLabel: 'Resultado de tu prueba de residencia',
   cases: {
@@ -54,6 +54,6 @@ export const hub: HubData = {
     { name: 'Modelo de convenio tributario', url: 'https://www.oecd.org/content/dam/oecd/en/publications/reports/2017/12/model-tax-convention-on-income-and-on-capital-condensed-version-2017_g1g8769b/mtc_cond-2017-en.pdf', publisher: 'OECD' },
   ],
   replaces: [],
-  lastReviewed: '2026-08-09',
+  lastReviewed: '2026-08-16',
   audience: 'AR',
 };

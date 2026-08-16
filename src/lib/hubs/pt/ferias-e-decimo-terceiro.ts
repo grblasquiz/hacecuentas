@@ -42,9 +42,9 @@ const brl = (n: number) =>
 
 export const hub: HubData = {
   slug: 'pt/trabalho/ferias-e-decimo-terceiro',
-  title: 'Férias e 13º salário: quanto vou receber e quando cai?',
+  title: 'Férias e 13º salário 2026: quanto vou receber e quando cai',
   description:
-    'Calcule as férias com o 1/3 constitucional, o abono pecuniário da venda de 10 dias, os descontos de INSS e IRRF, as duas parcelas do 13º salário e o recesso proporcional do estagiário.',
+    'Calcule as férias com o 1/3 constitucional, o abono da venda de 10 dias, os descontos de INSS e IRRF e as duas parcelas do 13º salário em 2026.',
   silo: 'Trabalho',
   siloHref: '/pt/trabalho',
   locale: 'pt',
@@ -333,5 +333,5 @@ export const hub: HubData = {
     '/pt/recesso-estagio-proporcional-dias',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-08-16',
 };
