@@ -40,6 +40,41 @@
         var title = control.getAttribute('title');
         if (title) control.setAttribute('aria-label', title);
       });
+
+      // Los hubs anteriores al componente Calculator no siempre tienen una
+      // región viva. Agregamos un anunciador dedicado (sin tocar el resultado
+      // visual) y lo actualizamos sólo después de una interacción real.
+      if (document.body && document.body.dataset.pageType === 'hub') {
+        var roots = scope.querySelectorAll('form.calc, form.calculator, form.lab, form.calc-shell, form.imc-calculator, [data-calculator], .hcm');
+        roots.forEach(function (calculator) {
+          if (calculator.querySelector('[data-sr-announce], [data-hc-hub-announcer]')) return;
+          var result = calculator.querySelector('[data-result], .result, #result, output, .breakdown, .result-box');
+          if (!result || result.hasAttribute('aria-live')) return;
+
+          var announcer = document.createElement('div');
+          announcer.className = 'hc-sr-only';
+          announcer.setAttribute('role', 'status');
+          announcer.setAttribute('aria-live', 'polite');
+          announcer.setAttribute('aria-atomic', 'true');
+          announcer.setAttribute('data-hc-hub-announcer', '');
+          calculator.appendChild(announcer);
+
+          var interacted = false;
+          var timer = 0;
+          calculator.addEventListener('input', function () { interacted = true; }, { capture: true });
+          calculator.addEventListener('click', function (event) {
+            if (event.target && event.target.closest && event.target.closest('button, [role="button"]')) interacted = true;
+          }, { capture: true });
+          new MutationObserver(function () {
+            if (!interacted) return;
+            window.clearTimeout(timer);
+            timer = window.setTimeout(function () {
+              var text = (result.innerText || result.textContent || '').replace(/\s+/g, ' ').trim();
+              if (text && text !== announcer.textContent) announcer.textContent = text.slice(0, 320);
+            }, 180);
+          }).observe(result, { childList: true, characterData: true, subtree: true });
+        });
+      }
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { enhance(document); }, { once: true });
@@ -114,6 +149,55 @@
     text-decoration: underline;
     text-decoration-thickness: 0.08em;
     text-underline-offset: 0.15em;
+  }
+
+  /* Fase 3: los módulos posteriores al cálculo se conservan en el árbol de
+     accesibilidad, pero el browser posterga su layout/paint hasta acercarse al
+     viewport. La geometría intrínseca evita saltos durante el scroll. */
+  @supports (content-visibility: auto) {
+    body[data-page-type="hub"] main :where(
+      .editorial-trust,
+      .hc-trust-card,
+      .hub-children,
+      .hub-interlinking
+    ) {
+      content-visibility: auto;
+      contain-intrinsic-size: auto 520px;
+    }
+  }
+
+  body[data-page-type="hub"] main :where(
+    .editorial-trust,
+    .hc-trust-card,
+    .hub-children,
+    .hub-interlinking
+  ) a:not([class*="button"]):not([class*="btn"]) {
+    text-decoration: underline;
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.15em;
+  }
+
+  .hc-sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body[data-page-type="hub"] main *,
+    body[data-page-type="hub"] main *::before,
+    body[data-page-type="hub"] main *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
   /* CTA compartido de las experiencias generadas: blanco ≥4.5:1. */
