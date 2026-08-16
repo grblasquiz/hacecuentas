@@ -24,5 +24,8 @@ describe('core accessibility baseline', () => {
     expect(baseline).toContain('font-size: 0.75rem !important');
     expect(baseline).toContain('background-color: #78480b !important');
     expect(layout).toContain('<AccessibilityBaseline />');
+    expect(baseline).toContain('.result-box :where(small, span)');
+    expect(baseline).toContain('.moments .section-title p');
+    expect(baseline).toContain('text-decoration: underline');
   });
 });
