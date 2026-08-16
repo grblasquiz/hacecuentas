@@ -2,7 +2,7 @@ import type { HubData } from './types';
 
 export const hub: HubData = {
   slug: 'trabajo/indemnizacion-por-despido',
-  title: 'Calculadora de indemnización por despido Argentina 2026',
+  title: 'Indemnización por despido 2026: cuánto te corresponde',
   description:
     'Calculá tu indemnización por despido y liquidación final en Argentina. Antigüedad, preaviso, integración, aguinaldo y vacaciones, con ley vigente.',
   silo: 'Trabajo',

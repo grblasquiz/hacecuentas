@@ -267,7 +267,7 @@ const nAr = (v: number, d = 2) => v.toLocaleString('es-AR', { maximumFractionDig
 
 export const hub: HubData = {
   slug: 'eventos/logistica',
-  title: '¿Cuántas mesas, sillas y meseros necesito para la fiesta?',
+  title: 'Logística de eventos: mesas, sillas, meseros y playlist',
   description:
     'Calculá mesas, sillas, mozos, vajilla, cotillón, globos, invitaciones, souvenirs y canciones para tu evento. Cumpleaños, casamiento, cumple infantil, cóctel, asado en casa y karaoke, en una sola lista.',
   silo: 'Eventos',

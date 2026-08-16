@@ -17,7 +17,7 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'inversiones/interes-compuesto',
-  title: 'Calculadora de interés compuesto y conversor TNA a TEA y TEM',
+  title: 'Interés compuesto: calculadora con aportes, TNA y TEA',
   description:
     'Calculá cuánto vale tu inversión dentro de X años con aportes mensuales, cuánto tarda en duplicarse por la regla del 72, cuál de dos tasas conviene y cómo pasar de TNA a TEM y TEA. Con el desglose entre capital aportado e interés ganado.',
   silo: 'Inversiones',
