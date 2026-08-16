@@ -289,7 +289,7 @@ export const hub: HubData = {
     '/calculadora-contrato-alquiler-2-anios-vs-3-anios',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-08-16',
   audience: 'AR',
 };
 

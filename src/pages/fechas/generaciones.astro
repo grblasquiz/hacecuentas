@@ -19,7 +19,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import GeneracionesExperience from '../../components/GeneracionesExperience.astro';
+import GeneracionesExperience from '../../components/GeneracionesCompleteExperience.astro';
 import {
   hub,
   ANIO_ACTUAL,
@@ -31,13 +31,16 @@ import {
 } from '../../lib/hubs/generaciones';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const visibleFaq = hub.faq.filter((f) =>
+  !/esperanza de vida|horas|planeta|marte|mercurio/i.test(`${f.q} ${f.a}`),
+);
 
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': 'FAQPage',
-      mainEntity: hub.faq.map((f) => ({
+      mainEntity: visibleFaq.map((f) => ({
         '@type': 'Question',
         name: f.q,
         acceptedAnswer: { '@type': 'Answer', text: f.a },

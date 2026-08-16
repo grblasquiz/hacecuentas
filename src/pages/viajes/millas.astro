@@ -50,7 +50,39 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
+  <aside class="miles-caveat" aria-label="Alcance de las referencias de millas">
+    <strong>Primero mirá el precio real de tu programa.</strong>
+    Las tablas son referencias orientativas y no definen un origen universal: ingresá las millas que te pide la web para tu ruta, fecha y cabina. La herramienta compara ese valor con el pasaje en efectivo; no garantiza disponibilidad ni precio.
+  </aside>
   <MillasExperience data={hub} />
   <Footer />
 </Layout>
 
+<script>
+  const improveMilesResult = () => {
+    const root = document.querySelector('.mockup-millas');
+    if (!root) return;
+    const route = root.querySelector('#ticket-route');
+    if (route) route.textContent = route.textContent?.replace(/^EZE\s*→/, 'TU ORIGEN →') || '';
+    const verdict = root.querySelector('#verdict');
+    if (verdict) {
+      verdict.textContent = verdict.textContent === 'Buen canje'
+        ? 'Supera tu referencia'
+        : 'Queda bajo tu referencia';
+    }
+    const result = root.querySelector('.result');
+    result?.setAttribute('aria-live', 'polite');
+    root.querySelectorAll('.switch').forEach((button) => {
+      button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
+    });
+  };
+  improveMilesResult();
+  document.querySelector('.mockup-millas')?.addEventListener('click', () => queueMicrotask(improveMilesResult));
+  document.querySelector('.mockup-millas')?.addEventListener('input', () => queueMicrotask(improveMilesResult));
+</script>
+
+<style>
+  .miles-caveat{max-width:1160px;margin:20px auto 0;padding:14px 18px;border:1px solid #b9d9e9;border-radius:12px;background:#f1f8fc;color:#29475d;line-height:1.55}
+  .miles-caveat strong{display:block;color:#143650}
+  @media(max-width:800px){.miles-caveat{margin:14px 14px 0}}
+</style>

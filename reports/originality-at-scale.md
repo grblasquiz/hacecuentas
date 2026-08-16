@@ -3,7 +3,7 @@
 Score heurístico: **10.0/10**
 
 Superficies: 490 hubs, 295 posts, 41 JSON editoriales y 803 rutas Astro.
-Bloqueos: 0 · advertencias: 82 · URLs duplicadas en sitemaps indexables: 0.
+Bloqueos: 0 · advertencias: 81 · URLs duplicadas en sitemaps indexables: 0.
 
 ## Primeras acciones
 
@@ -57,7 +57,6 @@ Bloqueos: 0 · advertencias: 82 · URLs duplicadas en sitemaps indexables: 0.
 - blog /blog/impuestos-del-que-factura-guia-2026: P1:sin-fuente-visible
 - blog /blog/impuestos-personales-patrimonio-compras-2026: P1:sin-fuente-visible
 - blog /blog/inflacion-julio-2026-cuanto-perdiste: P1:sin-fuente-visible
-- blog /blog/informe-financiero-argentina-2026-08: P1:sin-fuente-visible
 - blog /blog/ingresos-brutos-diferencia-entre-facturacion-base-y-saldo: P1:menos-de-300-palabras
 - blog /blog/ingresos-brutos-para-servicios-como-ordenar-una-primera-estimacion: P1:menos-de-300-palabras
 - blog /blog/mantenimiento-hogar-cuentas-mensuales-2026: P1:sin-fuente-visible
