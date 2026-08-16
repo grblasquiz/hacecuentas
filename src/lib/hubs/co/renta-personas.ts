@@ -72,15 +72,15 @@ const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
 
 export const hub: HubData = {
   slug: 'co/impuestos/renta-personas',
-  title: 'Renta personas naturales Colombia 2026: tabla UVT y topes',
+  title: 'Declaración de renta 2025 Colombia: topes y fechas 2026',
   description:
-    'Tabla del impuesto de renta para personas naturales en Colombia 2026, en UVT: verificá si estás obligado a declarar, cuándo vence según tu cédula y cuánto te toca pagar con los topes del art. 592, el límite del 40% del art. 336 y la tabla del art. 241 del Estatuto Tributario.',
+    'Revisa si debes declarar renta 2025 en Colombia, consulta la fecha exacta de 2026 por NIT y estima el impuesto con UVT, topes DIAN y tabla del artículo 241.',
   silo: 'Impuestos',
   siloHref: '/co/impuestos',
   locale: 'co',
 
   eyebrow: 'Colombia · DIAN · persona natural',
-  h1: 'Declaración de renta de personas naturales Colombia 2026: la tabla, si te toca, cuándo vence y cuánto pagás.',
+  h1: 'Declaración de renta 2025 en Colombia: topes, fecha y cálculo',
   lede:
     'Una sola cuenta responde las tres preguntas. Con tus ingresos del año, tus aportes y beneficios, la calculadora depura la base, la pasa por la tabla del art. 241 y la cruza con los topes del art. 592 y el calendario de la DIAN.',
   stamps: [
@@ -263,7 +263,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Desde qué monto se empieza a pagar impuesto?',
-      a: `El primer tramo del art. 241 va de 0 a ${TABLA_241[1].desde.toLocaleString('es-CO')} UVT con tarifa del 0%. Con la UVT vigente eso son unos ${cop(TABLA_241[1].desde * UVT)} de renta líquida gravable al año. Ojo: es renta gravable, no ingreso. Alguien puede facturar bastante más y no pagar nada porque los aportes, el 25% exento y las deducciones bajan la base por debajo del piso.`,
+      a: `El primer tramo del art. 241 va de 0 a ${TABLA_241[1].desde.toLocaleString('es-CO')} UVT con tarifa del 0%. Para el año gravable 2025 son unos ${cop(TABLA_241[1].desde * UVT_DECLARA)} de renta líquida gravable al año. Ojo: es renta gravable, no ingreso bruto.`,
     },
     {
       q: '¿Cuál es la tabla del impuesto de renta para personas naturales en Colombia 2026 (art. 241, en UVT)?',
@@ -271,11 +271,11 @@ export const hub: HubData = {
     },
     {
       q: '¿Por qué mis deducciones no se restan completas?',
-      a: `Por el límite global del art. 336 del Estatuto Tributario: la suma de deducciones y rentas exentas de la cédula general no puede superar el 40% de la renta líquida ni las ${LIMITE_336.topeUvt.toLocaleString('es-CO')} UVT anuales (${cop(LIMITE_336.topeUvt * UVT)}). Se aplica el menor de los dos. Todo lo que pase de ahí se recorta, exactamente como lo hace el formulario 210. Por eso a los ingresos altos la medicina prepagada o el AFC muchas veces ya no les mueve la aguja: el tope de 1.340 UVT muerde antes que el 40%.`,
+      a: `Por el límite global del art. 336 del Estatuto Tributario: la suma de deducciones y rentas exentas de la cédula general no puede superar el 40% de la renta líquida ni las ${LIMITE_336.topeUvt.toLocaleString('es-CO')} UVT anuales (${cop(LIMITE_336.topeUvt * UVT_DECLARA)} para 2025). Se aplica el menor de los dos, sin perjuicio de tratamientos que deban revisarse por separado.`,
     },
     {
       q: '¿Cuánto puedo deducir por dependientes?',
-      a: `${DEPENDIENTES.uvtCadaUno} UVT al año por cada dependiente (${cop(DEPENDIENTES.uvtCadaUno * UVT)}), hasta un máximo de ${DEPENDIENTES.maximo} dependientes, según el parágrafo 5 del art. 336 que introdujo la Ley 2277 de 2022. Es distinto de la deducción que te aplican en la retención mensual, que va por el art. 387 y se calcula como el 10% del ingreso laboral con tope de 32 UVT al mes. Son dos reglas diferentes: una es para la retención, la otra para la declaración anual.`,
+      a: `${DEPENDIENTES.uvtCadaUno} UVT al año por cada dependiente (${cop(DEPENDIENTES.uvtCadaUno * UVT_DECLARA)} para 2025), hasta un máximo de ${DEPENDIENTES.maximo} dependientes, según el parágrafo 5 del art. 336. Es distinto de la deducción usada en la retención mensual del art. 387.`,
     },
     {
       q: '¿La retención en la fuente es un impuesto aparte?',
@@ -308,27 +308,32 @@ export const hub: HubData = {
     },
     {
       name: 'Estatuto Tributario, art. 241 — tarifa para personas naturales residentes',
-      url: 'https://estatuto.co/241',
-      publisher: 'Estatuto Tributario Nacional',
+      url: 'https://normograma.dian.gov.co/dian/compilacion/docs/estatuto_tributario.htm#241',
+      publisher: 'Normograma DIAN',
     },
     {
       name: 'Estatuto Tributario, art. 336 — renta líquida gravable de la cédula general y límite del 40%',
-      url: 'https://estatuto.co/336',
-      publisher: 'Estatuto Tributario Nacional',
+      url: 'https://normograma.dian.gov.co/dian/compilacion/docs/estatuto_tributario.htm#336',
+      publisher: 'Normograma DIAN',
     },
     {
       name: 'Estatuto Tributario, art. 592 — quiénes no están obligados a declarar',
-      url: 'https://estatuto.co/592',
-      publisher: 'Estatuto Tributario Nacional',
+      url: 'https://normograma.dian.gov.co/dian/compilacion/docs/estatuto_tributario.htm#592',
+      publisher: 'Normograma DIAN',
     },
     {
       name: 'Estatuto Tributario, art. 206 — rentas de trabajo exentas y exención de pensiones',
-      url: 'https://estatuto.co/206',
-      publisher: 'Estatuto Tributario Nacional',
+      url: 'https://normograma.dian.gov.co/dian/compilacion/docs/estatuto_tributario.htm#206',
+      publisher: 'Normograma DIAN',
     },
     {
       name: 'DIAN — Declaración de renta de personas naturales',
-      url: 'https://www.dian.gov.co/impuestos/personas/Paginas/default.aspx',
+      url: 'https://micrositios.dian.gov.co/renta-personas-naturales-ag-2025/',
+      publisher: 'DIAN',
+    },
+    {
+      name: 'DIAN — Calendario tributario 2026',
+      url: 'https://www.dian.gov.co/Calendarios/Calendario_Tributario_2026.pdf',
       publisher: 'DIAN',
     },
   ],
@@ -353,5 +358,5 @@ export const hub: HubData = {
     '/co/calculadora-cripto-colombia-impuestos-renta-trader-2026',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-16',
 };

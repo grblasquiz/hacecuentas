@@ -13,7 +13,6 @@ import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import RentaPersonasColombiaExperience from '../../../components/generated/RentaPersonasColombiaExperience.astro';
-import TopPagesBoost from '../../../components/TopPagesBoost.astro';
 import {
   hub,
   UVT,
@@ -28,6 +27,21 @@ import {
 } from '../../../lib/hubs/co/renta-personas';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const calculatorConfig = {
+  uvt: UVT_DECLARA,
+  table: TABLA_241,
+  limits: {
+    income: TOPES_DECLARAR.topeIngresosUvt * UVT_DECLARA,
+    assets: TOPES_DECLARAR.topePatrimonioUvt * UVT_DECLARA,
+    card: TOPES_DECLARAR.topeConsumosTarjetaUvt * UVT_DECLARA,
+    purchases: TOPES_DECLARAR.topeComprasUvt * UVT_DECLARA,
+    deposits: TOPES_DECLARAR.topeConsignacionesUvt * UVT_DECLARA,
+  },
+  dueDates: VENCIMIENTOS,
+  exempt25CapUvt: EXENTA_LABORAL.topeAnualUvt,
+  globalCapUvt: LIMITE_336.topeUvt,
+  dependentUvt: DEPENDIENTES.uvtCadaUno,
+};
 
 const schema = {
   '@context': 'https://schema.org',
@@ -48,7 +62,7 @@ const schema = {
         { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
       ],
     },
-    { '@type': 'WebApplication', name: hub.title, url: CANONICAL, applicationCategory: 'FinanceApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'COP' }, dateModified: '2026-08-04' },
+    { '@type': 'WebApplication', name: hub.title, url: `${CANONICAL}#calculadora`, applicationCategory: 'FinanceApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: '0', priceCurrency: 'COP' }, dateModified: '2026-08-16' },
   ],
 };
 ---
@@ -62,9 +76,12 @@ const schema = {
   lang="es"
   ogType="article"
   articleSection={hub.silo}
+  articleAuthor="Martín Rodríguez"
+  articlePublished="2026-08-04"
+  articleModified="2026-08-16"
+  suppressAutoEnhancements={true}
 >
-  <Header />
-  <RentaPersonasColombiaExperience data={hub} />
-  <TopPagesBoost variant="renta-co" />
-  <Footer />
+  <Header slot="header" />
+  <RentaPersonasColombiaExperience data={hub} config={calculatorConfig} />
+  <Footer slot="footer" />
 </Layout>
