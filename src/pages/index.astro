@@ -16,25 +16,6 @@ const popular = [
   { href: '/jubilacion', group: 'Jubilación', title: '¿Cuándo y con cuánto me jubilo?', desc: 'Edad, aportes y próximos pasos.', icon: '◷', color: 'navy' },
 ];
 
-const tierOne = [
-  ['/trabajo/sueldo-bruto-y-neto', 'Entender mi sueldo'],
-  ['/trabajo/indemnizacion-por-despido', 'Me despidieron'],
-  ['/trabajo/aguinaldo', 'Cobrar el aguinaldo'],
-  ['/alquiler/aumento-de-alquiler', 'Revisar mi alquiler'],
-  ['/alquiler/entrar-a-un-alquiler', 'Entrar a un alquiler'],
-  ['/finanzas-personales/salir-de-deudas', 'Salir de deudas'],
-  ['/finanzas-personales/prestamo', 'Evaluar un préstamo'],
-  ['/inversiones/plazo-fijo', 'Comparar inversiones'],
-  ['/impuestos/monotributo', 'Resolver monotributo'],
-  ['/jubilacion', 'Planificar mi jubilación'],
-  ['/auto/costo-anual', 'Decidir sobre el auto'],
-  ['/vivienda/gastos-de-escritura', 'Comprar una vivienda'],
-  ['/construccion/costo-por-m2', 'Construir o refaccionar'],
-  ['/familia/costo-de-un-bebe', 'Prepararme para un bebé'],
-  ['/salud/peso-ideal-imc', 'Entender mi peso e IMC'],
-  ['/eventos', 'Organizar un evento'],
-];
-
 const moments = [
   {
     class: 'work', number: '01', title: 'Cambió mi trabajo',
@@ -90,7 +71,7 @@ const moments = [
 
 const live = [
   { href: '/futbol-hoy', tag: 'EN VIVO', title: 'Fútbol hoy en 14 países', meta: 'Partidos, resultados y tablas por país', color: 'navy' },
-  { href: '/recategorizacion-monotributo-julio-2026', tag: 'VENCE 5/8', title: 'Recategorización Monotributo', meta: 'Nueva escala y guía para decidir', color: 'green' },
+  { href: '/recategorizacion-monotributo-julio-2026', tag: 'GUÍA 2026', title: 'Recategorización Monotributo', meta: 'Nueva escala y guía para revisar tu categoría', color: 'green' },
   { href: '/valores-bcra', tag: 'HOY', title: 'Dólar, UVA e inflación', meta: 'Datos económicos diarios', color: 'blue' },
   { href: '/fechas/feriados', tag: 'CALENDARIO', title: 'Feriados de Argentina', meta: 'Días hábiles y próximos feriados', color: 'yellow' },
 ];
@@ -141,11 +122,12 @@ const schema = {
   <Header slot="header" />
 
   <div class="hc-home">
-    <main class="hero">
+    <div class="hero">
       <div class="hero-copy">
         <span class="hero-label">UNA PREGUNTA. LA CUENTA COMPLETA.</span>
         <h1>No adivines.<br /><em>Hacé cuentas.</em></h1>
         <p>Respuestas para decisiones reales de plata, trabajo, salud y vida cotidiana. Con la norma aplicada, la fuente y la fecha del dato.</p>
+        <p class="hero-proof"><strong>Más de 600 calculadoras y guías gratuitas</strong> para resolver una cuenta y entender qué hacer después.</p>
 
         <form class="search" id="hub-search" role="search" action="/buscar" method="get">
           <label for="home-query">¿Qué necesitás resolver?</label>
@@ -155,7 +137,16 @@ const schema = {
             <button type="submit">Encontrar respuesta <span>→</span></button>
           </div>
           <div class="search-results" id="hub-results" role="listbox" aria-label="Resultados de búsqueda" aria-live="polite" hidden></div>
+          <p class="search-status" id="hub-search-status" role="status" aria-live="polite"></p>
         </form>
+
+        <nav class="quick-searches" aria-label="Búsquedas frecuentes">
+          <span>Probá con:</span>
+          <button type="button" data-query="sueldo neto">Sueldo neto</button>
+          <button type="button" data-query="monotributo">Monotributo</button>
+          <button type="button" data-query="aumento alquiler">Alquiler</button>
+          <button type="button" data-query="indemnización">Indemnización</button>
+        </nav>
 
         <div class="hero-trust">
           <span><i>✓</i> Gratis</span>
@@ -164,16 +155,16 @@ const schema = {
         </div>
       </div>
 
-    </main>
+    </div>
 
     <section class="popular wrap" aria-labelledby="popular-title">
       <div class="section-title">
-        <div><span>MÁS RESUELTAS</span><h2 id="popular-title">Empezá por una pregunta.</h2></div>
-        <p>Las decisiones que más personas resolvieron en los últimos 90 días.</p>
+        <div><span>PARA EMPEZAR</span><h2 id="popular-title">Empezá por una pregunta.</h2></div>
+        <p>Seis decisiones frecuentes para llegar rápido a la cuenta que necesitás.</p>
       </div>
       <div class="popular-grid">
         {popular.map((item) => (
-          <a class:list={['popular-card', `popular-card--${item.color}`]} href={item.href}>
+          <a class:list={['popular-card', `popular-card--${item.color}`]} href={item.href} data-home-section="popular">
             <div class="popular-icon">{item.icon}</div>
             <div><span>{item.group}</span><h3>{item.title}</h3><p>{item.desc}</p></div>
             <b aria-hidden="true">↗</b>
@@ -195,21 +186,11 @@ const schema = {
               <h3>{item.title}</h3>
               <p>{item.desc}</p>
               <ul>{item.links.map(([href, label]) => <li><a href={href}>{label}<span>→</span></a></li>)}</ul>
-              <a class="moment-cta" href={item.href}>{item.cta} <span>↗</span></a>
+              <a class="moment-cta" href={item.href} data-home-section="moment">{item.cta} <span>↗</span></a>
             </article>
           ))}
         </div>
       </div>
-    </section>
-
-    <section class="tier-one wrap" aria-labelledby="tier-one-title">
-      <div class="section-title">
-        <div><span>DECISIONES PRIORITARIAS</span><h2 id="tier-one-title">Llegá directo a lo que necesitás resolver.</h2></div>
-        <p>Los hubs que concentran las decisiones más importantes, enlazados directamente desde el inicio.</p>
-      </div>
-      <nav aria-label="Hubs de decisión prioritarios">
-        {tierOne.map(([href, label]) => <a href={href}>{label}<span>→</span></a>)}
-      </nav>
     </section>
 
     <section class="fresh wrap" aria-labelledby="fresh-title">
@@ -219,7 +200,7 @@ const schema = {
       </div>
       <div class="fresh-grid">
         {live.map((item) => (
-          <a class:list={['fresh-card', `fresh-card--${item.color}`]} href={item.href}>
+          <a class:list={['fresh-card', `fresh-card--${item.color}`]} href={item.href} data-home-section="fresh">
             <span>{item.tag}</span><h3>{item.title}</h3><p>{item.meta}</p><b>Ver dato actualizado ↗</b>
           </a>
         ))}
@@ -249,16 +230,19 @@ const schema = {
           <p>Cada país tiene sus propias preguntas, leyes y valores. No traducimos la experiencia argentina: construimos respuestas locales.</p>
         </div>
         <div class="country-grid">
-          {countries.map(([href, flag, label]) => <a href={href}><span>{flag}</span><b>{label}</b><i>↗</i></a>)}
+          {countries.map(([href, flag, label]) => <a href={href} data-home-section="country"><span>{flag}</span><b>{label}</b><i>↗</i></a>)}
         </div>
       </div>
     </section>
 
     <section class="directory wrap" aria-labelledby="directory-title">
-      <div><span>TODAS LAS ÁREAS</span><h2 id="directory-title">Hay una respuesta para cada cuenta.</h2></div>
-      <nav aria-label="Áreas de Hacé Cuentas">
-        {silos.map(([href, label]) => <a href={href}>{label}<span>↗</span></a>)}
-      </nav>
+      <div><span>EXPLORAR</span><h2 id="directory-title">Hay una respuesta para cada cuenta.</h2></div>
+      <details>
+        <summary>Ver todas las áreas <span aria-hidden="true">↓</span></summary>
+        <nav aria-label="Áreas de Hacé Cuentas">
+          {silos.map(([href, label]) => <a href={href} data-home-section="directory">{label}<span>↗</span></a>)}
+        </nav>
+      </details>
     </section>
   </div>
 
@@ -270,12 +254,20 @@ const schema = {
       const form = document.getElementById('hub-search');
       const input = document.getElementById('home-query');
       const results = document.getElementById('hub-results');
-      if (!form || !input || !results) return;
+      const status = document.getElementById('hub-search-status');
+      if (!form || !input || !results || !status) return;
       const normalize = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char]);
+      const track = (name, params = {}) => { if (typeof window.hcTrack === 'function') window.hcTrack(name, params); };
       let fullIndex = null;
+      let loadingPromise = null;
+      let started = false;
+      let lastNoResults = '';
       const loadIndex = async () => {
         if (fullIndex) return fullIndex;
-        try {
+        if (loadingPromise) return loadingPromise;
+        status.textContent = 'Buscando entre más de 600 herramientas…';
+        loadingPromise = (async () => { try {
           const response = await fetch('/api/calcs-index.json');
           if (!response.ok) throw new Error('index');
           const data = await response.json();
@@ -283,12 +275,20 @@ const schema = {
             .filter((item) => item.locale === 'es' && (item.audience === 'AR' || item.audience === 'global'))
             .map((item) => ({ href: new URL(item.url).pathname, label: item.h1 || item.title, group: item.category || 'Calculadoras' }));
         } catch { fullIndex = []; }
+        status.textContent = '';
         return fullIndex;
+        })();
+        return loadingPromise;
+      };
+      const closeResults = () => {
+        results.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+        input.removeAttribute('aria-activedescendant');
       };
       const render = async () => {
         const query = normalize(input.value).trim();
         if (query.length < 2) {
-          results.hidden = true; results.innerHTML = ''; input.setAttribute('aria-expanded', 'false'); return [];
+          closeResults(); results.innerHTML = ''; status.textContent = ''; return [];
         }
         const remoteItems = await loadIndex();
         if (query !== normalize(input.value).trim()) return [];
@@ -299,33 +299,71 @@ const schema = {
           return terms.every((term) => text.includes(term));
         }).slice(0, 6);
         results.innerHTML = matches.length
-          ? matches.map((item) => `<a role="option" href="${item.href}"><span>${item.group}</span><b>${item.label}</b><i>→</i></a>`).join('')
-          : '<p class="search-empty">No encontramos una coincidencia. Probá con menos palabras.</p>';
+          ? matches.map((item, index) => `<a id="hub-option-${index}" role="option" aria-selected="false" data-position="${index + 1}" href="${escapeHtml(item.href)}"><span>${escapeHtml(item.group)}</span><b>${escapeHtml(item.label)}</b><i aria-hidden="true">→</i></a>`).join('')
+          : '<div class="search-empty"><b>No encontramos una coincidencia exacta.</b><span>Probá con menos palabras o buscá en todo el catálogo.</span><a href="/buscar?q=' + encodeURIComponent(input.value.trim()) + '">Ver todas las herramientas →</a></div>';
         results.hidden = false;
-        input.setAttribute('aria-expanded', matches.length ? 'true' : 'false');
+        input.setAttribute('aria-expanded', 'true');
+        status.textContent = matches.length ? `${matches.length} resultados disponibles.` : 'No encontramos coincidencias exactas.';
+        if (!matches.length && query !== lastNoResults) {
+          lastNoResults = query;
+          track('hc_search_no_results', { search_term: input.value.trim(), source_page: location.pathname });
+        }
         return matches;
       };
-      input.addEventListener('input', render);
-      input.addEventListener('focus', render);
+      const focusOption = (index) => {
+        const options = [...results.querySelectorAll('[role="option"]')];
+        if (!options.length) return;
+        const selected = (index + options.length) % options.length;
+        options.forEach((option, current) => option.setAttribute('aria-selected', current === selected ? 'true' : 'false'));
+        input.setAttribute('aria-activedescendant', options[selected].id);
+        options[selected].focus();
+      };
+      input.addEventListener('input', () => {
+        if (!started && input.value.trim()) { started = true; track('hc_search_started', { source_page: location.pathname }); }
+        render();
+      });
+      input.addEventListener('focus', () => {
+        track('hc_home_search_focus', { source_page: location.pathname });
+        loadIndex().then(() => { if (document.activeElement === input) render(); });
+      }, { once: true });
+      input.addEventListener('mouseenter', loadIndex, { once: true });
       input.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') { results.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+        if (event.key === 'Escape') closeResults();
         if (event.key === 'ArrowDown' && !results.hidden) {
-          const first = results.querySelector('a');
-          if (first) { event.preventDefault(); first.focus(); }
+          event.preventDefault(); focusOption(0);
         }
       });
       results.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') { results.hidden = true; input.focus(); input.setAttribute('aria-expanded', 'false'); }
+        const options = [...results.querySelectorAll('[role="option"]')];
+        const current = options.indexOf(document.activeElement);
+        if (event.key === 'Escape') { closeResults(); input.focus(); }
+        if (event.key === 'ArrowDown') { event.preventDefault(); focusOption(current + 1); }
+        if (event.key === 'ArrowUp') { event.preventDefault(); current <= 0 ? input.focus() : focusOption(current - 1); }
+      });
+      results.addEventListener('click', (event) => {
+        const link = event.target.closest('[role="option"]');
+        if (link) track('hc_search_result_clicked', { target_slug: link.pathname.replace(/^\//, ''), result_position: Number(link.dataset.position || 0), source_page: location.pathname });
       });
       document.addEventListener('click', (event) => {
-        if (!form.contains(event.target)) { results.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+        if (!form.contains(event.target)) closeResults();
       });
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
+        const rawQuery = input.value.trim();
+        if (!rawQuery) { status.textContent = 'Escribí una cuenta o una situación para buscar.'; input.focus(); return; }
+        track('hc_search_submitted', { search_term: rawQuery, source_page: location.pathname });
         const matches = await render();
-        if (matches.length) { event.preventDefault(); window.location.href = matches[0].href; }
-        else if (input.value.trim()) window.location.href = '/buscar?q=' + encodeURIComponent(input.value.trim());
+        if (matches.length) window.location.href = matches[0].href;
+        else window.location.href = '/buscar?q=' + encodeURIComponent(rawQuery);
       });
+      document.querySelectorAll('.quick-searches [data-query]').forEach((button) => button.addEventListener('click', () => {
+        input.value = button.dataset.query || '';
+        input.focus();
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }));
+      document.querySelectorAll('[data-home-section]').forEach((link) => link.addEventListener('click', () => {
+        track('related_click', { interaction_type: link.dataset.homeSection, target_slug: link.pathname.replace(/^\//, ''), source_page: location.pathname });
+      }));
     })();
   </script>
 </Layout>
@@ -344,6 +382,8 @@ const schema = {
   .hero h1 { margin:20px 0 24px; color:var(--navy); font-size:clamp(58px,6.3vw,86px); line-height:.93; letter-spacing:-.07em; }
   .hero h1 em { color:var(--blue); font-style:normal; }
   .hero-copy>p { max-width:720px; color:#68758a; font-size:18px; line-height:1.65; }
+  .hero-copy>.hero-proof { margin:12px 0 0; font-size:14px; line-height:1.5; }
+  .hero-proof strong { color:#34445c; }
   .search { position:relative; z-index:5; max-width:790px; margin-top:30px; }
   .search label { display:block; margin-bottom:9px; color:#34445c; font-size:13px; font-weight:700; }
   .search-box { display:grid; grid-template-columns:24px 1fr auto; align-items:center; gap:10px; padding:7px 7px 7px 17px; border:1px solid #dfe4eb; border-radius:14px; background:#fff; box-shadow:0 14px 36px rgba(34,52,80,.1); }
@@ -353,11 +393,17 @@ const schema = {
   .search-box button:hover { background:var(--blue); }
   .search-results { position:absolute; inset:calc(100% + 8px) 0 auto; padding:7px; border:1px solid var(--line); border-radius:12px; background:#fff; box-shadow:0 16px 36px rgba(28,46,75,.16); }
   .search-results :global(a) { display:grid; grid-template-columns:1fr auto; padding:10px 12px; border-radius:8px; text-decoration:none; }
-  .search-results :global(a:hover) { background:#f3f6fb; }
+  .search-results :global(a:hover), .search-results :global(a:focus), .search-results :global(a[aria-selected="true"]) { background:#f3f6fb; outline:none; }
   .search-results :global(span) { grid-column:1; color:#8590a0; font-size:10px; text-transform:uppercase; }
   .search-results :global(b) { grid-column:1; }
   .search-results :global(i) { grid-column:2; grid-row:1/3; align-self:center; font-style:normal; }
-  .search-empty { margin:0; padding:12px; color:#68758a; font-size:13px; line-height:1.45; }
+  .search-empty { display:grid; gap:5px; margin:0; padding:12px; color:#68758a; font-size:13px; line-height:1.45; }
+  .search-empty b { color:#34445c; }.search-empty a { margin-top:4px; color:var(--blue); font-weight:800; }
+  .search-status { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .quick-searches { display:flex; flex-wrap:wrap; align-items:center; gap:7px; max-width:790px; margin-top:12px; }
+  .quick-searches span { color:#7a879a; font-size:11px; font-weight:700; }
+  .quick-searches button { min-height:32px; padding:5px 10px; border:1px solid #dfe4eb; border-radius:999px; background:#fff; color:#506078; font:inherit; font-size:11px; font-weight:700; cursor:pointer; }
+  .quick-searches button:hover { border-color:#9db7ec; color:var(--blue); }
   .hero-trust { display:flex; flex-wrap:wrap; gap:18px; margin-top:21px; color:#69768a; font-size:12px; }
   .hero-trust span { display:flex; align-items:center; gap:7px; }
   .hero-trust i { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:#eaf9f3; color:var(--mint); font-style:normal; font-weight:800; }
@@ -393,12 +439,6 @@ const schema = {
   .moment-card li a { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(24,34,56,.13); color:#32445e; font-size:12px; text-decoration:none; }
   .moment-cta { position:relative; z-index:1; display:flex; justify-content:space-between; margin-top:auto; padding:12px 13px; border-radius:10px; background:rgba(255,255,255,.58); color:var(--navy); font-size:12px; font-weight:800; text-decoration:none; }
 
-  .tier-one { padding:88px 0 24px; }
-  .tier-one nav { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }
-  .tier-one nav a { display:flex; justify-content:space-between; gap:12px; align-items:center; min-height:58px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; background:#fff; color:#263b59; font-size:13px; font-weight:780; text-decoration:none; }
-  .tier-one nav a:hover { border-color:#9db7ec; color:var(--blue); transform:translateY(-1px); }
-  .tier-one nav span { color:var(--blue); }
-
   .fresh { padding:96px 0; }
   .fresh-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
   .fresh-card { min-height:230px; display:flex; flex-direction:column; padding:22px; border-radius:18px; text-decoration:none; }
@@ -427,6 +467,11 @@ const schema = {
   .country-grid i { color:#7c8796; font-style:normal; }
 
   .directory { display:grid; grid-template-columns:.7fr 1.3fr; gap:80px; padding:96px 0; }
+  .directory details { align-self:start; }
+  .directory summary { display:flex; justify-content:space-between; align-items:center; min-height:54px; padding:0 16px; border:1px solid var(--line); border-radius:12px; color:var(--navy); font-size:13px; font-weight:800; cursor:pointer; list-style:none; }
+  .directory summary::-webkit-details-marker { display:none; }
+  .directory details[open] summary { margin-bottom:12px; border-color:#aec3f1; }
+  .directory details[open] summary span { transform:rotate(180deg); }
   .directory nav { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
   .directory nav a { display:flex; justify-content:space-between; align-items:center; min-height:44px; padding:0 12px; border:1px solid var(--line); border-radius:9px; color:#344760; font-size:12px; font-weight:700; text-decoration:none; }
   .directory nav a:hover { border-color:#aec3f1; color:var(--blue); }
@@ -436,7 +481,7 @@ const schema = {
     .hero { padding-top:54px; }.hero-copy { max-width:760px; }
     .popular-grid { grid-template-columns:repeat(2,1fr); }.moment-grid { grid-template-columns:repeat(2,1fr); }
     .moment-card,.moment-card:nth-child(1),.moment-card:nth-child(2) { grid-column:span 1; }
-    .fresh-grid { grid-template-columns:repeat(2,1fr); }.tier-one nav { grid-template-columns:repeat(2,1fr); }.method,.world-grid,.directory { grid-template-columns:1fr; }
+    .fresh-grid { grid-template-columns:repeat(2,1fr); }.method,.world-grid,.directory { grid-template-columns:1fr; }
     .method { padding:55px; }.method-visual { max-width:500px; }.world-grid,.directory { gap:45px; }
   }
 
@@ -445,7 +490,7 @@ const schema = {
     .hero { min-height:0; padding:48px 0 64px; }.hero h1 { font-size:clamp(52px,16vw,68px); }
     .hero-copy>p { font-size:16px; }.search-box { grid-template-columns:22px 1fr; }.search-box button { grid-column:1/-1; width:100%; }
     .section-title { grid-template-columns:1fr; gap:16px; }.section-title h2,.method-copy h2,.world-copy h2,.directory h2 { font-size:36px; }
-    .popular { padding:70px 0; }.popular-grid,.moment-grid,.fresh-grid,.tier-one nav { grid-template-columns:1fr; }
+    .popular { padding:70px 0; }.popular-grid,.moment-grid,.fresh-grid { grid-template-columns:1fr; }
     .popular-card { min-height:180px; }.moments,.fresh,.world { padding:72px 0; }
     .moment-card { min-height:340px; }.method { width:calc(100% - 24px); padding:32px 20px; margin-bottom:70px; }
     .method-visual { min-height:330px; transform:scale(.88); transform-origin:left center; }
