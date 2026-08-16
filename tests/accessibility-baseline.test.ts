@@ -6,6 +6,7 @@ const root = join(import.meta.dirname, '..');
 const baseline = readFileSync(join(root, 'src/components/AccessibilityBaseline.astro'), 'utf8');
 const home = readFileSync(join(root, 'src/pages/index.astro'), 'utf8');
 const layout = readFileSync(join(root, 'src/layouts/Layout.astro'), 'utf8');
+const currentTools = JSON.parse(readFileSync(join(root, 'src/lib/current-tools-index.json'), 'utf8'));
 
 describe('core accessibility baseline', () => {
   it('models expandable search inputs as comboboxes', () => {
@@ -27,5 +28,14 @@ describe('core accessibility baseline', () => {
     expect(baseline).toContain('.result-box :where(small, span)');
     expect(baseline).toContain('.moments .section-title p');
     expect(baseline).toContain('text-decoration: underline');
+  });
+
+  it('applies the phase 3 baseline to the complete canonical hub catalog', () => {
+    expect(currentTools.length).toBeGreaterThanOrEqual(600);
+    expect(layout).toContain("(isRegisteredHub ? 'hub' : undefined)");
+    expect(baseline).toContain("document.body.dataset.pageType === 'hub'");
+    expect(baseline).toContain('data-hc-hub-announcer');
+    expect(baseline).toContain('contain-intrinsic-size: auto 520px');
+    expect(baseline).toContain('@media (prefers-reduced-motion: reduce)');
   });
 });
