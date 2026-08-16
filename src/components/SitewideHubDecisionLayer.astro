@@ -39,6 +39,17 @@ const normalized = (value: string) => value
   .normalize('NFD')
   .replace(/\p{Diacritic}/gu, '');
 const haystack = normalized(`${current?.title || ''} ${current?.h1 || ''} ${current?.description || ''} ${current?.category || ''} ${path}`);
+const STOP = new Set(['calculadora', 'calcular', 'calculo', 'cuanto', 'como', 'para', 'con', 'del', 'las', 'los', 'una', 'por', 'guia', 'guias', 'datos', 'herramienta', 'herramientas', 'argentina', 'colombia', 'mexico', 'peru', 'ecuador', 'uruguay', 'chile', 'brasil', 'espana', '2026', '2027']);
+const tokens = (value: string) => new Set(normalized(value).split(/[^a-z0-9]+/).filter((token) => token.length > 2 && !STOP.has(token)));
+const currentTokens = tokens(`${current?.title || ''} ${current?.h1 || ''} ${current?.description || ''} ${current?.category || ''}`);
+const affinity = (tool: (typeof tools)[number]) => {
+  const candidateTokens = tokens(`${tool.title} ${tool.h1} ${tool.description} ${tool.category}`);
+  let shared = 0;
+  currentTokens.forEach((token) => { if (candidateTokens.has(token)) shared += 1; });
+  const sameCategory = tool.category === current?.category ? 4 : 0;
+  const parentChild = tool.path.startsWith(`${path}/`) || path.startsWith(`${tool.path}/`) ? 3 : 0;
+  return shared * 2 + sameCategory + parentChild;
+};
 
 type Intent = { match: RegExp; prompts: string[]; target: RegExp[] };
 const INTENTS: Intent[] = [
@@ -62,23 +73,27 @@ const cluster = current ? tools.filter((tool) => tool.locale === current.locale 
 // Algunas salas son la única URL de su categoría. En ese caso ampliamos al
 // mercado, pero conservamos los patrones de intención: ningún hub queda sin
 // ruta ni cae en una relación de otro idioma/país.
-const candidatePool = cluster.length > 0
+const candidatePool = (cluster.length > 0
   ? cluster
-  : current ? tools.filter((tool) => tool.locale === current.locale && tool.path !== path) : [];
+  : current ? tools.filter((tool) => tool.locale === current.locale && tool.path !== path) : [])
+  .map((tool) => ({ tool, score: affinity(tool) }))
+  .filter(({ score }) => score >= 3)
+  .sort((a, b) => b.score - a.score || a.tool.path.localeCompare(b.tool.path));
 const selected: typeof candidatePool = [];
-const add = (tool?: (typeof cluster)[number]) => {
-  if (tool && tool.path !== path && !selected.some((item) => item.path === tool.path)) selected.push(tool);
+const add = (candidate?: (typeof candidatePool)[number]) => {
+  if (candidate && candidate.tool.path !== path && !selected.some((item) => item.tool.path === candidate.tool.path)) selected.push(candidate);
 };
-intent.target.forEach((pattern) => add(candidatePool.find((tool) => pattern.test(normalized(`${tool.path} ${tool.title} ${tool.h1}`)))));
-candidatePool.forEach((tool) => { if (selected.length < 3) add(tool); });
-const routes = selected.slice(0, 3).map((tool, index) => ({ tool, prompt: intent.prompts[index] || intent.prompts.at(-1)! }));
+intent.target.forEach((pattern) => add(candidatePool.find(({ tool }) => pattern.test(normalized(`${tool.path} ${tool.title} ${tool.h1}`)))));
+candidatePool.forEach((candidate) => { if (selected.length < 3) add(candidate); });
+const routes = selected.slice(0, 3).map(({ tool }, index) => ({ tool, prompt: intent.prompts[index] || intent.prompts.at(-1)! }));
 const nextSteps = routes.length > 1 ? [...routes.slice(1), routes[0]].slice(0, 3) : routes;
 
 const COPY = {
-  es: { eyebrow: 'Elegí tu situación', routeTitle: '¿Qué querés resolver?', nextEyebrow: 'Tu próximo paso', nextTitle: 'Seguí con la decisión', nextIntro: 'Usá el resultado que acabás de obtener para avanzar con una cuenta relacionada.', trust: 'Datos y metodología', checked: 'Fórmula y fuentes verificadas', editor: 'Responsable: Martín Rodríguez, fundador y editor', reviewed: 'Última actualización', method: 'Ver fuentes y metodología', share: 'Guardar o compartir este resultado', shareHelp: 'El enlace conserva tus datos en el navegador y no crea una página indexable.', copy: 'Copiar enlace', copied: 'Enlace copiado', native: 'Compartir', print: 'Descargar / imprimir', privacy: 'No guardamos estos datos en el servidor.' },
-  en: { eyebrow: 'Choose your situation', routeTitle: 'What do you want to solve?', nextEyebrow: 'Your next step', nextTitle: 'Continue your decision', nextIntro: 'Use the result you just obtained to continue with a related calculation.', trust: 'Data and methodology', checked: 'Formula and sources checked', editor: 'Responsible editor: Martín Rodríguez', reviewed: 'Last updated', method: 'View sources and methodology', share: 'Save or share this result', shareHelp: 'The link keeps your inputs in the browser and does not create an indexable page.', copy: 'Copy link', copied: 'Link copied', native: 'Share', print: 'Download / print', privacy: 'We do not store these inputs on the server.' },
-  pt: { eyebrow: 'Escolha sua situação', routeTitle: 'O que você quer resolver?', nextEyebrow: 'Próximo passo', nextTitle: 'Continue sua decisão', nextIntro: 'Use o resultado que acabou de obter para avançar com um cálculo relacionado.', trust: 'Dados e metodologia', checked: 'Fórmula e fontes verificadas', editor: 'Editor responsável: Martín Rodríguez', reviewed: 'Última atualização', method: 'Ver fontes e metodologia', share: 'Salvar ou compartilhar este resultado', shareHelp: 'O link mantém seus dados no navegador e não cria uma página indexável.', copy: 'Copiar link', copied: 'Link copiado', native: 'Compartilhar', print: 'Baixar / imprimir', privacy: 'Não armazenamos esses dados no servidor.' },
+  es: { eyebrow: 'Elegí tu situación', routeTitle: '¿Qué querés resolver?', nextEyebrow: 'Tu próximo paso', nextTitle: 'Seguí con la decisión', nextIntro: 'Usá el resultado que acabás de obtener para avanzar con una cuenta directamente relacionada.', trust: 'Datos y metodología', checked: 'Cálculo ejecutado en tu navegador; revisá los supuestos y fuentes de esta página.', editor: 'Responsable: Martín Rodríguez, fundador y editor', reviewed: 'Revisión de experiencia', freshness: 'La fecha de vigencia de cada valor se informa junto a su fuente.', method: 'Ver fuentes y metodología', share: 'Guardar o compartir este resultado', shareHelp: 'El enlace conserva tus datos en el navegador y no crea una página indexable.', copy: 'Copiar enlace', copied: 'Enlace copiado', native: 'Compartir', print: 'Descargar / imprimir', privacy: 'No guardamos estos datos en el servidor.' },
+  en: { eyebrow: 'Choose your situation', routeTitle: 'What do you want to solve?', nextEyebrow: 'Your next step', nextTitle: 'Continue your decision', nextIntro: 'Use the result you just obtained to continue with a directly related calculation.', trust: 'Data and methodology', checked: 'The calculation runs in your browser; review this page’s assumptions and sources.', editor: 'Responsible editor: Martín Rodríguez', reviewed: 'Experience review', freshness: 'The effective date of each value is shown with its source.', method: 'View sources and methodology', share: 'Save or share this result', shareHelp: 'The link keeps your inputs in the browser and does not create an indexable page.', copy: 'Copy link', copied: 'Link copied', native: 'Share', print: 'Download / print', privacy: 'We do not store these inputs on the server.' },
+  pt: { eyebrow: 'Escolha sua situação', routeTitle: 'O que você quer resolver?', nextEyebrow: 'Próximo passo', nextTitle: 'Continue sua decisão', nextIntro: 'Use o resultado que acabou de obter para avançar com um cálculo diretamente relacionado.', trust: 'Dados e metodologia', checked: 'O cálculo roda no seu navegador; revise as premissas e fontes desta página.', editor: 'Editor responsável: Martín Rodríguez', reviewed: 'Revisão da experiência', freshness: 'A data de vigência de cada valor aparece junto à fonte.', method: 'Ver fontes e metodologia', share: 'Salvar ou compartilhar este resultado', shareHelp: 'O link mantém seus dados no navegador e não cria uma página indexável.', copy: 'Copiar link', copied: 'Link copiado', native: 'Compartilhar', print: 'Baixar / imprimir', privacy: 'Não armazenamos esses dados no servidor.' },
 }[language];
+const experienceReviewed = modified || '2026-08-16';
 ---
 
 {isHub && routes.length > 0 && (
@@ -128,7 +143,8 @@ const COPY = {
       <h2 id="hc-trust-title">{COPY.trust}</h2>
       <p><strong>{COPY.checked}</strong></p>
       <p>{COPY.editor}</p>
-      <p data-hc-reviewed-row hidden={!modified}>{COPY.reviewed}: <time data-hc-reviewed datetime={modified}>{modified?.slice(0, 10)}</time></p>
+      <p data-hc-reviewed-row>{COPY.reviewed}: <time data-hc-reviewed datetime={experienceReviewed}>{experienceReviewed.slice(0, 10)}</time></p>
+      <p>{COPY.freshness}</p>
       <a href="/metodologia" data-hc-method-link>{COPY.method} →</a>
     </div>
   </aside>

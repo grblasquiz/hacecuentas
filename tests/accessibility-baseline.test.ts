@@ -16,8 +16,10 @@ describe('core accessibility baseline', () => {
   });
 
   it('labels generated controls from their visible labels', () => {
-    expect(baseline).toContain("control.closest('.field, .smonth, .input-wrap, .form-group')");
+    expect(baseline).toContain(".calc-field, .input-group");
     expect(baseline).toContain("label.setAttribute('for', control.id)");
+    expect(baseline).toContain("control.setAttribute('aria-labelledby'");
+    expect(baseline).toContain("control.getAttribute('placeholder')");
   });
 
   it('enforces shared touch, type and contrast baselines', () => {

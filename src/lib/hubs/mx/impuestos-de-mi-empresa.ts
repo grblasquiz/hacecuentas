@@ -127,11 +127,11 @@ export const hub: HubData = {
           DISCLAIMER_TAX,
           'Las plataformas cambian tarifas por categoría, reputación, plazo de acreditación y tipo de publicación: copiá la comisión real de tu panel',
           'Las retenciones de ISR e IVA afectan la caja recibida pero no siempre son un costo definitivo: se acreditan en la declaración cuando corresponde',
-          'El IVA de la comisión puede ser acreditable si contás con el CFDI; el cálculo lo muestra separado para evitar contarlo dos veces',
+          'El IVA de la comisión puede ser acreditable si cuentas con el CFDI; el cálculo lo muestra separado para evitar contarlo dos veces',
         ],
         plazo: 'recalculá cada vez que cambie la tarifa, el envío subsidiado o el costo de publicidad de la categoría.',
         answer:
-          'La rentabilidad se mide sobre el neto después de comisión, IVA del servicio, logística, publicidad, devoluciones y costo del producto; el precio publicado por sí solo no dice cuánto ganás.',
+          'La rentabilidad se mide sobre el neto después de comisión, IVA del servicio, logística, publicidad, devoluciones y costo del producto; el precio publicado por sí solo no dice cuánto ganas.',
       },
       {
         id: 'atraso',

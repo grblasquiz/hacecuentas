@@ -21,25 +21,79 @@
         }
       });
 
-      // Los mockups generados suelen usar <label> seguido de <input> sin for/id.
-      // Vincularlos acá mantiene el nombre accesible sin copy duplicado.
-      var serial = 0;
+      // Los mockups generados combinan labels reales, spans visuales y matrices
+      // compactas. Asociamos primero texto visible; placeholder/title quedan
+      // sólo como último recurso para no inventar nombres genéricos.
+      var serial = Number(document.body?.dataset.hcA11ySerial || 0);
+      function cleanName(value) {
+        return String(value || '').replace(/[\s:*]+$/g, '').replace(/\s+/g, ' ').trim().slice(0, 120);
+      }
+      function validName(value, control) {
+        var name = cleanName(value);
+        if (name.length < 2) return '';
+        if (name === cleanName(control.value) || /^[-+]?[$€£]?\s*[\d.,%]+$/.test(name)) return '';
+        return name;
+      }
+      function visibleText(node, control) {
+        if (!node || node === control || node.hidden || node.getAttribute?.('aria-hidden') === 'true') return '';
+        return validName(node.textContent, control);
+      }
+      function ensureId(node, prefix) {
+        if (!node.id) node.id = prefix + '-' + (++serial);
+        return node.id;
+      }
       scope.querySelectorAll('input, select, textarea').forEach(function (control) {
         if (control.type === 'hidden' || control.getAttribute('aria-label') || control.getAttribute('aria-labelledby')) return;
         if (control.id && document.querySelector('label[for="' + CSS.escape(control.id) + '"]')) return;
         if (control.closest('label')) return;
-        var wrap = control.closest('.field, .smonth, .input-wrap, .form-group');
+        var wrap = control.parentElement && control.parentElement.closest('.field, .smonth, .input-wrap, .form-group, .control, .calc-field, .input-group, [class*="field"], [class*="input-row"]');
         var label = wrap && wrap.querySelector('label');
         if (label) {
           if (!control.id) control.id = 'hc-auto-field-' + (++serial);
           label.setAttribute('for', control.id);
           return;
         }
-        // Los campos compactos de matrices suelen describirse con title en
-        // lugar de repetir cuatro labels visibles en la misma fila.
-        var title = control.getAttribute('title');
-        if (title) control.setAttribute('aria-label', title);
+        var candidate = wrap && wrap.querySelector('.field-label, .input-label, [class~="label"], [class$="-label"], [data-label], legend, small');
+        var name = visibleText(candidate, control);
+        if (name && candidate) {
+          control.setAttribute('aria-labelledby', ensureId(candidate, 'hc-auto-label'));
+          return;
+        }
+        var previous = control.previousElementSibling;
+        name = visibleText(previous, control);
+        if (name && previous && !previous.matches('input, select, textarea, button')) {
+          control.setAttribute('aria-labelledby', ensureId(previous, 'hc-auto-label'));
+          return;
+        }
+        var cell = control.closest('td, th');
+        var row = cell && cell.closest('tr');
+        if (cell && row) {
+          var cells = Array.from(row.children);
+          var column = cells.indexOf(cell);
+          var table = row.closest('table');
+          var rowName = visibleText(row.querySelector('th, td'), control);
+          var header = table && table.querySelector('thead tr');
+          var columnName = header && visibleText(header.children[column], control);
+          name = cleanName([rowName, columnName].filter(Boolean).join(' — '));
+          if (name) {
+            control.setAttribute('aria-label', name);
+            return;
+          }
+        }
+        var className = Array.from(control.classList || [])
+          .filter(function (part) { return !/^(control|input|field|form-control|up|active)$/i.test(part); })
+          .join(' ');
+        var option = control.closest('label, article, li, .card, .option, .upgrade');
+        var optionName = option && visibleText(option.querySelector('strong, b, h2, h3, span'), control);
+        name = validName(control.getAttribute('title'), control)
+          || validName(control.getAttribute('placeholder'), control)
+          || validName(control.getAttribute('name'), control)
+          || validName(control.id, control)
+          || validName(className, control)
+          || optionName;
+        if (name) control.setAttribute('aria-label', name.replace(/[-_]+/g, ' '));
       });
+      if (document.body) document.body.dataset.hcA11ySerial = String(serial);
 
       // Los hubs anteriores al componente Calculator no siempre tienen una
       // región viva. Agregamos un anunciador dedicado (sin tocar el resultado

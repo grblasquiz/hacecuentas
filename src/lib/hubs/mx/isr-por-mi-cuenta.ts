@@ -250,7 +250,8 @@ export const hub: HubData = {
     caption: 'Muestra qué parte del ingreso del mes te queda y qué parte se va en impuestos y retenciones.',
   },
   breakdownTitle: 'Número por número',
-  breakdownIntro: 'Las barras comparan cada concepto contra el mayor del cálculo.',
+  breakdownIntro:
+    'Cómo se calcula: cada caso aplica la base, tasa y retenciones que le corresponden; las barras comparan cada concepto contra el mayor del cálculo.',
 
   faq: [
     {
