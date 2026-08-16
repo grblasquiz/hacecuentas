@@ -10,6 +10,6 @@ export const NAFTA_META = {
   mes: '2026-08',
   fuente: 'Secretaría de Energía (datos.energia.gob.ar) — Res. 314/2016',
   fuenteUrl: 'http://datos.energia.gob.ar/dataset/precios-en-surtidor',
-  actualizado: '2026-08-15',
+  actualizado: '2026-08-16',
   estaciones: 4622,
 };
