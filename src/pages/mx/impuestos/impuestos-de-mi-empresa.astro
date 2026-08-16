@@ -59,6 +59,52 @@ const schema = {
     H.onCompute(function (v, caso) {
       const id = (caso && caso.id) || 'isr';
 
+      // ── Marketplace: margen por unidad con todos los costos controlables ──
+      if (id === 'marketplace') {
+        const precio = Math.max(0, v.ticket || 0);
+        const unidades = Math.max(1, Math.round(v.operaciones || 1));
+        const tasa = Math.max(0, v.marketplaceComision || 0) / 100;
+        const fijo = Math.max(0, v.marketplaceFijo || 0);
+        const comisionBase = precio * tasa + fijo;
+        const ivaComision = comisionBase * E.iva;
+        const producto = Math.max(0, v.costoProducto || 0);
+        const envio = Math.max(0, v.envioEmpaque || 0);
+        const publicidad = Math.max(0, v.publicidadUnidad || 0);
+        const devoluciones = precio * Math.max(0, v.devolucionesPct || 0) / 100;
+        const costos = producto + envio + publicidad + devoluciones + comisionBase + ivaComision;
+        const utilidad = precio - costos;
+        const margen = precio > 0 ? utilidad / precio * 100 : 0;
+        const tasaVariable = tasa * (1 + E.iva) + Math.max(0, v.devolucionesPct || 0) / 100;
+        const precioEquilibrio = tasaVariable < 1
+          ? (producto + envio + publicidad + fijo * (1 + E.iva)) / (1 - tasaVariable)
+          : 0;
+
+        return {
+          total: mxn(utilidad * unidades),
+          sub: 'Utilidad mensual estimada por ' + unidades + ' ventas. Cada unidad deja ' + mxn(utilidad) +
+            ' (' + margen.toFixed(1).replace('.', ',') + '% de margen). Para no perder, el precio debería ser al menos ' +
+            mxn(precioEquilibrio) + '. Las retenciones fiscales no se tratan como costo definitivo.',
+          rows: [
+            { k: 'Ventas brutas del mes', v: precio * unidades },
+            { k: 'Costo del producto', v: producto * unidades },
+            { k: 'Comisión del marketplace', v: comisionBase * unidades },
+            { k: 'IVA sobre la comisión', v: ivaComision * unidades },
+            { k: 'Envío y empaque', v: envio * unidades },
+            { k: 'Publicidad atribuida', v: publicidad * unidades },
+            { k: 'Costo esperado de devoluciones', v: devoluciones * unidades },
+            { k: 'Utilidad neta del mes', v: utilidad * unidades, extra: true },
+            { k: 'Margen neto', v: margen, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Precio de equilibrio por unidad', v: precioEquilibrio },
+          ],
+          chart: [
+            { label: 'Producto', value: producto, tone: 'main' },
+            { label: 'Marketplace + IVA', value: comisionBase + ivaComision, tone: 'warn' },
+            { label: 'Logística y publicidad', value: envio + publicidad + devoluciones, tone: 'prop' },
+            { label: 'Utilidad', value: Math.max(0, utilidad), tone: 'good' },
+          ],
+        };
+      }
+
       // ── Caso 2: qué cuesta facturar y cobrar ───────────────────────────
       if (id === 'cumplir') {
         const facturas = Math.max(0, Math.round(v.facturas || 0));

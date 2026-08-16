@@ -1,0 +1,73 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/mx/importar-productos';
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'FAQPage', mainEntity: hub.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+      { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+      { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+    ] },
+  ],
+};
+---
+<Layout title={hub.title} description={hub.description} canonical={CANONICAL} schema={schema} audience="MX" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+    H.onCompute(function (v, caso) {
+      const goods = Math.max(0, v.mercanciaUsd || 0);
+      const freight = Math.max(0, v.fleteUsd || 0);
+      const insurance = Math.max(0, v.seguroUsd || 0);
+      const fx = Math.max(0.0001, v.tipoCambio || 0);
+      const customsValue = (goods + freight + insurance) * fx;
+      const igi = customsValue * Math.max(0, v.igiPct || 0) / 100;
+      const dta = customsValue * Math.max(0, v.dtaPct || 0) / 100;
+      const vatBase = customsValue + igi + dta;
+      const vat = vatBase * Math.max(0, v.ivaPct || 0) / 100;
+      const other = Math.max(0, v.otros || 0);
+      const units = Math.max(1, Math.round(v.unidades || 1));
+      const total = customsValue + igi + dta + vat + other;
+      const unit = total / units;
+      const uplift = goods * fx > 0 ? (total / (goods * fx) - 1) * 100 : 0;
+      const parcel = caso && caso.id === 'mensajeria';
+      return {
+        total: mxn(total),
+        sub: 'Costo puesto estimado de ' + units.toLocaleString('es-MX') + ' unidades: ' + mxn(unit) +
+          ' por unidad, un ' + uplift.toFixed(1).replace('.', ',') + '% sobre el precio convertido del proveedor.' +
+          (parcel ? ' Sustituí las tasas por el desglose que te entregue la paquetería.' : ' Confirmá fracción, origen y regulaciones antes de emitir el pedimento.'),
+        rows: [
+          { k: 'Mercancía convertida a MXN', v: goods * fx },
+          { k: 'Flete, seguro e incrementables', v: (freight + insurance) * fx },
+          { k: 'Valor en aduana estimado', ref: 'Ley Aduanera arts. 64–65', v: customsValue },
+          { k: 'IGI', v: igi },
+          { k: 'DTA estimado', v: dta },
+          { k: 'Base del IVA de importación', ref: 'LIVA art. 27', v: vatBase },
+          { k: 'IVA de importación', v: vat },
+          { k: 'Agente, almacenaje y otros', v: other },
+          { k: 'Costo puesto total', v: total, extra: true },
+          { k: 'Costo puesto por unidad', v: unit },
+        ],
+        chart: [
+          { label: 'Mercancía', value: goods * fx, tone: 'main' },
+          { label: 'Logística internacional', value: (freight + insurance) * fx, tone: 'prop' },
+          { label: 'IGI, DTA e IVA', value: igi + dta + vat, tone: 'warn' },
+          { label: 'Despacho y otros', value: other, tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

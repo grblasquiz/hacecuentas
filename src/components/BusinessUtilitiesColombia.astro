@@ -1,0 +1,99 @@
+<section class="co-business-tools" aria-labelledby="co-tools-title">
+  <div class="co-tools-wrap">
+    <header>
+      <span>Herramientas del negocio</span>
+      <h2 id="co-tools-title">Validá el NIT y medí el margen de una venta online</h2>
+      <p>Dos cuentas puntuales dentro del mismo recorrido fiscal, sin crear páginas que compitan con este hub.</p>
+    </header>
+
+    <div class="co-tools-grid">
+      <form class="co-tool" id="nit-tool">
+        <h3>Dígito de verificación del NIT</h3>
+        <p>Ingresá el NIT base, sin puntos ni guion. También podés pegar el NIT completo para comprobarlo.</p>
+        <label>NIT
+          <input name="nit" inputmode="numeric" autocomplete="off" value="900123456" required />
+        </label>
+        <label class="co-check"><input name="includesDv" type="checkbox" /> El último dígito que ingresé es el DV</label>
+        <button type="submit">Calcular DV</button>
+        <output aria-live="polite">
+          <small>NIT completo</small><strong data-nit-result>—</strong><span data-nit-detail>La validación se hace con pesos y módulo 11.</span>
+        </output>
+      </form>
+
+      <form class="co-tool" id="online-tool">
+        <h3>Costo real de vender online</h3>
+        <p>Calculá comisión, IVA del servicio, logística, publicidad, devoluciones y utilidad por unidad.</p>
+        <div class="co-fields">
+          <label>Precio de venta (COP)<input name="price" type="number" min="0" value="120000" required /></label>
+          <label>Costo del producto (COP)<input name="product" type="number" min="0" value="55000" /></label>
+          <label>Comisión de plataforma (%)<input name="fee" type="number" min="0" max="60" step="0.01" value="14" /></label>
+          <label>Cargo fijo (COP)<input name="fixed" type="number" min="0" value="0" /></label>
+          <label>Envío y empaque (COP)<input name="shipping" type="number" min="0" value="12000" /></label>
+          <label>Publicidad por venta (COP)<input name="ads" type="number" min="0" value="6000" /></label>
+          <label>Devoluciones esperadas (%)<input name="returns" type="number" min="0" max="100" step="0.1" value="3" /></label>
+          <label><span>IVA sobre la comisión</span><select name="feeVat"><option value="yes">Sí, 19%</option><option value="no">No / ya incluido</option></select></label>
+        </div>
+        <button type="submit">Calcular margen</button>
+        <output aria-live="polite">
+          <small>Utilidad neta por venta</small><strong data-online-result>—</strong><span data-online-detail>Usá la tarifa real de tu categoría y contrato.</span>
+        </output>
+      </form>
+    </div>
+    <p class="co-tools-note">Las retenciones que practique la plataforma afectan el dinero recibido, pero pueden ser anticipos acreditables y no un costo definitivo. Verificalas en tu liquidación y declaración.</p>
+  </div>
+</section>
+
+<script>
+  const money = (value: number) => '$' + Math.round(value).toLocaleString('es-CO');
+  const numberOf = (form: HTMLFormElement, name: string) => Math.max(0, Number(new FormData(form).get(name)) || 0);
+
+  const nitForm = document.querySelector<HTMLFormElement>('#nit-tool');
+  nitForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(nitForm);
+    const raw = String(data.get('nit') || '').replace(/\D/g, '');
+    const includesDv = data.get('includesDv') === 'on';
+    if (!raw || (includesDv && raw.length < 2)) return;
+    const base = includesDv ? raw.slice(0, -1) : raw;
+    const supplied = includesDv ? Number(raw.slice(-1)) : null;
+    const weights = [71, 67, 59, 53, 47, 43, 41, 37, 29, 23, 19, 17, 13, 7, 3];
+    const padded = base.padStart(15, '0').slice(-15);
+    const sum = [...padded].reduce((total, digit, index) => total + Number(digit) * weights[index], 0);
+    const remainder = sum % 11;
+    const dv = remainder < 2 ? remainder : 11 - remainder;
+    const result = nitForm.querySelector<HTMLElement>('[data-nit-result]');
+    const detail = nitForm.querySelector<HTMLElement>('[data-nit-detail]');
+    if (result) result.textContent = `${base}-${dv}`;
+    if (detail) detail.textContent = supplied == null
+      ? `DV ${dv}. Suma ponderada ${sum}; residuo módulo 11: ${remainder}.`
+      : supplied === dv ? 'El dígito ingresado coincide.' : `El dígito ingresado no coincide: debería ser ${dv}.`;
+  });
+
+  const onlineForm = document.querySelector<HTMLFormElement>('#online-tool');
+  onlineForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const price = numberOf(onlineForm, 'price');
+    const product = numberOf(onlineForm, 'product');
+    const rate = numberOf(onlineForm, 'fee') / 100;
+    const fixed = numberOf(onlineForm, 'fixed');
+    const shipping = numberOf(onlineForm, 'shipping');
+    const ads = numberOf(onlineForm, 'ads');
+    const returnsRate = numberOf(onlineForm, 'returns') / 100;
+    const vatRate = new FormData(onlineForm).get('feeVat') === 'yes' ? 0.19 : 0;
+    const feeBase = price * rate + fixed;
+    const feeVat = feeBase * vatRate;
+    const returns = price * returnsRate;
+    const profit = price - product - shipping - ads - returns - feeBase - feeVat;
+    const margin = price > 0 ? profit / price * 100 : 0;
+    const variableRate = rate * (1 + vatRate) + returnsRate;
+    const breakEven = variableRate < 1 ? (product + shipping + ads + fixed * (1 + vatRate)) / (1 - variableRate) : 0;
+    const result = onlineForm.querySelector<HTMLElement>('[data-online-result]');
+    const detail = onlineForm.querySelector<HTMLElement>('[data-online-detail]');
+    if (result) result.textContent = money(profit);
+    if (detail) detail.textContent = `Margen ${margin.toFixed(1).replace('.', ',')}%. Comisión con IVA: ${money(feeBase + feeVat)}. Precio de equilibrio: ${money(breakEven)}.`;
+  });
+</script>
+
+<style>
+  .co-business-tools{padding:70px 0;background:#f4f8fb;color:#10233c}.co-tools-wrap{width:min(1160px,calc(100% - 40px));margin:auto}.co-tools-wrap>header{text-align:center;max-width:760px;margin:0 auto 34px}.co-tools-wrap>header span{font-size:.72rem;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:#127e67}.co-tools-wrap h2{font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:-.04em;margin:10px 0}.co-tools-wrap header p,.co-tool>p,.co-tools-note{color:#5c7187;line-height:1.6}.co-tools-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:18px}.co-tool{background:#fff;border:1px solid #dce5ec;border-radius:18px;padding:24px;box-shadow:0 12px 30px #1738580b}.co-tool h3{margin:0 0 8px}.co-tool label{display:grid;gap:6px;font-size:.82rem;font-weight:700;color:#52677f}.co-tool input,.co-tool select{width:100%;border:1px solid #d8e3eb;border-radius:9px;padding:11px;background:#fff;color:#142641;font:inherit}.co-fields{display:grid;grid-template-columns:1fr 1fr;gap:11px}.co-tool .co-check{display:flex;align-items:center;margin:14px 0}.co-check input{width:auto}.co-tool button{width:100%;border:0;border-radius:9px;background:#17324f;color:#fff;font-weight:800;padding:12px;margin-top:14px}.co-tool output{display:block;background:#e9f6f1;border-radius:12px;padding:16px;margin-top:14px}.co-tool output small,.co-tool output span{display:block}.co-tool output strong{display:block;color:#126e52;font-size:1.65rem;margin:4px 0}.co-tools-note{font-size:.8rem;margin-top:16px}@media(max-width:800px){.co-tools-grid{grid-template-columns:1fr}}@media(max-width:520px){.co-fields{grid-template-columns:1fr}}
+</style>
