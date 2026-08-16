@@ -14,6 +14,8 @@
  * además del log inline del fetcher.
  */
 
+import { existsSync, readdirSync } from 'node:fs';
+
 export type RunMode = 'deterministic' | 'llm' | 'pending';
 
 const modes = new Map<string, RunMode>();
@@ -39,4 +41,58 @@ export function getRunStatus(): {
 
 export function hasAnthropicKey(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
+}
+
+// ── Fallback local: Claude Code CLI (suscripción, sin API key) ───────────────
+// ask-claude.ts puede resolver el paso LLM shelleando a `claude -p` cuando no
+// hay ANTHROPIC_API_KEY. Detectamos el binario una sola vez y lo cacheamos.
+
+let cliPathCache: string | null | undefined;
+
+/**
+ * Binario del CLI bundleado por la app de escritorio (siempre el más nuevo).
+ * El de /usr/local/bin suele estar viejo (2.1.76, falla el refresh OAuth).
+ */
+function appBundledCli(): string | null {
+  const base = `${process.env.HOME || ''}/Library/Application Support/Claude/claude-code`;
+  if (!existsSync(base)) return null;
+  const versions = readdirSync(base)
+    .filter((v) => /^\d+\.\d+\.\d+$/.test(v))
+    .sort((a, b) => {
+      const pa = a.split('.').map(Number);
+      const pb = b.split('.').map(Number);
+      return pa[0] - pb[0] || pa[1] - pb[1] || pa[2] - pb[2];
+    });
+  for (const v of versions.reverse()) {
+    const bin = `${base}/${v}/claude.app/Contents/MacOS/claude`;
+    if (existsSync(bin)) return bin;
+  }
+  return null;
+}
+
+/** Ruta al binario `claude` local, o null si no hay. Override: CLAUDE_CLI_BIN. */
+export function localClaudeCliPath(): string | null {
+  if (cliPathCache !== undefined) return cliPathCache;
+  const candidates = [
+    process.env.CLAUDE_CLI_BIN,
+    appBundledCli(),
+    '/usr/local/bin/claude',
+    '/opt/homebrew/bin/claude',
+    `${process.env.HOME || ''}/.local/bin/claude`,
+  ].filter(Boolean) as string[];
+  cliPathCache = candidates.find((p) => existsSync(p)) ?? null;
+  return cliPathCache;
+}
+
+export function hasLocalClaudeCli(): boolean {
+  return localClaudeCliPath() !== null;
+}
+
+/**
+ * ¿Hay ALGÚN camino LLM disponible? (API key o CLI local por suscripción).
+ * Los fetchers hybrid/llm deben chequear esto — no hasAnthropicKey() — para
+ * decidir si intentan el paso LLM.
+ */
+export function hasLlmAccess(): boolean {
+  return hasAnthropicKey() || hasLocalClaudeCli();
 }

@@ -55,7 +55,9 @@ fi
 #       · biannual (monotributo/ganancias/smvm): 15-ene / 15-jul en adelante
 #       · monthly  (ipc/bcra/jubilacion-anses/ripte): día 16 en adelante
 #       · yearly   (bienes-personales/costo-laboral/…): febrero
-#     Son auto-llm (ANTHROPIC_API_KEY de .env) e idempotentes. Si un fetcher
+#     Son auto-llm e idempotentes. Camino LLM: ANTHROPIC_API_KEY de .env si
+#     existe; si no, ask-claude.ts cae solo al CLI `claude -p` local
+#     (suscripción — requiere sesión logueada: `claude login`). Si un fetcher
 #     falla, el marker NO se escribe → reintenta al día siguiente. Si algo
 #     cambió, fuerza el deploy aunque los valores live no se hayan movido
 #     (parchean src/lib/formulas/*, que el paso 3 no mira).

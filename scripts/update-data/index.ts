@@ -18,7 +18,7 @@
 import { REGISTRY, IMPLEMENTED_SLUGS } from './registry.ts';
 import { listAllCalcs, filterByFrequency, isStale, type Frequency } from './utils/freshness.ts';
 import { createLogger } from './utils/logger.ts';
-import { getRunStatus, reportWarn, hasAnthropicKey, type RunMode } from './utils/run-status.ts';
+import { getRunStatus, reportWarn, hasLlmAccess, type RunMode } from './utils/run-status.ts';
 
 const log = createLogger('update-data');
 
@@ -117,20 +117,20 @@ async function main() {
 
   // Modo efectivo por fetcher: lo que reportó el fetcher vía run-status gana;
   // si no reportó, se infiere de la metadata `path` del registry. Un fetcher
-  // 'llm' sin ANTHROPIC_API_KEY queda 'pending' con WARN visible — la falta
-  // de key NUNCA deshabilita en silencio.
+  // 'llm' sin camino LLM (ni API key ni CLI `claude` local) queda 'pending'
+  // con WARN visible — la falta de acceso NUNCA deshabilita en silencio.
   const status = getRunStatus();
-  const keyPresent = hasAnthropicKey();
+  const llmAvailable = hasLlmAccess();
   const modeOf = (name: string): RunMode => {
     if (status.modes[name]) return status.modes[name];
     const entry = REGISTRY.find((e) => e.name === name)!;
-    if (entry.path === 'llm') return keyPresent ? 'llm' : 'pending';
+    if (entry.path === 'llm') return llmAvailable ? 'llm' : 'pending';
     return 'deterministic';
   };
   const modes = new Map(results.map((r) => [r.name, modeOf(r.name)]));
   for (const [name, mode] of modes) {
     if (mode === 'pending' && !status.warns.some((w) => w.name === name)) {
-      reportWarn(name, 'requiere LLM y no hay ANTHROPIC_API_KEY (sin camino determinístico) — quedó pendiente');
+      reportWarn(name, 'requiere LLM y no hay ANTHROPIC_API_KEY ni CLI `claude` local (sin camino determinístico) — quedó pendiente');
     }
   }
   const warns = getRunStatus().warns;

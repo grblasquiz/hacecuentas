@@ -22,13 +22,13 @@ import { fetchJubilacionAnses } from './fetchers/jubilacion-anses.ts';
 import { fetchBienesPersonales } from './fetchers/bienes-personales.ts';
 import { fetchCostoLaboral } from './fetchers/costo-laboral.ts';
 import { fetchMonotributoVsInscripto } from './fetchers/monotributo-vs-inscripto.ts';
-import { fetchCostoMochilero } from './fetchers/costo-mochilero.ts';
 import { fetchPropinas } from './fetchers/propinas.ts';
 import { fetchGasNatural } from './fetchers/gas-natural.ts';
 import { fetchCostoM2 } from './fetchers/costo-m2.ts';
 import { fetchGananciasRG830 } from './fetchers/ganancias-rg830.ts';
 import { fetchIngresosBrutos } from './fetchers/ingresos-brutos.ts';
 import { fetchRipte } from './fetchers/ripte.ts';
+import { fetchTcSunatPe } from './fetchers/tc-sunat-pe.ts';
 
 export interface FetcherEntry {
   name: string;
@@ -173,14 +173,9 @@ export const REGISTRY: FetcherEntry[] = [
     frequency: 'yearly',
     run: fetchCostoLaboral,
   },
-  {
-    name: 'costo-mochilero',
-    path: 'llm',
-    // Presupuestos diarios USD/día para 29 países (Nomadic Matt, BBP, Budget Your Trip).
-    slugs: ['calculadora-costo-mochilero-por-pais'],
-    frequency: 'yearly',
-    run: fetchCostoMochilero,
-  },
+  // costo-mochilero: RETIRADO 2026-08-16 — la calc quedó podada (301 → /viajes)
+  // y su formula src/lib/formulas/costo-mochilero-por-pais.ts ya no existe; el
+  // fetcher hubiera quemado un call LLM para fallar en el patch.
   {
     name: 'propinas',
     path: 'llm',
@@ -233,6 +228,16 @@ export const REGISTRY: FetcherEntry[] = [
     ],
     frequency: 'monthly',
     run: fetchRipte,
+  },
+  {
+    name: 'tc-sunat-pe',
+    path: 'deterministic',
+    // TC oficial SUNAT (compra/venta) desde sunat.gob.pe/a/txt/tipoCambio.txt.
+    // Mantiene fresco el default referencial del conversor (el usuario puede
+    // pegar el TC del día igual). Antes era updateType manual y quedaba stale.
+    slugs: ['calculadora-tipo-de-cambio-sunat-dolar-soles-peru'],
+    frequency: 'daily',
+    run: fetchTcSunatPe,
   },
 ];
 

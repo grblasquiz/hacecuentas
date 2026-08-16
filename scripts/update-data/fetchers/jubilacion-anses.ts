@@ -21,7 +21,7 @@
 
 import { join } from 'node:path';
 import { askClaudeStructured } from '../utils/ask-claude.ts';
-import { reportMode, reportWarn, hasAnthropicKey } from '../utils/run-status.ts';
+import { reportMode, reportWarn, hasLlmAccess } from '../utils/run-status.ts';
 import { replaceNumericConst } from '../patchers/ts-constant.ts';
 import { touchLastUpdated } from '../patchers/data-update-date.ts';
 import { createLogger } from '../utils/logger.ts';
@@ -138,14 +138,14 @@ export async function fetchJubilacionAnses({ dry = false }: { dry?: boolean }): 
   log.info(`haber mínimo ${periodoEfectivo}: $${haber.toLocaleString('es-AR')} · bono: $${BONO_EXTRA.toLocaleString('es-AR')}`);
 
   // Cross-check LLM opcional (nunca bloquea ni cambia el valor escrito)
-  if (hasAnthropicKey()) {
+  if (hasLlmAccess()) {
     try {
       await crossCheckLLM(mesLegible, haber);
     } catch (err) {
       log.warn(`cross-check LLM falló: ${(err as Error).message}`);
     }
   } else {
-    log.info('sin ANTHROPIC_API_KEY — cross-check LLM omitido (no hace falta: camino determinístico)');
+    log.info('sin ANTHROPIC_API_KEY ni CLI claude — cross-check LLM omitido (no hace falta: camino determinístico)');
   }
 
   if (dry) {

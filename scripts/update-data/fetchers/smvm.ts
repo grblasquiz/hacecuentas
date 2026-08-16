@@ -17,7 +17,7 @@
 
 import { join } from 'node:path';
 import { askClaudeStructured } from '../utils/ask-claude.ts';
-import { reportMode, reportWarn, hasAnthropicKey } from '../utils/run-status.ts';
+import { reportMode, reportWarn, hasLlmAccess } from '../utils/run-status.ts';
 import { replaceNumericConst, replaceStringConst } from '../patchers/ts-constant.ts';
 import { touchLastUpdated } from '../patchers/data-update-date.ts';
 import { createLogger } from '../utils/logger.ts';
@@ -141,7 +141,7 @@ export async function fetchSmvm({ dry = false }: { dry?: boolean }): Promise<boo
 
   // Cronograma vencido: intentar LLM si hay key; si no, WARN sin romper.
   log.warn(`cronograma conocido termina en ${ultimo.periodo} y estamos en ${periodo}`);
-  if (hasAnthropicKey()) {
+  if (hasLlmAccess()) {
     log.info('consultando Claude por la resolución nueva del Consejo del Salario');
     const result = await fetchSmvmLLM(new Date().getFullYear());
     if (result) {
@@ -155,6 +155,6 @@ export async function fetchSmvm({ dry = false }: { dry?: boolean }): Promise<boo
     return false;
   }
   reportMode('smvm', 'pending');
-  reportWarn('smvm', 'cronograma vencido, requiere resolución nueva (sin ANTHROPIC_API_KEY para buscarla) — agregar tramos a CRONOGRAMA en fetchers/smvm.ts');
+  reportWarn('smvm', 'cronograma vencido, requiere resolución nueva (sin ANTHROPIC_API_KEY ni CLI claude para buscarla) — agregar tramos a CRONOGRAMA en fetchers/smvm.ts');
   return false;
 }
