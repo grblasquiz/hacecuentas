@@ -112,6 +112,8 @@ def psi_query(url: str, strategy: str = "mobile", api_key: str = None) -> dict:
 
     # Lab data (Lighthouse synthetic)
     lh = body.get("lighthouseResult", {})
+    out["requested_url"] = lh.get("requestedUrl") or url
+    out["final_url"] = lh.get("finalDisplayedUrl") or lh.get("finalUrl") or url
     cats = lh.get("categories", {})
     perf = cats.get("performance", {}) or {}
     out["perf_score"] = round((perf.get("score") or 0) * 100)
@@ -139,6 +141,7 @@ def psi_query(url: str, strategy: str = "mobile", api_key: str = None) -> dict:
     # Field data (CrUX real users) — solo aparece si hay suficiente trafico real
     le = body.get("loadingExperience") or {}
     le_metrics = le.get("metrics") or {}
+    field_id = le.get("id")
 
     def _crux(key: str) -> dict | None:
         m = le_metrics.get(key)
@@ -150,6 +153,10 @@ def psi_query(url: str, strategy: str = "mobile", api_key: str = None) -> dict:
         }
 
     out["field"] = {
+        "id": field_id,
+        # PSI cae a métricas de origen cuando la URL no reúne muestra propia.
+        # No presentarlas como datos de esa página: sería una falsa precisión.
+        "scope": "url" if field_id and field_id.rstrip("/") == out["final_url"].rstrip("/") else "origin",
         "lcp": _crux("LARGEST_CONTENTFUL_PAINT_MS"),
         "inp": _crux("INTERACTION_TO_NEXT_PAINT"),
         "cls": _crux("CUMULATIVE_LAYOUT_SHIFT_SCORE"),
@@ -198,7 +205,9 @@ def get_top_urls_from_gsc(n: int) -> list[str]:
         body={
             "startDate": start, "endDate": end,
             "dimensions": ["page"],
-            "rowLimit": n,
+            # Pedimos más filas porque muchas impresiones históricas pueden
+            # pertenecer a slugs que hoy redirigen al mismo destino canónico.
+            "rowLimit": max(n * 5, n),
             "dataState": "all",
         },
     ).execute()
@@ -206,9 +215,20 @@ def get_top_urls_from_gsc(n: int) -> list[str]:
     urls = []
     for row in resp.get("rows", []):
         page = row["keys"][0]
-        path = page.replace("https://hacecuentas.com", "").replace("https://www.hacecuentas.com", "")
-        if path and path not in urls:
+        try:
+            import requests
+            resolved = requests.get(page, allow_redirects=True, timeout=20)
+            if resolved.status_code != 200:
+                continue
+            page = resolved.url.split("?", 1)[0].split("#", 1)[0]
+        except Exception as exc:
+            sys.stderr.write(f"⚠️  No se pudo resolver {page}: {exc}\n")
+            continue
+        path = page.replace("https://hacecuentas.com", "").replace("https://www.hacecuentas.com", "") or "/"
+        if path not in urls:
             urls.append(path)
+        if len(urls) >= n:
+            break
     return urls[:n]
 
 
@@ -243,6 +263,7 @@ def write_markdown(results: list[dict], out: Path, strategy: str) -> None:
     poor_tbt = sum(1 for r in valid if (r.get("lab", {}).get("tbt_ms") or 0) > 200)
 
     field_data = [r for r in valid if r.get("field", {}).get("overall")]
+    url_field_data = [r for r in field_data if r.get("field", {}).get("scope") == "url"]
 
     lines = [
         f"# PSI Batch — {date} ({strategy})",
@@ -255,7 +276,8 @@ def write_markdown(results: list[dict], out: Path, strategy: str) -> None:
         f"- LCP > 2.5s (lab):  **{poor_lcp}/{len(valid)} URLs** {'✗' if poor_lcp > 0 else '✓'}",
         f"- CLS > 0.1 (lab):   **{poor_cls}/{len(valid)} URLs** {'✗' if poor_cls > 0 else '✓'}",
         f"- TBT > 200ms (lab): **{poor_tbt}/{len(valid)} URLs** {'✗' if poor_tbt > 0 else '✓'}",
-        f"- URLs con CrUX field data (suficiente trafico real): **{len(field_data)}/{len(valid)}**",
+        f"- URLs con CrUX propio: **{len(url_field_data)}/{len(valid)}**",
+        f"- URLs con fallback CrUX de origen: **{len(field_data) - len(url_field_data)}/{len(valid)}**",
         "",
         "## Lab data (Lighthouse synthetic)",
         "",
@@ -277,8 +299,8 @@ def write_markdown(results: list[dict], out: Path, strategy: str) -> None:
             "",
             "## Field data (CrUX p75 — usuarios reales últimos 28d)",
             "",
-            "| URL | Overall | LCP p75 | INP p75 | CLS p75 | TTFB p75 |",
-            "|-----|:-------:|--------:|--------:|--------:|---------:|",
+            "| URL | Alcance | Overall | LCP p75 | INP p75 | CLS p75 | TTFB p75 |",
+            "|-----|:-------:|:-------:|--------:|--------:|--------:|---------:|",
         ])
         for r in field_data:
             f = r["field"]
@@ -288,6 +310,7 @@ def write_markdown(results: list[dict], out: Path, strategy: str) -> None:
             ttfb = f.get("ttfb") or {}
             lines.append(
                 f"| `{r['url'].replace(BASE_URL, '')[:50]}` | "
+                f"{f.get('scope', '—')} | "
                 f"{_category_emoji(f.get('overall'))} {f.get('overall', '—')} | "
                 f"{_category_emoji(lcp.get('category'))} {_format_ms(lcp.get('p75'))} | "
                 f"{_category_emoji(inp.get('category'))} {_format_ms(inp.get('p75'))} | "
@@ -334,10 +357,10 @@ def write_markdown(results: list[dict], out: Path, strategy: str) -> None:
         lines.append("Action: code-split JS, defer Adsense / analytics, reducir main thread work.")
         lines.append("")
 
-    if len(field_data) < len(valid) / 2:
+    if len(url_field_data) < len(valid) / 2:
         lines.append(
-            "**Pocas URLs con CrUX field data** — Google no tiene suficientes user samples para "
-            "estas paginas. Indica trafico organíco bajo (consistente con HCU penalty)."
+            "**Pocas URLs con CrUX propio** — PSI usa métricas agregadas del origen cuando no "
+            "hay suficiente muestra por página. No atribuir esos percentiles a una URL concreta."
         )
         lines.append("")
 

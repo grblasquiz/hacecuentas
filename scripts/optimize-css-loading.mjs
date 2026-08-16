@@ -55,9 +55,11 @@ const DEFER_PATTERNS = [
 
 // Inline CSS de ruta específica si pesa menos que este umbral (en KB).
 // Elimina render-blocking para Speed Index sin inflar HTML masivamente.
-// Target: CSS específicos per-page (<8KB). Componentes grandes (Calculator 28K,
-// Footer 24K) NO se inlinean.
-const INLINE_THRESHOLD_KB = 8;
+// Astro 6 ya no conserva el sufijo `@_@astro` en todos los chunks; usamos
+// además frecuencia real de referencia para distinguir una hoja de ruta de
+// una compartida. 20 KB sin minificar suelen ser ~4–6 KB dentro del HTML gzip.
+const INLINE_THRESHOLD_KB = 20;
+const MAX_INLINE_REFERENCES = 2;
 
 // Pattern de archivos CSS candidatos a inline (per-page CSS):
 // - index@_@astro.*.css
@@ -65,6 +67,10 @@ const INLINE_THRESHOLD_KB = 8;
 const INLINE_PATTERNS = [
   /[a-zA-Z0-9_-]+@_@astro\.[A-Za-z0-9_-]+\.css/,
 ];
+
+// Se completa antes de transformar los HTML. Un CSS usado por cientos de
+// páginas (components-shared, layouts, etc.) nunca se duplica inline.
+const cssReferenceCounts = new Map();
 
 // Leer CSS file desde dist/client/_astro (lookup absoluto)
 const cssCache = new Map();
@@ -83,7 +89,9 @@ function readCssFile(href) {
 
 function shouldInline(href) {
   const isMatchedPattern = INLINE_PATTERNS.some((p) => p.test(href));
-  if (!isMatchedPattern) return false;
+  const references = cssReferenceCounts.get(href) || 0;
+  const isRouteSpecific = references > 0 && references <= MAX_INLINE_REFERENCES;
+  if (!isMatchedPattern && !isRouteSpecific) return false;
   const content = readCssFile(href);
   if (!content) return false;
   const kb = Buffer.byteLength(content, 'utf8') / 1024;
@@ -178,6 +186,17 @@ function injectModulePreload(html) {
 }
 
 const files = walk(DIST);
+
+// Contar referencias ANTES de reemplazar links. Esto vuelve la decisión
+// robusta ante cualquier convención futura de nombres de Astro.
+for (const f of files) {
+  const html = readFileSync(f, 'utf8');
+  for (const match of html.matchAll(/<link\s+[^>]*?href=['"]([^'"]+\.css)['"][^>]*?>/g)) {
+    const href = match[1];
+    cssReferenceCounts.set(href, (cssReferenceCounts.get(href) || 0) + 1);
+  }
+}
+
 for (const f of files) {
   const html = readFileSync(f, 'utf8');
   const { modified, deferred, inlined } = replaceInHtml(html);
@@ -193,7 +212,7 @@ console.log(`  modulepreload(lib-shared): retirado (Batch B) — chunk partido p
 
 console.log(`✓ CSS loading optimized:`);
 console.log(`  Files processed: ${filesProcessed}`);
-console.log(`  Links inlined (<${INLINE_THRESHOLD_KB}KB route-specific): ${linksInlined}`);
+console.log(`  Links inlined (<${INLINE_THRESHOLD_KB}KB, <=${MAX_INLINE_REFERENCES} HTML refs): ${linksInlined}`);
 console.log(`  Links deferred (below-fold Footer): ${linksDeferred}`);
 
 // ────────────────────────────────────────────────────────────
