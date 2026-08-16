@@ -59,7 +59,7 @@ const SHARED_PATTERNS: RegExp[] = [
   /^package\.json$/,
   /^package-lock\.json$/,
   /^wrangler\./,
-  /^scripts\/(?!new-calc\.ts$|cf-purge-cache\.sh$|detect-changes\.ts$|incremental-purge\.ts$|audit-blog-posts\.py$|remediate-blog-related-hubs\.mjs$)/,
+  /^scripts\/(?!new-calc\.ts$|cf-purge-cache\.sh$|detect-changes\.ts$|incremental-purge\.ts$|audit-blog-posts\.py$|remediate-blog-related-hubs\.mjs$|remediate-blog-external-sources\.mjs$)/,
   /^public\//,
   /^tsconfig\.json$/,
   /^\.github\/workflows\/deploy\.yml$/,
@@ -138,6 +138,7 @@ const IGNORE_PATTERNS: RegExp[] = [
   /^scripts\/cf-purge-cache\.sh$/,
   /^scripts\/audit-blog-posts\.py$/,
   /^scripts\/remediate-blog-related-hubs\.mjs$/,
+  /^scripts\/remediate-blog-external-sources\.mjs$/,
   // Scripts de submission a buscadores (post-deploy o cron, no afectan build)
   /^scripts\/bing-/,
   /^scripts\/google-indexing-/,
