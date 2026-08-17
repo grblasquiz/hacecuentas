@@ -19,6 +19,7 @@ import os
 import ssl
 import sys
 import urllib.request
+import urllib.parse
 from pathlib import Path
 
 try:
@@ -47,7 +48,11 @@ BASE = "https://ssl.bing.com/webmaster/api.svc/json"
 
 def api_call(path: str, payload: dict | None = None, method: str = "POST"):
     url = f"{BASE}/{path}?apikey={API_KEY}"
-    data = json.dumps(payload).encode("utf-8") if payload else None
+    if method == "GET" and payload:
+        url += "&" + urllib.parse.urlencode(payload)
+        data = None
+    else:
+        data = json.dumps(payload).encode("utf-8") if payload else None
     req = urllib.request.Request(
         url,
         data=data,
@@ -71,7 +76,9 @@ def submit_feed() -> bool:
 
 
 def list_feeds() -> None:
-    status, body = api_call("GetFeeds", {"siteUrl": SITE}, method="POST")
+    # GetFeeds is a WebGet operation: Bing expects siteUrl in the query string,
+    # not a JSON body. Sending POST returns HTTP 405.
+    status, body = api_call("GetFeeds", {"siteUrl": SITE}, method="GET")
     print(f"GetFeeds status={status}\n{body}")
 
 
