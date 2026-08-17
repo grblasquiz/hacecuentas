@@ -126,7 +126,7 @@
     var titleEl = document.getElementById('fx-hoy-title');
     var dateEl = document.querySelector('[data-hoy-date]');
     var cardsEl = document.getElementById('fx-hoy-cards');
-    if (titleEl) titleEl.textContent = isToday ? 'Partidos de hoy' : 'Próximos partidos';
+    if (titleEl) titleEl.textContent = cfg.tournamentFinished ? 'Resultados del Mundial 2026' : (isToday ? 'Partidos de hoy' : 'Próximos partidos');
     if (dateEl) dateEl.textContent = day.label;
     if (cardsEl) { cardsEl.innerHTML = day.matches.map(cardHTML).join(''); reformatTimes(cardsEl); }
     document.querySelectorAll('.fx-chip[data-chip]').forEach(function (c) {
