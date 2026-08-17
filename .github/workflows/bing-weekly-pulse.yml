@@ -1,0 +1,50 @@
+name: Bing organic weekly pulse
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Lunes 10:05 ART. La API devuelve una ventana móvil mensual; un único
+    # snapshot semanal evita reaccionar al ruido diario.
+    - cron: '5 13 * * 1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bing-organic-weekly-pulse
+  cancel-in-progress: false
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate Bing report
+        env:
+          BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
+        run: |
+          test -n "$BING_WEBMASTER_API_KEY"
+          python3 scripts/bing-weekly-pulse.py
+
+      - name: Commit weekly snapshot
+        run: |
+          git config user.name "hacecuentas-bing-bot"
+          git config user.email "bot@hacecuentas.com"
+          git add docs/kpi-pulse-bing/
+          if git diff --cached --quiet; then
+            echo "Sin cambios en el snapshot Bing"
+            exit 0
+          fi
+          git commit -m "audit(bing): weekly organic pulse"
+          git pull --rebase origin main
+          git push origin HEAD:main
