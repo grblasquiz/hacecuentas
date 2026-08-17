@@ -11,7 +11,7 @@ describe('oportunidades CTR observadas en Bing', () => {
       "const title = 'Monotributo 2026: tabla de categorías, topes y cuotas'",
     );
     expect(read('src/pages/mx/datos-uma-imss-2026.astro')).toContain(
-      "const title = 'UMA 2026 México: $117,31 diaria, mensual y anual'",
+      "const title = 'UMA 2026 México: $117.31 diaria y $3,566.22 mensual'",
     );
     expect(generationsHub.title).toContain('Generaciones por edad 2026');
     expect(sizesHub.title).toContain('Conversor de talles 2026');
