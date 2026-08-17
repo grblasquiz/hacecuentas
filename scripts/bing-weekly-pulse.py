@@ -15,9 +15,11 @@ Cron sugerido (crontab -e):
 """
 import json
 import os
+import re
 import ssl
 import sys
 import urllib.parse
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
@@ -90,6 +92,51 @@ def get_page_stats() -> list:
     except Exception as e:
         sys.stderr.write(f"GetPageStats error: {e}\n")
         return []
+
+
+def get_crawl_stats() -> list:
+    try:
+        return call("GetCrawlStats").get("d", [])
+    except Exception as exc:
+        sys.stderr.write(f"GetCrawlStats warning: {exc}\n")
+        return []
+
+
+def get_crawl_issues() -> list:
+    try:
+        return call("GetCrawlIssues").get("d", [])
+    except Exception as exc:
+        sys.stderr.write(f"GetCrawlIssues warning: {exc}\n")
+        return []
+
+
+def get_feeds() -> list:
+    try:
+        return call("GetFeeds").get("d", [])
+    except Exception as exc:
+        sys.stderr.write(f"GetFeeds warning: {exc}\n")
+        return []
+
+
+def get_http_status(url: str) -> int | None:
+    """Comprueba que un feed registrado siga siendo recuperable."""
+    try:
+        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "HacéCuentas-BingPulse/1.0"})
+        with urllib.request.urlopen(req, context=_ssl, timeout=15) as response:
+            return response.status
+    except urllib.error.HTTPError as exc:
+        return exc.code
+    except Exception as exc:
+        sys.stderr.write(f"Feed status warning ({url}): {exc}\n")
+        return None
+
+
+def bing_date(value: str) -> str:
+    """Convierte /Date(…)/ de Bing a YYYY-MM-DD."""
+    match = re.search(r"Date\((\d+)", value or "")
+    if not match:
+        return "?"
+    return datetime.fromtimestamp(int(match.group(1)) / 1000, UTC).date().isoformat()
 
 
 def get_page_query_stats(page: str) -> dict:
@@ -207,6 +254,12 @@ def main():
     # GetPageStats usa el campo Query para contener la URL (tipo QueryStats).
     pages = aggregate_stats(get_page_stats())
     quota = get_quota()
+    crawl_stats = get_crawl_stats()
+    crawl_issues = get_crawl_issues()
+    feeds = get_feeds()
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        feed_http = list(pool.map(get_http_status, [feed.get("Url", "") for feed in feeds]))
+    feed_health = [{**feed, "HttpStatus": status} for feed, status in zip(feeds, feed_http)]
     with ThreadPoolExecutor(max_workers=6) as pool:
         authority = list(pool.map(get_url_info, AUTHORITY_URLS))
     previous_anchors = load_previous_anchor_counts(out_file)
@@ -269,6 +322,39 @@ def main():
         f"- Total impressions: **{total_impr:,}**",
         f"- Total clicks: **{total_clicks}**",
         f"- CTR promedio: **{ctr:.2f}%**",
+        "",
+        "## Salud de crawl e indexación Bing",
+        "",
+    ]
+    if crawl_stats:
+        latest_crawl = crawl_stats[-1]
+        lines += [
+            f"- Último dato de Bing: **{bing_date(latest_crawl.get('Date',''))}**",
+            f"- URLs en índice: **{latest_crawl.get('InIndex', 0):,}**",
+            f"- Páginas rastreadas: **{latest_crawl.get('CrawledPages', 0):,}**",
+            f"- Errores de crawl: **{latest_crawl.get('CrawlErrors', 0)}** · 4xx: **{latest_crawl.get('Code4xx', 0)}** · 5xx: **{latest_crawl.get('Code5xx', 0)}**",
+            f"- Issues activos listados por Bing: **{len(crawl_issues)}**",
+        ]
+    else:
+        lines.append("_Bing no devolvió estadísticas de crawl._")
+    lines += [
+        "",
+        "### Feeds registrados en Bing",
+        "",
+        "| Feed | Estado Bing | HTTP live | URLs reconocidas | Último crawl |",
+        "|---|---|---:|---:|---|",
+    ]
+    for feed in feed_health:
+        url = feed.get("Url", "")
+        path = urllib.parse.urlparse(url).path or "/"
+        status = feed.get("HttpStatus")
+        lines.append(
+            f"| [{path}]({url}) | {feed.get('Status','?')} | {status if status is not None else '?'} | {feed.get('UrlCount',0)} | {bing_date(feed.get('LastCrawled',''))} |"
+        )
+    if not feed_health:
+        lines.append("_No hay feeds registrados o la API no respondió._")
+
+    lines += [
         "",
         "## Top 20 queries por impressions",
         "",
