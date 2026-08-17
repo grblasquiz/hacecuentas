@@ -65,18 +65,19 @@ export const MORA = {
 };
 
 const cop = (n: number) => '$' + Math.round(n).toLocaleString('es-CO');
+const SANCION_MINIMA_2026 = cop(SANCIONES.minimaUvt * UVT);
 
 export const hub: HubData = {
   slug: 'co/impuestos/sanciones-dian',
-  title: 'Sanción por extemporaneidad DIAN 2026: cálculo y mínima UVT',
+  title: `Sanción mínima DIAN 2026: 10 UVT (${SANCION_MINIMA_2026}) y cálculo`,
   description:
-    'Calculá la sanción por extemporaneidad DIAN 2026 (arts. 641 y 642 ET), la de corrección (art. 644), la sanción mínima de 10 UVT (art. 639) y los intereses de mora del art. 635, con la UVT y la tasa de usura vigentes.',
+    `La sanción mínima DIAN 2026 es de 10 UVT (${SANCION_MINIMA_2026}). Calculá extemporaneidad, corrección e intereses de mora con los artículos vigentes.`,
   silo: 'Impuestos',
   siloHref: '/co/impuestos',
   locale: 'co',
 
   eyebrow: 'Colombia · DIAN · Estatuto Tributario',
-  h1: 'Me atrasé con la DIAN: ¿cuánto me va a costar ponerme al día?',
+  h1: 'Sanción mínima DIAN 2026: ¿cuánto pagás por declarar tarde?',
   lede:
     'Hay dos cuentas distintas que corren al mismo tiempo y casi nadie suma juntas: la sanción, que depende de cuánto te demoraste y de si la DIAN ya te escribió, y los intereses de mora, que corren día por día sobre el impuesto. Acá salen las dos, con el piso de la sanción mínima aplicado donde corresponde.',
   stamps: [
@@ -359,5 +360,5 @@ export const hub: HubData = {
     '/co/calculadora-conversion-uvt-uvr-colombia-actualizacion-2026',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-08-17',
 };
