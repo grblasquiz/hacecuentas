@@ -79,10 +79,28 @@ def aggregate_stats(rows: list, key: str = "Query") -> list:
         value = row.get(key, "")
         if not value:
             continue
-        item = grouped.setdefault(value, {key: value, "Impressions": 0, "Clicks": 0})
-        item["Impressions"] += row.get("Impressions", 0) or 0
+        item = grouped.setdefault(value, {
+            key: value, "Impressions": 0, "Clicks": 0,
+            "_position_weighted": 0.0, "_position_plain": 0.0, "_position_rows": 0,
+        })
+        impressions = row.get("Impressions", 0) or 0
+        position = row.get("AvgImpressionPosition", row.get("Position", 0)) or 0
+        item["Impressions"] += impressions
         item["Clicks"] += row.get("Clicks", 0) or 0
-    return list(grouped.values())
+        item["_position_weighted"] += position * impressions
+        item["_position_plain"] += position
+        item["_position_rows"] += 1
+    result = []
+    for item in grouped.values():
+        impressions = item["Impressions"]
+        item["Position"] = (
+            item["_position_weighted"] / impressions if impressions
+            else item["_position_plain"] / max(item["_position_rows"], 1)
+        )
+        for temp in ("_position_weighted", "_position_plain", "_position_rows"):
+            item.pop(temp, None)
+        result.append(item)
+    return result
 
 
 def get_quota() -> dict:
@@ -115,9 +133,24 @@ def main():
     total_clicks = sum(q.get("Clicks", 0) for q in queries)
     ctr = (total_clicks / total_impr * 100) if total_impr > 0 else 0
 
-    # Opportunities: queries con ≥100 impressions y CTR <2%
+    # Query candidates: Bing no expone query→page en esta API. Sirven para
+    # detectar demanda, pero NO alcanzan para diagnosticar un problema de title.
     opps = [q for q in queries if q.get("Impressions", 0) >= 100 and q.get("Clicks", 0) <= 2]
     opps.sort(key=lambda q: q.get("Impressions", 0), reverse=True)
+
+    # URL-level opportunities: estas sí permiten priorizar una superficie concreta.
+    page_opps = []
+    for p in pages:
+        impressions = p.get("Impressions", 0) or 0
+        clicks = p.get("Clicks", 0) or 0
+        position = p.get("Position", 0) or 0
+        page = p.get("Query", "") or ""
+        page_ctr = clicks / impressions * 100 if impressions else 0
+        gain_at_2pct = max(0, round(impressions * 0.02 - clicks))
+        if impressions >= 500 and 3 <= position <= 10 and page_ctr < 2 and gain_at_2pct > 0:
+            page_opps.append({"page": page, "impressions": impressions, "clicks": clicks,
+                              "ctr": page_ctr, "position": position, "gain_at_2pct": gain_at_2pct})
+    page_opps.sort(key=lambda p: p["gain_at_2pct"], reverse=True)
 
     lines = [
         f"# Bing KPI Pulse — semana {iso_year}-W{iso_week:02d}",
@@ -144,9 +177,9 @@ def main():
 
     lines += [
         "",
-        "## CTR Rescue Opportunities (≥100 impr, ≤2 clicks)",
+        "## Consultas de demanda a investigar (≥100 impr, ≤2 clicks)",
         "",
-        "Estas queries tienen volumen pero el title/meta no convierte. ROI alto editar.",
+        "La API no informa qué URL respondió cada consulta. Son candidatos para mapear contra las páginas; por sí solos no prueban un problema de title/meta.",
         "",
         "| Query | Impr | Clicks | CTR |",
         "|---|---:|---:|---:|",
@@ -156,7 +189,18 @@ def main():
             qctr = (q.get("Clicks", 0) / q.get("Impressions", 1) * 100) if q.get("Impressions", 0) > 0 else 0
             lines.append(f"| {q.get('Query','?')} | {q.get('Impressions',0)} | {q.get('Clicks',0)} | {qctr:.2f}% |")
     else:
-        lines.append("_Sin opportunities esta semana (todas las queries con ≥100 impr ya tienen >2 clicks)._")
+        lines.append("_Sin consultas candidatas esta semana._")
+
+    lines += ["", "## Oportunidades CTR por página (posición 3-10)", "",
+              "Ordenadas por clics mensuales incrementales estimados si cada URL alcanza un CTR conservador de 2%.", "",
+              "| Page | Impr | Clicks | CTR | Pos | Upside a 2% |",
+              "|---|---:|---:|---:|---:|---:|"]
+    if page_opps:
+        for p in page_opps[:20]:
+            page = p["page"] if len(p["page"]) <= 65 else p["page"][:65] + "..."
+            lines.append(f"| {page} | {p['impressions']} | {p['clicks']} | {p['ctr']:.2f}% | {p['position']:.1f} | +{p['gain_at_2pct']} |")
+    else:
+        lines.append("_Sin URLs que cumplan los umbrales esta semana._")
 
     lines += [
         "",
@@ -180,7 +224,7 @@ def main():
     out_file.write_text("\n".join(lines) + "\n")
     print(f"[bing-pulse] escrito {out_file.relative_to(ROOT)}", file=sys.stderr)
     print(f"\nQueries: {len(queries)} | Impr: {total_impr:,} | Clicks: {total_clicks} | CTR: {ctr:.2f}%", file=sys.stderr)
-    print(f"Opportunities (rescue CTR): {len(opps)}", file=sys.stderr)
+    print(f"Query candidates: {len(opps)} | Page CTR opportunities: {len(page_opps)}", file=sys.stderr)
 
 
 if __name__ == "__main__":
