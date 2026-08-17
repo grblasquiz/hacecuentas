@@ -21,4 +21,14 @@ describe('calculadoras restauradas por demanda comprobada en Bing', () => {
     expect(mx).toContain('href="/mx/calculadora-factor-integracion-salarial-imss-mexico"');
     expect(es).toContain('href="/es/calculadora-irpf-2026-tramos-espana-nomina"');
   });
+
+  it('permite los sitemaps reactivados de México y España en ambas capas', () => {
+    const wrapper = readFileSync('scripts/generate-worker-wrapper.mjs', 'utf8');
+    const middleware = readFileSync('src/middleware.ts', 'utf8');
+
+    for (const sitemap of ['/sitemap-mx.xml', '/sitemap-es.xml']) {
+      expect(wrapper).toContain(`'${sitemap}'`);
+      expect(middleware).toContain(`'${sitemap}'`);
+    }
+  });
 });

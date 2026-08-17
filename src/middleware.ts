@@ -34,6 +34,8 @@ const LIVE_SITEMAPS: ReadonlySet<string> = new Set([
   '/sitemap-calcs-finanzas.xml',
   '/sitemap-calcs-construccion.xml',
   '/sitemap-hubs-recovery.xml',
+  '/sitemap-mx.xml',
+  '/sitemap-es.xml',
   '/sitemap-co.xml',
   '/sitemap-pe.xml',
   '/sitemap-ec.xml',
