@@ -18,7 +18,7 @@ import os
 import ssl
 import sys
 import urllib.request
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 try:
@@ -113,7 +113,7 @@ def get_quota() -> dict:
 
 
 def main():
-    today = datetime.utcnow().date()
+    today = datetime.now(UTC).date()
     iso_year, iso_week, _ = today.isocalendar()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     out_file = OUT_DIR / f"{iso_year}-W{iso_week:02d}.md"
