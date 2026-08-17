@@ -17,6 +17,7 @@ import json
 import os
 import ssl
 import sys
+import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
@@ -45,9 +46,26 @@ if not API_KEY:
 SITE = "https://hacecuentas.com"
 BASE = "https://ssl.bing.com/webmaster/api.svc/json"
 
+# Activos con mayor upside Bing y páginas que concentran la autoridad del sitio.
+# GetUrlInfo.AnchorCount es una señal propia de Bing; no equivale a dominios de
+# referencia y puede incluir anclas que Bing conoce sin exponer su origen.
+AUTHORITY_URLS = [
+    ("Dominio", "domain:hacecuentas.com"),
+    ("Home", f"{SITE}/"),
+    ("Mundial 2026", f"{SITE}/fixture-mundial-2026"),
+    ("Salario Colombia", f"{SITE}/co/datos-salario-minimo-colombia-2026"),
+    ("Festivos Colombia", f"{SITE}/feriados-colombia-2026"),
+    ("Salario México", f"{SITE}/mx/datos-salario-minimo-mexico-2026"),
+    ("UMA México", f"{SITE}/mx/datos-uma-imss-2026"),
+    ("Feriados Chile", f"{SITE}/feriados-chile-2026"),
+    ("Tipo de cambio SUNAT", f"{SITE}/pe/calculadora-tipo-de-cambio-sunat-dolar-soles-peru"),
+    ("Préstamo IESS", f"{SITE}/ec/calculadora-prestamo-quirografario-iess-ecuador"),
+]
 
-def call(endpoint: str) -> dict:
-    url = f"{BASE}/{endpoint}?siteUrl={SITE}&apikey={API_KEY}"
+
+def call(endpoint: str, **params) -> dict:
+    query = urllib.parse.urlencode({"siteUrl": SITE, "apikey": API_KEY, **params})
+    url = f"{BASE}/{endpoint}?{query}"
     req = urllib.request.Request(url)
     with urllib.request.urlopen(req, context=_ssl, timeout=60) as r:
         return json.loads(r.read())
@@ -113,6 +131,46 @@ def get_quota() -> dict:
         return {"daily": "?", "monthly": "?"}
 
 
+def get_url_info(label_url: tuple[str, str]) -> dict:
+    """Lee señales de descubrimiento/autoridad para una URL prioritaria."""
+    label, url = label_url
+    try:
+        d = call("GetUrlInfo", url=url).get("d", {})
+        return {
+            "label": label,
+            "url": url,
+            "anchors": d.get("AnchorCount", 0) or 0,
+            "children": d.get("TotalChildUrlCount", 0) or 0,
+        }
+    except Exception as exc:
+        sys.stderr.write(f"GetUrlInfo warning ({label}): {exc}\n")
+        return {"label": label, "url": url, "anchors": None, "children": None}
+
+
+def load_previous_anchor_counts(current_file: Path) -> dict[str, int]:
+    """Recupera el último snapshot para calcular deltas semanales."""
+    candidates = sorted((p for p in OUT_DIR.glob("????-W??.md") if p != current_file), reverse=True)
+    if not candidates:
+        return {}
+    counts = {}
+    in_section = False
+    for line in candidates[0].read_text(encoding="utf-8").splitlines():
+        if line == "## Señales de autoridad reconocidas por Bing":
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if not in_section or not line.startswith("|") or line.startswith("|---"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) >= 3 and cells[0] != "Activo":
+            try:
+                counts[cells[0]] = int(cells[2].replace(",", ""))
+            except ValueError:
+                pass
+    return counts
+
+
 def resolve_final_url(url: str) -> str:
     """Sigue redirects para no confundir aliases históricos con oportunidades CTR."""
     try:
@@ -136,6 +194,9 @@ def main():
     # GetPageStats usa el campo Query para contener la URL (tipo QueryStats).
     pages = aggregate_stats(get_page_stats())
     quota = get_quota()
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        authority = list(pool.map(get_url_info, AUTHORITY_URLS))
+    previous_anchors = load_previous_anchor_counts(out_file)
 
     # Bing API devuelve datos del último mes, no slice semanal puro.
     # Tomamos top 20 por impressions.
@@ -236,6 +297,25 @@ def main():
             lines.append(f"| {page} | {p['impressions']} | {p['clicks']} | {p['ctr']:.2f}% | {p['position']:.1f} | +{p['gain_at_2pct']} |")
     else:
         lines.append("_Sin URLs que cumplan los umbrales esta semana._")
+
+    lines += [
+        "",
+        "## Señales de autoridad reconocidas por Bing",
+        "",
+        "`AnchorCount` es una señal interna de Bing, no un conteo de dominios de referencia. El objetivo es ver si la autoridad deja de concentrarse en la home y empieza a llegar a las páginas prioritarias.",
+        "",
+        "| Activo | URL | AnchorCount | Δ semanal |",
+        "|---|---|---:|---:|",
+    ]
+    for item in authority:
+        anchors = item["anchors"]
+        previous = previous_anchors.get(item["label"])
+        if anchors is None:
+            anchor_text, delta_text = "?", "?"
+        else:
+            anchor_text = f"{anchors:,}"
+            delta_text = "—" if previous is None else f"{anchors - previous:+,}"
+        lines.append(f"| {item['label']} | {item['url']} | {anchor_text} | {delta_text} |")
 
     lines += [
         "",
