@@ -18,6 +18,7 @@ import os
 import ssl
 import sys
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -112,6 +113,18 @@ def get_quota() -> dict:
         return {"daily": "?", "monthly": "?"}
 
 
+def resolve_final_url(url: str) -> str:
+    """Sigue redirects para no confundir aliases históricos con oportunidades CTR."""
+    try:
+        req = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "HacéCuentas-BingPulse/1.0"})
+        with urllib.request.urlopen(req, context=_ssl, timeout=10) as response:
+            return response.geturl().rstrip("/")
+    except Exception as exc:
+        # Una falla temporal de red no debe sacar una URL del análisis.
+        sys.stderr.write(f"URL status warning ({url}): {exc}\n")
+        return url.rstrip("/")
+
+
 def main():
     today = datetime.now(UTC).date()
     iso_year, iso_week, _ = today.isocalendar()
@@ -138,8 +151,9 @@ def main():
     opps = [q for q in queries if q.get("Impressions", 0) >= 100 and q.get("Clicks", 0) <= 2]
     opps.sort(key=lambda q: q.get("Impressions", 0), reverse=True)
 
-    # URL-level opportunities: estas sí permiten priorizar una superficie concreta.
-    page_opps = []
+    # URL-level opportunities: primero separamos aliases 301 que Bing todavía
+    # reporta. Editar su snippet sería inútil; deben consolidarse en la canónica.
+    page_candidates = []
     for p in pages:
         impressions = p.get("Impressions", 0) or 0
         clicks = p.get("Clicks", 0) or 0
@@ -148,8 +162,19 @@ def main():
         page_ctr = clicks / impressions * 100 if impressions else 0
         gain_at_2pct = max(0, round(impressions * 0.02 - clicks))
         if impressions >= 500 and 3 <= position <= 10 and page_ctr < 2 and gain_at_2pct > 0:
-            page_opps.append({"page": page, "impressions": impressions, "clicks": clicks,
-                              "ctr": page_ctr, "position": position, "gain_at_2pct": gain_at_2pct})
+            page_candidates.append({"page": page, "impressions": impressions, "clicks": clicks,
+                                    "ctr": page_ctr, "position": position, "gain_at_2pct": gain_at_2pct})
+
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        final_urls = list(pool.map(resolve_final_url, [p["page"] for p in page_candidates]))
+    redirects = []
+    page_opps = []
+    for p, final_url in zip(page_candidates, final_urls):
+        if final_url != p["page"].rstrip("/"):
+            redirects.append({**p, "target": final_url})
+        else:
+            page_opps.append(p)
+    redirects.sort(key=lambda p: p["impressions"], reverse=True)
     page_opps.sort(key=lambda p: p["gain_at_2pct"], reverse=True)
 
     lines = [
@@ -191,6 +216,16 @@ def main():
     else:
         lines.append("_Sin consultas candidatas esta semana._")
 
+    lines += ["", "## Consolidación de redirects observados por Bing", "",
+              "Estas URLs todavía reciben impresiones en Bing pero hoy redirigen. No se optimiza su snippet: se reenvían alias y canónica por IndexNow.", "",
+              "| Alias observado | Impr | Clicks | Destino canónico |",
+              "|---|---:|---:|---|"]
+    if redirects:
+        for p in redirects:
+            lines.append(f"| {p['page']} | {p['impressions']} | {p['clicks']} | {p['target']} |")
+    else:
+        lines.append("_Sin aliases redirigidos dentro del set prioritario._")
+
     lines += ["", "## Oportunidades CTR por página (posición 3-10)", "",
               "Ordenadas por clics mensuales incrementales estimados si cada URL alcanza un CTR conservador de 2%.", "",
               "| Page | Impr | Clicks | CTR | Pos | Upside a 2% |",
@@ -224,7 +259,7 @@ def main():
     out_file.write_text("\n".join(lines) + "\n")
     print(f"[bing-pulse] escrito {out_file.relative_to(ROOT)}", file=sys.stderr)
     print(f"\nQueries: {len(queries)} | Impr: {total_impr:,} | Clicks: {total_clicks} | CTR: {ctr:.2f}%", file=sys.stderr)
-    print(f"Query candidates: {len(opps)} | Page CTR opportunities: {len(page_opps)}", file=sys.stderr)
+    print(f"Query candidates: {len(opps)} | Redirect aliases: {len(redirects)} | Page CTR opportunities: {len(page_opps)}", file=sys.stderr)
 
 
 if __name__ == "__main__":
