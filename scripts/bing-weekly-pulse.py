@@ -60,6 +60,7 @@ AUTHORITY_URLS = [
     ("Feriados Chile", f"{SITE}/feriados-chile-2026"),
     ("Tipo de cambio SUNAT", f"{SITE}/pe/calculadora-tipo-de-cambio-sunat-dolar-soles-peru"),
     ("Préstamo IESS", f"{SITE}/ec/calculadora-prestamo-quirografario-iess-ecuador"),
+    ("TRM Colombia", f"{SITE}/co/calculadora-trm-dolar-hoy-pesos-colombianos"),
 ]
 
 
@@ -89,6 +90,18 @@ def get_page_stats() -> list:
     except Exception as e:
         sys.stderr.write(f"GetPageStats error: {e}\n")
         return []
+
+
+def get_page_query_stats(page: str) -> dict:
+    """Mapea una URL a las consultas reales que Bing le asignó."""
+    try:
+        resp = call("GetPageQueryStats", page=page)
+        rows = aggregate_stats(resp.get("d", []))
+        rows.sort(key=lambda row: row.get("Impressions", 0), reverse=True)
+        return {"page": page, "queries": rows}
+    except Exception as exc:
+        sys.stderr.write(f"GetPageQueryStats warning ({page}): {exc}\n")
+        return {"page": page, "queries": []}
 
 
 def aggregate_stats(rows: list, key: str = "Query") -> list:
@@ -237,6 +250,11 @@ def main():
             page_opps.append(p)
     redirects.sort(key=lambda p: p["impressions"], reverse=True)
     page_opps.sort(key=lambda p: p["gain_at_2pct"], reverse=True)
+    # La API sí permite mapear página→consulta. Enriquecemos solo las 20 URLs
+    # accionables para no multiplicar llamadas sobre aliases o páginas menores.
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        page_query_rows = list(pool.map(get_page_query_stats, [p["page"] for p in page_opps[:20]]))
+    page_queries = {item["page"]: item["queries"] for item in page_query_rows}
 
     lines = [
         f"# Bing KPI Pulse — semana {iso_year}-W{iso_week:02d}",
@@ -265,7 +283,7 @@ def main():
         "",
         "## Consultas de demanda a investigar (≥100 impr, ≤2 clicks)",
         "",
-        "La API no informa qué URL respondió cada consulta. Son candidatos para mapear contra las páginas; por sí solos no prueban un problema de title/meta.",
+        "Son consultas globales para descubrir demanda. La sección por página más abajo usa `GetPageQueryStats` para confirmar qué URL respondió antes de cambiar title o contenido.",
         "",
         "| Query | Impr | Clicks | CTR |",
         "|---|---:|---:|---:|",
@@ -293,10 +311,33 @@ def main():
               "|---|---:|---:|---:|---:|---:|"]
     if page_opps:
         for p in page_opps[:20]:
-            page = p["page"] if len(p["page"]) <= 65 else p["page"][:65] + "..."
-            lines.append(f"| {page} | {p['impressions']} | {p['clicks']} | {p['ctr']:.2f}% | {p['position']:.1f} | +{p['gain_at_2pct']} |")
+            path = urllib.parse.urlparse(p["page"]).path or "/"
+            lines.append(f"| [{path}]({p['page']}) | {p['impressions']} | {p['clicks']} | {p['ctr']:.2f}% | {p['position']:.1f} | +{p['gain_at_2pct']} |")
     else:
         lines.append("_Sin URLs que cumplan los umbrales esta semana._")
+
+    lines += [
+        "",
+        "## Consultas reales por oportunidad",
+        "",
+        "Top consultas de cada URL según `GetPageQueryStats`. Esto permite alinear snippets con demanda demostrada y detectar intención cruzada sin inferencias.",
+        "",
+        "| Página | Query | Impr | Clicks | CTR | Pos |",
+        "|---|---|---:|---:|---:|---:|",
+    ]
+    query_detail_count = 0
+    for p in page_opps[:20]:
+        path = urllib.parse.urlparse(p["page"]).path or "/"
+        for query in page_queries.get(p["page"], [])[:5]:
+            impressions = query.get("Impressions", 0) or 0
+            clicks = query.get("Clicks", 0) or 0
+            qctr = clicks / impressions * 100 if impressions else 0
+            lines.append(
+                f"| [{path}]({p['page']}) | {query.get('Query','?')} | {impressions} | {clicks} | {qctr:.2f}% | {query.get('Position',0):.1f} |"
+            )
+            query_detail_count += 1
+    if not query_detail_count:
+        lines.append("_Bing no devolvió consultas por URL esta semana._")
 
     lines += [
         "",
@@ -326,8 +367,8 @@ def main():
     ]
     for p in pages[:10]:
         page = p.get("Query", "") or "(no URL reported)"
-        if len(page) > 70: page = page[:70] + "..."
-        lines.append(f"| {page} | {p.get('Impressions',0)} | {p.get('Clicks',0)} |")
+        path = urllib.parse.urlparse(page).path or "/"
+        lines.append(f"| [{path}]({page}) | {p.get('Impressions',0)} | {p.get('Clicks',0)} |")
 
     lines += [
         "",
