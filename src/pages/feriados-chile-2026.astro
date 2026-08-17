@@ -25,6 +25,13 @@ const SITE = 'https://hacecuentas.com';
 const URL = `${SITE}/${slug}`;
 const total = feriados.length;
 
+// El calendario oficial del Gobierno de Chile también registra dos feriados
+// territoriales. Se separan de los 16 nacionales para no inflar el total país.
+const feriadosTerritoriales = [
+  { fecha: '2026-06-07', dia: 'Domingo', nombre: 'Asalto y Toma del Morro de Arica', alcance: 'Región de Arica y Parinacota' },
+  { fecha: '2026-08-20', dia: 'Jueves', nombre: 'Natalicio de Bernardo O’Higgins', alcance: 'Comunas de Chillán y Chillán Viejo' },
+];
+
 const IRRENUNCIABLE = 'Irrenunciable';
 const irrenunciables = feriados.filter((f) => f.tipo === IRRENUNCIABLE);
 // Fin de semana largo = feriado en lunes o viernes (pega con el finde).
@@ -66,8 +73,8 @@ const OTROS_FERIADOS = [
   { slug: 'feriados-2026', pais: 'todos los países', flag: '🌎' },
 ];
 
-const title = 'Feriados Chile 2026: calendario e irrenunciables';
-const description = 'Consultá los 16 feriados de Chile 2026: próximo feriado, fechas, irrenunciables, fines de semana largos y puentes del calendario oficial.';
+const title = 'Feriados Chile 2026: 16 fechas y 5 irrenunciables';
+const description = 'Calendario oficial de los 16 feriados de Chile 2026 y 5 irrenunciables. Próximo feriado nacional: 18 de septiembre; incluye fechas regionales.';
 
 const faq = [
   { q: `¿Cuántos feriados hay en ${pais} en 2026?`, a: `En 2026 hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de esta página.` },
@@ -76,7 +83,7 @@ const faq = [
   { q: `¿Cuántos fines de semana largos hay en 2026?`, a: `En 2026 hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo por sí solos.${proxFindeLargo ? ` El próximo es ${proxFindeLargo.dia} ${fmtLarga(proxFindeLargo.fecha)} (${proxFindeLargo.nombre}).` : ''}` },
   { q: `¿Cómo armo un puente en 2026 en ${pais}?`, a: puentes.length ? `Un puente se arma cuando un feriado cae martes o jueves: pedís el lunes anterior o el viernes siguiente y te quedan 4 días seguidos. En ${pais} hay ${puentes.length} feriado${puentes.length === 1 ? '' : 's'} en martes o jueves en 2026 para aprovechar así. El detalle está en la sección "Puentes 2026" de esta página.` : `En 2026 no hay feriados nacionales en martes o jueves en ${pais}, así que no se arma un puente clásico de 4 días con un solo día de licencia.` },
   { q: `¿Qué significa que un feriado sea irrenunciable?`, a: `${notaTipo} En el resto de los feriados el comercio puede abrir y se puede pactar trabajo, con el pago que corresponda.` },
-  { q: `¿Estos feriados son nacionales o también hay locales?`, a: `La tabla lista los feriados nacionales de ${pais} (válidos en todo el país). Además puede haber feriados regionales o comunales según la zona, que no están incluidos acá.` },
+  { q: `¿Estos feriados son nacionales o también hay locales?`, a: `La tabla principal lista los 16 feriados nacionales de ${pais}, válidos en todo el país. Además, en 2026 hay dos feriados territoriales: el 7 de junio en la Región de Arica y Parinacota y el 20 de agosto en las comunas de Chillán y Chillán Viejo. Están detallados en una tabla separada para no confundirlos con los nacionales.` },
   { q: `¿Se trabaja en los feriados? ¿Cómo se paga si trabajo un feriado en ${pais}?`, a: `${notaTipo} Para calcular exactamente cuánto cobrás por trabajar un feriado, usá la ${RECARGO_CALC.label.toLowerCase()}, enlazada en esta página.` },
   { q: `¿De dónde salen estas fechas?`, a: `De las normas oficiales de ${pais} (${marco}). Verificamos cada fecha y su día de la semana contra el calendario real 2026. Última revisión: ${dataAsOf}.` },
   { q: `¿Puedo usar este calendario en mi web o trabajo?`, a: `Sí, bajo licencia CC-BY 4.0: reproducí los datos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".` },
@@ -122,7 +129,7 @@ const schema = { '@context': 'https://schema.org', '@graph': [
       <header class="cf-hero">
         <div class="cf-hero__main">
           <p class="cf-kicker"><span aria-hidden="true">🇨🇱</span> Chile · Calendario oficial 2026</p>
-          <h1 class="cf-h1">Calendario Chile <span class="cf-yr">2026</span>: {total} feriados</h1>
+          <h1 class="cf-h1">Feriados Chile <span class="cf-yr">2026</span>: {total} fechas oficiales</h1>
           <p class="cf-sub">Los {total} feriados nacionales con su fecha exacta y día de la semana, cuáles son irrenunciables y dónde están los fines de semana largos.</p>
           <ul class="cf-pills">
             <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
@@ -300,6 +307,33 @@ const schema = { '@context': 'https://schema.org', '@graph': [
         {notaTipo && <p class="fc-note" style="margin-top:0.6rem">{notaTipo}</p>}
       </section>
 
+      <!-- Feriados regionales y comunales -->
+      <section class="cf-section" id="feriados-regionales">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">Sólo en algunas zonas</p>
+            <h2 class="cf-section__title">Feriados regionales y comunales de Chile 2026</h2>
+          </div>
+          <p class="cf-section__lead">No se suman a los 16 nacionales: aplican únicamente en el territorio indicado.</p>
+        </div>
+        <div class="cf-tablewrap">
+          <table class="cf-table">
+            <thead><tr><th>Fecha</th><th>Día</th><th>Feriado</th><th>Dónde aplica</th></tr></thead>
+            <tbody>
+              {feriadosTerritoriales.map((f) => (
+                <tr>
+                  <td class="fc-nowrap"><strong>{fmtFecha(f.fecha)}</strong></td>
+                  <td>{f.dia}</td>
+                  <td>{f.nombre}</td>
+                  <td>{f.alcance}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="fc-note" style="margin-top:0.6rem">El jueves 20 de agosto es feriado sólo en Chillán y Chillán Viejo; no corresponde al resto de la Región de Ñuble ni al país completo.</p>
+      </section>
+
       <!-- Fines de semana largos y puentes -->
       <section class="cf-section">
         <div class="cf-section__head">
@@ -398,7 +432,7 @@ Feriados {pais} 2026 · Licencia CC-BY 4.0</code></pre>
               ))}
               <div class="fc-src__item"><strong>{marco.charAt(0).toUpperCase() + marco.slice(1)}</strong><span>Marco legal de los feriados en {pais}</span></div>
             </div>
-            <p class="fc-src__foot">● Información revisada en julio de 2026</p>
+            <p class="fc-src__foot">● Información revisada el {dataAsOf}</p>
           </div>
         </div>
       </div>

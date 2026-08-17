@@ -150,11 +150,12 @@ export const FERIADOS_LATAM_2026: Record<string, FeriadosPais> = {
   },
   chile: {
     pais: 'Chile', gentilicio: 'los chilenos', audience: 'CL', slug: 'feriados-chile-2026',
-    totalLabel: '16 feriados nacionales', dataAsOf: '2026-08-04',
+    totalLabel: '16 feriados nacionales', dataAsOf: '2026-08-17',
     marco: 'Ley 19.973 y normas que establecen los feriados legales de Chile',
     notaTipo: 'Irrenunciable = descanso obligatorio para los trabajadores del comercio alcanzados por la Ley 19.973 (Año Nuevo, 1 de mayo, 18 y 19 de septiembre, y Navidad). La ley contempla excepciones, entre ellas restaurantes, entretenimiento, combustibles y farmacias de turno.',
     fuentes: [
       { nombre: 'Dirección del Trabajo — feriados obligatorios e irrenunciables', url: 'https://www.dt.gob.cl/portal/1628/w3-article-95017.html' },
+      { nombre: 'Gobierno de Chile — calendario de feriados nacionales y regionales 2026', url: 'https://www.gob.cl/noticias/feriados-2026-revisa-cuantos-habra-y-cuales-son-irrenunciables/' },
       { nombre: 'Feriados.cl — calendario legal 2026', url: 'https://www.feriados.cl/' },
     ],
     feriados: FERIADOS_CL_2026,

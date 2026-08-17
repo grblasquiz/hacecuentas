@@ -14,9 +14,18 @@ describe('calendario Chile 2026', () => {
     expect(FERIADOS_CL_2026.map((feriado) => feriado.fecha)).toContain('2026-12-25');
   });
 
-  it('alinea title y H1 con la consulta calendario Chile 2026', () => {
-    expect(page).toContain("const title = 'Feriados Chile 2026: calendario e irrenunciables'");
-    expect(page).toContain('Calendario Chile <span class="cf-yr">2026</span>: {total} feriados');
+  it('alinea title y H1 con la consulta exacta feriados Chile 2026', () => {
+    expect(page).toContain("const title = 'Feriados Chile 2026: 16 fechas y 5 irrenunciables'");
+    expect(page).toContain('Feriados Chile <span class="cf-yr">2026</span>: {total} fechas oficiales');
+  });
+
+  it('distingue los feriados territoriales sin sumarlos al total nacional', () => {
+    expect(page).toContain("fecha: '2026-06-07'");
+    expect(page).toContain("fecha: '2026-08-20'");
+    expect(page).toContain('Comunas de Chillán y Chillán Viejo');
+    expect(page).toContain('No se suman a los 16 nacionales');
+    expect(FERIADOS_LATAM_2026.chile.dataAsOf).toBe('2026-08-17');
+    expect(FERIADOS_LATAM_2026.chile.fuentes[1].url).toContain('gob.cl/noticias/feriados-2026');
   });
 
   it('explica el alcance legal y sus excepciones con fuente oficial', () => {
