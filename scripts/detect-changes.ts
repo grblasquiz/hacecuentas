@@ -396,8 +396,14 @@ function buildPipelineScripts(): Set<string> {
     const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
       scripts?: Record<string, string>;
     };
-    const build = pkg.scripts?.build ?? '';
-    for (const m of build.matchAll(/scripts\/([A-Za-z0-9._-]+)\.(?:mjs|ts|js|py)/g)) {
+    // `build` delega en `build:raw`; mirar sólo el primer string dejaba fuera
+    // postprocesadores globales como optimize-css-loading.mjs. Cualquier
+    // script npm del pipeline build/prebuild puede afectar todos los HTML.
+    const pipelineCommands = Object.entries(pkg.scripts || {})
+      .filter(([name]) => name === 'prebuild' || name === 'build' || name.startsWith('build:'))
+      .map(([, command]) => command)
+      .join('\n');
+    for (const m of pipelineCommands.matchAll(/scripts\/([A-Za-z0-9._-]+)\.(?:mjs|ts|js|py)/g)) {
       set.add(m[1]);
     }
   } catch {

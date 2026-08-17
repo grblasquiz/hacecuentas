@@ -127,6 +127,10 @@ export const hub: HubData = {
 
   faq: [
     {
+      q: '¿Cuántas libras son 75 kilos?',
+      a: '75 kilogramos son 165,3466967 libras; redondeado a dos decimales, 165,35 lb. La cuenta es 75 ÷ 0,45359237, porque una libra internacional equivale exactamente a 0,45359237 kg. Para una referencia rápida, 75 kg son aproximadamente 165 libras.',
+    },
+    {
       q: '¿Cuánto es 1 kilo en libras?',
       a: '1 kilogramo = 2,204622622 libras. El camino de ida es el exacto: 1 libra = 0,45359237 kg por definición, y el 2,2046 sale de dividir 1 por ese número. Para la cuenta mental, multiplicar por 2,2 te deja a menos de un 0,3% del valor real: 70 kg son 154 lb.',
     },
@@ -210,7 +214,7 @@ export const hub: HubData = {
     '/calculadora-conversion-quintal-tonelada-kg-agro',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-16',
   audience: 'global',
 };
 
