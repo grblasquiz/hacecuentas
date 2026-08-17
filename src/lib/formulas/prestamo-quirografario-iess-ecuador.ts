@@ -20,7 +20,7 @@ export function tasaBiessPorPlazo(meses: number): number {
   if (meses <= 6) return 0.065;
   if (meses <= 9) return 0.075;
   if (meses <= 12) return 0.085;
-  if (meses <= 48) return 0.11;
+  if (meses <= 48) return 0.1284;
   return 0.1299; // 49–60 meses
 }
 

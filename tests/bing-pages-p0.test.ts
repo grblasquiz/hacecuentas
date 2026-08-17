@@ -11,13 +11,19 @@ describe('páginas prioritarias de Bing', () => {
     expect(tasaBiessPorPlazo(6)).toBe(0.065);
     expect(tasaBiessPorPlazo(9)).toBe(0.075);
     expect(tasaBiessPorPlazo(12)).toBe(0.085);
-    expect(tasaBiessPorPlazo(48)).toBe(0.11);
+    expect(tasaBiessPorPlazo(13)).toBe(0.1284);
+    expect(tasaBiessPorPlazo(36)).toBe(0.1284);
+    expect(tasaBiessPorPlazo(48)).toBe(0.1284);
     expect(tasaBiessPorPlazo(60)).toBe(0.1299);
 
     const result = computeIess({ sueldoMensual: 1_200, montoSolicitado: 50_000, plazoMeses: 60 });
     expect(result.montoMaximo).toContain('38.560');
     expect(result.montoAprobado).toContain('38.560');
     expect(result.detalle).toContain('12.99%');
+
+    const result36 = computeIess({ sueldoMensual: 1_200, montoSolicitado: 10_000, plazoMeses: 36 });
+    expect(result36.cuotaMensual).toContain('336,17');
+    expect(result36.detalle).toContain('12.84%');
   });
 
   it('reproduce el caso control del algoritmo de retenciones AEAT 2026', () => {
