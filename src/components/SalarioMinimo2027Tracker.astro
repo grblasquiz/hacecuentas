@@ -1,0 +1,183 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import type { SalarioMinimo2027Pais } from '../lib/data/salario-minimo-2027';
+import { sourceRel } from '../lib/source-rel';
+
+// Tracker "salario mínimo 2027" por país. Formato anti-especulación: separa con
+// dureza lo VIGENTE (dato legal), lo LEGISLADO/ANUNCIADO (con quién lo dijo) y
+// lo NO definido. Es la página que responde "cuánto va a ser el mínimo en 2027"
+// meses antes del anuncio, y se actualiza cuando sale la norma (proximaRevision).
+
+interface Props {
+  data: SalarioMinimo2027Pais;
+}
+const { data } = Astro.props as Props;
+const {
+  pais, audience, slug, slug2026, nombreDelMinimo, vigenteHoy, vigenteDetalle,
+  estado2027, definicion, mecanismo, cronograma, historico, queSeSabe,
+  advertencia, proximaRevision, dataAsOf, fuentes, calcRelacionada,
+} = data;
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/${slug}`;
+
+const title = `Salario mínimo ${pais} 2027: cuándo se define y qué se sabe`;
+const description = `Salario mínimo ${pais} 2027: cuándo se anuncia, cómo se define, qué aumentos se anunciaron y el histórico de los últimos años. Hoy rige ${vigenteHoy.split('·')[0].trim()}.`;
+
+const faq = [
+  { q: `¿Ya se sabe cuánto será el salario mínimo de ${pais} en 2027?`, a: `${estado2027} ${advertencia}` },
+  { q: `¿Cuándo se define el salario mínimo 2027 en ${pais}?`, a: definicion },
+  { q: `¿Cuál es el ${nombreDelMinimo} vigente hoy en ${pais}?`, a: `${vigenteHoy}. ${vigenteDetalle}` },
+  { q: `¿Quién fija el salario mínimo en ${pais}?`, a: mecanismo },
+  { q: `¿Cuánto aumentó el salario mínimo en ${pais} los últimos años?`, a: historico.map((h) => `${h.anio}: ${h.valor}${h.detalle ? ` (${h.detalle})` : ''}`).join(' · ') + '.' },
+  { q: `¿Qué anuncios reales hay para 2027?`, a: queSeSabe.join(' ') },
+  { q: `¿Cuándo se actualiza esta página?`, a: `Apenas haya novedad oficial: la próxima revisión programada es ${proximaRevision}. Última revisión: ${dataAsOf}.` },
+  { q: `¿Puedo citar estos datos?`, a: `Sí, bajo licencia CC-BY 4.0: reproducí los datos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".` },
+];
+
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'WebPage', '@id': `${URL}#webpage`, name: title, description, url: URL, inLanguage: 'es', dateModified: dataAsOf, mainEntity: { '@id': `${URL}#dataset` } },
+  { '@type': 'Dataset', '@id': `${URL}#dataset`,
+    name: `Salario mínimo ${pais} 2027 — tracker`,
+    description: `Estado de la definición del salario mínimo 2027 de ${pais}: valor vigente, mecanismo legal, cronograma, anuncios oficiales e histórico.`,
+    url: URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+    inLanguage: 'es', dateModified: dataAsOf, temporalCoverage: '2026/2027',
+    spatialCoverage: { '@type': 'Place', name: pais },
+    creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
+    variableMeasured: ['Valor vigente', 'Cronograma de definición', 'Histórico de aumentos'] },
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: `Salario mínimo ${pais} 2027`, item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+---
+
+<Layout title={title} description={description} canonical={`/${slug}`} audience={audience} schema={schema}>
+  <Header slot="header" />
+  <main class="article-main">
+    <article class="smtracker">
+      <header>
+        <nav class="crumbs"><a href="/">Inicio</a> <span>›</span> <span>Salario mínimo {pais} 2027</span></nav>
+        <h1>Salario mínimo {pais} 2027: cuándo se define y qué se sabe</h1>
+        <p class="updated">Última revisión: <time datetime={dataAsOf}>{dataAsOf}</time> · Próxima revisión programada: {proximaRevision} · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a></p>
+      </header>
+
+      <p class="answer-box">{estado2027}</p>
+
+      <section class="estado-grid">
+        <div class="card card-vigente">
+          <span class="card-label">Vigente hoy ({nombreDelMinimo})</span>
+          <span class="card-value">{vigenteHoy}</span>
+          <p class="card-note">{vigenteDetalle} <a href={slug2026}>Ver la ficha completa del valor vigente →</a></p>
+        </div>
+        <div class="card card-2027">
+          <span class="card-label">Definición del valor 2027</span>
+          <span class="card-value">{definicion}</span>
+          <p class="card-note">{advertencia}</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Qué se sabe hoy del salario mínimo 2027 en {pais}</h2>
+        <ul class="sabe">
+          {queSeSabe.map((s) => (<li>{s}</li>))}
+        </ul>
+      </section>
+
+      {cronograma.length > 0 && (
+        <section>
+          <h2>Cronograma: cómo sigue la definición</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th class="l">Cuándo</th><th class="l">Qué pasa</th></tr></thead>
+              <tbody>
+                {cronograma.map((c) => (<tr><td class="l nowrap"><strong>{c.fecha}</strong></td><td class="l">{c.hito}</td></tr>))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2>Quién y cómo lo fija</h2>
+        <p>{mecanismo}</p>
+      </section>
+
+      <section>
+        <h2>Histórico del {nombreDelMinimo} en {pais}</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="l">Año</th><th class="l">Valor</th><th class="l">Aumento / norma</th></tr></thead>
+            <tbody>
+              {historico.map((h) => (<tr><td class="l nowrap">{h.anio}</td><td class="l">{h.valor}</td><td class="l">{h.detalle ?? '—'}</td></tr>))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {calcRelacionada && (
+        <section class="calc-cta-box">
+          <h2>Calculá con el valor vigente</h2>
+          <p>Mientras el valor 2027 no exista, toda cuenta se hace con el vigente. <a href={calcRelacionada.href}>→ {calcRelacionada.label}</a></p>
+        </section>
+      )}
+
+      <section class="otros-paises">
+        <h2>Salario mínimo 2027 en otros países</h2>
+        <p><a href="/datos-salario-minimo-latam-2027">Ver el tracker regional: qué se sabe del salario mínimo 2027 país por país →</a></p>
+      </section>
+
+      <section class="cite-instructions">
+        <h2>Cómo citar esta página</h2>
+        <pre><code>Fuente: Hacé Cuentas — {URL}
+Salario mínimo {pais} 2027 · Licencia CC-BY 4.0</code></pre>
+      </section>
+
+      <section class="faq">
+        <h2>Preguntas frecuentes</h2>
+        {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+      </section>
+
+      <section class="fuentes">
+        <h2>Fuentes</h2>
+        <ul>{fuentes.map((s) => (<li><a href={s.url} rel={sourceRel(s.url)} target="_blank">{s.nombre}</a></li>))}</ul>
+      </section>
+    </article>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .smtracker { max-width: 900px; margin: 0 auto; padding: 1rem 1rem 4rem; }
+  .crumbs { font-size: .85rem; color: var(--text-muted); margin-bottom: .75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  .smtracker h1 { font-size: 2rem; line-height: 1.2; margin-bottom: .75rem; }
+  .updated { font-size: .85rem; color: var(--text-muted); }
+  .updated a { color: var(--accent); }
+  .smtracker h2 { font-size: 1.4rem; margin-top: 2.5rem; margin-bottom: .75rem; }
+  .answer-box { margin: 1.25rem 0 0; padding: .9rem 1.1rem; background: var(--bg-soft); border-left: 3px solid var(--accent); border-radius: .5rem; font-size: 1.05rem; line-height: 1.55; }
+  .estado-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .9rem; margin-top: 1.5rem; }
+  .card { border: 1px solid var(--border); border-radius: .7rem; padding: 1rem 1.1rem; background: var(--bg-soft); }
+  .card-2027 { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+  .card-label { display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
+  .card-value { display: block; margin-top: .3rem; font-size: 1.15rem; font-weight: 700; line-height: 1.35; }
+  .card-note { margin-top: .5rem; font-size: .88rem; color: var(--text-muted); line-height: 1.55; }
+  .card-note a { color: var(--accent); }
+  .sabe li { line-height: 1.65; margin-bottom: .6rem; }
+  .sabe { margin-left: 1.25rem; }
+  .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { padding: .6rem .7rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--bg-soft); font-weight: 600; }
+  .nowrap { white-space: nowrap; }
+  .calc-cta-box a, .otros-paises a, .fuentes a { color: var(--accent); font-weight: 600; }
+  .cite-instructions { margin-top: 2.5rem; padding: 1.1rem; background: var(--bg-soft); border-radius: .6rem; }
+  .cite-instructions pre { background: var(--code-bg, #eaeef3); padding: .75rem; border-radius: .4rem; overflow-x: auto; font-size: .85rem; white-space: pre-wrap; }
+  .faq details { border-bottom: 1px solid var(--border); padding: .75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: .5rem; color: var(--text-muted); line-height: 1.6; }
+  .fuentes li { line-height: 1.7; margin-bottom: .4rem; }
+  .fuentes ul { margin-left: 1.25rem; }
+</style>

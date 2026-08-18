@@ -1,0 +1,109 @@
+---
+export const prerender = true;
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SALARIO_MINIMO_2027 } from '../lib/data/salario-minimo-2027';
+
+// Tracker regional "salario mínimo 2027": qué se sabe país por país, meses antes
+// de los anuncios (dic-2026/ene-2027). Rutea a los trackers nacionales y le pasa
+// autoridad al hub 2026 vigente (y viceversa).
+
+const PAISES = ['colombia', 'mexico', 'chile', 'peru', 'ecuador']
+  .map((k) => (SALARIO_MINIMO_2027 as Record<string, any>)[k])
+  .filter(Boolean);
+
+const canonical = 'https://hacecuentas.com/datos-salario-minimo-latam-2027';
+const title = 'Salario mínimo 2027 por país: qué se sabe y cuándo se define';
+const description =
+  'Salario mínimo 2027 en Latinoamérica: qué se sabe hoy en Colombia, México, Chile, Perú y Ecuador, cuándo se define cada uno y qué aumentos ya están legislados o anunciados.';
+
+const faq = [
+  {
+    q: '¿Ya se sabe el salario mínimo 2027 de algún país?',
+    a: 'Ningún país tiene el monto 2027 decretado todavía. Chile es el más avanzado: el reajuste del 1-ene-2027 ya está legislado (Ley 21.830, sube por IPC) y solo falta el monto exacto. Perú tiene un aumento anunciado en dos tramos (S/ 1.230 en nov-2026 y S/ 1.300 en abr-2027), pendiente de decreto. Colombia, México y Ecuador lo definen en diciembre de 2026.',
+  },
+  {
+    q: '¿Cuándo se anuncia el salario mínimo 2027 en cada país?',
+    a: PAISES.map((p) => `${p.pais}: ${p.definicion}`).join(' · '),
+  },
+  {
+    q: '¿Qué valores rigen hoy?',
+    a: PAISES.map((p) => `${p.pais}: ${p.vigenteHoy}`).join(' · ') + '. Son los valores para cualquier cálculo actual.',
+  },
+];
+
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'WebPage', name: title, description, url: canonical, inLanguage: 'es', dateModified: '2026-08-18', mainEntity: { '@id': `${canonical}#dataset` } },
+  { '@type': 'Dataset', '@id': `${canonical}#dataset`,
+    name: 'Salario mínimo 2027 por país — tracker regional',
+    description: 'Estado de definición del salario mínimo 2027 en Colombia, México, Chile, Perú y Ecuador: valor vigente, fecha de definición y anuncios oficiales.',
+    url: canonical, dateModified: '2026-08-18', temporalCoverage: '2026/2027', spatialCoverage: 'Latinoamérica',
+    license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+    creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' } },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+---
+
+<Layout title={title} description={description} canonical={canonical} schema={schema} lang="es">
+  <Header />
+  <main class="hub">
+    <h1>Salario mínimo 2027 por país: qué se sabe hoy</h1>
+    <p class="lead">
+      Ningún país de la región tiene todavía el monto 2027 decretado, pero el estado es muy distinto entre
+      países: Chile ya legisló su reajuste de enero, Perú anunció un aumento en dos tramos y el resto lo
+      define en diciembre. Esta página se actualiza con cada anuncio oficial.
+    </p>
+
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th scope="col">País</th>
+          <th scope="col">Vigente hoy</th>
+          <th scope="col">Estado del valor 2027</th>
+          <th scope="col">Ficha</th>
+        </tr>
+      </thead>
+      <tbody>
+        {PAISES.map((p) => (
+          <tr>
+            <th scope="row">{p.pais}</th>
+            <td>{p.vigenteHoy}</td>
+            <td>{p.estado2027}</td>
+            <td><a href={`/${p.slug}`}>Ver tracker {p.pais} →</a></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <h2>Preguntas frecuentes</h2>
+    {faq.map((f) => (
+      <details>
+        <summary>{f.q}</summary>
+        <p>{f.a}</p>
+      </details>
+    ))}
+
+    <h2>¿Buscabas los valores vigentes?</h2>
+    <ul class="links">
+      <li><a href="/datos-salario-minimo-latam-2026">Salario mínimo 2026 por país</a> — la tabla comparativa con los valores que rigen hoy en 11 países.</li>
+    </ul>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .hub { max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); line-height: 1.2; margin: 0 0 .6rem; }
+  .lead { color: var(--muted, #555); margin: 0 0 1.5rem; line-height: 1.6; }
+  h2 { font-size: 1.25rem; margin: 2rem 0 .75rem; }
+  .tabla { width: 100%; border-collapse: collapse; font-size: .93rem; display: block; overflow-x: auto; }
+  .tabla th, .tabla td { padding: .6rem .7rem; border-bottom: 1px solid var(--border, #e5e5e5); text-align: left; vertical-align: top; }
+  .tabla thead th { font-weight: 600; white-space: nowrap; }
+  .tabla tbody th { font-weight: 600; white-space: nowrap; }
+  details { border-bottom: 1px solid var(--border, #e5e5e5); padding: .6rem 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { margin: .6rem 0 0; color: var(--muted, #555); line-height: 1.6; }
+  .links { padding-left: 1.1rem; }
+  .links li { margin: .35rem 0; }
+</style>
