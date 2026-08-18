@@ -15,8 +15,10 @@ interface Props {
   related?: { href: string; label: string }[];
   title?: string;
   description?: string;
+  anio?: number;
 }
-const { data, related = [], title: titleOverride, description: descriptionOverride } = Astro.props as Props;
+const { data, related = [], title: titleOverride, description: descriptionOverride, anio = 2026 } = Astro.props as Props;
+const anioSig = anio + 1;
 const { pais, gentilicio, audience, slug, totalLabel, dataAsOf, marco, notaTipo, fuentes, feriados } = data;
 
 const SITE = 'https://hacecuentas.com';
@@ -39,12 +41,14 @@ const diasHastaTxt = diasHasta === 0 ? 'es hoy' : diasHasta === 1 ? 'es mañana'
 
 // Cross-linking entre países (cluster temático de feriados LATAM).
 const OTROS_FERIADOS = [
-  { slug: 'calculadora-feriados-argentina-2026-calendario', pais: 'Argentina', flag: '🇦🇷' },
-  { slug: 'feriados-chile-2026', pais: 'Chile', flag: '🇨🇱' },
-  { slug: 'feriados-colombia-2026', pais: 'Colombia', flag: '🇨🇴' },
-  { slug: 'feriados-peru-2026', pais: 'Perú', flag: '🇵🇪' },
-  { slug: 'feriados-mexico-2026', pais: 'México', flag: '🇲🇽' },
-  { slug: 'feriados-ecuador-2026', pais: 'Ecuador', flag: '🇪🇨' },
+  // AR 2026: la calc dedicada está podada (301) → se enlaza la página viva de
+  // feriados AR. Desde 2027 existe la landing propia feriados-argentina-<año>.
+  { slug: anio === 2026 ? 'fechas/feriados' : `feriados-argentina-${anio}`, pais: 'Argentina', flag: '🇦🇷' },
+  { slug: `feriados-chile-${anio}`, pais: 'Chile', flag: '🇨🇱' },
+  { slug: `feriados-colombia-${anio}`, pais: 'Colombia', flag: '🇨🇴' },
+  { slug: `feriados-peru-${anio}`, pais: 'Perú', flag: '🇵🇪' },
+  { slug: `feriados-mexico-${anio}`, pais: 'México', flag: '🇲🇽' },
+  { slug: `feriados-ecuador-${anio}`, pais: 'Ecuador', flag: '🇪🇨' },
 ].filter((p) => p.slug !== slug);
 
 const fmtFecha = (iso: string) => {
@@ -78,29 +82,29 @@ const RECARGO_CALC: Record<string, { href: string; label: string }> = {
 };
 const recargoCalc = RECARGO_CALC[audience] ?? null;
 
-const title = titleOverride ?? `Calendario ${pais} 2026: feriados y días festivos con fechas | Hacé Cuentas`;
-const description = descriptionOverride ?? `Calendario ${pais} 2026: los ${total} feriados y días festivos con la fecha exacta, el día de la semana y todos los fines de semana largos y puentes. Mirá cuál es el próximo. Datos oficiales verificados.`;
+const title = titleOverride ?? `Calendario ${pais} ${anio}: feriados y días festivos con fechas | Hacé Cuentas`;
+const description = descriptionOverride ?? `Calendario ${pais} ${anio}: los ${total} feriados y días festivos con la fecha exacta, el día de la semana y todos los fines de semana largos y puentes. Mirá cuál es el próximo. Datos oficiales verificados.`;
 
 const faq = [
-  { q: `¿Cuántos feriados hay en ${pais} en 2026?`, a: `En 2026 hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de arriba.` },
-  { q: `¿Cuándo es el próximo feriado en ${pais}?`, a: proximo ? `El próximo feriado en ${pais} es el ${fmtLarga(proximo.fecha)} (${proximo.dia}): ${proximo.nombre}${diasHasta !== null && diasHasta > 1 ? `, faltan ${diasHasta} días` : ''}. Quedan ${quedanEnAnio} feriado${quedanEnAnio === 1 ? '' : 's'} en lo que resta de 2026. La tabla marca el próximo automáticamente según la fecha de hoy.` : `Ya pasaron todos los feriados nacionales de 2026 en ${pais}. Usá el calendario para planificar tus días libres del próximo año.` },
-  { q: `¿Cuántos fines de semana largos hay en 2026?`, a: `En 2026 hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo por sí solos.${proxFindeLargo ? ` El próximo es ${proxFindeLargo.dia} ${fmtLarga(proxFindeLargo.fecha)} (${proxFindeLargo.nombre}).` : ''}` },
-  { q: `¿Cómo armo un puente en 2026 en ${pais}?`, a: puentes.length ? `Un puente se arma cuando un feriado cae martes o jueves: pedís el lunes anterior o el viernes siguiente y te quedan 4 días seguidos. En ${pais} hay ${puentes.length} feriado${puentes.length === 1 ? '' : 's'} en martes o jueves en 2026 para aprovechar así. El detalle está en la sección "Puentes 2026" de esta página.` : `En 2026 no hay feriados nacionales en martes o jueves en ${pais}, así que no se arma un puente clásico de 4 días con un solo día de licencia. Los fines de semana largos vienen de los feriados que caen lunes o viernes.` },
+  { q: `¿Cuántos feriados hay en ${pais} en ${anio}?`, a: `En ${anio} hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de arriba.` },
+  { q: `¿Cuándo es el próximo feriado en ${pais}?`, a: proximo ? `El próximo feriado en ${pais} es el ${fmtLarga(proximo.fecha)} (${proximo.dia}): ${proximo.nombre}${diasHasta !== null && diasHasta > 1 ? `, faltan ${diasHasta} días` : ''}. Quedan ${quedanEnAnio} feriado${quedanEnAnio === 1 ? '' : 's'} en lo que resta de ${anio}. La tabla marca el próximo automáticamente según la fecha de hoy.` : `Ya pasaron todos los feriados nacionales de ${anio} en ${pais}. Usá el calendario para planificar tus días libres del próximo año.` },
+  { q: `¿Cuántos fines de semana largos hay en ${anio}?`, a: `En ${anio} hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo por sí solos.${proxFindeLargo ? ` El próximo es ${proxFindeLargo.dia} ${fmtLarga(proxFindeLargo.fecha)} (${proxFindeLargo.nombre}).` : ''}` },
+  { q: `¿Cómo armo un puente en ${anio} en ${pais}?`, a: puentes.length ? `Un puente se arma cuando un feriado cae martes o jueves: pedís el lunes anterior o el viernes siguiente y te quedan 4 días seguidos. En ${pais} hay ${puentes.length} feriado${puentes.length === 1 ? '' : 's'} en martes o jueves en ${anio} para aprovechar así. El detalle está en la sección "Puentes ${anio}" de esta página.` : `En ${anio} no hay feriados nacionales en martes o jueves en ${pais}, así que no se arma un puente clásico de 4 días con un solo día de licencia. Los fines de semana largos vienen de los feriados que caen lunes o viernes.` },
   { q: `¿Estos feriados son nacionales o también hay locales?`, a: `La tabla lista los feriados nacionales de ${pais} (válidos en todo el país). Además puede haber feriados locales o provinciales según la ciudad o región, que no están incluidos acá.` },
   { q: `¿Se trabaja en los feriados? ¿Cómo se paga si trabajo un feriado en ${pais}?`, a: `${notaTipo || 'Los feriados son días de descanso; si trabajás, suele corresponder un pago con recargo según la legislación laboral vigente.'}${recargoCalc ? ` Para calcular exactamente cuánto cobrás por trabajar un feriado, usá la ${recargoCalc.label.toLowerCase()}, enlazada en esta página.` : ''}` },
-  { q: `¿De dónde salen estas fechas?`, a: `De las normas oficiales de ${pais} (${marco}). Verificamos cada fecha y su día de la semana contra el calendario real 2026. Última revisión: ${dataAsOf}.` },
+  { q: `¿De dónde salen estas fechas?`, a: `De las normas oficiales de ${pais} (${marco}). Verificamos cada fecha y su día de la semana contra el calendario real ${anio}. Última revisión: ${dataAsOf}.` },
   { q: `¿Puedo usar este calendario en mi web o trabajo?`, a: `Sí, bajo licencia CC-BY 4.0: reproducí los datos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".` },
 ];
 
 const datasetSchema = {
   '@type': 'Dataset', '@id': `${URL}#dataset`,
-  name: `Feriados ${pais} 2026 — calendario oficial`,
-  description: `Calendario de feriados nacionales de ${pais} en 2026: fecha observada, día de la semana y tipo de cada feriado. ${marco}.`,
+  name: `Feriados ${pais} ${anio} — calendario oficial`,
+  description: `Calendario de feriados nacionales de ${pais} en ${anio}: fecha observada, día de la semana y tipo de cada feriado. ${marco}.`,
   url: URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
-  inLanguage: 'es', dateModified: dataAsOf, temporalCoverage: '2026',
+  inLanguage: 'es', dateModified: dataAsOf, temporalCoverage: String(anio),
   spatialCoverage: { '@type': 'Place', name: pais },
   creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
-  keywords: [`feriados ${pais}`, `feriados ${pais} 2026`, `festivos ${pais} 2026`, 'calendario', 'fines de semana largos'],
+  keywords: [`feriados ${pais}`, `feriados ${pais} ${anio}`, `festivos ${pais} ${anio}`, 'calendario', 'fines de semana largos'],
   variableMeasured: ['Fecha del feriado', 'Día de la semana', 'Nombre del feriado', 'Tipo'],
 };
 const schema = { '@context': 'https://schema.org', '@graph': [
@@ -108,7 +112,7 @@ const schema = { '@context': 'https://schema.org', '@graph': [
   datasetSchema,
   { '@type': 'BreadcrumbList', itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
-    { '@type': 'ListItem', position: 2, name: `Feriados ${pais} 2026`, item: URL } ] },
+    { '@type': 'ListItem', position: 2, name: `Feriados ${pais} ${anio}`, item: URL } ] },
   { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
 ] };
 ---
@@ -118,9 +122,9 @@ const schema = { '@context': 'https://schema.org', '@graph': [
   <main class="article-main">
     <article class="feriados-page">
       <header>
-        <nav class="crumbs"><a href="/">Inicio</a> <span>›</span> <span>Calendario {pais} 2026</span></nav>
-        <h1>Calendario {pais} 2026: feriados y días festivos</h1>
-        <p class="lede">Todos los <strong>feriados y días festivos de {pais}</strong> en 2026, con la fecha exacta, el día de la semana y los <strong>fines de semana largos</strong>. Para que {gentilicio} planifiquen sus días libres.</p>
+        <nav class="crumbs"><a href="/">Inicio</a> <span>›</span> <span>Calendario {pais} {anio}</span></nav>
+        <h1>Calendario {pais} {anio}: feriados y días festivos</h1>
+        <p class="lede">Todos los <strong>feriados y días festivos de {pais}</strong> en {anio}, con la fecha exacta, el día de la semana y los <strong>fines de semana largos</strong>. Para que {gentilicio} planifiquen sus días libres.</p>
         <p class="updated">Última revisión: <time datetime={dataAsOf}>{dataAsOf}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a></p>
         {proximo && (
           <div class="proximo-hero" data-proximo>
@@ -132,29 +136,29 @@ const schema = { '@context': 'https://schema.org', '@graph': [
       </header>
 
       <p class="answer-box">
-        En <strong>2026</strong>, {pais} tiene <strong>{totalLabel}</strong>.{' '}
+        En <strong>{anio}</strong>, {pais} tiene <strong>{totalLabel}</strong>.{' '}
         {proximo
           ? <span>El próximo es <strong>{proximo.dia} {fmtLarga(proximo.fecha)}</strong> ({proximo.nombre}), {diasHastaTxt}. </span>
-          : <span>Ya pasaron todos los feriados nacionales de 2026. </span>}
+          : <span>Ya pasaron todos los feriados nacionales de {anio}. </span>}
         Hay <strong>{findesLargos.length} {findesLargos.length === 1 ? 'fin de semana largo' : 'fines de semana largos'}</strong>{puentes.length > 0 && <span> y <strong>{puentes.length} {puentes.length === 1 ? 'puente' : 'puentes'}</strong> aprovechables (feriados en martes o jueves)</span>}.
       </p>
 
       <section class="stats-callout">
-        <div class="stat"><span class="stat-num">{total}</span><span class="stat-label">feriados en 2026</span></div>
-        <div class="stat" id="proximo-stat"><span class="stat-num" id="proximo-fecha">{proximo ? fmtFecha(proximo.fecha) : '2027'}</span><span class="stat-label" id="proximo-label">{proximo ? `${proximo.dia} · próximo feriado` : 'sin feriados pendientes'}</span></div>
+        <div class="stat"><span class="stat-num">{total}</span><span class="stat-label">feriados en {anio}</span></div>
+        <div class="stat" id="proximo-stat"><span class="stat-num" id="proximo-fecha">{proximo ? fmtFecha(proximo.fecha) : String(anioSig)}</span><span class="stat-label" id="proximo-label">{proximo ? `${proximo.dia} · próximo feriado` : 'sin feriados pendientes'}</span></div>
         <div class="stat"><span class="stat-num">{findesLargos.length}</span><span class="stat-label">fines de semana largos</span></div>
       </section>
 
       <section class="cal-visual">
-        <h2>Calendario {pais} 2026 mes a mes</h2>
+        <h2>Calendario {pais} {anio} mes a mes</h2>
         <p>El año completo en un vistazo: los <strong>{total} feriados</strong> están marcados en <span style="background:var(--accent,#2c5cdc);color:#fff;padding:0 .4rem;border-radius:5px;font-weight:600;">color</span>. Más abajo tenés la tabla con la fecha exacta, el día y el tipo de cada uno.</p>
         <CalendarGrid feriados={feriados.map((f) => ({ fecha: f.fecha, nombre: f.nombre }))} pais={pais} />
       </section>
 
       <section>
-        <h2>Tabla de feriados y días festivos de {pais} 2026</h2>
+        <h2>Tabla de feriados y días festivos de {pais} {anio}</h2>
         <div class="table-wrap">
-          <table id="feriados-table">
+          <table id="feriados-table" data-anio={anio}>
             <thead><tr><th class="l">Fecha</th><th class="l">Día</th><th class="l">Feriado</th><th class="l">Tipo</th></tr></thead>
             <tbody>
               {feriados.map((f) => (
@@ -172,7 +176,7 @@ const schema = { '@context': 'https://schema.org', '@graph': [
       </section>
 
       <section>
-        <h2>Fines de semana largos 2026 en {pais}</h2>
+        <h2>Fines de semana largos {anio} en {pais}</h2>
         <p>Estos feriados caen lunes o viernes, así que pegan con el fin de semana:</p>
         <ul class="findes">
           {findesLargos.map((f) => (
@@ -184,8 +188,8 @@ const schema = { '@context': 'https://schema.org', '@graph': [
 
       {puentes.length > 0 && (
         <section class="puentes">
-          <h2>Puentes 2026 en {pais}: 4 días con un solo día de licencia</h2>
-          <p>Un <strong>puente</strong> se arma cuando un feriado cae <strong>martes o jueves</strong>: pedís un único día de licencia y te quedan <strong>4 días seguidos</strong>. Estos son los puentes aprovechables de {pais} en 2026:</p>
+          <h2>Puentes {anio} en {pais}: 4 días con un solo día de licencia</h2>
+          <p>Un <strong>puente</strong> se arma cuando un feriado cae <strong>martes o jueves</strong>: pedís un único día de licencia y te quedan <strong>4 días seguidos</strong>. Estos son los puentes aprovechables de {pais} en {anio}:</p>
           <ul class="findes">
             {puentes.map((f) => (
               <li><strong>{f.dia} {fmtFecha(f.fecha)}</strong> — {f.nombre}: pedí <strong>{f.pedir}</strong> y armás un fin de semana de 4 días.</li>
@@ -207,10 +211,10 @@ const schema = { '@context': 'https://schema.org', '@graph': [
 
       {OTROS_FERIADOS.length > 0 && (
         <section class="otros-paises">
-          <h2>Feriados de otros países en 2026</h2>
+          <h2>Feriados de otros países en {anio}</h2>
           <p>Calendarios de feriados de otros países de la región, con fechas, días de la semana y fines de semana largos:</p>
           <ul class="paises-links">
-            {OTROS_FERIADOS.map((p) => (<li><a href={`/${p.slug}`}>{p.flag} Feriados {p.pais} 2026</a></li>))}
+            {OTROS_FERIADOS.map((p) => (<li><a href={`/${p.slug}`}>{p.flag} Feriados {p.pais} {anio}</a></li>))}
           </ul>
         </section>
       )}
@@ -228,7 +232,7 @@ const schema = { '@context': 'https://schema.org', '@graph': [
         <h2>Cómo citar este calendario</h2>
         <p>¿Usás estas fechas en una nota, app o web? La atribución pedida es:</p>
         <pre><code>Fuente: Hacé Cuentas — {URL}
-Feriados {pais} 2026 · Licencia CC-BY 4.0</code></pre>
+Feriados {pais} {anio} · Licencia CC-BY 4.0</code></pre>
       </section>
 
       <section class="faq">
@@ -279,8 +283,10 @@ Feriados {pais} 2026 · Licencia CC-BY 4.0</code></pre>
       const mesesL = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
       if (heroMain) heroMain.innerHTML = '<strong>' + dia + ' ' + Number(d) + ' de ' + mesesL[Number(m) - 1] + '</strong> — ' + nombre;
     } else if (numEl && labelEl) {
-      numEl.textContent = '2027';
-      labelEl.textContent = 'sin feriados pendientes en 2026';
+      const tabla = document.getElementById('feriados-table');
+      const anioTabla = Number((tabla && tabla.getAttribute('data-anio')) || '2026');
+      numEl.textContent = String(anioTabla + 1);
+      labelEl.textContent = 'sin feriados pendientes en ' + anioTabla;
       const hero = document.querySelector('[data-proximo]');
       if (hero) hero.style.display = 'none';
     }
