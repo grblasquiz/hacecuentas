@@ -147,6 +147,7 @@ async function main() {
   ]);
 
   const phase2Tasks: Task[] = [
+    tsxTask('hub-research', 'generate-hub-citable-research'),
     task('og', 'generate-og-images'),
     tsxTask('sitemap', 'generate-sitemap'),
     task('search-index', 'generate-search-index'),

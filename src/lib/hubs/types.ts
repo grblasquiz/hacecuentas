@@ -92,6 +92,14 @@ export interface HubSource {
   date?: string;
 }
 
+/** Dato original y citable del hub; nunca usar para renombrar cifras ajenas. */
+export interface HubCitableStat {
+  value: string;
+  label: string;
+  detail?: string;
+  source?: string;
+}
+
 export interface HubData {
   /** Ruta sin barra inicial: 'trabajo/indemnizacion-por-despido'. */
   slug: string;
@@ -140,6 +148,9 @@ export interface HubData {
   /** Mínimo 7 — regla anti thin-content del proyecto. */
   faq: HubFaq[];
   sources: HubSource[];
+
+  /** Research o benchmarks propios. La ficha de cobertura aparece igual. */
+  citableStats?: HubCitableStat[];
 
   /** URLs viejas que este hub reemplaza (alimentan los 301). */
   replaces: string[];
