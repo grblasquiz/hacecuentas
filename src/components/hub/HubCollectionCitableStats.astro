@@ -1,0 +1,38 @@
+---
+import research from '../../lib/hubs/citable-research.json';
+
+export interface Props { slug: string; title: string; locale?: string }
+const { slug, title, locale = 'es' } = Astro.props;
+const row = (research.hubs as Record<string, any>)[slug.replace(/^\//, '')];
+const lang = locale === 'en' ? 'en' : locale.startsWith('pt') ? 'pt' : 'es';
+const COPY = {
+  es: { eyebrow: 'Investigación propia', title: 'Cobertura de esta colección, en números', intro: 'Estas cifras agregan las decisiones, variables y fuentes de los hubs incluidos. El análisis se regenera desde el inventario oficial de Hacé Cuentas.', percentile: 'percentil de cobertura', routes: 'hubs y rutas incluidas', variables: 'variables modeladas', sources: 'fuentes declaradas', publishers: 'organismos o editores', quote: 'Cita sugerida', dataset: 'Descargar dataset completo (CSV)', method: 'Ver metodología', cohort: 'colecciones comparables' },
+  en: { eyebrow: 'Original research', title: 'This collection’s coverage, by the numbers', intro: 'These figures aggregate the decisions, variables and sources in the included hubs. The analysis is rebuilt from Hacé Cuentas’ official inventory.', percentile: 'coverage percentile', routes: 'included hubs and routes', variables: 'modelled variables', sources: 'declared sources', publishers: 'publishers or agencies', quote: 'Suggested citation', dataset: 'Download full dataset (CSV)', method: 'View methodology', cohort: 'comparable collections' },
+  pt: { eyebrow: 'Pesquisa própria', title: 'Cobertura desta coleção, em números', intro: 'Estes números agregam decisões, variáveis e fontes dos hubs incluídos. A análise é regenerada a partir do inventário oficial do Hacé Cuentas.', percentile: 'percentil de cobertura', routes: 'hubs e rotas incluídas', variables: 'variáveis modeladas', sources: 'fontes declaradas', publishers: 'organismos ou editores', quote: 'Citação sugerida', dataset: 'Baixar dataset completo (CSV)', method: 'Ver metodologia', cohort: 'coleções comparáveis' },
+  }[lang];
+const quote = lang === 'en'
+  ? `Hacé Cuentas’ “${title}” collection brings together ${row?.routes || 0} hubs and routes, ${row?.variables || 0} modelled variables and ${row?.sources || 0} declared sources.`
+  : lang === 'pt'
+    ? `A coleção “${title}” do Hacé Cuentas reúne ${row?.routes || 0} hubs e rotas, ${row?.variables || 0} variáveis modeladas e ${row?.sources || 0} fontes declaradas.`
+    : `La colección «${title}» de Hacé Cuentas reúne ${row?.routes || 0} hubs y rutas, ${row?.variables || 0} variables modeladas y ${row?.sources || 0} fuentes declaradas.`;
+---
+
+{row && <section class="hub-citable-stats hub-collection-stats" aria-labelledby={`research-${slug.replaceAll('/', '-')}`}>
+  <header><p>{COPY.eyebrow}</p><h2 id={`research-${slug.replaceAll('/', '-')}`}>{COPY.title}</h2><p>{COPY.intro}</p></header>
+  <dl>
+    <div><dt>{COPY.percentile}</dt><dd>P{row.depthPercentile}</dd><p>{row.peerHubs} {COPY.cohort}</p></div>
+    <div><dt>{COPY.routes}</dt><dd>{row.routes}</dd></div>
+    <div><dt>{COPY.variables}</dt><dd>{row.variables}</dd></div>
+    <div><dt>{COPY.sources}</dt><dd>{row.sources}</dd></div>
+    <div><dt>{COPY.publishers}</dt><dd>{row.publishers}</dd></div>
+  </dl>
+  <figure><figcaption>{COPY.quote}</figcaption><blockquote>{quote}</blockquote></figure>
+  <footer><a href="/metodologia">{COPY.method}</a><a href="/datasets/hub-citable-research.csv" download>{COPY.dataset}</a></footer>
+</section>}
+
+<style>
+  .hub-collection-stats{margin:clamp(2rem,5vw,4rem) auto;padding:clamp(1.35rem,3vw,2rem);max-width:1160px;border:1px solid #dce3e9;border-radius:18px;background:#fff;color:#18283a;box-shadow:0 12px 30px rgba(20,43,67,.06)}
+  header{max-width:780px}header>p:first-child{margin:0 0 .45rem;color:#23648d;font-size:.75rem;font-weight:850;letter-spacing:.1em;text-transform:uppercase}h2{margin:0;font-size:clamp(1.45rem,3vw,2rem);line-height:1.15}header>p:last-child{color:#526477;line-height:1.65}
+  dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin:1.5rem 0}dl>div{display:flex;flex-direction:column;padding:1rem;border:1px solid #e1e7ec;border-radius:13px;background:#f7fafc}dt{order:2;color:#526477;font-size:.78rem;font-weight:750}dd{order:1;margin:0 0 .25rem;color:#173c5d;font-size:clamp(1.55rem,3vw,2.25rem);font-weight:900;line-height:1}dl p{order:3;margin:.4rem 0 0;color:#667687;font-size:.72rem}
+  figure{margin:0;padding:1rem 1.1rem;border-left:4px solid #2e7ca7;background:#eef6fa}figcaption{margin-bottom:.4rem;color:#23648d;font-size:.7rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}blockquote{margin:0;color:#25384a;font-size:.95rem;font-weight:650;line-height:1.6}footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.75rem;margin-top:1rem}footer a{color:#23648d;font-size:.78rem;font-weight:750}
+</style>

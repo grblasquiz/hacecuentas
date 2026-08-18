@@ -13,6 +13,8 @@
  * post-resultado. Así cubre hubs clásicos, experiencias y mockups aprobados.
  */
 import currentTools from '../lib/current-tools-index.json';
+import research from '../lib/hubs/citable-research.json';
+import HubCollectionCitableStats from './hub/HubCollectionCitableStats.astro';
 
 interface Props {
   pageTitle?: string;
@@ -33,6 +35,8 @@ const current = tools.find((tool) => tool.path === path);
 const locale = current?.locale || 'es';
 const language = locale === 'en' ? 'en' : locale.startsWith('pt') ? 'pt' : 'es';
 const isHub = Boolean(current && !noindex);
+const researchRow = current ? (research.hubs as Record<string, any>)[current.path.replace(/^\//, '')] : null;
+const isCollectionHub = researchRow?.pageType === 'collection';
 
 const normalized = (value: string) => value
   .toLowerCase()
@@ -111,6 +115,8 @@ const experienceReviewed = modified || '2026-08-16';
     </div>
   </section>
 )}
+
+{isHub && isCollectionHub && <HubCollectionCitableStats slug={current.path} title={current.h1 || current.title} locale={current.locale} />}
 
 {isHub && (
   <section class="hc-post-result-system" data-hc-post-result-system hidden data-nosnippet>
