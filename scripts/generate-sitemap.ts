@@ -940,6 +940,17 @@ sitemaps.push({
     core('/trabajo/contratar-personal-casas-particulares', '0.88', 'monthly'),
     core('/familia/fallecimiento-y-tramites',     '0.88', 'monthly'),
     core('/negocios-e-independientes',           '0.95', 'weekly'),
+    // Oportunidades editoriales detectadas en artículos de X y videos de YouTube (ago-2026).
+    // COMENTADAS 8-19: estos hubs todavía no existen como archivo (dan 404 en prod).
+    // Descomentar cada línea cuando el hub correspondiente esté creado y commiteado.
+    // core('/legal/actualizacion-sentencias',                 '0.88', 'monthly'),
+    // core('/impuestos/cuando-hacerme-monotributista',        '0.88', 'monthly'),
+    // core('/negocios/costo-fiscal-venta-online',             '0.90', 'monthly'),
+    // core('/impuestos/precio-unitario-maximo-monotributo',   '0.88', 'monthly'),
+    // core('/impuestos/cuota-monotributo-empleado-jubilado',  '0.88', 'monthly'),
+    // core('/impuestos/saldo-a-favor-iibb',                   '0.88', 'monthly'),
+    // core('/impuestos/diagnostico-convenio-multilateral',    '0.88', 'monthly'),
+    // core('/trabajo/salario-real-por-gremio',                '0.88', 'monthly'),
     core('/deportes',                            '0.95', 'weekly'),
     core('/buscar',                        '0.9',  'weekly'),
     core('/glosario',                            '0.8',  'monthly'),
@@ -1064,7 +1075,11 @@ sitemaps.push({
     core('/blog',                                '0.7',  'weekly'),
     core('/mapa-del-sitio',                      '0.65', 'monthly'),
     core('/datasets',                            '0.6',  'monthly'),
+    core('/estadisticas-calculadoras-online-2026','0.7',  'monthly'),
     core('/cuanta-gente-viaja-subte-buenos-aires','0.8',  'monthly'),
+    core('/estadisticas-inflacion-argentina',    '0.8',  'monthly'),
+    core('/estadisticas-dolar-argentina',        '0.8',  'monthly'),
+    core('/estadisticas-plazo-fijo-uva-argentina','0.75', 'monthly'),
     // Los hubs de vertical (/mx /co /cl /es /pt /en) NO van acá: cada
     // sitemap-<locale>.xml ya publica su home vía sitemapForLocale(withIndex),
     // con un lastmod que hereda el cambio más reciente del locale. Listarlos
