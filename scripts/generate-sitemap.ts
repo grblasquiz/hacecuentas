@@ -1064,6 +1064,7 @@ sitemaps.push({
     core('/blog',                                '0.7',  'weekly'),
     core('/mapa-del-sitio',                      '0.65', 'monthly'),
     core('/datasets',                            '0.6',  'monthly'),
+    core('/cuanta-gente-viaja-subte-buenos-aires','0.8',  'monthly'),
     // Los hubs de vertical (/mx /co /cl /es /pt /en) NO van acá: cada
     // sitemap-<locale>.xml ya publica su home vía sitemapForLocale(withIndex),
     // con un lastmod que hereda el cambio más reciente del locale. Listarlos

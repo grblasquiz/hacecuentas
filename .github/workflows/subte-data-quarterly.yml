@@ -1,0 +1,36 @@
+name: Actualizar datos trimestrales del subte
+
+on:
+  schedule:
+    # 12:17 UTC = 09:17 America/Argentina/Buenos_Aires
+    - cron: '17 12 5 1,4,7,10 *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: subte-data-quarterly
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Actualizar dataset
+        run: python3 scripts/update-subte-data.py
+      - name: Commit si apareció un mes nuevo
+        run: |
+          if git diff --quiet -- src/data/subte-2026.json; then
+            echo "No hay datos nuevos"
+            exit 0
+          fi
+          git config user.name "hacecuentas-data-bot"
+          git config user.email "bot@hacecuentas.com"
+          git add src/data/subte-2026.json
+          git commit -m "data(subte): actualización trimestral de molinetes"
+          git push

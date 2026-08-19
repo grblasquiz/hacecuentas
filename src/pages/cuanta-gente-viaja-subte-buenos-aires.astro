@@ -1,0 +1,227 @@
+---
+// @incremental-standalone — atlas interactivo del subte porteño.
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import data from '../data/subte-2026.json';
+
+export const prerender = true;
+const fmt = new Intl.NumberFormat('es-AR');
+const compact = new Intl.NumberFormat('es-AR',{notation:'compact',maximumFractionDigits:1});
+const colors:Record<string,string>={A:'#27b7eb',B:'#f04454',C:'#2a75d4',D:'#2fb276',E:'#8d6bc4',H:'#ffd13d',Premetro:'#ff8a32'};
+const stations=Object.entries(data.current.byStation).sort((a,b)=>b[1]-a[1]);
+const lines=Object.entries(data.current.byLine).filter(([l])=>colors[l]).sort((a,b)=>b[1]-a[1]);
+const total=data.current.total;
+const growth=(total/data.previous.total-1)*100;
+const lineStations=Object.fromEntries(Object.keys(colors).map(line=>[line,stations.filter(([name])=>data.current.stationLine[name]===line).slice(0,line==='Premetro'?3:7)]));
+const radiusFor=(value:number)=>Math.max(7,Math.min(18,7+Math.sqrt(value/stations[0][1])*11));
+const layouts:Record<string,{d:string;pts:[number,number][]}>={
+  A:{d:'M80 470 L240 470 L345 400 L510 400 L650 330 L870 330',pts:[[80,470],[190,470],[285,440],[410,400],[535,388],[685,330],[850,330]]},
+  B:{d:'M85 255 L245 255 L335 315 L510 315 L650 230 L900 230',pts:[[85,255],[200,255],[285,280],[395,315],[515,312],[665,230],[875,230]]},
+  C:{d:'M590 90 L590 210 L535 315 L535 520 L610 610',pts:[[590,90],[590,175],[565,255],[535,340],[535,430],[545,520],[605,602]]},
+  D:{d:'M250 90 L330 170 L405 235 L510 315 L665 400 L875 520',pts:[[250,90],[325,165],[390,225],[505,310],[610,372],[735,440],[860,512]]},
+  E:{d:'M110 590 L260 590 L350 520 L535 520 L685 455 L910 455',pts:[[110,590],[225,590],[315,548],[430,520],[545,515],[700,455],[885,455]]},
+  H:{d:'M385 620 L385 515 L420 400 L420 315 L420 130',pts:[[385,620],[385,535],[400,455],[420,375],[420,300],[420,215],[420,135]]},
+  Premetro:{d:'M110 590 L90 650 L230 650',pts:[[110,590],[120,650],[220,650]]}
+};
+const faq=[
+  ['¿Cuánta gente viaja en subte por día?','Entre enero y junio de 2026 se registraron 97,8 millones de entradas: un promedio de unas 540.000 por día calendario. La cifra cuenta accesos por molinete, no personas únicas.'],
+  ['¿Cuál es la línea de subte más usada?','La línea B fue la que más entradas registró en el primer semestre de 2026. Podés aislar cada línea desde los filtros del mapa.'],
+  ['¿Cuál es la estación más concurrida?','Constitución, de la línea C, encabeza el ranking de entradas registradas durante el período analizado.'],
+  ['¿Cuál es la hora pico del subte?','Al sumar toda la red, la mayor cantidad de entradas se registra alrededor de las 17 h. Cada estación tiene un patrón propio que podés explorar y comparar.'],
+  ['¿Cuánto creció el uso del subte frente a 2025?','En el mismo período enero-junio, las entradas crecieron 2,0% frente a 2025. La comparación usa exactamente los mismos seis meses.'],
+  ['¿Qué mide un molinete?','Mide entradas a la red. No identifica personas únicas ni registra directamente dónde bajan: una misma persona puede generar varias entradas en distintos días.'],
+  ['¿De dónde salen los datos?','Del dataset público de molinetes de Subterráneos de Buenos Aires, publicado en Buenos Aires Data. Esta página usa los registros disponibles hasta junio de 2026.']
+];
+const schema={'@context':'https://schema.org','@graph':[{'@type':'Dataset',name:'Entradas al subte de Buenos Aires por estación — 2026',temporalCoverage:'2026-01-01/2026-06-30',spatialCoverage:'Buenos Aires',isBasedOn:data.sourceUrl,creator:{'@type':'Organization',name:'Hacé Cuentas'}},{'@type':'Article',headline:'Cuánta gente viaja en subte en Buenos Aires: estadísticas 2026',dateModified:data.generatedAt},{'@type':'FAQPage',mainEntity:faq.map(([q,a])=>({'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}}))}]};
+---
+
+<Layout title="Cuánta gente viaja en subte en Buenos Aires: estadísticas 2026" description="Estadísticas 2026 del subte de Buenos Aires por línea, estación, mes, día y hora. Compará estaciones y encontrá cuándo conviene viajar." canonical="/cuanta-gente-viaja-subte-buenos-aires" audience="AR" schema={schema} domain="data">
+  <Header />
+  <main class="atlas">
+    <section class="map-hero" id="mapa">
+      <div class="ambient one"></div><div class="ambient two"></div>
+      <header class="hero-title">
+        <p><span></span> BUENOS AIRES · 2026</p>
+        <h1>El pulso<br/>bajo la ciudad</h1>
+        <p class="hero-copy">Seis meses de viajes, convertidos en un mapa vivo. Elegí una estación y mirá cómo se mueve.</p>
+      </header>
+
+      <div class="top-stats">
+        <div><span>ENTRADAS</span><strong>{compact.format(total)}</strong></div>
+        <div><span>VS. 2025</span><strong>+{growth.toFixed(1).replace('.',',')}%</strong></div>
+        <div><span>HORA PICO</span><strong>17:00</strong></div>
+      </div>
+
+      <div class="map-shell">
+        <div class="map-toolbar">
+          <div class="search"><svg viewBox="0 0 24 24"><path d="m21 21-4.5-4.5m2.5-5A8 8 0 1 1 3 11a8 8 0 0 1 16 0Z"/></svg><input id="station-search" list="station-list" placeholder="Encontrá tu estación" autocomplete="off"/><button id="search-go">Ir</button></div>
+          <div class="filters"><button class="active" data-filter="all">Red completa</button>{Object.entries(colors).map(([line,color])=><button data-filter={line} style={`--line:${color}`}>{line==='Premetro'?'P':line}</button>)}</div>
+        </div>
+        <datalist id="station-list">{stations.map(([name])=><option value={name}/>)}</datalist>
+
+        <div class="city-map">
+          <div class="city-label palermo">PALERMO</div><div class="city-label centro">MICROCENTRO</div><div class="city-label constitucion">CONSTITUCIÓN</div><div class="city-label caballito">CABALLITO</div>
+          <svg class="network" viewBox="0 0 980 700" role="img" aria-label="Mapa esquemático de demanda del subte">
+            <defs><filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+            {Object.entries(layouts).map(([line,layout])=><g class="map-line" data-map-line={line} style={`--line:${colors[line]}`}>
+              <path class="line-shadow" d={layout.d}/><path class="line-path" d={layout.d}/>
+              {(lineStations[line] as [string,number][]).map(([name,value],i)=><g class="map-station" data-station={name} transform={`translate(${layout.pts[i][0]} ${layout.pts[i][1]})`} tabindex="0" role="button" aria-label={`${name}: ${fmt.format(value)} entradas`}><circle class="hit" r="27"/><circle class="pulse" r={radiusFor(value)+7}/><circle class="dot" r={radiusFor(value)}/><text x="0" y={radiusFor(value)+20}>{name}</text></g>)}
+            </g>)}
+          </svg>
+          <div class="map-note"><i></i><span>El tamaño del punto representa la cantidad de entradas</span></div>
+        </div>
+
+        <aside class="station-ribbon" id="station-panel">
+          <button class="ribbon-close" id="panel-close" aria-label="Cerrar detalle">×</button>
+          <div class="ribbon-identity">
+            <span>ESTACIÓN SELECCIONADA</span>
+            <div><i id="panel-line">C</i><h2 id="panel-name">Constitucion</h2></div>
+            <p><strong id="panel-total">{fmt.format(stations[0][1])}</strong> entradas</p>
+          </div>
+          <div class="ribbon-metrics">
+            <article><span>EN LA RED</span><b id="panel-rank">#1</b><small id="panel-share">7,6% del total</small></article>
+            <article><span>EN SU LÍNEA</span><b id="panel-line-rank">#1</b><small id="panel-line-share">54% de la línea</small></article>
+            <article><span>CUÁNDO CONVIENE</span><b id="panel-quiet">—</b><small>franja más tranquila</small></article>
+            <article><span>VS. 2025</span><b id="panel-growth">—</b><small>mismo período</small></article>
+          </div>
+          <div class="ribbon-chart hour-block"><div><span>RITMO HORARIO</span><small id="chart-caption">pico a las 17:00</small></div><div class="spark" id="spark"></div></div>
+          <div class="ribbon-chart month-block"><div><span>EVOLUCIÓN MENSUAL</span><small id="weekday-split">—</small></div><div class="months" id="month-bars"></div></div>
+          <span id="panel-peak" hidden></span><span id="panel-insight" hidden></span>
+          <button class="panel-next" id="panel-next" aria-label="Siguiente estación">→</button>
+        </aside>
+      </div>
+      <a class="scroll-cue" href="#historia"><span>Seguí explorando</span><i>↓</i></a>
+    </section>
+
+    <section class="narrative" id="historia">
+      <div class="narrative-intro"><p>UNA CIUDAD, DOS PICOS</p><h2>La red se despierta a las 8.<br/>Pero late más fuerte a las 17.</h2><span>Al sumar todas las entradas por franja horaria aparece una coreografía cotidiana: un primer pico cuando empieza el día y otro más intenso al volver.</span></div>
+      <div class="rhythm-card">
+        <div class="rhythm-title"><span>ENTRADAS POR HORA · TODA LA RED</span><strong>17:00</strong><small>máximo del período</small></div>
+        <div class="rhythm-chart" id="rhythm-chart"></div>
+        <div class="time-axis"><span>06 h</span><span>09 h</span><span>12 h</span><span>15 h</span><span>18 h</span><span>21 h</span></div>
+      </div>
+    </section>
+
+    <section class="ranking-section">
+      <div class="rank-copy"><p>LAS QUE MUEVEN LA RED</p><h2>Diez estaciones concentran buena parte de la historia.</h2><span>Constitución rompe la escala. Después aparecen cabeceras, combinaciones y nodos que conectan barrios enteros.</span></div>
+      <div class="rank-list">
+        {stations.slice(0,10).map(([name,value],i)=><button data-rank-station={name}><span>{String(i+1).padStart(2,'0')}</span><div><strong>{name}</strong><small>Línea {data.current.stationLine[name]}</small></div><i style={`--line:${colors[data.current.stationLine[name]]};--w:${value/stations[0][1]*100}%`}><b></b></i><em>{compact.format(Math.round(value/6))}<small>promedio mensual</small></em></button>)}
+      </div>
+    </section>
+
+    <section class="compare-section" id="comparador">
+      <div class="compare-copy"><p>ESTACIÓN CONTRA ESTACIÓN</p><h2>Dos curvas.<br/>Dos maneras de viajar.</h2><span>Elegí dos estaciones para comparar cómo cambia su movimiento a lo largo del día.</span></div>
+      <div class="compare-card">
+        <div class="compare-controls">
+          <label><span>ESTACIÓN 1</span><select id="compare-a">{stations.map(([name])=><option value={name}>{name}</option>)}</select></label>
+          <b>VS.</b>
+          <label><span>ESTACIÓN 2</span><select id="compare-b">{stations.map(([name],i)=><option value={name} selected={i===1}>{name}</option>)}</select></label>
+        </div>
+        <div class="compare-legend"><span><i></i><b id="legend-a">{stations[0][0]}</b></span><span><i></i><b id="legend-b">{stations[1][0]}</b></span></div>
+        <div class="compare-chart" id="compare-chart" aria-label="Comparación horaria de estaciones"></div>
+        <div class="compare-axis"><span>6 h</span><span>9 h</span><span>12 h</span><span>15 h</span><span>18 h</span><span>21 h</span></div>
+        <p id="compare-insight"></p>
+      </div>
+    </section>
+
+    <section class="useful-links">
+      <div><p>DEL VIAJE AL BOLSILLO</p><h2>Ahora calculá cuánto te cuesta moverte.</h2></div>
+      <nav aria-label="Herramientas SUBE relacionadas">
+        <a href="/calculadora-sube-argentina-costo-viaje-gasto-mensual"><span>Calculadora SUBE Argentina</span><b>Costo por viaje y gasto mensual →</b></a>
+        <a href="/calculadora-gasto-tarjeta-sube-mensual"><span>Planificador de carga</span><b>Cuánto cargar en la SUBE →</b></a>
+        <a href="/blog/tarjeta-sube-guia-completa-2026"><span>Guía 2026</span><b>Tarifas, registro y descuentos →</b></a>
+      </nav>
+    </section>
+
+    <section class="faq-section">
+      <header><p>LAS PREGUNTAS REALES</p><h2>Todo lo que este mapa cuenta —y lo que no.</h2></header>
+      <div>{faq.map(([q,a],i)=><details open={i===0}><summary>{q}<span>+</span></summary><p>{a}</p></details>)}</div>
+    </section>
+
+    <section class="closing">
+      <div><p>LA FOTO COMPLETA</p><strong>{compact.format(total)}</strong><span>entradas registradas entre enero y junio de 2026</span></div>
+      <div><p>Qué significa</p><span>Son accesos registrados por molinetes, no personas únicas. Una misma persona puede aparecer muchas veces. La comparación con 2025 utiliza exactamente el mismo período.</span><a href={data.sourceUrl} target="_blank" rel="nofollow noopener">Ver fuente oficial ↗</a></div>
+    </section>
+    <script id="subte-data" type="application/json" set:html={JSON.stringify(data)}></script>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  const init=()=>{const source=JSON.parse(document.querySelector('#subte-data')?.textContent||'{}');const d=source.current;const list=Object.entries(d.byStation).sort((a:any,b:any)=>b[1]-a[1]);const colors:Record<string,string>={A:'#27b7eb',B:'#f04454',C:'#2a75d4',D:'#2fb276',E:'#8d6bc4',H:'#ffd13d',Premetro:'#ff8a32'};const nf=new Intl.NumberFormat('es-AR');let current=0;const maxEntry=(o:Record<string,number>)=>Object.entries(o).sort((a,b)=>b[1]-a[1])[0];const bars=(target:string,values:Record<string,number>,keys:number[],labels=true)=>{const el=document.querySelector(target) as HTMLElement;const max=Math.max(...keys.map(k=>values[k]||0));el.innerHTML=keys.map(k=>`<i style="--h:${(values[k]||0)/max*100}%" title="${k}:00 · ${nf.format(values[k]||0)}"><span>${labels&&k%3===0?k:''}</span></i>`).join('')};const open=(name:string,focus=false)=>{const value=d.byStation[name];if(!value)return;current=list.findIndex(([n])=>n===name);const line=d.stationLine[name];const peak=maxEntry(d.stationHours[name]||{});(document.querySelector('#panel-line') as HTMLElement).textContent=line==='Premetro'?'P':line;(document.querySelector('#panel-line') as HTMLElement).style.background=colors[line];(document.querySelector('#panel-name') as HTMLElement).textContent=name;(document.querySelector('#panel-total') as HTMLElement).textContent=nf.format(value);(document.querySelector('#panel-rank') as HTMLElement).textContent=`#${current+1}`;(document.querySelector('#panel-peak') as HTMLElement).textContent=`${peak[0]}:00`;(document.querySelector('#chart-caption') as HTMLElement).textContent=`pico a las ${peak[0]}:00`;document.querySelector('#panel-insight')!.innerHTML=`Acá se registra el <strong>${(value/d.total*100).toFixed(1).replace('.',',')}%</strong> de todas las entradas de la red.`;bars('#spark',d.stationHours[name]||{},Array.from({length:19},(_,i)=>i+5),false);document.querySelectorAll('.map-station').forEach(el=>el.classList.toggle('selected',(el as HTMLElement).dataset.station===name));document.querySelector('#station-panel')?.classList.add('open');if(focus)document.querySelector('#station-panel')?.scrollIntoView({behavior:'smooth',block:'nearest'})};document.querySelectorAll<HTMLElement>('.map-station').forEach(el=>{el.addEventListener('click',()=>open(el.dataset.station||'',true));el.addEventListener('keydown',e=>{if(e.key==='Enter')open(el.dataset.station||'',true)})});document.querySelectorAll<HTMLElement>('[data-rank-station]').forEach(el=>el.addEventListener('click',()=>{open(el.dataset.rankStation||'',true);document.querySelector('#mapa')?.scrollIntoView({behavior:'smooth'})}));document.querySelectorAll<HTMLElement>('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b===btn));const f=btn.dataset.filter;document.querySelectorAll<HTMLElement>('[data-map-line]').forEach(line=>line.classList.toggle('dim',f!=='all'&&line.dataset.mapLine!==f))}));const search=()=>open((document.querySelector('#station-search') as HTMLInputElement).value,true);document.querySelector('#search-go')?.addEventListener('click',search);document.querySelector('#station-search')?.addEventListener('change',search);document.querySelector('#panel-next')?.addEventListener('click',()=>open(list[(current+1)%list.length][0] as string));document.querySelector('#panel-close')?.addEventListener('click',()=>document.querySelector('#station-panel')?.classList.remove('open'));bars('#rhythm-chart',d.byHour,Array.from({length:19},(_,i)=>i+5));open(list[0][0] as string)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+</script>
+
+<script>
+  const enrichStationRibbon=()=>{
+    const source=JSON.parse(document.querySelector('#subte-data')?.textContent||'{}');
+    const now=source.current, before=source.previous;
+    const all=Object.entries(now.byStation).sort((a:any,b:any)=>b[1]-a[1]);
+    const nf=new Intl.NumberFormat('es-AR');
+    const panel=document.querySelector('#station-panel') as HTMLElement;
+    panel.scrollIntoView=()=>{};
+    const update=(name:string)=>{
+      const value=now.byStation[name]; if(!value)return;
+      const line=now.stationLine[name];
+      const lineList=all.filter(([station])=>now.stationLine[station]===line);
+      const lineRank=lineList.findIndex(([station])=>station===name)+1;
+      const old=before.byStation[name]||0;
+      const change=old?((value/old-1)*100):null;
+      document.querySelector('#panel-share')!.textContent=`${(value/now.total*100).toFixed(1).replace('.',',')}% del total`;
+      document.querySelector('#panel-line-rank')!.textContent=`#${lineRank}`;
+      document.querySelector('#panel-line-share')!.textContent=`${(value/now.byLine[line]*100).toFixed(1).replace('.',',')}% de la línea`;
+      const growth=document.querySelector('#panel-growth') as HTMLElement;
+      growth.textContent=change===null?'Sin base':`${change>=0?'+':''}${change.toFixed(1).replace('.',',')}%`;
+      growth.classList.toggle('down',change!==null&&change<0);
+      const hours=now.stationHours[name]||{};
+      const quiet=Object.entries(hours).filter(([h,v])=>Number(h)>=7&&Number(h)<=21&&Number(v)>0).sort((a:any,b:any)=>a[1]-b[1])[0];
+      document.querySelector('#panel-quiet')!.textContent=quiet?`${quiet[0]}–${Number(quiet[0])+1} h`:'—';
+      const days=now.stationWeekdays[name]||{};
+      const workday=(Number(days[0]||0)+Number(days[1]||0)+Number(days[2]||0)+Number(days[3]||0)+Number(days[4]||0))/129;
+      const weekend=(Number(days[5]||0)+Number(days[6]||0))/52;
+      document.querySelector('#weekday-split')!.textContent=`hábil ${nf.format(Math.round(workday))}/día · finde ${nf.format(Math.round(weekend))}/día`;
+      const months=now.stationMonths[name]||{}; const keys=[1,2,3,4,5,6];
+      const max=Math.max(...keys.map(k=>months[k]||0),1);
+      document.querySelector('#month-bars')!.innerHTML=keys.map(k=>`<i style="--h:${(months[k]||0)/max*100}%" title="${nf.format(months[k]||0)}"><span>${['Ene','Feb','Mar','Abr','May','Jun'][k-1]}</span></i>`).join('');
+    };
+    const sync=()=>update(document.querySelector('#panel-name')?.textContent||'');
+    document.querySelectorAll<HTMLElement>('.map-station,[data-rank-station]').forEach(el=>el.addEventListener('click',()=>setTimeout(sync,0)));
+    document.querySelector('#search-go')?.addEventListener('click',()=>setTimeout(sync,0));
+    document.querySelector('#station-search')?.addEventListener('change',()=>setTimeout(sync,0));
+    document.querySelector('#panel-next')?.addEventListener('click',()=>setTimeout(sync,0));
+    const compare=()=>{
+      const a=(document.querySelector('#compare-a') as HTMLSelectElement).value;
+      const b=(document.querySelector('#compare-b') as HTMLSelectElement).value;
+      const hours=Array.from({length:17},(_,i)=>i+6), av=now.stationHours[a]||{}, bv=now.stationHours[b]||{};
+      const max=Math.max(...hours.flatMap(h=>[av[h]||0,bv[h]||0]),1);
+      document.querySelector('#legend-a')!.textContent=a; document.querySelector('#legend-b')!.textContent=b;
+      document.querySelector('#compare-chart')!.innerHTML=hours.map(h=>`<div title="${h}:00 · ${a}: ${nf.format(av[h]||0)} · ${b}: ${nf.format(bv[h]||0)}"><i style="--h:${(av[h]||0)/max*100}%"></i><b style="--h:${(bv[h]||0)/max*100}%"></b></div>`).join('');
+      const peakA=hours.sort((x,y)=>(av[y]||0)-(av[x]||0))[0], peakB=[...hours].sort((x,y)=>(bv[y]||0)-(bv[x]||0))[0];
+      const ratio=(now.byStation[a]||0)/(now.byStation[b]||1);
+      document.querySelector('#compare-insight')!.innerHTML=`<strong>${a}</strong> mueve ${ratio>=1?ratio.toFixed(1).replace('.',','):`${(1/ratio).toFixed(1).replace('.',',')} veces menos`} que <strong>${b}</strong>. Sus picos aparecen a las ${peakA} y ${peakB} h.`;
+    };
+    document.querySelector('#compare-a')?.addEventListener('change',compare); document.querySelector('#compare-b')?.addEventListener('change',compare); compare();
+    setTimeout(()=>{sync();panel.classList.remove('open')},0);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enrichStationRibbon);else enrichStationRibbon();
+</script>
+
+<style>
+  :global(html){scroll-behavior:smooth}.atlas{--night:#07111f;--night2:#0c192b;--cream:#f4f0e8;--ink:#172033;font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}.map-hero{min-height:1100px;background:var(--night);color:#fff;position:relative;overflow:hidden;padding:5rem max(2rem,calc((100vw - 1360px)/2)) 4rem}.map-hero:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.026) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.026) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,#000 20%,transparent 90%)}.ambient{position:absolute;border-radius:50%;filter:blur(120px);opacity:.18}.ambient.one{width:500px;height:500px;background:#167ed8;right:10%;top:20%}.ambient.two{width:350px;height:350px;background:#ee3348;left:5%;bottom:10%}.hero-title,.top-stats,.map-shell,.scroll-cue{position:relative;z-index:1}.hero-title{max-width:620px}.hero-title>p,.narrative-intro>p,.rank-copy>p,.closing p{font-size:.68rem;letter-spacing:.16em;font-weight:850;color:#8291aa}.hero-title>p span{display:inline-block;width:8px;height:8px;border-radius:50%;background:#50d694;box-shadow:0 0 0 5px rgba(80,214,148,.12);margin-right:.6rem}.hero-title h1{color:#fff;font-size:clamp(4.4rem,8vw,8.5rem);line-height:.79;letter-spacing:-.075em;margin:1.5rem 0 2rem}.hero-copy{max-width:480px;color:#aeb9cb;font-size:1.15rem;line-height:1.6}.top-stats{position:absolute;top:6rem;right:max(2rem,calc((100vw - 1360px)/2));display:flex;gap:2.5rem}.top-stats div{display:grid}.top-stats span{font-size:.62rem;letter-spacing:.14em;color:#75849c}.top-stats strong{font-size:1.5rem}.map-shell{height:710px;margin-top:-2rem;border:1px solid rgba(255,255,255,.1);border-radius:30px;background:rgba(9,21,37,.7);backdrop-filter:blur(20px);box-shadow:0 40px 100px rgba(0,0,0,.35);overflow:hidden}.map-toolbar{position:absolute;z-index:5;left:1.2rem;top:1.2rem;display:flex;gap:.7rem;align-items:center}.search{height:46px;display:flex;align-items:center;background:rgba(255,255,255,.95);border-radius:99px;padding-left:1rem;color:#172033;box-shadow:0 10px 30px rgba(0,0,0,.2)}.search svg{width:18px;fill:none;stroke:#5d6879;stroke-width:2}.search input{border:0;background:transparent;outline:0;width:190px;padding:.8rem}.search button{border:0;background:#172033;color:#fff;border-radius:50px;margin-right:4px;padding:.6rem .8rem;font-weight:750}.filters{display:flex;background:rgba(6,15,27,.75);padding:.3rem;border:1px solid rgba(255,255,255,.12);border-radius:99px}.filters button{border:0;background:transparent;color:#9ba8bb;border-radius:99px;padding:.55rem .65rem;font-weight:780}.filters button:not([data-filter="all"]){width:34px}.filters button.active{background:#fff;color:#172033}.city-map{position:absolute;inset:0 360px 0 0;overflow:hidden}.city-map:after{content:"RÍO DE LA PLATA";position:absolute;right:-130px;bottom:80px;transform:rotate(-63deg);font-size:.62rem;letter-spacing:.3em;color:#39506c}.network{width:100%;height:100%;overflow:visible}.line-shadow{fill:none;stroke:#000;stroke-opacity:.45;stroke-width:12;stroke-linecap:round;stroke-linejoin:round}.line-path{fill:none;stroke:var(--line);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;filter:url(#glow);opacity:.9}.map-line{transition:.3s opacity}.map-line.dim{opacity:.08}.hit{fill:transparent}.pulse{fill:var(--line);opacity:.12}.dot{fill:#0b1728;stroke:var(--line);stroke-width:5;transition:.2s;filter:url(#glow)}.map-station{cursor:pointer;outline:none}.map-station text{fill:#dfe7f3;font-size:10px;text-anchor:middle;opacity:.72;paint-order:stroke;stroke:#07111f;stroke-width:4px;stroke-linejoin:round}.map-station:hover .dot,.map-station.selected .dot{fill:var(--line);transform:scale(1.2)}.map-station.selected .pulse{animation:pulse 1.8s infinite}.map-station:hover text,.map-station.selected text{opacity:1;fill:#fff}.city-label{position:absolute;color:#31425a;font-size:.58rem;letter-spacing:.2em}.palermo{left:23%;top:16%}.centro{left:52%;top:44%}.constitucion{left:55%;bottom:12%}.caballito{left:13%;top:56%}.map-note{position:absolute;left:1.4rem;bottom:1.2rem;display:flex;align-items:center;gap:.6rem;font-size:.68rem;color:#718198}.map-note i{width:14px;height:14px;border:3px solid #27b7eb;border-radius:50%}.station-panel{position:absolute;right:0;top:0;bottom:0;width:360px;background:#f6f2ea;color:#172033;padding:1.8rem;box-shadow:-20px 0 70px rgba(0,0,0,.26)}.panel-head{display:flex;justify-content:space-between;align-items:center;font-size:.62rem;letter-spacing:.12em;color:#788193}.panel-head button{display:none;border:0;background:#e2ddd3;border-radius:50%;width:34px;height:34px;font-size:1.2rem}.panel-name{display:flex;align-items:center;gap:1rem;margin-top:2.5rem}.panel-name i{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;color:#fff;font-style:normal;font-weight:900}.panel-name h2{font-size:2.5rem;line-height:1;letter-spacing:-.055em;margin:0;overflow-wrap:anywhere}.panel-total{display:grid;margin:2rem 0}.panel-total strong{font-size:3.5rem;line-height:1;letter-spacing:-.06em}.panel-total span{color:#727b8a}.panel-metrics{display:grid;grid-template-columns:repeat(3,1fr);border-block:1px solid #d9d4ca}.panel-metrics div{display:grid;padding:1rem 0}.panel-metrics span,.panel-chart>div:first-child span{font-size:.58rem;letter-spacing:.12em;color:#7c8592}.panel-metrics b{font-size:1.15rem}.panel-chart{margin-top:1.8rem}.panel-chart>div:first-child{display:flex;justify-content:space-between}.panel-chart small{font-size:.65rem;color:#78818e}.spark,.rhythm-chart{display:flex;align-items:end;gap:4px;height:105px;margin-top:1rem}.spark i,.rhythm-chart i{height:var(--h);flex:1;background:#172033;border-radius:3px 3px 0 0;position:relative}.spark span,.rhythm-chart span{position:absolute;top:100%;font-size:.5rem;font-style:normal;color:#77808e}.station-panel>p{font-size:.82rem;line-height:1.6;color:#646e7d;background:#ebe6dc;padding:1rem;border-radius:12px;margin-top:1.5rem}.panel-next{position:absolute;left:1.8rem;right:1.8rem;bottom:1.8rem;display:flex;justify-content:space-between;border:0;background:#172033;color:#fff;border-radius:12px;padding:1rem;font-weight:750}.scroll-cue{display:flex;justify-content:center;align-items:center;gap:1rem;color:#8d9bb0;text-decoration:none;font-size:.72rem;margin-top:2rem}.scroll-cue i{display:grid;place-items:center;width:34px;height:34px;border:1px solid #41506a;border-radius:50%;font-style:normal}.narrative{background:var(--cream);color:var(--ink);padding:8rem max(2rem,calc((100vw - 1180px)/2));display:grid;grid-template-columns:.85fr 1.15fr;gap:6rem;align-items:center}.narrative-intro h2,.rank-copy h2{font-size:clamp(2.8rem,5vw,5rem);line-height:.98;letter-spacing:-.06em;margin:1.2rem 0 2rem}.narrative-intro>span,.rank-copy>span{color:#66707f;line-height:1.7}.rhythm-card{background:#fff;border-radius:28px;padding:2rem;box-shadow:0 25px 70px rgba(23,32,51,.1)}.rhythm-title{display:grid}.rhythm-title>span{font-size:.62rem;letter-spacing:.14em;color:#78818f}.rhythm-title strong{font-size:4rem;letter-spacing:-.06em;margin-top:1rem}.rhythm-title small{color:#737c89}.rhythm-chart{height:240px;gap:7px}.rhythm-chart i{background:linear-gradient(to top,#27b7eb,#f04454)}.ranking-section{background:#fff;padding:8rem max(2rem,calc((100vw - 1180px)/2));display:grid;grid-template-columns:.7fr 1.3fr;gap:6rem}.rank-copy{position:sticky;top:100px;align-self:start}.rank-list button{width:100%;display:grid;grid-template-columns:40px 1fr 180px 70px;gap:1rem;align-items:center;border:0;border-bottom:1px solid #e3e6ea;background:#fff;padding:1rem .4rem;text-align:left;cursor:pointer}.rank-list button:hover{background:#f7f8f9}.rank-list>button>span{color:#9aa1ad}.rank-list div{display:grid}.rank-list small{color:#89919e}.rank-list i{height:5px;background:#edf0f3;border-radius:99px;overflow:hidden}.rank-list i b{display:block;width:var(--w);height:100%;background:var(--line)}.rank-list em{text-align:right;font-style:normal;font-weight:800}.closing{background:#172033;color:#fff;padding:5rem max(2rem,calc((100vw - 1180px)/2));display:grid;grid-template-columns:1fr 1fr;gap:6rem}.closing>div{display:grid;align-content:start}.closing strong{font-size:6rem;letter-spacing:-.07em}.closing>div>span{color:#aeb8c8;line-height:1.7}.closing a{color:#fff;font-weight:800;margin-top:1.5rem}
+  @keyframes pulse{0%,100%{opacity:.1;transform:scale(1)}50%{opacity:.35;transform:scale(1.6)}}@media(max-width:900px){.map-hero{padding:3rem 1rem;min-height:1050px}.hero-title h1{font-size:4.8rem}.top-stats{position:relative;top:auto;right:auto;margin:2rem 0;justify-content:space-between;gap:1rem}.map-shell{height:680px;margin:0}.map-toolbar{right:1rem;flex-direction:column;align-items:stretch}.search input{width:auto;flex:1}.filters{overflow:auto}.city-map{inset:100px 0 0}.network{width:145%;transform:translateX(-15%)}.station-panel{display:none;position:fixed;z-index:100;inset:auto .6rem .6rem;top:5rem;width:auto;border-radius:24px;overflow:auto}.station-panel.open{display:block}.panel-head button{display:block}.panel-next{position:static;width:100%;margin-top:1rem}.narrative,.ranking-section,.closing{grid-template-columns:1fr;gap:3rem;padding:5rem 1.2rem}.rank-copy{position:static}.rank-list button{grid-template-columns:30px 1fr 65px}.rank-list i{display:none}.closing strong{font-size:4.5rem}.hero-copy{font-size:1rem}.map-note{display:none}}@media(prefers-reduced-motion:reduce){:global(html){scroll-behavior:auto}.map-station.selected .pulse{animation:none}}
+  .map-shell{margin-top:2.5rem}.city-map{inset:0}.station-ribbon{position:absolute;z-index:8;left:16px;right:16px;bottom:16px;min-height:205px;display:grid;grid-template-columns:1.05fr 1.35fr 1.05fr 1fr auto;gap:1.35rem;align-items:stretch;padding:1.3rem 1.4rem;background:rgba(10,22,38,.94);color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.42);backdrop-filter:blur(24px);transition:.35s transform,.35s opacity}.station-ribbon:not(.open){transform:translateY(calc(100% + 30px));opacity:0}.ribbon-close{position:absolute;right:.65rem;top:.55rem;border:0;background:transparent;color:#8190a6;font-size:1.25rem;cursor:pointer}.ribbon-identity{display:flex;flex-direction:column;justify-content:center;border-right:1px solid #304057;padding-right:1rem;min-width:0}.ribbon-identity>span,.ribbon-metrics span,.ribbon-chart>div>span{font-size:.56rem;letter-spacing:.14em;color:#8391a5}.ribbon-identity>div{display:flex;align-items:center;gap:.75rem;margin:.65rem 0}.ribbon-identity i{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:50%;font-style:normal;font-weight:900}.ribbon-identity h2{color:#fff;font-size:1.7rem;line-height:1;letter-spacing:-.045em;margin:0;overflow-wrap:anywhere}.ribbon-identity p{margin:0;color:#8997aa;font-size:.7rem}.ribbon-identity p strong{color:#fff;font-size:1.2rem}.ribbon-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}.ribbon-metrics article{display:grid;align-content:center;border-bottom:1px solid #2c3b50}.ribbon-metrics article:nth-child(n+3){border-bottom:0}.ribbon-metrics b{font-size:1.15rem}.ribbon-metrics b.down{color:#ff7783}.ribbon-metrics small{font-size:.6rem;color:#7e8da2}.ribbon-chart{display:flex;flex-direction:column;justify-content:center;min-width:0}.ribbon-chart>div:first-child{display:flex;justify-content:space-between;gap:.4rem}.ribbon-chart small{font-size:.58rem;color:#7d8ba0}.station-ribbon .spark,.months{height:105px;display:flex;align-items:end;gap:3px;margin-top:.75rem}.station-ribbon .spark i,.months i{position:relative;flex:1;height:var(--h);min-height:2px;background:#45d19a;border-radius:2px 2px 0 0}.station-ribbon .spark span,.months span{position:absolute;top:100%;font-size:.48rem;font-style:normal;color:#738198}.months i{background:#27b7eb}.months span{left:50%;transform:translateX(-50%)}.station-ribbon .panel-next{position:static;align-self:center;display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid #405068;border-radius:50%;background:transparent}.map-note{bottom:240px}
+  @media(max-width:900px){.city-map{inset:100px 0 0}.station-ribbon{left:.6rem;right:.6rem;bottom:.6rem;min-height:0;max-height:62%;overflow:auto;grid-template-columns:1fr 1fr;padding:1.1rem}.ribbon-identity{grid-column:1/-1;border-right:0;border-bottom:1px solid #304057;padding:0 0 .8rem}.ribbon-metrics{grid-column:1/-1}.ribbon-chart{min-height:125px}.station-ribbon .panel-next{position:absolute;right:2.8rem;top:.65rem}.map-note{display:none}}
+  .map-shell{border:0;background:transparent;box-shadow:none;border-radius:0;overflow:visible}.ribbon-identity h2{font-size:1.45rem;white-space:nowrap;overflow-wrap:normal}.time-axis{display:flex;justify-content:space-between;margin-top:.55rem;color:#707987;font-size:.62rem;font-weight:700}.rhythm-chart+.time-axis{padding:0 .15rem}
+  :global(.station-ribbon .spark i),:global(.station-ribbon .months i),:global(.rhythm-chart i){position:relative;display:block;flex:1;height:var(--h);min-height:2px;border-radius:3px 3px 0 0;background:#45d19a}
+  :global(.station-ribbon .months i){background:#27b7eb}
+  :global(.rhythm-chart i){background:linear-gradient(to top,#27b7eb,#f04454)}
+  :global(.station-ribbon .spark span),:global(.rhythm-chart i span){display:none}
+  :global(.station-ribbon .months span){position:absolute;top:100%;left:50%;transform:translateX(-50%);font-size:.48rem;font-style:normal;color:#738198}
+  .map-shell{height:930px}.city-map{bottom:0;transition:.35s bottom}.map-note{bottom:1.2rem}.map-shell:has(.station-ribbon.open) .city-map{bottom:235px}.map-shell:has(.station-ribbon.open) .map-note{bottom:250px}
+  @media(max-width:900px){.map-shell{height:760px}.map-shell:has(.station-ribbon.open) .city-map{bottom:0}.map-shell:has(.station-ribbon.open) .map-note{bottom:1.2rem}}
+  @media(min-width:601px) and (max-width:900px){.map-shell{height:1080px}.map-shell:has(.station-ribbon.open) .city-map{bottom:400px}.station-ribbon{left:.8rem;right:.8rem;bottom:.8rem;height:370px;max-height:none;overflow:visible;grid-template-columns:1fr 1.25fr 1fr;align-content:stretch}.ribbon-identity{grid-column:auto;border-bottom:0;border-right:1px solid #304057;padding-right:1rem}.ribbon-metrics{grid-column:auto}.ribbon-chart{min-height:0}.month-block{grid-column:1/-1;height:105px}.station-ribbon .panel-next{right:2.8rem;top:.65rem}.map-hero{min-height:1450px}}
+  .rank-list em{display:grid;justify-items:end;white-space:nowrap}.rank-list em small{font-size:.55rem;font-weight:650;letter-spacing:.04em;text-transform:uppercase}
+  .compare-section{background:#07111f;color:#fff;padding:8rem max(2rem,calc((100vw - 1180px)/2));display:grid;grid-template-columns:.7fr 1.3fr;gap:6rem;align-items:center}.compare-copy p,.useful-links p,.faq-section header p{font-size:.68rem;letter-spacing:.16em;font-weight:850;color:#6f829d}.compare-copy h2,.useful-links h2,.faq-section h2{font-size:clamp(2.8rem,5vw,5rem);line-height:.98;letter-spacing:-.06em;margin:1.2rem 0 2rem}.compare-copy span{color:#91a0b5;line-height:1.7}.compare-card{background:#0d1c30;border:1px solid #21334b;border-radius:28px;padding:2rem;box-shadow:0 30px 90px rgba(0,0,0,.3)}.compare-controls{display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:end}.compare-controls label{display:grid;gap:.45rem}.compare-controls label span{font-size:.56rem;letter-spacing:.13em;color:#7587a1}.compare-controls select{width:100%;border:1px solid #30435d;border-radius:12px;background:#13243a;color:#fff;padding:.85rem}.compare-controls>b{color:#64758d;padding-bottom:.8rem}.compare-legend{display:flex;gap:1.5rem;margin:1.8rem 0 0}.compare-legend span{display:flex;align-items:center;gap:.5rem;font-size:.72rem}.compare-legend i{width:9px;height:9px;border-radius:50%;background:#45d19a}.compare-legend span+span i{background:#27b7eb}.compare-chart{height:260px;display:flex;gap:6px;align-items:end;margin-top:1.2rem;border-bottom:1px solid #304057}.compare-chart div{height:100%;flex:1;display:flex;gap:2px;align-items:end}.compare-chart i,.compare-chart b{height:var(--h);flex:1;min-height:2px;background:#45d19a;border-radius:3px 3px 0 0}.compare-chart b{background:#27b7eb}.compare-axis{display:flex;justify-content:space-between;color:#7788a0;font-size:.58rem;margin-top:.5rem}.compare-card>p{color:#aab6c7;line-height:1.55;margin:1.5rem 0 0}.compare-card>p strong{color:#fff}.useful-links{background:#f4f0e8;color:#172033;padding:7rem max(2rem,calc((100vw - 1180px)/2));display:grid;grid-template-columns:.8fr 1.2fr;gap:6rem}.useful-links nav{display:grid}.useful-links a{display:grid;text-decoration:none;color:#172033;padding:1.4rem 0;border-bottom:1px solid #cfd1d1}.useful-links a span{font-size:.65rem;letter-spacing:.12em;color:#727b88}.useful-links a b{font-size:1.25rem;margin-top:.3rem}.useful-links a:hover b{color:#167ed8}.faq-section{background:#fff;color:#172033;padding:8rem max(2rem,calc((100vw - 1180px)/2));display:grid;grid-template-columns:.8fr 1.2fr;gap:6rem}.faq-section details{border-bottom:1px solid #dfe3e8;padding:1.2rem 0}.faq-section summary{display:flex;justify-content:space-between;gap:1rem;cursor:pointer;font-size:1.05rem;font-weight:800;list-style:none}.faq-section summary::-webkit-details-marker{display:none}.faq-section summary span{font-size:1.4rem;color:#718096}.faq-section details[open] summary span{transform:rotate(45deg)}.faq-section details p{color:#657080;line-height:1.65;margin:1rem 2rem 0 0}
+  @media(max-width:900px){.compare-section,.useful-links,.faq-section{grid-template-columns:1fr;gap:3rem;padding:5rem 1.2rem}.compare-card{padding:1.2rem}.compare-chart{height:210px}.rank-list em small{font-size:.48rem}.useful-links h2,.faq-section h2{font-size:3rem}}
+  @media(max-width:600px){.map-hero{padding-inline:.8rem;min-height:1100px}.hero-title h1{font-size:3.8rem}.top-stats{align-items:start}.top-stats strong{font-size:1.1rem}.top-stats span{font-size:.5rem}.map-shell{height:780px}.map-toolbar{left:.6rem;right:.6rem}.network{width:155%;transform:translateX(-20%)}.station-ribbon{grid-template-columns:1fr;max-height:70%}.ribbon-metrics{grid-template-columns:1fr 1fr}.ribbon-chart{grid-column:1/-1}.compare-controls{grid-template-columns:1fr}.compare-controls>b{display:none}.compare-chart{gap:3px}.rank-list button{grid-template-columns:28px 1fr 84px;gap:.5rem}.rank-list em{font-size:.82rem}.closing{padding-inline:1.2rem}}
+</style>
