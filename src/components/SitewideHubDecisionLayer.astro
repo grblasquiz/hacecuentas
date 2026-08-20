@@ -15,14 +15,17 @@
 import currentTools from '../lib/current-tools-index.json';
 import research from '../lib/hubs/citable-research.json';
 import HubCollectionCitableStats from './hub/HubCollectionCitableStats.astro';
+import { keywordAlignment, type SearchIntent } from '../lib/search-target';
 
 interface Props {
   pageTitle?: string;
   modified?: string;
   noindex?: boolean;
+  primaryKeyword?: string;
+  searchIntent?: SearchIntent;
 }
 
-const { pageTitle = '', modified, noindex = false } = Astro.props;
+const { pageTitle = '', primaryKeyword = '', searchIntent = 'informacional', modified, noindex = false } = Astro.props;
 const clean = (value: string) => {
   try {
     const pathname = new URL(value, 'https://hacecuentas.com').pathname;
@@ -37,6 +40,9 @@ const language = locale === 'en' ? 'en' : locale.startsWith('pt') ? 'pt' : 'es';
 const isHub = Boolean(current && !noindex);
 const researchRow = current ? (research.hubs as Record<string, any>)[current.path.replace(/^\//, '')] : null;
 const isCollectionHub = researchRow?.pageType === 'collection';
+const needsKeywordReinforcement = Boolean(
+  current && primaryKeyword && keywordAlignment(primaryKeyword, current.h1 || '') === 0,
+);
 
 const normalized = (value: string) => value
   .toLowerCase()
@@ -93,16 +99,17 @@ const routes = selected.slice(0, 3).map(({ tool }, index) => ({ tool, prompt: in
 const nextSteps = routes.length > 1 ? [...routes.slice(1), routes[0]].slice(0, 3) : routes;
 
 const COPY = {
-  es: { eyebrow: 'Elegí tu situación', routeTitle: '¿Qué querés resolver?', nextEyebrow: 'Tu próximo paso', nextTitle: 'Seguí con la decisión', nextIntro: 'Usá el resultado que acabás de obtener para avanzar con una cuenta directamente relacionada.', trust: 'Datos y metodología', checked: 'Cálculo ejecutado en tu navegador; revisá los supuestos y fuentes de esta página.', editor: 'Responsable: Martín Rodríguez, fundador y editor', reviewed: 'Revisión de experiencia', freshness: 'La fecha de vigencia de cada valor se informa junto a su fuente.', method: 'Ver fuentes y metodología', share: 'Guardar o compartir este resultado', shareHelp: 'El enlace conserva tus datos en el navegador y no crea una página indexable.', copy: 'Copiar enlace', copied: 'Enlace copiado', native: 'Compartir', print: 'Descargar / imprimir', privacy: 'No guardamos estos datos en el servidor.' },
-  en: { eyebrow: 'Choose your situation', routeTitle: 'What do you want to solve?', nextEyebrow: 'Your next step', nextTitle: 'Continue your decision', nextIntro: 'Use the result you just obtained to continue with a directly related calculation.', trust: 'Data and methodology', checked: 'The calculation runs in your browser; review this page’s assumptions and sources.', editor: 'Responsible editor: Martín Rodríguez', reviewed: 'Experience review', freshness: 'The effective date of each value is shown with its source.', method: 'View sources and methodology', share: 'Save or share this result', shareHelp: 'The link keeps your inputs in the browser and does not create an indexable page.', copy: 'Copy link', copied: 'Link copied', native: 'Share', print: 'Download / print', privacy: 'We do not store these inputs on the server.' },
-  pt: { eyebrow: 'Escolha sua situação', routeTitle: 'O que você quer resolver?', nextEyebrow: 'Próximo passo', nextTitle: 'Continue sua decisão', nextIntro: 'Use o resultado que acabou de obter para avançar com um cálculo diretamente relacionado.', trust: 'Dados e metodologia', checked: 'O cálculo roda no seu navegador; revise as premissas e fontes desta página.', editor: 'Editor responsável: Martín Rodríguez', reviewed: 'Revisão da experiência', freshness: 'A data de vigência de cada valor aparece junto à fonte.', method: 'Ver fontes e metodologia', share: 'Salvar ou compartilhar este resultado', shareHelp: 'O link mantém seus dados no navegador e não cria uma página indexável.', copy: 'Copiar link', copied: 'Link copiado', native: 'Compartilhar', print: 'Baixar / imprimir', privacy: 'Não armazenamos esses dados no servidor.' },
+  es: { eyebrow: 'Elegí tu situación', focus: 'Consulta principal', routeTitle: '¿Qué querés resolver?', nextEyebrow: 'Tu próximo paso', nextTitle: 'Seguí con la decisión', nextIntro: 'Usá el resultado que acabás de obtener para avanzar con una cuenta directamente relacionada.', trust: 'Datos y metodología', checked: 'Cálculo ejecutado en tu navegador; revisá los supuestos y fuentes de esta página.', editor: 'Responsable: Martín Rodríguez, fundador y editor', reviewed: 'Revisión de experiencia', freshness: 'La fecha de vigencia de cada valor se informa junto a su fuente.', method: 'Ver fuentes y metodología', share: 'Guardar o compartir este resultado', shareHelp: 'El enlace conserva tus datos en el navegador y no crea una página indexable.', copy: 'Copiar enlace', copied: 'Enlace copiado', native: 'Compartir', print: 'Descargar / imprimir', privacy: 'No guardamos estos datos en el servidor.' },
+  en: { eyebrow: 'Choose your situation', focus: 'Main query', routeTitle: 'What do you want to solve?', nextEyebrow: 'Your next step', nextTitle: 'Continue your decision', nextIntro: 'Use the result you just obtained to continue with a directly related calculation.', trust: 'Data and methodology', checked: 'The calculation runs in your browser; review this page’s assumptions and sources.', editor: 'Responsible editor: Martín Rodríguez', reviewed: 'Experience review', freshness: 'The effective date of each value is shown with its source.', method: 'View sources and methodology', share: 'Save or share this result', shareHelp: 'The link keeps your inputs in the browser and does not create an indexable page.', copy: 'Copy link', copied: 'Link copied', native: 'Share', print: 'Download / print', privacy: 'We do not store these inputs on the server.' },
+  pt: { eyebrow: 'Escolha sua situação', focus: 'Consulta principal', routeTitle: 'O que você quer resolver?', nextEyebrow: 'Próximo passo', nextTitle: 'Continue sua decisão', nextIntro: 'Use o resultado que acabou de obter para avançar com um cálculo diretamente relacionado.', trust: 'Dados e metodologia', checked: 'O cálculo roda no seu navegador; revise as premissas e fontes desta página.', editor: 'Editor responsável: Martín Rodríguez', reviewed: 'Revisão da experiência', freshness: 'A data de vigência de cada valor aparece junto à fonte.', method: 'Ver fontes e metodologia', share: 'Salvar ou compartilhar este resultado', shareHelp: 'O link mantém seus dados no navegador e não cria uma página indexável.', copy: 'Copiar link', copied: 'Link copiado', native: 'Compartilhar', print: 'Baixar / imprimir', privacy: 'Não armazenamos esses dados no servidor.' },
 }[language];
 const experienceReviewed = modified || '2026-08-16';
 ---
 
 {isHub && routes.length > 0 && (
-  <section class="hc-decision-routes" data-hc-decision-routes aria-labelledby="hc-decision-routes-title">
+  <section class="hc-decision-routes" data-hc-decision-routes data-search-intent={searchIntent} aria-labelledby="hc-decision-routes-title">
     <p class="hc-system-eyebrow">{COPY.eyebrow}</p>
+    {needsKeywordReinforcement && <p class="hc-search-focus"><strong>{COPY.focus}:</strong> {primaryKeyword}</p>}
     <h2 id="hc-decision-routes-title">{COPY.routeTitle}</h2>
     <div class="hc-decision-routes__grid">
       {routes.map(({ tool, prompt }) => (
@@ -298,6 +305,8 @@ const experienceReviewed = modified || '2026-08-16';
 <style>
   .hc-decision-routes,.hc-post-result-system,.hc-trust-card{width:min(1120px,calc(100% - 2rem));margin:1.5rem auto;color:#172033;font-family:Inter,system-ui,sans-serif}
   .hc-system-eyebrow{margin:0 0 .35rem!important;color:#315f86!important;font-size:.72rem!important;font-weight:800!important;letter-spacing:.1em;text-transform:uppercase}
+  .hc-search-focus{margin:0 0 .45rem!important;color:#526174!important;font-size:.9rem!important;line-height:1.45}
+  .hc-search-focus strong{color:#172033}
   .hc-decision-routes{padding:1.25rem;border:1px solid #dfe5e8;border-radius:18px;background:#f7fafb}
   .hc-decision-routes h2,.hc-post-result-system h2,.hc-trust-card h2{margin:0 0 .85rem;font-size:clamp(1.25rem,2.4vw,1.7rem);color:#172033}
   .hc-decision-routes__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem}

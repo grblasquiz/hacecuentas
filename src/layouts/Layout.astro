@@ -19,6 +19,7 @@ import { seoDescriptionFor } from '../lib/seo-description-overrides';
 import { isSelfCanonicalUrl } from '../lib/hreflang';
 import { isLegacyReviewNoindexPath } from '../lib/route-policy';
 import currentTools from '../lib/current-tools-index.json';
+import { resolveSearchTarget, type SearchIntent } from '../lib/search-target';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
 // Antes (5 weights estáticos): 5 woff2 × ~17 KB = ~85 KB de Inter.
@@ -65,6 +66,8 @@ export interface Props {
   editorialSources?: Array<{ name?: string; title?: string; publisher?: string; url?: string; date?: string }>;
   professionalReviewer?: { name?: string; profession?: string; credential?: string; licenseNumber?: string; profileUrl?: string; reviewedAt?: string } | null;
   suppressAutoEnhancements?: boolean; // experiencias con navegación, engagement y relacionados propios
+  primaryKeyword?: string;  // consulta primaria explícita; si falta se deriva del title
+  searchIntent?: SearchIntent;
 }
 
 const {
@@ -100,6 +103,8 @@ const {
   editorialSources = [],
   professionalReviewer,
   suppressAutoEnhancements = false,
+  primaryKeyword,
+  searchIntent,
 } = Astro.props;
 
 // La mayoría de los hubs históricos no declaraba pageType aunque ya figure en
@@ -120,6 +125,15 @@ const isRegisteredHub = currentTools.some((tool) => {
   }
 });
 const effectivePageType = pageType ?? (isRegisteredHub ? 'hub' : undefined);
+const searchTarget = resolveSearchTarget({
+  path: currentPath,
+  title,
+  description,
+  pageType: effectivePageType,
+  lang,
+  primaryKeyword,
+  searchIntent,
+});
 
 // Defensivo: keywords/newsKeywords deben ser string[]. Si una página los pasa
 // como string (ej. keywords="a, b, c") el `.slice().join()` de abajo tiraría
@@ -129,6 +143,10 @@ const effectivePageType = pageType ?? (isRegisteredHub ? 'hub' : undefined);
 const keywordsArr = typeof keywords === 'string'
   ? (keywords as string).split(',').map((k) => k.trim()).filter(Boolean)
   : keywords;
+const effectiveKeywords = Array.from(new Set([
+  searchTarget.primaryKeyword,
+  ...(keywordsArr || []),
+].map((value) => String(value || '').trim()).filter(Boolean)));
 const newsKeywordsArr = typeof newsKeywords === 'string'
   ? (newsKeywords as string).split(',').map((k) => k.trim()).filter(Boolean)
   : newsKeywords;
@@ -230,6 +248,19 @@ const schemaContainsType = (value: unknown, type: string): boolean => {
   if (record['@type'] === type || (Array.isArray(record['@type']) && record['@type'].includes(type))) return true;
   return Object.values(record).some((item) => schemaContainsType(item, type));
 };
+const schemaDefinesTopLevelType = (value: unknown, type: string): boolean => {
+  if (!value || typeof value !== 'object') return false;
+  if (Array.isArray(value)) return value.some((item) => schemaDefinesTopLevelType(item, type));
+  const record = value as Record<string, unknown>;
+  const ownType = record['@type'];
+  if (ownType === type || (Array.isArray(ownType) && ownType.includes(type))) return true;
+  const graph = record['@graph'];
+  return Array.isArray(graph) && graph.some((item) => {
+    if (!item || typeof item !== 'object') return false;
+    const itemType = (item as Record<string, unknown>)['@type'];
+    return itemType === type || (Array.isArray(itemType) && itemType.includes(type));
+  });
+};
 const needsBreadcrumbSchema =
   cleanPath !== '/' &&
   cleanPath.split('/').filter(Boolean).length >= 1 &&
@@ -243,12 +274,26 @@ const automaticBreadcrumbSchema = needsBreadcrumbSchema
       ],
     }
   : null;
+const automaticWebPageSchema = !schemaDefinesTopLevelType(schema, 'WebPage')
+  ? {
+      '@type': 'WebPage',
+      '@id': `${fullCanonical}#webpage`,
+      url: fullCanonical,
+      name: seoTitle,
+      description: seoDescription,
+      inLanguage: schemaLang,
+      isPartOf: { '@id': `${siteUrl}/#website` },
+      about: { '@type': 'Thing', name: searchTarget.primaryKeyword },
+      keywords: effectiveKeywords.join(', '),
+    }
+  : null;
 
 // Schema.org WebSite + Organization global (siempre presente)
 const globalSchema = {
   '@context': 'https://schema.org',
   '@graph': [
     ...(automaticBreadcrumbSchema ? [automaticBreadcrumbSchema] : []),
+    ...(automaticWebPageSchema ? [automaticWebPageSchema] : []),
     {
       '@type': 'Organization',
       '@id': `${siteUrl}/#organization`,
@@ -471,8 +516,8 @@ const globalSchema = {
     <title>{seoTitle}</title>
     <meta name="description" content={seoDescription} />
     <meta name="author" content="Martín Rodríguez" />
-    {keywordsArr && keywordsArr.length > 0 && (
-      <meta name="keywords" content={keywordsArr.slice(0, 10).join(', ')} />
+    {effectiveKeywords.length > 0 && (
+      <meta name="keywords" content={effectiveKeywords.slice(0, 10).join(', ')} />
     )}
     {/* Señales legacy — Google las ignora pero Bing/Yandex/Baidu las leen.
         rating=general previene filtrado por safe-search; distribution=global
@@ -805,7 +850,7 @@ const globalSchema = {
       })();
     </script>
   </head>
-  <body data-domain={domain} data-page-type={effectivePageType}>
+  <body data-domain={domain} data-page-type={effectivePageType} data-search-intent={searchTarget.searchIntent}>
     <!-- Skip-link (WCAG 2.4.1): primer elemento focuseable. Solo si la página NO trae
          su propio Header (que ya incluye un skip-link i18n) → evita el duplicado. -->
     {!Astro.slots.has('header') && <a href="#main" class="skip-link">Saltar al contenido</a>}
@@ -856,7 +901,7 @@ const globalSchema = {
         sources={editorialSources}
         professionalReviewer={professionalReviewer}
       />
-      {!suppressAutoEnhancements && <SitewideHubDecisionLayer pageTitle={title} modified={articleModifiedTime} noindex={effectiveNoindex} />}
+      {!suppressAutoEnhancements && <SitewideHubDecisionLayer pageTitle={title} primaryKeyword={searchTarget.primaryKeyword} searchIntent={searchTarget.searchIntent} modified={articleModifiedTime} noindex={effectiveNoindex} />}
       {!suppressAutoEnhancements && <HubInterlinking pageTitle={title} noindex={effectiveNoindex} />}
     </main>
     <slot name="footer" />
