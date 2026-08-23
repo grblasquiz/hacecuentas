@@ -1260,15 +1260,25 @@ if (calcsDo.length > 0) sitemaps.push(sitemapForLocale(calcsDo, 'do', CALCS_DO_D
 if (calcsPtPt.length > 0) sitemaps.push(sitemapForLocale(calcsPtPt, 'pt-pt', CALCS_PT_PT_DIR, true));
 
 // 4. Blog
-if (blogPosts.length > 0) {
+if (blogPosts.length > 0 || blogPostsPt.length > 0) {
   sitemaps.push({
     name: 'sitemap-blog.xml',
-    urls: (blogPosts as any[]).map((p: any) => ({
-      loc: `${site}/blog/${p.slug}`,
-      priority: '0.75',
-      changefreq: 'monthly',
-      lastmod: p.updatedDate || p.date || buildDate,
-    })),
+    urls: [
+      ...(blogPosts as any[]).map((p: any) => ({
+        loc: `${site}/blog/${p.slug}`,
+        priority: '0.75',
+        changefreq: 'monthly',
+        lastmod: p.updatedDate || p.date || buildDate,
+      })),
+      // Los posts PT-BR antes sólo entraban al sitemap-news (ventana 7d):
+      // pasada la ventana quedaban fuera de TODOS los sitemaps.
+      ...(blogPostsPt as any[]).map((p: any) => ({
+        loc: `${site}/pt/blog/${p.slug}`,
+        priority: '0.75',
+        changefreq: 'monthly',
+        lastmod: p.updatedDate || p.date || buildDate,
+      })),
+    ],
   });
 }
 
