@@ -1,0 +1,122 @@
+---
+/**
+ * Respuesta SEO canónica para hubs con experiencias visuales propias.
+ *
+ * Esas páginas no pasan por DecisionHub, por lo que el dato `answer` podía
+ * existir en HubData sin llegar al HTML. Este bloque publica la respuesta,
+ * condiciones, advertencias, plazo y evidencia primaria sin duplicar la
+ * calculadora ni alterar su diseño.
+ */
+import type { HubData } from '../../lib/hubs/types';
+
+export interface Props {
+  data: HubData;
+}
+
+const { data } = Astro.props;
+const primaryCase = data.cases?.items[0];
+const answerTitle = primaryCase?.answer ?? data.answer?.title ?? data.h1;
+const answerCopy = data.answer?.copy ?? data.lede;
+const included = primaryCase?.yes ?? data.answer?.yes ?? [];
+const warnings = primaryCase?.warn ?? data.answer?.warn ?? [];
+const deadline = primaryCase?.plazo ?? data.answer?.plazo ?? '';
+const sources = data.sources.slice(0, 2);
+const id = `seo-answer-${data.slug.replaceAll('/', '-')}`;
+
+const COPY: Record<string, {
+  eyebrow: string;
+  title: string;
+  included: string;
+  warnings: string;
+  deadline: string;
+  evidence: string;
+}> = {
+  ar: {
+    eyebrow: 'Respuesta comprobable', title: 'La respuesta, sin vueltas',
+    included: 'Qué entra', warnings: 'Qué puede cambiarla',
+    deadline: 'Plazo o próximo paso', evidence: 'Fuentes principales',
+  },
+  es: {
+    eyebrow: 'Respuesta comprobable', title: 'La respuesta, sin rodeos',
+    included: 'Qué incluye', warnings: 'Qué puede cambiarla',
+    deadline: 'Plazo o próximo paso', evidence: 'Fuentes principales',
+  },
+  en: {
+    eyebrow: 'Verifiable answer', title: 'The direct answer',
+    included: 'What is included', warnings: 'What can change it',
+    deadline: 'Deadline or next step', evidence: 'Primary sources',
+  },
+  pt: {
+    eyebrow: 'Resposta verificável', title: 'A resposta direta',
+    included: 'O que está incluído', warnings: 'O que pode alterá-la',
+    deadline: 'Prazo ou próximo passo', evidence: 'Fontes principais',
+  },
+  'pt-pt': {
+    eyebrow: 'Resposta verificável', title: 'A resposta direta',
+    included: 'O que está incluído', warnings: 'O que pode alterá-la',
+    deadline: 'Prazo ou próximo passo', evidence: 'Fontes principais',
+  },
+};
+
+const T = COPY[data.locale ?? 'ar'] ?? COPY.es;
+---
+
+<section class="hub-seo-answer" aria-labelledby={id}>
+  <div class="hub-seo-answer__wrap">
+    <p class="hub-seo-answer__eyebrow">{T.eyebrow}</p>
+    <h2 id={id}>{T.title}</h2>
+    <p class="hub-seo-answer__lead"><strong>{answerTitle}</strong></p>
+    <p>{answerCopy}</p>
+
+    {(included.length > 0 || warnings.length > 0) && (
+      <div class="hub-seo-answer__grid">
+        {included.length > 0 && (
+          <div>
+            <h3>{T.included}</h3>
+            <ul>{included.map((item) => <li>{item}</li>)}</ul>
+          </div>
+        )}
+        {warnings.length > 0 && (
+          <div>
+            <h3>{T.warnings}</h3>
+            <ul>{warnings.map((item) => <li>{item}</li>)}</ul>
+          </div>
+        )}
+      </div>
+    )}
+
+    {deadline && <p class="hub-seo-answer__note"><strong>{T.deadline}:</strong> {deadline}</p>}
+    {sources.length > 0 && (
+      <p class="hub-seo-answer__sources">
+        <strong>{T.evidence}:</strong>{' '}
+        {sources.map((source, index) => (
+          <><a href={source.url} rel="noopener noreferrer">{source.publisher ?? source.name}</a>{index < sources.length - 1 ? ' · ' : ''}</>
+        ))}
+      </p>
+    )}
+  </div>
+</section>
+
+<style>
+  .hub-seo-answer {
+    background: #f6f8fa;
+    border-top: 1px solid #dce3e9;
+    color: #17202b;
+    padding: clamp(2.5rem, 5vw, 4.5rem) 1.25rem;
+  }
+  .hub-seo-answer__wrap { margin: 0 auto; max-width: 1080px; }
+  .hub-seo-answer__eyebrow {
+    color: #315f86; font-size: .75rem; font-weight: 850;
+    letter-spacing: .08em; margin: 0 0 .5rem; text-transform: uppercase;
+  }
+  .hub-seo-answer h2 { font-size: clamp(1.6rem, 3vw, 2.35rem); line-height: 1.15; margin: 0 0 1rem; }
+  .hub-seo-answer p { color: #465466; line-height: 1.7; max-width: 850px; }
+  .hub-seo-answer__lead { color: #17202b !important; font-size: clamp(1.12rem, 2vw, 1.4rem); }
+  .hub-seo-answer__grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 1.5rem 0; }
+  .hub-seo-answer__grid > div { background: #fff; border: 1px solid #dce3e9; border-radius: .9rem; padding: 1.15rem 1.25rem; }
+  .hub-seo-answer__grid h3 { font-size: 1rem; margin: 0 0 .75rem; }
+  .hub-seo-answer__grid ul { color: #465466; display: grid; gap: .5rem; line-height: 1.55; margin: 0; padding-left: 1.15rem; }
+  .hub-seo-answer__note { background: #edf3f7; border-left: 3px solid #315f86; padding: .8rem 1rem; }
+  .hub-seo-answer__sources a { color: #285b82; font-weight: 750; overflow-wrap: anywhere; }
+  @media (max-width: 720px) { .hub-seo-answer__grid { grid-template-columns: 1fr; } }
+</style>

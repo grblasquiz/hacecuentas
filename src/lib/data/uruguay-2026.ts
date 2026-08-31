@@ -8,7 +8,7 @@
  */
 
 /** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
-export const DATA_AS_OF = '2026-07-22';
+export const DATA_AS_OF = '2026-08-31';
 
 export const URUGUAY_2026 = {
   anio: 2026,
@@ -171,10 +171,10 @@ export const URUGUAY_2026 = {
   // ── Tipo de cambio USD/UYU (BCU interbancario) ──
   // SNAPSHOT — ACTUALIZAR: el dólar cotiza a diario. Para "dólar hoy" usar fuente en vivo (BCU/BROU).
   usd: {
-    interbancario: 40.097,     // BCU interbancario (jun-2026)
-    brouCompra: 39.07,         // BROU pizarra compra (referencial)
-    brouVenta: 41.08,          // BROU pizarra venta (referencial)
-    fecha: '2026-06-22',
+    interbancario: 40.1959,    // referencia de mercado USD/UYU
+    brouCompra: 39.05,         // BROU pizarra compra
+    brouVenta: 41.45,          // BROU pizarra venta
+    fecha: '2026-08-31',
   },
 
   // ── Unidad Indexada (UI) ──
@@ -182,8 +182,8 @@ export const URUGUAY_2026 = {
   // Se usa para alquileres, créditos hipotecarios, ahorro indexado y algunos tributos.
   // Valor oficial DGI al 22-jun-2026 = $6,5888 (jun-2026 abrió en $6,5583 y cerró cerca de $6,6011).
   unidadIndexada: {
-    valor: 6.6253,             // $U por 1 UI (DGI tabla diaria, 26-jul-2026)
-    fecha: '2026-07-26',
+    valor: 6.6371,             // $U por 1 UI (INE tabla diaria, 31-ago-2026)
+    fecha: '2026-08-31',
     fuente: 'INE/DGI',
   },
 
@@ -196,9 +196,9 @@ export const URUGUAY_2026 = {
   // rurales, créditos del BHU/ANV y algunas multas/sanciones.
   // Valor DGI/INE de junio-2026 = $1.922,68 (rige durante julio-2026).
   unidadReajustable: {
-    valor: 1922.68,            // $U por 1 UR (INE/DGI, junio-2026; rige julio-2026)
-    fecha: '2026-06',
-    mesValor: 'junio 2026 (rige en julio 2026)',
+    valor: 1923.44,            // $U por 1 UR (INE/DGI, julio-2026; rige agosto-2026)
+    fecha: '2026-07',
+    mesValor: 'julio 2026 (rige en agosto 2026)',
     fuente: 'INE/DGI',
   },
 

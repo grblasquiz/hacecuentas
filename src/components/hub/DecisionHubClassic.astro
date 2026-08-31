@@ -268,6 +268,13 @@ const staticPlazo =
 const compareItems = (data.compareCases ?? [])
   .map((id) => cases.find((c) => c.id === id))
   .filter((c): c is NonNullable<typeof c> => !!c);
+// La respuesta principal tiene que existir en el HTML inicial: antes se
+// completaban estas listas sólo con JavaScript y el bloque aparecía después de
+// toda la calculadora. Además de ser peor UX para quien llega desde Google,
+// dejaba fuera del HTML útil las condiciones que realmente contestan la query.
+const initialYes = defaultCase?.yes ?? data.answer?.yes ?? [];
+const initialWarn = defaultCase?.warn ?? data.answer?.warn ?? [];
+const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
 ---
 
 <div class="hc-hub">
@@ -311,6 +318,33 @@ const compareItems = (data.compareCases ?? [])
     </header>
 
     <main class="journey">
+      <section class="panel context-panel direct-answer">
+        <div class="panel-head">
+          <p class="panel-kicker">{T.respuesta}</p>
+          <h2>{T.queCorresponde}</h2>
+        </div>
+        <div class="answer-strip">
+          {/* Nivel 1: veredicto de compute(). Oculto = comportamiento histórico. */}
+          <div class="verdict" id="verdict" hidden>
+            <b id="verdict-title"></b>
+            <span id="verdict-copy"></span>
+          </div>
+          <b id="answer-title">{defaultCase?.answer ?? data.answer?.title}</b>
+          <span id="answer-copy">{defaultCase?.yes[0] ?? data.answer?.copy}</span>
+        </div>
+        <div class="legal">
+          <div class="lcard yes">
+            <h3>{T.entra}</h3>
+            <ul id="yes-list">{initialYes.map((item) => <li>{item}</li>)}</ul>
+          </div>
+          <div class="lcard warn">
+            <h3>{T.ojo}</h3>
+            <ul id="warn-list">{initialWarn.map((item) => <li>{item}</li>)}</ul>
+          </div>
+        </div>
+        {initialPlazo && <p class="plazo"><b>{T.plazo}</b> <span id="plazo">{initialPlazo}</span></p>}
+      </section>
+
       {data.cases && (
         <section class="panel case-panel">
           <div class="panel-head">
@@ -417,27 +451,6 @@ const compareItems = (data.compareCases ?? [])
       </section>
 
       <CompareGrid cases={compareItems} title={T.comparar} kicker={T.comoSeForma} />
-
-      <section class="panel context-panel">
-        <div class="panel-head">
-          <p class="panel-kicker">{T.respuesta}</p>
-          <h2>{T.queCorresponde}</h2>
-        </div>
-        <div class="answer-strip">
-          {/* Nivel 1: veredicto de compute(). Oculto = comportamiento histórico. */}
-          <div class="verdict" id="verdict" hidden>
-            <b id="verdict-title"></b>
-            <span id="verdict-copy"></span>
-          </div>
-          <b id="answer-title">{defaultCase?.answer ?? data.answer?.title}</b>
-          <span id="answer-copy">{defaultCase?.yes[0] ?? data.answer?.copy}</span>
-        </div>
-        <div class="legal">
-          <div class="lcard yes"><h3>{T.entra}</h3><ul id="yes-list"></ul></div>
-          <div class="lcard warn"><h3>{T.ojo}</h3><ul id="warn-list"></ul></div>
-        </div>
-        <p class="plazo"><b>{T.plazo}</b> <span id="plazo"></span></p>
-      </section>
     </main>
 
     <HubCitableStats data={data} />

@@ -22,7 +22,7 @@
  */
 
 /** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
-export const DATA_AS_OF = '2026-06-22';
+export const DATA_AS_OF = '2026-08-31';
 
 export const REPUBLICA_DOMINICANA_2026 = {
   anio: 2026,
@@ -40,11 +40,11 @@ export const REPUBLICA_DOMINICANA_2026 = {
   // p. ej. dolarapi tiene DOP, o InfoDolar.com.do que agrega bancos).
   // Fuentes: BCRD (https://www.bancentral.gov.do/a/d/2538-mercado-cambiario), InfoDolar RD.
   fx: {
-    usdCompra: 58.07,          // RD$/USD — cierre 24-jul-2026 (BCRD spot). ⚠️ ACTUALIZAR
-    usdVenta: 58.51,           // RD$/USD — cierre 24-jul-2026 (BCRD spot). ⚠️ ACTUALIZAR
-    usdMid: 58.29,             // promedio compra/venta — para conversiones. ⚠️ ACTUALIZAR
-    eurMid: 65.86,             // RD$/EUR — cierre mercado 24-jul-2026. ⚠️ ACTUALIZAR
-    fecha: '2026-07-24',
+    usdCompra: 58.6440,        // RD$/USD — cierre BCRD 28-ago, vigente al 31-ago
+    usdVenta: 58.8735,         // RD$/USD — cierre BCRD 28-ago, vigente al 31-ago
+    usdMid: 58.75875,          // promedio compra/venta — para conversiones
+    eurMid: 68.16,             // RD$/EUR — referencia cruzada de mercado al 31-ago
+    fecha: '2026-08-31',
     // Tendencia: el DOP se deprecia ~8% interanual de forma ordenada (sin saltos).
   },
 
@@ -307,10 +307,10 @@ export function dopToUsd(dop: number): number {
  * Fuentes: BCRD (mercado cambiario) e Investing.com (EUR/DOP).
  */
 export const EUR_DOP_2026 = {
-  mid: 65.86,      // RD$ por 1 EUR — promedio de referencia (cierre 24-jul)
-  compra: 65.06,   // RD$ por 1 EUR — precio de compra (estimado: mid − 0,80)
-  venta: 66.66,    // RD$ por 1 EUR — precio de venta (estimado: mid + 0,80)
-  fecha: '2026-07-24',
+  mid: 68.16,      // RD$ por 1 EUR — referencia cruzada de mercado
+  compra: 67.36,   // RD$ por 1 EUR — referencia orientativa (mid − 0,80)
+  venta: 68.96,    // RD$ por 1 EUR — referencia orientativa (mid + 0,80)
+  fecha: '2026-08-31',
 } as const;
 
 /**

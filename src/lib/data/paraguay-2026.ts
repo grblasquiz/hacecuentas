@@ -18,7 +18,7 @@
  */
 
 /** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
-export const DATA_AS_OF = '2026-07-22';
+export const DATA_AS_OF = '2026-08-31';
 
 export const PARAGUAY_2026 = {
   anio: 2026,
@@ -124,10 +124,10 @@ export const PARAGUAY_2026 = {
  * sólo como fallback citable. 1 unidad de moneda extranjera = X guaraníes (PYG).
  */
 export const TIPO_CAMBIO_PY = {
-  asOf: '2026-07-24',
-  usdPyg: 6050.25,   // 1 USD = Gs. 6.050,25 (dólar estadounidense)
-  brlPyg: 1195.65,   // 1 BRL = Gs. 1.195,65 (real brasileño — frontera Ciudad del Este)
-  arsPyg: 4.05,      // 1 ARS = Gs. 4,05 (peso argentino — frontera Encarnación)
+  asOf: '2026-08-31',
+  usdPyg: 5922.01,   // cierre referencial BCP del último día hábil (28-ago)
+  brlPyg: 1143.31,   // cross-rate de mercado: 1 BRL = Gs. 1.143,31
+  arsPyg: 3.91401,   // cross-rate de mercado: 1 ARS = Gs. 3,91401
   fuente: 'BCP — Cotización Referencial de Monedas',
   // NOTA: en zonas de frontera las casas de cambio operan con spread propio (compra/venta)
   // que se aparta de la referencia del BCP. El snapshot es la cotización oficial de referencia.

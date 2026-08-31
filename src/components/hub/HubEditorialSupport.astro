@@ -12,6 +12,10 @@ const { data, renderH1 = false } = Astro.props;
 type EditorialCopy = {
   context: string;
   contextTitle: string;
+  included: string;
+  warnings: string;
+  deadline: string;
+  evidence: string;
   faq: string;
   sources: string;
   reviewed: string;
@@ -25,7 +29,9 @@ type EditorialCopy = {
 const COPY: Record<string, EditorialCopy> = {
   ar: {
     context: 'Cómo usar esta herramienta',
-    contextTitle: 'Qué responde y qué conviene revisar',
+    contextTitle: 'Respuesta directa',
+    included: 'Qué entra en la respuesta', warnings: 'Qué puede cambiarla',
+    deadline: 'Plazo o próximo paso', evidence: 'Respuesta sustentada en',
     faq: 'Preguntas frecuentes',
     sources: 'Fuentes y referencias',
     reviewed: 'Última revisión',
@@ -35,7 +41,9 @@ const COPY: Record<string, EditorialCopy> = {
   },
   en: {
     context: 'How to use this tool',
-    contextTitle: 'What it answers and what to check',
+    contextTitle: 'Direct answer',
+    included: 'What the answer includes', warnings: 'What can change it',
+    deadline: 'Deadline or next step', evidence: 'Answer supported by',
     faq: 'Frequently asked questions',
     sources: 'Sources and references',
     reviewed: 'Last reviewed',
@@ -45,7 +53,9 @@ const COPY: Record<string, EditorialCopy> = {
   },
   pt: {
     context: 'Como usar esta ferramenta',
-    contextTitle: 'O que ela responde e o que você deve verificar',
+    contextTitle: 'Resposta direta',
+    included: 'O que entra na resposta', warnings: 'O que pode alterá-la',
+    deadline: 'Prazo ou próximo passo', evidence: 'Resposta baseada em',
     faq: 'Perguntas frequentes',
     sources: 'Fontes e referências',
     reviewed: 'Última revisão',
@@ -55,7 +65,9 @@ const COPY: Record<string, EditorialCopy> = {
   },
   'pt-pt': {
     context: 'Como utilizar esta ferramenta',
-    contextTitle: 'O que responde e o que deve verificar',
+    contextTitle: 'Resposta direta',
+    included: 'O que entra na resposta', warnings: 'O que pode alterá-la',
+    deadline: 'Prazo ou próximo passo', evidence: 'Resposta baseada em',
     faq: 'Perguntas frequentes',
     sources: 'Fontes e referências',
     reviewed: 'Última revisão',
@@ -65,7 +77,9 @@ const COPY: Record<string, EditorialCopy> = {
   },
   es: {
     context: 'Cómo usar esta herramienta',
-    contextTitle: 'Qué responde y qué conviene revisar',
+    contextTitle: 'Respuesta directa',
+    included: 'Qué entra en la respuesta', warnings: 'Qué puede cambiarla',
+    deadline: 'Plazo o próximo paso', evidence: 'Respuesta sustentada en',
     faq: 'Preguntas frecuentes',
     sources: 'Fuentes y referencias',
     reviewed: 'Última revisión',
@@ -76,6 +90,13 @@ const COPY: Record<string, EditorialCopy> = {
 };
 
 const T = COPY[data.locale ?? 'ar'] ?? COPY.es;
+const primaryCase = data.cases?.items[0];
+const answerTitle = primaryCase?.answer ?? data.answer?.title ?? data.h1;
+const answerCopy = data.answer?.copy ?? data.lede;
+const included = primaryCase?.yes ?? data.answer?.yes ?? [];
+const warnings = primaryCase?.warn ?? data.answer?.warn ?? [];
+const deadline = primaryCase?.plazo ?? data.answer?.plazo ?? '';
+const evidence = data.sources.slice(0, 2);
 ---
 
 <section class="hub-editorial-support" aria-labelledby={`editorial-${data.slug.replaceAll('/', '-')}`}>
@@ -85,7 +106,33 @@ const T = COPY[data.locale ?? 'ar'] ?? COPY.es;
     <header class="hub-editorial-support__intro">
       <p class="hub-editorial-support__eyebrow">{T.context}</p>
       <h2 id={`editorial-${data.slug.replaceAll('/', '-')}`}>{T.contextTitle}</h2>
-      <p>{data.lede}</p>
+      <p class="hub-editorial-support__answer"><strong>{answerTitle}</strong></p>
+      <p>{answerCopy}</p>
+      {(included.length > 0 || warnings.length > 0) && (
+        <div class="hub-editorial-support__answer-grid">
+          {included.length > 0 && (
+            <div>
+              <h3>{T.included}</h3>
+              <ul>{included.map((item) => <li>{item}</li>)}</ul>
+            </div>
+          )}
+          {warnings.length > 0 && (
+            <div>
+              <h3>{T.warnings}</h3>
+              <ul>{warnings.map((item) => <li>{item}</li>)}</ul>
+            </div>
+          )}
+        </div>
+      )}
+      {deadline && <p class="hub-editorial-support__deadline"><strong>{T.deadline}:</strong> {deadline}</p>}
+      {evidence.length > 0 && (
+        <p class="hub-editorial-support__evidence">
+          <strong>{T.evidence}:</strong>{' '}
+          {evidence.map((source, index) => (
+            <><a href={source.url} rel="noopener noreferrer">{source.publisher ?? source.name}</a>{index < evidence.length - 1 ? ' · ' : ''}</>
+          ))}
+        </p>
+      )}
       <p>{data.inputsIntro}</p>
       <p class="hub-editorial-support__reviewed">
         <strong>{T.reviewed}:</strong> <time datetime={data.lastReviewed}>{data.lastReviewed}</time>
@@ -155,7 +202,7 @@ const T = COPY[data.locale ?? 'ar'] ?? COPY.es;
   }
 
   .hub-editorial-support__intro {
-    max-width: 780px;
+    max-width: 920px;
   }
 
   .hub-editorial-support__eyebrow {
@@ -178,6 +225,53 @@ const T = COPY[data.locale ?? 'ar'] ?? COPY.es;
     color: #465466;
     font-size: 1rem;
     line-height: 1.7;
+  }
+
+  .hub-editorial-support__answer {
+    color: #18212d !important;
+    font-size: clamp(1.1rem, 2vw, 1.35rem) !important;
+    line-height: 1.45 !important;
+  }
+
+  .hub-editorial-support__answer-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 1.5rem 0;
+  }
+
+  .hub-editorial-support__answer-grid > div {
+    background: #fff;
+    border: 1px solid #dce2e8;
+    border-radius: .875rem;
+    padding: 1.1rem 1.25rem;
+  }
+
+  .hub-editorial-support__answer-grid h3 {
+    color: #18212d;
+    font-size: 1rem;
+    margin: 0 0 .7rem;
+  }
+
+  .hub-editorial-support__answer-grid ul {
+    color: #465466;
+    display: grid;
+    gap: .5rem;
+    line-height: 1.55;
+    margin: 0;
+    padding-left: 1.15rem;
+  }
+
+  .hub-editorial-support__deadline,
+  .hub-editorial-support__evidence {
+    background: #eef3f7;
+    border-left: 3px solid #315f86;
+    padding: .8rem 1rem;
+  }
+
+  .hub-editorial-support__evidence a {
+    color: #285b82;
+    font-weight: 700;
   }
 
   .hub-editorial-support__reviewed {
@@ -266,6 +360,7 @@ const T = COPY[data.locale ?? 'ar'] ?? COPY.es;
   }
 
   @media (max-width: 760px) {
+    .hub-editorial-support__answer-grid,
     .hub-editorial-support__grid {
       grid-template-columns: 1fr;
     }

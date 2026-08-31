@@ -38,7 +38,7 @@ export const PUERTA_A_PUERTA_2026 = {
   fuente: 'Decreto 604/2026 (BO 17-jul-2026) — Correo Argentino / ARCA, envíos postales internacionales',
 } as const;
 
-export const DOLAR_OFICIAL_REF = { venta: 1500, fecha: '2026-07-17' } as const; // BCRA, referencia editable en cada calc
+export const DOLAR_OFICIAL_REF = { venta: 1530, fecha: '2026-08-31' } as const; // referencia oficial, editable en cada calc
 
 // ── Franquicia de equipaje de viajeros (ARCA/ex-AFIP, vigente 2026) ──
 // Fuente: https://www.afip.gob.ar/viajeros/ayuda/franquicia.asp
