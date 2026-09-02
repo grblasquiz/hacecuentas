@@ -6319,4 +6319,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/volumen-piramide-base-altura': '/matematica/volumen-de-cuerpos',
   '/volumen-prisma-rectangular-caja': '/matematica/volumen-de-cuerpos',
   '/z-score': '/en/math/statistics',
+  '/co/calculadora-hora-extra-recargo-nocturno-dominical-colombia': '/co/trabajo/horas-extras-y-recargos',
+  '/mx/calculadora-irpf-2026-tramos-espana-nomina': '/es/calculadora-irpf-2026-tramos-espana-nomina',
+  '/mx/calculadora-finiquito-despido-improcedente-espana-2026': '/es/trabajo/perder-el-trabajo',
 };

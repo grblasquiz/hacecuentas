@@ -580,6 +580,7 @@ const DATA_PAGES: DataPage[] = [
   { slug: 'datos-salario-minimo-argentina-2026', title: 'Salario mínimo Argentina 2026', description: 'SMVM mensual, por hora y cronograma mes a mes.', category: 'negocios', tag: 'Datos oficiales 2026' },
   { slug: 'datos-salario-minimo-colombia-2026', title: 'Salario mínimo Colombia 2026', description: 'Con auxilio de transporte y aportes de ley.', category: 'negocios', tag: 'Datos oficiales 2026' },
   { slug: 'datos-salario-minimo-mexico-2026', title: 'Salario mínimo México 2026', description: 'Diario, mensual y valor de la UMA.', category: 'negocios', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-uma-imss-2026', title: 'Valor de la UMA 2026 (México)', description: 'Diaria, mensual y anual, con topes IMSS y multas.', category: 'negocios', tag: 'Datos oficiales 2026' },
   { slug: 'datos-sueldo-minimo-peru-2026', title: 'Sueldo mínimo Perú 2026', description: 'RMV, UIT y descuentos de ley (tabla).', category: 'negocios', tag: 'Datos oficiales 2026' },
   { slug: 'datos-salario-minimo-latam-2026', title: 'Salario mínimo en LATAM 2026', description: 'Comparativa país por país, actualizada.', category: 'negocios', tag: 'Datos oficiales 2026' },
   { slug: 'datos-salario-basico-ecuador-2026', title: 'Salario básico Ecuador 2026', description: 'SBU, décimos y aportes al IESS.', category: 'negocios', tag: 'Datos oficiales 2026' },

@@ -83,6 +83,21 @@ const countries = [
   ['/en','🌎','English'],
 ];
 
+const latam = [
+  ['/co/datos-salario-minimo-colombia-2026', '🇨🇴', 'Salario mínimo Colombia 2026', 'Valor mensual, diario y con auxilio de transporte'],
+  ['/mx/datos-salario-minimo-mexico-2026', '🇲🇽', 'Salario mínimo México 2026', 'General y Frontera Norte, por día y por mes'],
+  ['/mx/datos-uma-imss-2026', '🇲🇽', 'Valor de la UMA 2026', 'Diaria, mensual y anual (INEGI)'],
+  ['/pe/datos-sueldo-minimo-peru-2026', '🇵🇪', 'Sueldo mínimo Perú 2026', 'RMV vigente y cálculo por hora'],
+  ['/pe/calculadora-tipo-de-cambio-sunat-dolar-soles-peru', '🇵🇪', 'Tipo de cambio SUNAT hoy', 'Dólar a soles, compra y venta'],
+  ['/co/calculadora-trm-dolar-hoy-pesos-colombianos', '🇨🇴', 'TRM dólar hoy', 'Pesos colombianos por dólar'],
+  ['/ec/calculadora-prestamo-quirografario-iess-ecuador', '🇪🇨', 'Préstamo quirografario IESS', 'Cuota, plazo e interés BIESS'],
+  ['/es/calculadora-irpf-2026-tramos-espana-nomina', '🇪🇸', 'IRPF 2026 en la nómina', 'Tramos y retención por comunidad'],
+  ['/feriados-colombia-2026', '🇨🇴', 'Festivos Colombia 2026', '19 festivos y puentes'],
+  ['/feriados-chile-2026', '🇨🇱', 'Feriados Chile 2026', 'Calendario oficial e irrenunciables'],
+  ['/feriados-peru-2026', '🇵🇪', 'Feriados Perú 2026', 'Días no laborables y feriados largos'],
+  ['/datos-monotributo-2026', '🇦🇷', 'Categorías Monotributo 2026', 'Tabla de topes y cuotas vigentes'],
+];
+
 const silos = [
   ['/alquiler','Alquiler'], ['/auto','Auto'], ['/bebes','Bebés'], ['/ciencia','Ciencia'], ['/cocina','Cocina'],
   ['/construccion','Construcción'], ['/conversores','Conversiones'], ['/embarazo','Embarazo'], ['/estudio','Estudio'],
@@ -233,6 +248,18 @@ const schema = {
           {countries.map(([href, flag, label]) => <a href={href} data-home-section="country"><span>{flag}</span><b>{label}</b><i>↗</i></a>)}
         </div>
       </div>
+    </section>
+
+    <section class="latam wrap" aria-labelledby="latam-title">
+      <div class="section-title">
+        <div><span>DATOS OFICIALES POR PAÍS</span><h2 id="latam-title">Los valores que más se consultan en Latinoamérica y España.</h2></div>
+        <p>Salarios mínimos, feriados, tipos de cambio y escalas fiscales con la fuente oficial y la fecha de vigencia.</p>
+      </div>
+      <nav class="latam-grid" aria-label="Datos oficiales más consultados">
+        {latam.map(([href, flag, title, meta]) => (
+          <a href={href} data-home-section="latam"><span aria-hidden="true">{flag}</span><b>{title}</b><small>{meta}</small></a>
+        ))}
+      </nav>
     </section>
 
     <section class="directory wrap" aria-labelledby="directory-title">
@@ -466,6 +493,13 @@ const schema = {
   .country-grid a { display:grid; grid-template-columns:32px 1fr auto; gap:10px; align-items:center; min-height:60px; padding:0 14px; border:1px solid rgba(24,34,56,.1); border-radius:12px; background:rgba(255,255,255,.68); text-decoration:none; }
   .country-grid i { color:#7c8796; font-style:normal; }
 
+  .latam { padding:96px 0 0; }
+  .latam-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:34px; }
+  .latam-grid a { display:grid; grid-template-columns:30px 1fr; grid-template-rows:auto auto; column-gap:12px; align-items:center; padding:16px 18px; border:1px solid var(--line); border-radius:14px; background:#fff; text-decoration:none; transition:border-color .15s; }
+  .latam-grid a:hover { border-color:#aec3f1; }
+  .latam-grid a span { grid-row:1 / span 2; font-size:22px; }
+  .latam-grid a b { color:var(--navy); font-size:15px; line-height:1.2; }
+  .latam-grid a small { color:#6f7783; font-size:12px; line-height:1.35; }
   .directory { display:grid; grid-template-columns:.7fr 1.3fr; gap:80px; padding:96px 0; }
   .directory details { align-self:start; }
   .directory summary { display:flex; justify-content:space-between; align-items:center; min-height:54px; padding:0 16px; border:1px solid var(--line); border-radius:12px; color:var(--navy); font-size:13px; font-weight:800; cursor:pointer; list-style:none; }
@@ -481,7 +515,7 @@ const schema = {
     .hero { padding-top:54px; }.hero-copy { max-width:760px; }
     .popular-grid { grid-template-columns:repeat(2,1fr); }.moment-grid { grid-template-columns:repeat(2,1fr); }
     .moment-card,.moment-card:nth-child(1),.moment-card:nth-child(2) { grid-column:span 1; }
-    .fresh-grid { grid-template-columns:repeat(2,1fr); }.method,.world-grid,.directory { grid-template-columns:1fr; }
+    .fresh-grid,.latam-grid { grid-template-columns:repeat(2,1fr); }.method,.world-grid,.directory { grid-template-columns:1fr; }
     .method { padding:55px; }.method-visual { max-width:500px; }.world-grid,.directory { gap:45px; }
   }
 
@@ -490,7 +524,7 @@ const schema = {
     .hero { min-height:0; padding:48px 0 64px; }.hero h1 { font-size:clamp(52px,16vw,68px); }
     .hero-copy>p { font-size:16px; }.search-box { grid-template-columns:22px 1fr; }.search-box button { grid-column:1/-1; width:100%; }
     .section-title { grid-template-columns:1fr; gap:16px; }.section-title h2,.method-copy h2,.world-copy h2,.directory h2 { font-size:36px; }
-    .popular { padding:70px 0; }.popular-grid,.moment-grid,.fresh-grid { grid-template-columns:1fr; }
+    .popular { padding:70px 0; }.popular-grid,.moment-grid,.fresh-grid,.latam-grid { grid-template-columns:1fr; }
     .popular-card { min-height:180px; }.moments,.fresh,.world { padding:72px 0; }
     .moment-card { min-height:340px; }.method { width:calc(100% - 24px); padding:32px 20px; margin-bottom:70px; }
     .method-visual { min-height:330px; transform:scale(.88); transform-origin:left center; }
