@@ -1,0 +1,78 @@
+---
+/**
+ * HubCountryVariants — bloque "Esta decisión en otros países" para HUBS.
+ *
+ * Equivalente de CountryVariants (que solo cubre calcs vía country-families.json)
+ * pero para los hubs de decisión. Los hubs de país (mx/co/pe/…) viven aislados:
+ * el índice de país los enlaza, pero ningún hub AR (los que Google SÍ indexa,
+ * 66% en la muestra del 2026-09-02) apunta a su equivalente de otro país.
+ * Resultado medido: Google los tiene en "Descubierta: actualmente sin indexar"
+ * con 0 referring URLs. Este bloque es bidireccional por construcción.
+ *
+ * Data: src/lib/hub-families.json (generado por `npm run hub-families` desde
+ * src/lib/hub-families-source.json). Keyed por path canónico sin barra final.
+ * No-op si el path no pertenece a una familia.
+ */
+import families from '../lib/hub-families.json';
+interface Sib { url: string; country: string; flag: string; label: string }
+interface Entry { topic: string; siblings: Sib[] }
+interface Props { path: string }
+const { path } = Astro.props as Props;
+const key = (path || '/').replace(/\.html$/, '').replace(/\/+$/, '') || '/';
+const entry = (families as Record<string, Entry>)[key];
+const siblings = entry?.siblings ?? [];
+---
+{siblings.length > 0 && (
+  <section class="hcv" aria-labelledby="hcv-heading" data-hub-country-variants>
+    <div class="hcv__head">
+      <span class="hcv__globe" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></svg>
+      </span>
+      <div>
+        <h2 id="hcv-heading" class="hcv__title">{entry.topic}: la misma cuenta en otros países</h2>
+        <p class="hcv__sub">Cada versión aplica la normativa y los valores vigentes de su país.</p>
+      </div>
+    </div>
+    <ul class="hcv__list">
+      {siblings.map((s) => (
+        <li class="hcv__item">
+          <a class="hcv__link" href={s.url}>
+            <span class="hcv__flag" aria-hidden="true">{s.flag}</span>
+            <span class="hcv__txt"><b>{s.country}</b><small>{s.label}</small></span>
+            <span class="hcv__arrow" aria-hidden="true">→</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .hcv {
+    margin: 1.75rem auto;
+    max-width: 1080px;
+    padding: 1.1rem 1.25rem 1.25rem;
+    border: 1px solid var(--hcv-border, #e6e8ee);
+    border-radius: 16px;
+    background: var(--hcv-bg, #fbfcff);
+  }
+  .hcv__head { display: flex; align-items: flex-start; gap: .7rem; margin-bottom: .9rem; }
+  .hcv__globe { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #3157ff; background: rgba(49,87,255,.10); }
+  .hcv__globe svg { width: 20px; height: 20px; }
+  .hcv__title { margin: 0; font-size: 1.06rem; font-weight: 700; line-height: 1.25; color: var(--hcv-fg, #10131a); }
+  .hcv__sub { margin: .12rem 0 0; font-size: .84rem; color: var(--hcv-muted, #5b6472); }
+  .hcv__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .55rem; }
+  .hcv__item { margin: 0; }
+  .hcv__link { display: flex; align-items: center; gap: .6rem; padding: .6rem .75rem; border: 1px solid var(--hcv-border, #e6e8ee); border-radius: 11px; background: var(--hcv-card, #fff); color: var(--hcv-fg, #1a2130); text-decoration: none; font-size: .9rem; line-height: 1.25; transition: border-color .12s ease, background .12s ease; }
+  .hcv__link:hover { border-color: #3157ff; background: rgba(49,87,255,.05); }
+  .hcv__flag { flex: none; font-size: 1.15rem; }
+  .hcv__txt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+  .hcv__txt small { font-size: .78rem; color: var(--hcv-muted, #5b6472); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hcv__arrow { flex: none; color: #3157ff; font-weight: 700; opacity: .55; }
+  @media (prefers-color-scheme: dark) {
+    .hcv { --hcv-border: #262b36; --hcv-bg: #14171e; --hcv-card: #1b1f28; --hcv-fg: #e8ebf2; --hcv-muted: #9aa3b2; }
+    .hcv__globe { background: rgba(90,120,255,.16); color: #8aa1ff; }
+    .hcv__link:hover { border-color: #5a78ff; background: rgba(90,120,255,.10); }
+    .hcv__arrow { color: #8aa1ff; }
+  }
+</style>
