@@ -1,9 +1,11 @@
+import { PUAM_ANSES } from '../data/anses-2026';
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; }
 export function jubilacionPuaPrestacionUniversalAdultoMayor(i: Inputs): Outputs {
   const e=Number(i.edad)||0; const a=String(i.aportes||'no')==='si';
   const accede=e>=65 && !a;
-  const monto=accede?322654:0;
+  const monto=accede?PUAM_ANSES:0;
   let insightText: string;
   let insightTone: 'good' | 'warn' | 'neutral';
   if (accede) {

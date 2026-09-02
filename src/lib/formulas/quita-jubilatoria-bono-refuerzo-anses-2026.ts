@@ -1,3 +1,5 @@
+import { ANSES_2026 } from '../data/anses-2026';
+
 export interface Inputs {
   tipo_beneficio: string;
   haber_mensual: number;
@@ -17,31 +19,23 @@ export interface Outputs {
 // Parámetros vigentes 2026 — actualizar mensualmente según resoluciones ANSES/decretos PEN
 const PARAMETROS_2026: Record<
   string,
-  { nombre: string; haberMinimo: number; tope: number; bono: number }
+  { nombre: string; elegible: boolean }
 > = {
   jubilacion: {
     nombre: "Jubilación / Pensión contributiva",
-    haberMinimo: 411989,
-    tope: 411989, // hasta 1 haber mínimo
-    bono: 70000,
+    elegible: true,
   },
   puam: {
     nombre: "PUAM (Pensión Universal Adulto Mayor)",
-    haberMinimo: 322654,
-    tope: 322654,
-    bono: 70000,
+    elegible: true,
   },
   auh: {
     nombre: "AUH (Asignación Universal por Hijo)",
-    haberMinimo: 75000,
-    tope: Infinity, // sin tope de ingresos para AUH
-    bono: 25000,
+    elegible: false,
   },
   aue: {
     nombre: "AUE (Asignación Universal por Embarazo)",
-    haberMinimo: 75000,
-    tope: Infinity,
-    bono: 25000,
+    elegible: false,
   },
 };
 
@@ -51,7 +45,9 @@ export function compute(i: Inputs): Outputs {
     : "jubilacion";
 
   const haber = Math.max(0, Number(i.haber_mensual) || 0);
-  const meses = Math.min(12, Math.max(1, Math.round(Number(i.meses_cobro) || 12)));
+  // El Decreto 824/2026 sólo garantiza el mensual septiembre; no proyectar
+  // automáticamente el bono a meses futuros.
+  const meses = 1;
 
   if (haber <= 0) {
     return {
@@ -64,17 +60,22 @@ export function compute(i: Inputs): Outputs {
   }
 
   const params = PARAMETROS_2026[tipo];
-  const corresponde = haber <= params.tope;
-  const bono_mensual = corresponde ? params.bono : 0;
+  const topeConBono = ANSES_2026.haberMinimo + 70_000;
+  const bono_mensual = params.elegible
+    ? Math.min(70_000, Math.max(0, topeConBono - haber))
+    : 0;
+  const corresponde = bono_mensual > 0;
   const total_con_bono = haber + bono_mensual;
   const acumulado_anual = bono_mensual * meses;
   const porcentaje_refuerzo = haber > 0 ? (bono_mensual / haber) * 100 : 0;
 
   let detalle: string;
-  if (!corresponde) {
-    detalle = `Tu haber de $${haber.toLocaleString("es-AR")} supera el tope de $${params.tope.toLocaleString("es-AR")} para ${params.nombre}. No te correspondería el bono bajo los criterios vigentes 2026. Verificá el decreto del mes en curso en anses.gob.ar.`;
+  if (!params.elegible) {
+    detalle = `${params.nombre} no está incluida en el bono previsional de septiembre 2026 (Decreto 824/2026). No se suma ningún refuerzo.`;
+  } else if (!corresponde) {
+    detalle = `La suma de tus haberes ($${haber.toLocaleString("es-AR")}) alcanza o supera $${topeConBono.toLocaleString("es-AR")}, por lo que el Decreto 824/2026 no agrega bono.`;
   } else {
-    detalle = `Beneficio: ${params.nombre}. Haber mínimo de referencia: $${params.haberMinimo.toLocaleString("es-AR")} ARS. Tu haber ($${haber.toLocaleString("es-AR")}) no supera el tope, por lo que te correspondería un bono de $${bono_mensual.toLocaleString("es-AR")} ARS mensuales. Acumulado en ${meses} mes${meses !== 1 ? "es" : ""}: $${acumulado_anual.toLocaleString("es-AR")} ARS. Nota: el bono es no remunerativo, no computable para SAC ni movilidad.`;
+    detalle = `Beneficio: ${params.nombre}. El Decreto 824/2026 paga hasta $70.000: completo si la suma de haberes no supera la mínima de $${ANSES_2026.haberMinimo.toLocaleString("es-AR")}, y proporcional hasta completar $${topeConBono.toLocaleString("es-AR")}. Para el haber informado corresponde $${bono_mensual.toLocaleString("es-AR")}. Es no remunerativo y no computa para SAC ni movilidad.`;
   }
 
   const chart = bono_mensual > 0
@@ -100,7 +101,9 @@ export function compute(i: Inputs): Outputs {
       }
     : {
         title: 'No te correspondería el bono',
-        text: `Tu haber de **$${haber.toLocaleString('es-AR')}** supera el tope de **$${params.tope.toLocaleString('es-AR')}** para ${params.nombre}, así que bajo los criterios vigentes 2026 quedás fuera del refuerzo. Confirmá el decreto del mes en anses.gob.ar.`,
+        text: params.elegible
+          ? `La suma de haberes informada (**$${haber.toLocaleString('es-AR')}**) alcanza o supera el límite de **$${topeConBono.toLocaleString('es-AR')}**, por lo que no se agrega bono.`
+          : `${params.nombre} no está incluida entre las prestaciones alcanzadas por el Decreto 824/2026.`,
         tone: 'warn',
         icon: '⚠️',
       };

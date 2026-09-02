@@ -1,13 +1,12 @@
 /**
- * DETERMINÍSTICO: parcial — el Anexo VIII RG 830 se actualiza por RG semestral sin
- * cronograma futuro; viable como tabla con vigencia cargada a mano al salir cada RG
- * (escala + MNI por concepto: no trivial). Sigue LLM con validación.
+ * DETERMINÍSTICO: parcial — el Anexo VIII RG 830 se actualiza por RG sin
+ * cronograma futuro. Sigue LLM con validación hasta reemplazarlo por un extractor
+ * determinístico del texto vigente de la Biblioteca ARCA.
  *
  * Retenciones Ganancias RG 830 (biannual) — auto-llm vía Claude + WebSearch.
  *
- * ARCA (ex-AFIP) actualiza el Anexo VIII de la RG 830/2000 periódicamente —
- * típicamente 2 veces por año — vía sucesivas RG (5423/2023, etc) que
- * ajustan MNI y escala progresiva de honorarios por inflación.
+ * ARCA (ex-AFIP) modifica el Anexo VIII de la RG 830/2000 mediante sucesivas RG.
+ * No existe una frecuencia semestral garantizada.
  *
  * Patchea en `src/lib/formulas/ganancias-rg830.ts`:
  *   - Record `conceptos` (8 entries: MNI + alicuotas por concepto)
@@ -198,14 +197,12 @@ export async function fetchGananciasRG830({ dry = false }: { dry?: boolean }): P
 
   if (!result) return false;
 
-  // Guard de vigencia: el Anexo VIII vigente es el de RG 5423/2023 (01/10/2023)
-  // y ARCA no lo actualizó. Solo aceptamos un patch si hay una resolución MÁS
-  // NUEVA; re-parsear la misma norma solo genera churn (y ya produjo una
-  // reescritura que reemplazó la escala progresiva de honorarios por una
-  // alícuota plana "promedio", jul-2026).
-  const VIGENCIA_ACTUAL = '2023-10-01';
+  // Guard de vigencia: el texto vigente del Anexo VIII fue republicado por la
+  // RG 5740/2025, vigente desde 31/07/2025. Los conceptos cubiertos por la calc
+  // conservaron sus valores; los cambios afectaron códigos 112/113.
+  const VIGENCIA_ACTUAL = '2025-07-31';
   if (result.fechaVigencia <= VIGENCIA_ACTUAL) {
-    log.skip(`sin novedad normativa (vigencia ${result.fechaVigencia} ≤ ${VIGENCIA_ACTUAL}, RG 5423/2023 sigue vigente)`);
+    log.skip(`sin novedad normativa (vigencia ${result.fechaVigencia} ≤ ${VIGENCIA_ACTUAL}, Anexo VIII RG 5740/2025 vigente)`);
     return false;
   }
 

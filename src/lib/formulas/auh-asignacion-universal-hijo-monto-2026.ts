@@ -2,7 +2,7 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; }
 export function auhAsignacionUniversalHijoMonto2026(i: Inputs): Outputs {
   const h=Number(i.hijos)||0; const e=String(i.embarazo||'no')==='si';
-  const porHijo=144562;
+  const porHijo=A.auhGeneral;
   const total=h*porHijo+(e?porHijo:0);
   const retenido=total*0.20;
   const cobro=total*0.80;
@@ -29,3 +29,4 @@ export function auhAsignacionUniversalHijoMonto2026(i: Inputs): Outputs {
 
   return { auhMensual:fmt(total), retenido:fmt(retenido), cobroEfectivo:fmt(cobro), resumen:`${h} hijos${e?' + embarazo':''}: AUH $${total.toFixed(0)}/mes, cobro efectivo $${cobro.toFixed(0)}.`, _insight, _chart };
 }
+import { ASIGNACIONES_ANSES_AGO_2026 as A } from '../data/argentina-2026';

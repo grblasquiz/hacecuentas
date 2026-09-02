@@ -1,8 +1,10 @@
+import { BIENES_PERSONALES_2025 } from '../data/bienes-personales-2025';
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 export function bienesPersonalesTramosAlicuota2026(i: Inputs): Outputs {
   const p=Number(i.patrimonio)||0; const v=Number(i.vivienda)||0;
-  const MNI=384728044.57; const VIV_EX=1346548155.99;
+  const MNI=BIENES_PERSONALES_2025.minimoNoImponible; const VIV_EX=BIENES_PERSONALES_2025.casaHabitacionExentaHasta;
   const vivExenta=Math.min(v,VIV_EX);
   const base=Math.max(0, p-vivExenta-MNI);
   let imp=0; let alic='0%';

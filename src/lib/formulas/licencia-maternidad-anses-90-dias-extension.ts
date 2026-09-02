@@ -20,7 +20,7 @@ export interface Outputs {
 export function compute(i: Inputs): Outputs {
   // Constantes 2026 — fuente: ANSES / Secretaría de Seguridad Social
   const TOPE_RIPTE_2026 = 1_980_000; // Tope salarial mensual sujeto a aportes (RIPTE Q1 2026)
-  const AUH_EMBARAZO_MENSUAL_2026 = 89_745; // Asignación por Embarazo sin empleo formal (movilidad Q1 2026)
+  const AUH_EMBARAZO_MENSUAL_2026 = A.auhGeneral; // AUE, Res. ANSES 233/2026, Anexo V
   const AUH_PORCENTAJE_MENSUAL = 0.8; // 80% se cobra mensualmente; 20% al presentar certificado de parto
   const DIAS_LICENCIA_BASE = 90; // días corridos Ley LCT art. 177
   const DIAS_EXTRA_MULTIPLE = 30; // días adicionales por parto múltiple o discapacidad (Ley 27.716)
@@ -154,3 +154,4 @@ export function compute(i: Inputs): Outputs {
     ...(_chart ? { _chart } : {}),
   };
 }
+import { ASIGNACIONES_ANSES_AGO_2026 as A } from '../data/argentina-2026';

@@ -27,17 +27,12 @@ export function compute(i: Inputs): Outputs {
   const escolaridad = Boolean(i.tiene_escolaridad);
   const prenatal = Boolean(i.tiene_prenatal);
 
-  // Valores oficiales ANSES junio 2026 (movilidad mensual por IPC, DNU 274/2024).
+  // Valores oficiales ANSES agosto 2026 (Res. 233/2026, Anexos I y V).
   // Asignación SUAF por hijo según tramo de ingreso del grupo familiar (IGF).
-  const TRAMOS_2026 = [
-    { limite: 1122074, tramo: 1, asignacion: 72474 },
-    { limite: 1645630, tramo: 2, asignacion: 48888 },
-    { limite: 1899934, tramo: 3, asignacion: 29570 },
-    { limite: 5941936, tramo: 4, asignacion: 15257 },
-  ];
-  const AYUDA_ESCOLAR_ANUAL = 85000; // pago ÚNICO anual por hijo (inicio del ciclo lectivo)
-  const AUH_POR_HIJO = 144562;       // desocupados/informales cobran AUH, no SUAF
-  const TOPE_IGF = 5941936;          // tope de IGF para la asignación general por hijo
+  const TRAMOS_2026 = A.suaf.tramos;
+  const AYUDA_ESCOLAR_ANUAL = A.ayudaEscolar;
+  const AUH_POR_HIJO = A.auhGeneral;
+  const TOPE_IGF = A.suaf.topeIgf;
 
   // Desocupado / trabajador informal → AUH (no SUAF)
   if (condicion === 'desocupado') {
@@ -86,7 +81,7 @@ export function compute(i: Inputs): Outputs {
   let obs = `Trabajador ${condicion === 'monotributista' ? 'monotributista' : 'en relación de dependencia'} en ${tramoLabel}: $${asignacionPorHijo.toLocaleString('es-AR')} por hijo.`;
   if (prenatal) obs += ` Prenatal (mensual): $${montoPrenatal.toLocaleString('es-AR')}.`;
   if (escolaridad) obs += ` Ayuda escolar: pago anual único de $${montoEscolar.toLocaleString('es-AR')} por hijo.`;
-  obs += ' Valores ANSES junio 2026; verificá en anses.gob.ar.';
+  obs += ' Valores ANSES agosto 2026 (Resolución 233/2026); verificá tu liquidación en Mi ANSES.';
 
   const chart = {
     type: 'doughnut' as const,
@@ -118,3 +113,4 @@ export function compute(i: Inputs): Outputs {
     _insight: insight,
   };
 }
+import { ASIGNACIONES_ANSES_AGO_2026 as A } from '../data/argentina-2026';

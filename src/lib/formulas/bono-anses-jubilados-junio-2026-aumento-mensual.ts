@@ -1,3 +1,5 @@
+import { HABER_MINIMO_ANSES } from '../data/anses-2026';
+
 export interface Inputs {
   tipo_prestacion: string;
   haber_actual: number;
@@ -20,7 +22,7 @@ export function compute(i: Inputs): Outputs {
   const tipoPrestacion = String(i.tipo_prestacion || 'jubilacion_aportante');
 
   // Límite de haber para elegibilidad (aproximadamente 2 SMVM 2026)
-  const LIMITE_HABER_2026 = 411989;
+  const LIMITE_HABER_2026 = HABER_MINIMO_ANSES;
 
   // Montos de bono según tipo de prestación (junio 2026)
   const MONTOS_BONO: { [key: string]: number } = {

@@ -9,7 +9,7 @@ import DatosHoyNav from '../components/DatosHoyNav.astro';
 export const prerender = true;
 
 const title = 'IPC Argentina 2026: inflación mes a mes y próximo dato';
-const description = 'IPC de Argentina 2026 mes a mes: último dato oficial, inflación acumulada e interanual. El IPC de julio se publica el 13 de agosto, según INDEC.';
+const description = 'IPC de Argentina 2026 mes a mes: último dato oficial disponible, inflación acumulada e interanual, con fuente INDEC.';
 
 interface DataPoint { fecha: string; valor: number; }
 interface PlazoFijoBanco { entidad: string; logo: string; tnaClientes: number; }
@@ -38,7 +38,7 @@ const lastMensual = inflacionMensual[inflacionMensual.length - 1];
 const lastInteranual = inflacionInteranual[inflacionInteranual.length - 1];
 const lastUva = uva[uva.length - 1];
 const last12 = inflacionMensual.slice(-12).reverse();
-const julyPending = !inflacionMensual.some((m) => m.fecha.startsWith('2026-07'));
+const latestIpcLabel = lastMensual ? mesHumano(lastMensual.fecha) : 'último período disponible';
 
 // Acumulado 12 meses (compuesto)
 let acum12 = 1;
@@ -95,7 +95,7 @@ const faq = [
   },
   {
     q: '¿Cuándo sale el próximo dato de inflación?',
-    a: 'El <strong>IPC de julio de 2026</strong> se publica el jueves <strong>13 de agosto de 2026</strong>. La fecha surge del calendario anticipado de difusión del INDEC; no hay un día fijo para todos los meses.',
+    a: `El último período disponible en esta página es <strong>${latestIpcLabel}</strong>. La fecha del próximo informe debe consultarse en el calendario anticipado de difusión del INDEC; no hay un día fijo para todos los meses.`,
   },
   {
     q: '¿Cómo se compara con otros países?',
@@ -145,14 +145,6 @@ const schemaBreadcrumb = {
         Datos en vivo del INDEC y el BCRA: <strong>inflación mensual e interanual</strong>, valor <strong>UVA</strong>, y <strong>tasas de plazo fijo</strong> para compararla con tus ahorros.
       </p>
     </header>
-
-    {julyPending && (
-      <aside class="ipc-status" aria-label="Estado del IPC de julio de 2026">
-        <strong>IPC julio 2026: todavía no fue publicado.</strong>
-        <span>El INDEC lo difundirá el jueves 13 de agosto. Hasta entonces, el último dato oficial disponible es {lastMensual ? `${mesHumano(lastMensual.fecha)} (${lastMensual.valor.toFixed(1)}%)` : 'el informado por INDEC'}.</span>
-        <a href="https://www.indec.gob.ar/ftp/cuadros/publicaciones/calendario_2sem2026.pdf" rel="noopener">Ver calendario oficial del INDEC →</a>
-      </aside>
-    )}
 
     <section class="stat-grid">
       <div class="stat-card mensual">

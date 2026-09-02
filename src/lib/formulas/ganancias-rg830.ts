@@ -5,11 +5,11 @@
  * de retención (pagador) retiene al momento del pago.
  *
  * IMPORTANTE sobre los valores 2026:
- * Los MNI y tramos de escala del Anexo VIII NO se actualizan desde la
- * RG 5423/2023. ARCA los mantiene congelados pese a la inflación acumulada,
- * lo que hace que casi cualquier pago a proveedores caiga bajo retención.
- * Por eso los valores de abajo lucen "ridículamente bajos" — son los oficiales.
- * Fuente: https://biblioteca.afip.gob.ar/search/query/adjunto.aspx?p=t:RAG%7Cn:830%7Co:3%7Ca:2000%7Cd:A8_RG5423.pdf
+ * El texto vigente del Anexo VIII es el sustituido por la RG 5740/2025.
+ * Esa norma modificó los códigos 112/113 por el Seguro de Cese Laboral y
+ * republicó el anexo completo; los conceptos que usa esta calculadora y sus
+ * escalas conservaron los importes que ya regían desde la RG 5423/2023.
+ * Fuente vigente: https://biblioteca.arca.gob.ar/search/query/adjunto.aspx?p=t:RAG%7Cn:830%7Co:3%7Ca:2000%7Cd:A8_RG5740.pdf
  *
  * Fórmula:
  *   monto_acumulado = pago_actual + pagos_anteriores_mes
@@ -25,6 +25,8 @@ export interface GananciasRG830Inputs {
   montoPago: number; // neto de IVA
   pagosAnteriores: number; // acumulado del mes
   retencionesAnteriores: number; // retenciones ya hechas al proveedor este mes
+  /** Relevante para conceptos cuya alícuota no inscripto es 28%/25%. */
+  tipoBeneficiario?: 'persona-humana' | 'otro-sujeto';
 }
 
 interface ConceptoConfig {
@@ -38,8 +40,8 @@ interface ConceptoConfig {
   escalaTipo?: 'general' | 'profesionales';
 }
 
-// Valores oficiales Anexo VIII RG 830 (últimos publicados por RG 5423/2023).
-// Vigentes en 2026 — ARCA no los actualizó.
+// Valores oficiales del Anexo VIII RG 830, texto según RG 5740/2025.
+// Vigentes al 31/08/2026.
 const conceptos: Record<string, ConceptoConfig> = {
   'honorarios-profesionales': {
     nombre: 'Honorarios profesionales, profesiones liberales, oficios (cód. 119)',
@@ -169,6 +171,9 @@ export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outp
   const pago = Number(inputs.montoPago);
   const anteriores = Number(inputs.pagosAnteriores) || 0;
   const retPrev = Number(inputs.retencionesAnteriores) || 0;
+  // Compatibilidad con formularios existentes: hasta que el selector se
+  // publique, "no inscripto" representa a persona humana/sucesión indivisa.
+  const tipoBeneficiario = inputs.tipoBeneficiario ?? 'persona-humana';
 
   const cfg = conceptos[concepto];
   if (!cfg) throw new Error('Seleccioná un concepto válido');
@@ -195,8 +200,17 @@ export function gananciasRG830(inputs: GananciasRG830Inputs): GananciasRG830Outp
       alicuotaAplicada = `${cfg.alicuotaInscripto}%`;
     }
   } else {
-    retencionTotal = baseRetencion * (cfg.alicuotaNoInscripto / 100);
-    alicuotaAplicada = `${cfg.alicuotaNoInscripto}% (no inscripto)`;
+    const alicuotaNoInscripto =
+      cfg.alicuotaNoInscripto === 28 && tipoBeneficiario === 'otro-sujeto'
+        ? 25
+        : cfg.alicuotaNoInscripto;
+    retencionTotal = baseRetencion * (alicuotaNoInscripto / 100);
+    const sujeto = alicuotaNoInscripto === 28
+      ? 'persona humana o sucesión indivisa no inscripta'
+      : alicuotaNoInscripto === 25
+        ? 'otro sujeto no inscripto'
+        : 'no inscripto';
+    alicuotaAplicada = `${alicuotaNoInscripto}% (${sujeto})`;
   }
 
   const retencionEstePago = Math.max(0, retencionTotal - retPrev);

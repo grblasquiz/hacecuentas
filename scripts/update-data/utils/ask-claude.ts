@@ -24,7 +24,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { createLogger } from './logger.ts';
-import { localClaudeCliPath, reportWarn } from './run-status.ts';
+import { localClaudeCliPath, reportLlmUnavailable, reportWarn } from './run-status.ts';
 
 let cliAuthWarned = false;
 
@@ -177,6 +177,7 @@ function askClaudeViaCli<T>(opts: AskClaudeOpts<T>, cliPath: string): T | null {
   if (envelope.is_error || res.status !== 0 || typeof envelope.result !== 'string') {
     const msg = String(envelope.result);
     if (/authenticat|oauth/i.test(msg)) {
+      reportLlmUnavailable();
       log.error(
         `CLI sin sesión válida (${msg.slice(0, 120)}) — correr \`claude\` interactivo y loguearse (claude login) para revivir el fallback local`,
       );

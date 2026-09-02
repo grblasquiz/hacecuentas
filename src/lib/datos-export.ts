@@ -15,6 +15,7 @@ import {
   ESCALA, MNI_MENSUAL_BASE, INCREMENTO_CONYUGE_MENSUAL,
   INCREMENTO_HIJO_MENSUAL, INCREMENTO_HIJO_INCAPACITADO_MENSUAL,
 } from './formulas/_ganancias-escala';
+import { GANANCIAS_2026_CURRENT_PERIOD, GANANCIAS_2026_DEDUCCIONES, GANANCIAS_2026_META } from './data/ganancias-2026';
 import { sueldoAR, BASE_IMPONIBLE_MAXIMA_APORTES } from './formulas/sueldo-ar';
 import { aguinaldo } from './formulas/aguinaldo';
 import { salarioMinimo } from './formulas/salario-minimo';
@@ -98,6 +99,7 @@ export function buildMonotributo(): DatosExport {
 
 // ── Argentina · Impuesto a las Ganancias 2026 ────────────────────────────────
 export function buildGanancias(): DatosExport {
+  const d = GANANCIAS_2026_DEDUCCIONES[GANANCIAS_2026_CURRENT_PERIOD];
   const escala = ESCALA.map((t, i) => ({
     desde_ars: i === 0 ? 0 : fin(ESCALA[i - 1].hasta),
     hasta_ars: fin(t.hasta),
@@ -105,12 +107,12 @@ export function buildGanancias(): DatosExport {
     monto_fijo_acumulado_ars: t.acumulado,
   }));
   const deducciones = [
-    { concepto: 'Ganancia no imponible (inc. a)', mensual_ars: null, anual_oficial: '$5.151.802,50' },
-    { concepto: 'Deducción especial empleados (inc. c.1)', mensual_ars: null, anual_oficial: '$18.031.308,76' },
-    { concepto: 'GNI + deducción especial (mínimo soltero)', mensual_ars: MNI_MENSUAL_BASE, anual_oficial: '$23.183.111,26' },
-    { concepto: 'Cónyuge a cargo (inc. b.1)', mensual_ars: INCREMENTO_CONYUGE_MENSUAL, anual_oficial: '$4.851.964,66' },
-    { concepto: 'Hijo a cargo (inc. b.2)', mensual_ars: INCREMENTO_HIJO_MENSUAL, anual_oficial: '$2.446.863,48' },
-    { concepto: 'Hijo incapacitado (inc. b.2.1)', mensual_ars: INCREMENTO_HIJO_INCAPACITADO_MENSUAL, anual_oficial: '$4.893.726,96' },
+    { concepto: 'Ganancia no imponible (inc. a)', mensual_ars: null, anual_oficial: d.gni },
+    { concepto: 'Deducción especial empleados (inc. c.2)', mensual_ars: null, anual_oficial: d.especialEmpleados },
+    { concepto: 'GNI + deducción especial (mínimo soltero)', mensual_ars: MNI_MENSUAL_BASE, anual_oficial: d.gni + d.especialEmpleados },
+    { concepto: 'Cónyuge a cargo (inc. b.1)', mensual_ars: INCREMENTO_CONYUGE_MENSUAL, anual_oficial: d.conyuge },
+    { concepto: 'Hijo a cargo (inc. b.2)', mensual_ars: INCREMENTO_HIJO_MENSUAL, anual_oficial: d.hijo },
+    { concepto: 'Hijo incapacitado (inc. b.2.1)', mensual_ars: INCREMENTO_HIJO_INCAPACITADO_MENSUAL, anual_oficial: d.hijoIncapacitado },
   ];
   const ejemplos = [2_500_000, 3_000_000, 4_000_000, 5_000_000, 7_000_000, 10_000_000].map((bruto) => {
     const r = sueldoAR({ bruto, conyuge: false, hijos: 0 });
@@ -124,12 +126,12 @@ export function buildGanancias(): DatosExport {
     meta: {
       name: 'Impuesto a las Ganancias 2026 (empleados) — escala y deducciones art. 30',
       description:
-        'Escala progresiva mensual del Impuesto a las Ganancias 2026 (9 tramos, 5% a 35%) y deducciones personales del art. 30 (GNI, deducción especial, cónyuge, hijos), primer semestre 2026.',
+        'Escala progresiva mensual del Impuesto a las Ganancias 2026 (9 tramos, 5% a 35%) y deducciones personales del art. 30 (GNI, deducción especial, cónyuge, hijos), segundo semestre 2026.',
       datasetPage: `${HOMEPAGE}/datos-ganancias-2026`,
       source: 'ARCA — Ley 27.743 / RG 4003',
-      sourceUrl: null,
-      temporalCoverage: '2026-01/2026-06',
-      lastReviewed: '2026-06-10',
+      sourceUrl: GANANCIAS_2026_META.secondPeriodSource,
+      temporalCoverage: '2026-07/2026-12',
+      lastReviewed: GANANCIAS_2026_META.lastReviewed,
       license: LICENSE,
       attribution: 'Hacé Cuentas — https://hacecuentas.com/datos-ganancias-2026',
       homepage: HOMEPAGE,
@@ -166,14 +168,14 @@ export function buildTopesSipa(): DatosExport {
   });
   return {
     meta: {
-      name: 'Base imponible máxima de aportes SIPA — Argentina, junio 2026',
+      name: 'Base imponible máxima de aportes SIPA — Argentina, agosto 2026',
       description:
         'Tope de la base imponible para aportes personales (jubilación 11%, obra social 3%, PAMI 3%) según Ley 24.241 art. 9: base máxima mensual, aporte máximo por concepto y ejemplos de aplicación en sueldos altos.',
       datasetPage: `${HOMEPAGE}/datos-topes-sipa-2026`,
-      source: 'ANSES — Resolución 139/2026 (Ley 24.241)',
-      sourceUrl: null,
-      temporalCoverage: '2026-06',
-      lastReviewed: '2026-06-10',
+      source: 'ANSES — Resolución 232/2026 (Ley 24.241)',
+      sourceUrl: 'https://www.argentina.gob.ar/normativa/nacional/resoluci%C3%B3n-232-2026-428341',
+      temporalCoverage: '2026-08',
+      lastReviewed: '2026-08-31',
       license: LICENSE,
       attribution: 'Hacé Cuentas — https://hacecuentas.com/datos-topes-sipa-2026',
       homepage: HOMEPAGE,

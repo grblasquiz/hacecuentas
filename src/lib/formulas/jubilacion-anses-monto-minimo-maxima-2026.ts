@@ -1,8 +1,15 @@
+import { ANSES_2026 } from '../data/anses-2026';
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: any; }
 export function jubilacionAnsesMontoMinimoMaxima2026(i: Inputs): Outputs {
   const t=String(i.tipo||'minima');
-  const h: Record<string,[number,number]> = { minima:[411989,70000], media:[781445,70000], maxima:[2770531,0], pnc:[288393,70000] };
+  const h: Record<string,[number,number]> = {
+    minima: [ANSES_2026.haberMinimo, 70000],
+    media: [781445, 70000],
+    maxima: [ANSES_2026.haberMaximo, 0],
+    pnc: [ANSES_2026.haberMinimo * 0.70, 70000],
+  };
   const [haber,bono]=h[t]||h.minima;
   const total = haber + bono;
   const fmt = (n: number) => '$' + n.toLocaleString('es-AR');

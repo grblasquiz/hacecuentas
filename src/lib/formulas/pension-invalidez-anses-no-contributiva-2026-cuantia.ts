@@ -1,3 +1,5 @@
+import { HABER_MINIMO_ANSES } from '../data/anses-2026';
+
 export interface Inputs {
   edad: number;
   porcentaje_invalidez: number;
@@ -16,8 +18,7 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Constantes 2026 ANSES — haber mínimo junio 2026 (movilidad IPC, DNU 274/2024)
-  const HABER_MINIMO_2026 = 411989; // ARS - haber mínimo jubilatorio jul-2026
+  const HABER_MINIMO_2026 = HABER_MINIMO_ANSES;
   const CUANTIA_INTEGRAL = HABER_MINIMO_2026 * 0.70; // ~288.392 ARS (70% del haber mínimo)
   const TOPE_PERSONAL_FACTOR = 3.73; // ~986.000 ARS
   const TOPE_PERSONAL = HABER_MINIMO_2026 * TOPE_PERSONAL_FACTOR;

@@ -4,7 +4,7 @@ export const hub: HubData = {
   slug: 'trabajo/sueldo-bruto-y-neto',
   title: 'Calculadora de sueldo bruto a neto 2026 Argentina',
   description:
-    'Calculá sueldo bruto a neto y neto a bruto en Argentina. Incluye aportes con tope SIPA de julio 2026, Ganancias estimada y monotributo por categoría.',
+    'Calculá sueldo bruto a neto y neto a bruto en Argentina. Incluye aportes con tope SIPA de agosto 2026, Ganancias estimada y monotributo por categoría.',
   silo: 'Trabajo',
   siloHref: '/trabajo',
 
@@ -14,7 +14,7 @@ export const hub: HubData = {
     'Partimos del caso más habitual: tenés el bruto y querés saber cuánto cobrás. Si lo tuyo es al revés —cuánto te tienen que poner de bruto para cobrar X— o si sos monotributista, cambiá el caso abajo.',
   stamps: [
     'Revisado 31-07-2026',
-    'Tope SIPA julio 2026',
+    'Tope SIPA agosto 2026',
     'Ganancias estimada con escala 2026',
     'Cálculo explicado',
   ],
@@ -243,7 +243,7 @@ export const hub: HubData = {
       name: 'Bases imponibles mínima y máxima para aportes — valores vigentes',
       url: 'https://www.boletinoficial.gob.ar/detalleAviso/primera/343717/20260630',
       publisher: 'ANSES — Resolución 186/2026',
-      date: 'julio 2026',
+      date: 'agosto 2026',
     },
     {
       name: 'Ley de Contrato de Trabajo 20.744 — arts. 121, 122, 128, 150 y 155 (aguinaldo, pago y vacaciones)',

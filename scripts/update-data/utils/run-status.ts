@@ -48,6 +48,12 @@ export function hasAnthropicKey(): boolean {
 // hay ANTHROPIC_API_KEY. Detectamos el binario una sola vez y lo cacheamos.
 
 let cliPathCache: string | null | undefined;
+let llmRuntimeUnavailable = false;
+
+/** Marca que el camino LLM existe pero falló en ejecución (por ejemplo, OAuth vencido). */
+export function reportLlmUnavailable(): void {
+  llmRuntimeUnavailable = true;
+}
 
 /**
  * Binario del CLI bundleado por la app de escritorio (siempre el más nuevo).
@@ -94,5 +100,5 @@ export function hasLocalClaudeCli(): boolean {
  * decidir si intentan el paso LLM.
  */
 export function hasLlmAccess(): boolean {
-  return hasAnthropicKey() || hasLocalClaudeCli();
+  return !llmRuntimeUnavailable && (hasAnthropicKey() || hasLocalClaudeCli());
 }

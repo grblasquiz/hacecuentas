@@ -58,14 +58,13 @@ PERIODOS = [
         'escala_url': 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/documentos/Tabla-Art-94-LIG-per-ene-a-jun-2026.pdf',
         'deducciones_url': 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-ene-a-jun-2026.pdf',
     },
-    # Cuando ARCA publique jul-dic 2026:
-    # {
-    #     'codigo': 'jul-dic-2026',
-    #     'sem_label': 'jul-a-dic',
-    #     'year': 2026,
-    #     'escala_url': '...Tabla-Art-94-LIG-per-jul-a-dic-2026.pdf',
-    #     'deducciones_url': '...Deducciones-personales-art-30-jul-a-dic-2026.pdf',
-    # },
+    {
+        'codigo': 'jul-dic-2026',
+        'sem_label': 'jul-a-dic',
+        'year': 2026,
+        'escala_url': 'https://www.arca.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/documentos/Tabla-Art-94-LIG-per-jul-a-dic-2026.pdf',
+        'deducciones_url': 'https://www.arca.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-jul-dic-2026.pdf',
+    },
 ]
 
 MESES = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',

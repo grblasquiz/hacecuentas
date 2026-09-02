@@ -6,10 +6,9 @@
  *
  *   haber_mínimo(m) = haber_mínimo(m-1) × (1 + IPC(m-2)/100)
  *
- * Anclamos con el valor oficial de AGOSTO 2026: $419.734,71 (haber mínimo puro,
- * +1,9% por IPC de junio) + bono complementario $70.000 (decreto, se renueva
- * mes a mes desde 2024 — sin señal de cambio). Verificado 22-07-2026 (Ámbito,
- * Infobae, Canal 26). Desde el ancla se encadena hacia adelante (o atrás) con
+ * Anclamos con el valor oficial de AGOSTO 2026: $419.775,93 (haber mínimo puro,
+ * +1,89% por IPC de junio), establecido por la Resolución ANSES 232/2026.
+ * Desde el ancla se encadena hacia adelante (o atrás) con
  * la serie IPC de api.argentinadatos.com (misma fuente que el fetcher `ipc`).
  *
  * LLM: solo cross-check opcional. Si hay ANTHROPIC_API_KEY se le pregunta a
@@ -30,8 +29,8 @@ const log = createLogger('jubilacion-anses');
 const FILE = join(process.cwd(), 'src/lib/formulas/jubilacion-minima.ts');
 
 // ── Ancla oficial (verificar/actualizar cuando haya un valor confirmado nuevo) ──
-// Agosto 2026: haber mínimo $419.734,71 (+1,9% = IPC jun-2026) + bono $70.000.
-const ANCLA = { periodo: '2026-08', haber: 419734.71 };
+// Agosto 2026: haber mínimo $419.775,93 (+1,89% = IPC jun-2026), Res. 232/2026.
+const ANCLA = { periodo: '2026-08', haber: 419775.93 };
 const BONO_EXTRA = 70000;
 
 interface InflacionItem {

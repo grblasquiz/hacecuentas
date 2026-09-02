@@ -2,7 +2,9 @@
 interface Props { data:any }
 const { data } = Astro.props;
 import { MNI_MENSUAL_BASE, INCREMENTO_CONYUGE_MENSUAL, INCREMENTO_HIJO_MENSUAL, ESCALA, aplicarEscalaMensual, GNI_ANUAL, DEDUCCION_ESPECIAL_AUTONOMOS_ANUAL } from '../lib/formulas/_ganancias-escala';
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from '../lib/formulas/sueldo-ar';
 const CLIENT_SCALE = ESCALA.map((t) => ({ ...t, hasta: Number.isFinite(t.hasta) ? t.hasta : 1e15 }));
+const fmtARS = (n:number) => '$' + Math.round(n).toLocaleString('es-AR');
 ---
 <div class="gains-experience">
     <section class="hero">
@@ -13,7 +15,7 @@ const CLIENT_SCALE = ESCALA.map((t) => ({ ...t, hasta: Number.isFinite(t.hasta) 
           <h1>¿Cuánto te sacan<br>del sueldo por<br>Ganancias?</h1>
           <p>Calculá la retención mensual, entendé en qué tramo caés y descubrí qué deducciones pueden bajarla.</p>
           <div class="chips"><span>🏛️ Escala ARCA</span><span>📄 Art. 94 LIG</span><span>✓ SiRADIG incluido</span></div>
-          <div class="tax-art"><div class="receipt"><div class="receipt-head"><b>Recibo de sueldo</b><span>julio 2026</span></div><div class="retention">−$33.129</div><div class="retention-sub">Retención mensual estimada</div><div class="rline"><span>Neto después de aportes</span><strong>$2.871.871</strong></div></div><div class="arca">ARCA<br>2026</div><span class="base-tag">Base imponible: $414.962</span></div>
+          <div class="tax-art"><div class="receipt"><div class="receipt-head"><b>Recibo de sueldo</b><span>agosto 2026</span></div><div class="retention">−$33.129</div><div class="retention-sub">Retención mensual estimada</div><div class="rline"><span>Neto después de aportes</span><strong>$2.871.871</strong></div></div><div class="arca">ARCA<br>2026</div><span class="base-tag">Base imponible: $414.962</span></div>
         </div>
         <form class="calc">
           <div class="calc-title"><div><h2>Calculá tu retención</h2><p>Empezamos con el descuento mensual.</p></div><span class="tag">Escala vigente</span></div>
@@ -43,7 +45,7 @@ const CLIENT_SCALE = ESCALA.map((t) => ({ ...t, hasta: Number.isFinite(t.hasta) 
         <article class="card"><h3>Del bruto a la retención</h3>
           <div class="row"><span>💼 Sueldo bruto</span><div class="bar"><i style="width:100%"></i></div><b id="tax-row-gross">$3.500.000</b></div>
           <div class="row"><span>− Aportes personales</span><div class="bar"><i style="width:17%"></i></div><b id="tax-row-contrib">−$595.000</b></div>
-          <div class="row"><span>− Deducciones art. 30</span><div class="bar"><i style="width:71%"></i></div><b id="tax-row-ded">−$2.490.038</b></div>
+          <div class="row"><span>− Deducciones art. 30</span><div class="bar"><i style="width:71%"></i></div><b id="tax-row-ded">−$2.699.773</b></div>
           <div class="row"><span>= Base imponible</span><div class="bar"><i style="width:12%"></i></div><b id="tax-row-base">$414.962</b></div>
           <div class="total"><strong id="tax-total-label">Retención del mes</strong><strong id="tax-detail-result">$33.129</strong></div>
         </article>
@@ -51,8 +53,8 @@ const CLIENT_SCALE = ESCALA.map((t) => ({ ...t, hasta: Number.isFinite(t.hasta) 
       </div>
     </section>
     <section class="deductions"><div class="wrap"><div class="ded-head"><div><span>SiRADIG</span><h2>Deducciones que pueden bajar la retención</h2></div><div class="legend">Cargalas durante el año para que impacten en tu recibo</div></div><div class="ded-grid">
-      <article class="ded"><i>💍</i><h3>Cónyuge a cargo</h3><p>Siempre que no tenga ingresos superiores al mínimo permitido.</p><b>Hasta $404.330/mes →</b></article>
-      <article class="ded"><i>👧</i><h3>Hijos a cargo</h3><p>Menores de 18 años o incapacitados para el trabajo.</p><b>$203.905 por hijo/mes →</b></article>
+      <article class="ded"><i>💍</i><h3>Cónyuge a cargo</h3><p>Siempre que no tenga ingresos superiores al mínimo permitido.</p><b>Hasta {fmtARS(INCREMENTO_CONYUGE_MENSUAL)}/mes →</b></article>
+      <article class="ded"><i>👧</i><h3>Hijos a cargo</h3><p>Menores de 18 años o incapacitados para el trabajo.</p><b>{fmtARS(INCREMENTO_HIJO_MENSUAL)} por hijo/mes →</b></article>
       <article class="ded"><i>🏠</i><h3>Alquiler de vivienda</h3><p>Hasta el 40% pagado, con el tope anual de la GNI.</p><b>Cargar contrato y facturas →</b></article>
       <article class="ded"><i>🩺</i><h3>Medicina prepaga</h3><p>Cuotas médico-asistenciales tuyas y de tus cargas de familia.</p><b>Con límite del 5% →</b></article>
       <article class="ded"><i>🧹</i><h3>Personal doméstico</h3><p>Remuneraciones y contribuciones del personal registrado.</p><b>Hasta la GNI anual →</b></article>
@@ -63,18 +65,18 @@ const CLIENT_SCALE = ESCALA.map((t) => ({ ...t, hasta: Number.isFinite(t.hasta) 
     <section class="support wrap"><div><h2>Preguntas frecuentes</h2>{data.faq.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><aside><h2>Fuentes oficiales</h2>{data.sources.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}<small>{s.publisher}</small></a>)}</aside></section>
   </div>
 
-<script is:inline define:vars={{ MNI:MNI_MENSUAL_BASE, SPOUSE:INCREMENTO_CONYUGE_MENSUAL, CHILD:INCREMENTO_HIJO_MENSUAL, SCALE:CLIENT_SCALE, GNI:GNI_ANUAL, AUTO:DEDUCCION_ESPECIAL_AUTONOMOS_ANUAL }}>
+<script is:inline define:vars={{ MNI:MNI_MENSUAL_BASE, SPOUSE:INCREMENTO_CONYUGE_MENSUAL, CHILD:INCREMENTO_HIJO_MENSUAL, SCALE:CLIENT_SCALE, GNI:GNI_ANUAL, AUTO:DEDUCCION_ESPECIAL_AUTONOMOS_ANUAL, CAP:BASE_IMPONIBLE_MAXIMA_APORTES }}>
 (()=>{const $=id=>document.getElementById(id),num=id=>Number(String($(id).value||'').replace(/\./g,'').replace(',','.').replace(/[^\d.-]/g,''))||0,money=n=>(n<0?'−':'')+'$'+Math.round(Math.abs(n)).toLocaleString('es-AR'),pct=n=>(n*100).toLocaleString('es-AR',{maximumFractionDigits:2})+'%';let kase='mensual';
 const tax=base=>{if(base<=0)return{value:0,rate:0};let prev=0;for(const t of SCALE){if(base<=t.hasta)return{value:t.acumulado+(base-prev)*t.tasa,rate:t.tasa};prev=t.hasta}return{value:0,rate:0}};
-const calc=()=>{const gross=Math.max(0,num('tax-gross')),spouse=$('tax-spouse').value==='si'?SPOUSE:0,children=Math.max(0,num('tax-children'))*CHILD,other=Math.max(0,num('tax-deductions')),contrib=Math.min(gross,4414652.38)*.17,ded=MNI+spouse+children+other;let base=Math.max(0,gross-contrib-ded),r=tax(base),value=r.value,label='Retención mensual estimada',net=gross-contrib-value,netLabel='Neto tras aportes e impuesto',totalLabel='Retención del mes';
-if(kase==='aguinaldo'){const baseSac=Math.max(0,gross*13/12-Math.min(gross*13/12,4414652.38)*.17-ded),withSac=tax(baseSac);value=Math.max(0,withSac.value-r.value);r=withSac;base=baseSac;label='Retención mensual extra por SAC';net=gross*.5-value;netLabel='Aguinaldo neto estimado';totalLabel='Impacto mensual del SAC'}
+const calc=()=>{const gross=Math.max(0,num('tax-gross')),spouse=$('tax-spouse').value==='si'?SPOUSE:0,children=Math.max(0,num('tax-children'))*CHILD,other=Math.max(0,num('tax-deductions')),contrib=Math.min(gross,CAP)*.17,ded=MNI+spouse+children+other;let base=Math.max(0,gross-contrib-ded),r=tax(base),value=r.value,label='Retención mensual estimada',net=gross-contrib-value,netLabel='Neto tras aportes e impuesto',totalLabel='Retención del mes';
+if(kase==='aguinaldo'){const baseSac=Math.max(0,gross*13/12-Math.min(gross*13/12,CAP)*.17-ded),withSac=tax(baseSac);value=Math.max(0,withSac.value-r.value);r=withSac;base=baseSac;label='Retención mensual extra por SAC';net=gross*.5-value;netLabel='Aguinaldo neto estimado';totalLabel='Impacto mensual del SAC'}
 if(kase==='monotributo'){const annualGross=gross*12,annualBase=Math.max(0,annualGross-GNI-AUTO-other*12),monthlyBase=annualBase/12;r=tax(monthlyBase);value=r.value*12;base=annualBase;label='Ganancias anual estimada';net=annualGross-value;netLabel='Ingreso anual tras Ganancias';totalLabel='Impuesto anual'}
 if(kase==='saldo'){const annual=r.value*12,withheld=Math.max(0,num('tax-withheld'));value=withheld-annual;label=value>=0?'Saldo estimado a favor':'Saldo estimado a pagar';net=annual;netLabel='Impuesto anual determinado';totalLabel=label}
 /* Tu mínimo personal: despeje del bruto desde el que empezás a pagar.
    Base = bruto − 17%·min(bruto,tope) − deducciones. Con bruto ≤ tope:
    bruto·0,83 = ded → bruto = ded/0,83. Si eso supera el tope de aportes,
    el aporte queda fijo en tope·0,17 y el despeje es bruto = ded + tope·0,17. */
-const TOPE=4414652.38;let floor=ded/.83;if(floor>TOPE)floor=ded+TOPE*.17;
+const TOPE=CAP;let floor=ded/.83;if(floor>TOPE)floor=ded+TOPE*.17;
 let floorMsg='Con tus cargas, pagás Ganancias a partir de un bruto de <b>'+money(floor)+'</b>.';
 if(kase==='mensual'&&base>0){const alqAhorro=(r.value-tax(Math.max(0,base-GNI/12)).value)*12;if(alqAhorro>1000)floorMsg+=' Cargar el alquiler en el SiRADIG (deducís hasta el 40% con tope de la GNI) te ahorra hasta <b>'+money(alqAhorro)+'/año</b>.'}
 $('tax-floor').innerHTML=floorMsg;

@@ -1,81 +1,70 @@
 /**
- * Escala de Ganancias — valores compartidos (primer semestre 2026).
+ * Escala de Ganancias — valores compartidos (segundo semestre 2026).
  *
  * Fuente oficial: ARCA, RG 4003, Ley 27.743 (Ley Bases 2024).
- *   - Escala: https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/documentos/Tabla-Art-94-LIG-per-ene-a-jun-2026.pdf
- *   - Deducciones: https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-ene-a-jun-2026.pdf
+ *   - Escala: https://www.arca.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/documentos/Tabla-Art-94-LIG-per-jul-a-dic-2026.pdf
+ *   - Deducciones: https://www.arca.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-jul-dic-2026.pdf
  *
- * Valores ANUALES (diciembre 2026 acumulado):
- *   - Ganancia no imponible (art. 30 inc a):      $5.151.802,50
- *   - Cónyuge (art. 30 inc b.1):                  $4.851.964,66
- *   - Hijo (art. 30 inc b.2):                     $2.446.863,48
- *   - Hijo incapacitado (art. 30 inc b.2.1):      $4.893.726,96
- *   - Deducción especial empleados (inc c apt 2): $24.728.652,02
- *   - Deducción especial autónomos (inc c apt 1): $18.031.308,76
+ * Los valores se derivan de `data/ganancias-2026.ts`, que conserva ambos
+ * semestres y evita que la tabla informativa y las calculadoras diverjan.
  *
  * ARCA actualiza semestralmente por IPC INDEC. El fetcher
  * `scripts/update-data/fetchers/ganancias-escala.ts` patchea este archivo.
  * El prefijo `_` indica que es módulo interno: no es una calc con UI.
  */
 
-// --- Valores ANUALES oficiales (primer semestre 2026, referencia) ---
-// GNI:                                   $5.151.802,50
-// Deducción especial empleados (apt 2):  $24.728.652,02
-// Deducción especial autónomos (apt 1):  $18.031.308,76
-// Cónyuge:                               $4.851.964,66
-// Hijo:                                  $2.446.863,48
-// Hijo incapacitado:                     $4.893.726,96
+import {
+  GANANCIAS_2026,
+  GANANCIAS_2026_CURRENT_PERIOD,
+  GANANCIAS_2026_DEDUCCIONES,
+} from '../data/ganancias-2026';
+
+const DEDUCCIONES = GANANCIAS_2026_DEDUCCIONES[GANANCIAS_2026_CURRENT_PERIOD];
 
 /**
  * Mínimo no imponible efectivo mensual para trabajador en relación de dependencia
  * soltero sin cargas. Combina GNI + Deducción Especial del art. 30 inc c) APARTADO 2
  * (la incrementada para rentas del trabajo en relación de dependencia y jubilaciones).
- * El apartado 1 ($18.031.308,76), menor, es el de autónomos — NO aplica a empleados.
- * Cálculo: (5.151.802,50 + 24.728.652,02) / 12 = 2.490.037,88 ≈ 2_490_038
- * Validación: el piso resultante ≈ $3.000.000 bruto / $2.490.000 neto para soltero,
- * coincidente con ARCA/iProfesional jun-2026.
- * El fetcher patchea este valor como literal.
+ * El apartado 1, menor, es el de autónomos — NO aplica a empleados.
+ * Los importes salen de la tabla oficial del período activo; no se duplican acá.
  */
-export const MNI_MENSUAL_BASE = 2_490_038;
+export const MNI_MENSUAL_BASE = Number(((DEDUCCIONES.gni + DEDUCCIONES.especialEmpleados) / 12).toFixed(2));
 
 /**
- * Ganancia No Imponible (art. 30 inc a) ANUAL, primer semestre 2026: $5.151.802,50.
+ * Ganancia No Imponible (art. 30 inc a) anual del período activo.
  * Es el tope legal de la deducción del 40% del alquiler de vivienda (art. 85 inc h LIG):
  * lo deducible no puede superar la GNI del período. Fuente: ARCA, RG 4003.
  */
-export const GNI_ANUAL = 5_151_802.5;
+export const GNI_ANUAL = DEDUCCIONES.gni;
 
 /**
  * Deducción especial del art. 30 inc c) APARTADO 1 — autónomos y profesionales
- * independientes. ANUAL, primer semestre 2026: $18.031.308,76.
+ * independientes. Importe anual del período activo.
  *
  * Es la contracara de `MNI_MENSUAL_BASE`, que usa el apartado 2 (la incrementada
- * para relación de dependencia y jubilaciones, $24.728.652,02). Un monotributista
+ * para relación de dependencia y jubilaciones). Un monotributista
  * que pasa a régimen general deduce ESTA, no aquella: usar la de empleados le
  * bajaría el impuesto ~$558.000 anuales de más.
  *
- * OJO: el fetcher `scripts/update-data/fetchers/ganancias-escala.ts` NO patchea
- * esta constante todavía — sólo toca MNI_MENSUAL_BASE, los incrementos y ESCALA.
- * Cuando ARCA actualice el semestre hay que moverla a mano, o sumarla a la lista
- * de `replaceNumericConst` del fetcher.
+ * La fuente única es `data/ganancias-2026.ts`.
  */
-export const DEDUCCION_ESPECIAL_AUTONOMOS_ANUAL = 18_031_308.76;
+export const DEDUCCION_ESPECIAL_AUTONOMOS_ANUAL = DEDUCCIONES.especialAutonomos;
 
-/** Deducción mensual por cónyuge a cargo: 4.851.964,66 / 12 ≈ 404_330 */
-export const INCREMENTO_CONYUGE_MENSUAL = 404_330;
+/** Deducción mensual por cónyuge a cargo. */
+export const INCREMENTO_CONYUGE_MENSUAL = Number((DEDUCCIONES.conyuge / 12).toFixed(2));
 
-/** Deducción mensual por hijo a cargo: 2.446.863,48 / 12 ≈ 203_905 */
-export const INCREMENTO_HIJO_MENSUAL = 203_905;
+/** Deducción mensual por hijo a cargo. */
+export const INCREMENTO_HIJO_MENSUAL = Number((DEDUCCIONES.hijo / 12).toFixed(2));
 
-/** Deducción mensual por hijo incapacitado: 4.893.726,96 / 12 ≈ 407_811 */
-export const INCREMENTO_HIJO_INCAPACITADO_MENSUAL = 407_811;
+/** Deducción mensual por hijo incapacitado. */
+export const INCREMENTO_HIJO_INCAPACITADO_MENSUAL = Number((DEDUCCIONES.hijoIncapacitado / 12).toFixed(2));
 
 /**
  * @deprecated Usar `INCREMENTO_CONYUGE_MENSUAL` e `INCREMENTO_HIJO_MENSUAL`
  * por separado. Este promedio existe sólo por compatibilidad con código legacy.
  * Semánticamente incorrecto: cónyuge vale ~2× que un hijo según ARCA.
  */
-export const INCREMENTO_POR_FAMILIAR = 304_118;
+export const INCREMENTO_POR_FAMILIAR = Number(((INCREMENTO_CONYUGE_MENSUAL + INCREMENTO_HIJO_MENSUAL) / 2).toFixed(2));
 
 export interface TramoEscala {
   /** Tope mensual del tramo; la última usa Infinity para el excedente */
@@ -87,21 +76,17 @@ export interface TramoEscala {
 }
 
 /**
- * Escala mensual 2026 — 9 tramos (5% a 35%).
- * Derivada de la tabla ENERO del PDF oficial: cada `hasta` es 1/12 del anual.
- * Fuente: Art. 94 LIG · RG 4003 · actualización IPC primer semestre 2026.
+ * Escala mensual proyectada 2026 — 9 tramos (5% a 35%).
+ * Derivada de la tabla anual vigente para julio-diciembre: cada tope y monto
+ * fijo es 1/12 del acumulado anual. La retención real de nómina es acumulativa.
  */
-export const ESCALA: TramoEscala[] = [
-  { hasta: 166_669, tasa: 0.05, acumulado: 0 },
-  { hasta: 333_338, tasa: 0.09, acumulado: 8_333 },
-  { hasta: 500_008, tasa: 0.12, acumulado: 23_334 },
-  { hasta: 750_011, tasa: 0.15, acumulado: 43_334 },
-  { hasta: 1_500_023, tasa: 0.19, acumulado: 80_835 },
-  { hasta: 2_250_034, tasa: 0.23, acumulado: 223_337 },
-  { hasta: 3_375_051, tasa: 0.27, acumulado: 395_839 },
-  { hasta: 5_062_576, tasa: 0.31, acumulado: 699_594 },
-  { hasta: Infinity, tasa: 0.35, acumulado: 1_222_727 },
-];
+export const ESCALA: TramoEscala[] = GANANCIAS_2026[GANANCIAS_2026_CURRENT_PERIOD].map(
+  ([, hasta, acumulado, tasa]) => ({
+    hasta: Number.isFinite(hasta) ? Number((hasta / 12).toFixed(2)) : Infinity,
+    tasa,
+    acumulado: Number((acumulado / 12).toFixed(2)),
+  }),
+);
 
 /** Aplica la escala mensual y devuelve {impuesto liquidado, alícuota marginal}. */
 export function aplicarEscalaMensual(base: number): { impuesto: number; marginal: number } {

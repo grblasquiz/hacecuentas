@@ -1,3 +1,5 @@
+import { ANSES_2026 } from '../data/anses-2026';
+
 /** Haber jubilatorio con fórmula de movilidad Argentina
  *  Ley 27.609 (2020): movilidad trimestral por RIPTE + IPC
  *  Actualización: fórmula vigente 2024-2026
@@ -46,11 +48,10 @@ export function jubilacionHaberMinimoMovilidad(i: Inputs): Outputs {
   const aumentoTotal = haberProyectado - haber;
   const aumentoPorcentaje = ((haberProyectado / haber) - 1) * 100;
 
-  // Haber mínimo jubilatorio jun-2026 (movilidad IPC, DNU 274/2024)
-  const haberMinimo = 411_989;
+  const haberMinimo = ANSES_2026.haberMinimo;
 
   const formula = `Haber proyectado = $${haber.toLocaleString()} × (1 + ${movilidadTrimestral.toFixed(2)}%)^${trimestres} = $${Math.round(haberProyectado).toLocaleString()}`;
-  const explicacion = `Haber actual: $${haber.toLocaleString()}. Movilidad trimestral estimada: ${movilidadTrimestral.toFixed(2)}% (RIPTE ${ripte}% + IPC ${ipc}% promediados). En ${trimestres} trimestre(s): haber proyectado $${Math.round(haberProyectado).toLocaleString()} (+${aumentoPorcentaje.toFixed(1)}%, +$${Math.round(aumentoTotal).toLocaleString()}). Haber mínimo garantizado (ref. junio 2026): ~$${haberMinimo.toLocaleString()}. Nota: desde marzo 2024 la movilidad se actualiza mensualmente por IPC del mes anterior (DNU 274/2024).`;
+  const explicacion = `Haber actual: $${haber.toLocaleString()}. Movilidad trimestral estimada: ${movilidadTrimestral.toFixed(2)}% (RIPTE ${ripte}% + IPC ${ipc}% promediados). En ${trimestres} trimestre(s): haber proyectado $${Math.round(haberProyectado).toLocaleString()} (+${aumentoPorcentaje.toFixed(1)}%, +$${Math.round(aumentoTotal).toLocaleString()}). Haber mínimo garantizado (${ANSES_2026.periodo}): ~$${haberMinimo.toLocaleString()}. Nota: desde marzo 2024 la movilidad se actualiza mensualmente por IPC del mes anterior (DNU 274/2024).`;
 
   const baseSlice = Math.max(0, Math.min(haber, haberProyectado));
   const aumentoSlice = Math.max(0, haberProyectado - baseSlice);

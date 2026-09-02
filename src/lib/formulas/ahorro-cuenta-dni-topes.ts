@@ -1,15 +1,15 @@
-import { CUENTA_DNI_JUL_2026, fmtARS } from '../data/argentina-2026';
+import { CUENTA_DNI_AGO_2026, fmtARS } from '../data/argentina-2026';
 
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 
 /**
- * Ahorro real con Cuenta DNI (julio 2026): descuento del rubro con su tope de reintegro.
+ * Ahorro real con Cuenta DNI (agosto 2026): descuento del rubro con su tope de reintegro.
  * reintegro = min(gasto × %, tope del período). Además: gasto óptimo para agotar el tope.
  */
 export function compute(i: Inputs): Outputs {
   const rubroKey = String(i.rubro || 'gastronomia');
-  const r = CUENTA_DNI_JUL_2026[rubroKey] || CUENTA_DNI_JUL_2026.gastronomia;
+  const r = CUENTA_DNI_AGO_2026[rubroKey] || CUENTA_DNI_AGO_2026.gastronomia;
   const gasto = Math.max(0, Number(i.gasto) || 0);
 
   const descuentoSinTope = gasto * (r.pct / 100);

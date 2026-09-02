@@ -130,7 +130,7 @@ export const hub: HubData = {
           'La comparación es mensual y sobre el mismo bruto: no cuenta el aguinaldo ni las cargas que paga el empleador',
           'El autónomo carga el IVA débito completo sin computar crédito fiscal: es el escenario conservador',
           'El aporte jubilatorio del monotributo es bajo, así que la jubilación futura también',
-          'Los tres regímenes usan la escala de Ganancias del primer semestre 2026',
+          'Los tres regímenes usan la escala de Ganancias del segundo semestre 2026',
         ],
         plazo: 'la cuota de monotributo y la de autónomos vencen el día 20 de cada mes.',
       },
@@ -302,7 +302,7 @@ export const hub: HubData = {
       publisher: 'Ministerio de Capital Humano',
     },
     {
-      name: 'Deducciones personales y escala del art. 94 LIG — primer semestre 2026',
+      name: 'Deducciones personales y escala del art. 94 LIG — segundo semestre 2026',
       url: 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/',
       publisher: 'ARCA',
     },

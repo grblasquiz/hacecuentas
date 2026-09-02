@@ -6,20 +6,18 @@ export function sueldoUocraConstruccionBasicoNeto(i: Inputs): Outputs {
   const categoria=String(i.categoria||'ayudante');
   const zona=String(i.zona||'general');
   const HORAS_MES = 200; // jornada estándar 8 hs × 25 días
-  // Valor hora UOCRA Zona A (general) — escala CCT 76/75 vigente mayo 2026 (paritaria homologada).
-  // Cambian por paritaria; verificá la escala vigente del mes en uocra.org / IERIC.
-  const VALOR_HORA: Record<string, number> = {
-    ayudante: 4698,
-    mediof: 5183,
-    oficial: 5776,
-    especializado: 7080,
-    sereno: 4698, // el sereno se liquida mensualizado; tomamos jornal de referencia equivalente
+  // Escala oficial CCT 76/75 vigente desde 01/08/2026, UOCRA (Anexo I).
+  // El sereno se liquida mensual; el resto son jornales horarios.
+  const ESCALA: Record<string, Record<string, number>> = {
+    ayudante:      { general: 5399, patagonia: 6020, 'santa-cruz': 10007, tdf: 10798 },
+    mediof:        { general: 5866, patagonia: 6502, 'santa-cruz': 10306, tdf: 11732 },
+    oficial:       { general: 6348, patagonia: 7049, 'santa-cruz': 10680, tdf: 12695 },
+    especializado: { general: 7420, patagonia: 8237, 'santa-cruz': 11392, tdf: 14841 },
+    sereno:        { general: 980858, patagonia: 1092719, 'santa-cruz': 1639782, tdf: 1961716 },
   };
-  const valorHora = VALOR_HORA[categoria] ?? VALOR_HORA.ayudante;
-  const ZONA: Record<string, number> = { general: 0, patagonia: 0.23, tdf: 0.50 };
-  const adicZona = ZONA[zona] ?? 0;
-  const basicoHora = valorHora * (1 + adicZona);
-  const basicoMes = basicoHora * HORAS_MES;
+  const escalaCategoria = ESCALA[categoria] ?? ESCALA.ayudante;
+  const basicoUnidad = escalaCategoria[zona] ?? escalaCategoria.general;
+  const basicoMes = categoria === 'sereno' ? basicoUnidad : basicoUnidad * HORAS_MES;
   const plusAntig = basicoMes * 0.01 * antig; // 1% del básico por año (CCT 76/75)
   const bruto = basicoMes + plusAntig;
   const baseAp = Math.min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES); // tope Ley 24.241 art.9
@@ -55,12 +53,12 @@ export function sueldoUocraConstruccionBasicoNeto(i: Inputs): Outputs {
     icon:'👷',
   };
   return {
-    basico: '$'+Math.round(basicoHora).toLocaleString('es-AR'),
+    basico: '$'+Math.round(basicoUnidad).toLocaleString('es-AR'),
     bruto: '$'+bruto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     neto: '$'+neto.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     sac: '$'+sac.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
     fcl: '$'+fcl.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.'),
-    resumen: `Básico por hora: $${fmt(basicoHora)} (Zona ${zona}). Bruto mensual ~$${fmt(bruto)}, neto ~$${fmt(neto)}. FCL ~$${fmt(fcl)}/mes al IERIC.`,
+    resumen: `${categoria === 'sereno' ? 'Básico mensual' : 'Básico por hora'}: $${fmt(basicoUnidad)} (Zona ${zona}, escala agosto 2026). Bruto mensual ~$${fmt(bruto)}, neto ~$${fmt(neto)}. FCL ~$${fmt(fcl)}/mes al IERIC.`,
     _chart: chart,
     _insight: insight
   };

@@ -2,7 +2,7 @@ import type { HubData } from './types';
 
 /**
  * Hub de decisión — "¿Cuánto gana un… según convenio?"
- * Arquetipo CATÁLOGO: un solo selector con los 16 convenios/escalafones y tres
+ * Arquetipo CATÁLOGO: un selector con las escalas verificadas y tres
  * escalones de categoría. Sin `cases`.
  *
  * Las escalas están centralizadas acá abajo (CONVENIOS) y replican, cifra por
@@ -25,6 +25,10 @@ export interface ConvenioEscala {
   /** Adicionales fijos del convenio, sobre el básico y en pesos. */
   extraPctBasico: number;
   extraFijo: number;
+  /** Suma de convenio no remunerativa que sí genera antigüedad/presentismo. */
+  sumaNoRemFija?: number;
+  /** Asignación extraordinaria que no genera adicionales. */
+  bonoExtraFijo?: number;
   /** Comercio: el presentismo es 1/12 del básico MÁS la antigüedad, no un % del básico. */
   extraDoceavo?: boolean;
   /** Etiqueta del adicional (para la fila del desglose). */
@@ -53,9 +57,9 @@ export const CONVENIOS: Record<string, ConvenioEscala> = {
   uocra: {
     label: 'Construcción (UOCRA)',
     cct: 'CCT 76/75 · Zona A',
-    vigencia: 'julio 2026',
-    // Jornal horario Zona A × 8 h × 22 jornadas: 4948 / 5817 / 6800.
-    niveles: [870_848, 1_023_792, 1_196_800],
+    vigencia: 'agosto 2026',
+    // Jornal horario oficial Zona A × 8 h × 22 jornadas: 5399 / 6348 / 7420.
+    niveles: [950_224, 1_117_248, 1_305_920],
     nombres: ['Ayudante', 'Oficial', 'Oficial especializado'],
     antig: { tipo: 'pct', v: 0 },
     extraPctBasico: 0.20,
@@ -80,16 +84,18 @@ export const CONVENIOS: Record<string, ConvenioEscala> = {
   comercio: {
     label: 'Empleados de Comercio (FAECYS)',
     cct: 'CCT 130/75',
-    vigencia: 'julio 2026',
-    niveles: [1_233_585, 1_255_270, 1_299_445],
+    vigencia: 'agosto 2026',
+    niveles: [1_160_461, 1_182_970, 1_228_824],
     nombres: ['Maestranza A', 'Administrativo C / Cajero B', 'Vendedor D'],
     antig: { tipo: 'pct', v: 0.01 },
     extraPctBasico: 0,
     extraFijo: 0,
+    sumaNoRemFija: 120_000,
+    bonoExtraFijo: 25_000,
     extraDoceavo: true,
     extraLabel: 'Presentismo (art. 40)',
     aportes: 0.17,
-    nota: 'Desde julio 2026 las sumas fijas no remunerativas quedaron absorbidas por el básico. El presentismo del art. 40 es 1/12 (8,33%) del básico más antigüedad.',
+    nota: 'Agosto 2026: el básico remunerativo se paga con $120.000 no remunerativos y la segunda cuota extraordinaria de $25.000. Antigüedad y presentismo alcanzan a los $120.000, no al bono.',
   },
   camioneros: {
     label: 'Camioneros (FEDCAM)',
@@ -263,21 +269,26 @@ export const CONVENIOS: Record<string, ConvenioEscala> = {
   },
 };
 
-export const ORDEN_CONVENIOS = Object.keys(CONVENIOS);
+/**
+ * Sólo se publican en el selector las escalas contrastadas contra el acuerdo
+ * oficial vigente. Las demás referencias se conservan fuera de la experiencia
+ * hasta verificar categoría por categoría y con un enlace directo a la escala.
+ */
+export const ORDEN_CONVENIOS = ['comercio', 'uocra'];
 
 export const hub: HubData = {
   slug: 'trabajo/sueldos-por-convenio',
   title: 'Sueldos por convenio 2026: escalas y cálculo por CCT',
   description:
-    'Elegí tu gremio y mirá el básico de convenio vigente, la antigüedad, los adicionales y el neto de bolsillo. UOCRA, Comercio, Camioneros, UTHGRA, UOM, SMATA, UTA, docentes, salud y más, con la escala de la última paritaria.',
+    'Calculá básicos, adicionales y neto estimado con escalas oficiales de agosto de 2026 para Empleados de Comercio y UOCRA.',
   silo: 'Trabajo',
   siloHref: '/trabajo',
 
   eyebrow: 'Escalas salariales de convenio',
   h1: '¿Cuánto gana un… según convenio?',
   lede:
-    'Elegí el gremio y el escalón de tu categoría. Vas a ver el básico de la última paritaria, cuánto suma tu antigüedad, qué queda de bolsillo y —lo importante— dónde queda parado tu convenio frente a los otros dieciséis.',
-  stamps: ['Actualizado 27-07-2026', '16 convenios cargados', '18 calculadoras adentro'],
+    'Elegí Comercio o UOCRA y el escalón de tu categoría. Vas a ver el básico del acuerdo oficial de agosto de 2026, cuánto suman los adicionales y qué queda de bolsillo.',
+  stamps: ['Revisado 31-08-2026', 'UOCRA agosto verificado', 'Comercio agosto verificado'],
 
   resultLabel: 'Neto estimado de bolsillo',
 
@@ -291,7 +302,7 @@ export const hub: HubData = {
       type: 'select',
       value: 'comercio',
       options: ORDEN_CONVENIOS.map((k) => ({ value: k, label: CONVENIOS[k].label })),
-      help: 'Los básicos son los de la última paritaria homologada de cada gremio.',
+      help: 'Sólo mostramos convenios cuya escala de agosto fue contrastada contra el acuerdo publicado por el gremio.',
     },
     {
       id: 'nivel',
@@ -312,8 +323,7 @@ export const hub: HubData = {
       value: '',
       thousands: true,
       help:
-        'Bonos de paritaria y viáticos: no pagan aportes, pero tampoco cuentan para el SAC ni para la jubilación. ' +
-        'Camioneros de larga distancia: $14.000 por noche fuera de casa. Comercio: el bono no remunerativo del acuerdo vigente.',
+        'Bonos de paritaria y otros conceptos del recibo que no pagan aportes. En Comercio, las sumas del acuerdo vigente ya están incorporadas automáticamente.',
     },
   ],
   fineprint:
@@ -323,11 +333,11 @@ export const hub: HubData = {
     type: 'bars',
     title: 'Tu convenio contra los demás',
     caption:
-      'Las barras del desglose comparan el bruto de los dieciséis convenios en el mismo escalón y con la misma antigüedad. La tuya queda destacada: así ves si tu gremio paga por encima o por debajo del resto.',
+      'Las barras comparan las dos escalas oficiales verificadas en el mismo escalón relativo y con la misma antigüedad.',
   },
   breakdownTitle: 'Dónde queda parado tu convenio',
   breakdownIntro:
-    'Mismo escalón, misma antigüedad, todos los gremios. La barra más larga es el convenio que mejor paga en esa posición.',
+    'Mismo escalón y misma antigüedad para Comercio y UOCRA. No es un ranking general del mercado laboral.',
 
   answer: {
     title: 'Cómo leer tu recibo de convenio',
@@ -335,9 +345,9 @@ export const hub: HubData = {
       'El sueldo de convenio se arma en capas: primero el básico de tu categoría según la última paritaria, después la antigüedad, después los adicionales propios del gremio (presentismo, guardias, viáticos, horas extra) y recién al final se descuentan los aportes.',
     yes: [
       'Básico de convenio de tu categoría, según la escala vigente del mes',
-      'Antigüedad: 1% por año en la mayoría de los convenios privados, 10% anual en docencia y escalonada en el GCBA',
-      'Adicionales propios del gremio: presentismo, guardias, viáticos, horas de vuelo, nocturnidad',
-      'Aportes del trabajador: 11% jubilación, 3% obra social y 3% PAMI, más la cuota sindical donde exista',
+      'Antigüedad del 1% anual en Comercio; UOCRA usa fondo de cese y no paga adicional por antigüedad',
+      'Presentismo según la regla específica de cada convenio',
+      'Aportes estimados del régimen general sobre los conceptos remunerativos',
     ],
     warn: [
       'El básico de convenio es un PISO: la empresa puede pagar por encima, nunca por debajo',
@@ -354,7 +364,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Cómo se calcula la antigüedad en cada convenio?',
-      a: 'En la mayoría de los convenios privados (Comercio, UOM, SMATA, Camioneros, UTHGRA) es 1% del básico por año. UTA paga alrededor del 1,5%, la Policía Federal el 2% y la docencia el 10% anual. El escalafón del GCBA usa una tabla escalonada que arranca en 10% a los 2 años y llega al 70% a los 24. La construcción no paga antigüedad: la reemplaza el fondo de cese de la Ley 22.250.',
+      a: 'En Comercio es 1% por año y se calcula también sobre la suma no remunerativa de $120.000 del acuerdo vigente. La construcción no paga adicional por antigüedad: lo reemplaza el fondo de cese de la Ley 22.250.',
     },
     {
       q: '¿Por qué la UOCRA no tiene adicional por antigüedad?',
@@ -362,15 +372,11 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué convenio paga mejor hoy en la Argentina?',
-      a: 'Entre los convenios de esta comparación, los aeronáuticos y los directores técnicos de Primera A están muy por encima del resto, pero son escalas chicas y muy específicas. En los gremios masivos, en 2026 los básicos más altos son los de UTA, SMATA y Empleados de Comercio; los más bajos, el piso docente nacional y las categorías de ingreso de UOM.',
+      a: 'Esta calculadora no responde cuál paga mejor en toda la Argentina: compara únicamente Comercio y UOCRA, las dos escalas de agosto de 2026 que fueron verificadas acá contra sus acuerdos publicados.',
     },
     {
       q: '¿El presentismo se pierde por una sola falta?',
       a: 'Depende del convenio. En Comercio (art. 40 del CCT 130/75) el premio por asistencia y puntualidad equivale a 1/12 del básico más antigüedad y se pierde por inasistencias injustificadas o llegadas tarde reiteradas. En la construcción (art. 52 del CCT 76/75) es el 20% del básico devengado y exige asistencia perfecta en la quincena. Las faltas justificadas por enfermedad con certificado no lo hacen perder.',
-    },
-    {
-      q: '¿Los viáticos de larga distancia son sueldo?',
-      a: 'No. En Camioneros los viáticos por permanencia fuera de la residencia y por kilómetro son no remunerativos: no pagan aportes ni Ganancias, pero tampoco cuentan para el aguinaldo, la indemnización por despido ni el haber jubilatorio. Por eso un chofer de larga distancia puede cobrar mucho más de bolsillo y jubilarse con bastante menos.',
     },
     {
       q: '¿Mi empleador puede pagarme menos que el básico de convenio?',
@@ -378,11 +384,11 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuánto se descuenta del bruto en cada caso?',
-      a: 'El régimen general descuenta 17%: 11% de jubilación, 3% de obra social y 3% de PAMI, sobre la base imponible con tope de la Ley 24.241. En UOM y SMATA se agrega la cuota sindical del 2%. La Policía Federal tiene régimen propio: alrededor del 13% a la Caja de Retiros y 5% a OSFPF, sin aportes a ANSES ni a PAMI.',
+      a: 'La estimación usa 17%: 11% de jubilación, 3% de obra social y 3% de PAMI, aplicados sólo sobre los conceptos remunerativos. El recibo real puede incluir cuota sindical u otros descuentos particulares.',
     },
     {
       q: '¿Con estos sueldos se paga Impuesto a las Ganancias?',
-      a: 'Con los básicos de convenio solos, casi ningún gremio de esta lista llega al mínimo no imponible de 2026. Se empieza a pagar cuando se acumulan horas extra, guardias, viáticos remunerativos o cargos jerárquicos, y en los aeronáuticos y los DT de Primera A desde el propio básico.',
+      a: 'No se puede determinar sólo con el básico: Ganancias depende de la remuneración acumulada, las deducciones personales y la situación familiar. Esta calculadora entrega un neto antes de Ganancias.',
     },
     {
       q: '¿Cada cuánto cambian las escalas de convenio?',
@@ -393,57 +399,15 @@ export const hub: HubData = {
   sources: [
     {
       name: 'Escala salarial CCT 76/75 — acuerdo UOCRA–CAMARCO',
-      url: 'https://www.uocra.org/',
+      url: 'https://www.uocra.org/pdf/99db1b_segundo_tramo_paritaria_76-75_y_577-10_junio-julio-agosto.pdf',
       publisher: 'UOCRA',
-      date: 'escala julio 2026',
+      date: 'escala agosto 2026',
     },
     {
       name: 'Escala salarial CCT 130/75 — acuerdo FAECYS–CAC/CAME/UDECA',
-      url: 'https://www.faecys.org.ar/',
+      url: 'https://www.faecys.org.ar/acuerdo-comercio-23-07-2026-faecys-acordo-un-aumento-del-57-trimestral-y-suma-un-bono-de-50-mil/',
       publisher: 'FAECYS',
-      date: 'escala julio 2026',
-    },
-    {
-      name: 'Escala FEHGRA CCT 389/04 — acuerdo UTHGRA–FEHGRA',
-      url: 'https://www.uthgra.org.ar/',
-      publisher: 'UTHGRA',
-      date: 'escala junio 2026',
-    },
-    {
-      name: 'Escala salarial CCT 40/89 — Federación Nacional de Trabajadores Camioneros',
-      url: 'https://www.fedcam.org.ar/',
-      publisher: 'FEDCAM',
-      date: 'escala julio 2026',
-    },
-    {
-      name: 'Convenios y escalas salariales SMATA',
-      url: 'https://www.smata.org.ar/',
-      publisher: 'SMATA',
-      date: 'escala junio 2026',
-    },
-    {
-      name: 'Acuerdos paritarios UOM — CCT 260/75',
-      url: 'https://uom.org.ar/',
-      publisher: 'Unión Obrera Metalúrgica',
-      date: 'escala julio 2026',
-    },
-    {
-      name: 'Acuerdos salariales UTA — transporte automotor de pasajeros',
-      url: 'https://www.uta.org.ar/',
-      publisher: 'Unión Tranviarios Automotor',
-      date: 'escala junio 2026',
-    },
-    {
-      name: 'Escalafón docente y salarios del GCBA',
-      url: 'https://buenosaires.gob.ar/educacion',
-      publisher: 'Ministerio de Educación de la Ciudad de Buenos Aires',
-      date: 'punto índice abril 2026',
-    },
-    {
-      name: 'Paritaria nacional docente — piso salarial garantizado',
-      url: 'https://www.argentina.gob.ar/educacion',
-      publisher: 'Ministerio de Capital Humano',
-      date: '2026',
+      date: 'acuerdo julio-septiembre 2026; escala agosto 2026',
     },
     {
       name: 'Ley 22.250 — Régimen laboral de la industria de la construcción (fondo de cese)',
@@ -453,11 +417,6 @@ export const hub: HubData = {
     {
       name: 'Ley de Contrato de Trabajo 20.744, arts. 121, 156 y 256',
       url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/25000-29999/25552/texact.htm',
-      publisher: 'InfoLeg',
-    },
-    {
-      name: 'Ley 21.965 del Personal de la Policía Federal Argentina',
-      url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/40000-44999/41541/texact.htm',
       publisher: 'InfoLeg',
     },
   ],
@@ -483,6 +442,6 @@ export const hub: HubData = {
     '/calculadora-sueldo-docente-afa-tecnico-categoria-b-c',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-08-31',
   audience: 'AR',
 };

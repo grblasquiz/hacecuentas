@@ -1,3 +1,5 @@
+import { BIENES_PERSONALES_2025 } from '../data/bienes-personales-2025';
+
 export interface Inputs {
   cripto_ars: number;
   cedears_ars: number;
@@ -25,20 +27,15 @@ export interface Outputs {
 }
 
 // Fuente: Ley 23.966 y RG ARCA vigente para período fiscal 2025
-// Valores actualizados a abril 2026
-const MNI = 292_994_964; // Mínimo No Imponible período fiscal 2025
-const EXENCION_VIVIENDA_UNICA = 704_387_911; // Exención vivienda única y permanente
+// Valores oficiales ARCA para el período fiscal 2025 (DDJJ 2026).
+const MNI = BIENES_PERSONALES_2025.minimoNoImponible;
+const EXENCION_VIVIENDA_UNICA = BIENES_PERSONALES_2025.casaHabitacionExentaHasta;
 
 // Escala progresiva (excedente del MNI) — período fiscal 2025
 // [limite_superior, alicuota]
 // El último tramo no tiene límite superior (Infinity)
-const TRAMOS: Array<{ hasta: number; alicuota: number; label: string }> = [
-  { hasta: 584_510_622, alicuota: 0.005, label: "Tramo 1 (0,50%)" },
-  { hasta: 1_462_974_820, alicuota: 0.0075, label: "Tramo 2 (0,75%)" },
-  { hasta: 2_925_949_640, alicuota: 0.01, label: "Tramo 3 (1,00%)" },
-  { hasta: 8_777_848_920, alicuota: 0.0125, label: "Tramo 4 (1,25%)" },
-  { hasta: Infinity, alicuota: 0.015, label: "Tramo 5 (1,50%)" },
-];
+const TRAMOS: Array<{ hasta: number; alicuota: number; label: string }> =
+  BIENES_PERSONALES_2025.escala.map((t, i) => ({ hasta: t.hasta, alicuota: t.tasa, label: `Tramo ${i + 1} (${(t.tasa * 100).toFixed(2).replace('.', ',')}%)` }));
 
 function calcularImpuesto(baseImponible: number): {
   impuesto: number;
@@ -97,7 +94,7 @@ export function compute(i: Inputs): Outputs {
   let viviendaExentaAplicada = 0;
 
   if (situacion === "exenta") {
-    // Vivienda totalmente exenta (valor <= $704.387.911)
+    // Vivienda exenta hasta el tope oficial del período fiscal 2025.
     viviendaExentaAplicada = Math.min(inmuebleVivienda, EXENCION_VIVIENDA_UNICA);
   } else if (situacion === "supera_exencion") {
     // Solo se exime hasta el tope; el excedente queda gravado

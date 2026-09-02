@@ -191,11 +191,11 @@ describe('licenciaMaternidadPaternidad', () => {
 describe('jubilacionAnsesMontoMinimoMaxima2026', () => {
   it('haber minimo incluye bono', () => {
     // Montos vivos de movilidad — chequeo estructural: total = haber + bono.
-    const num = (s: string) => parseInt(s.replace(/[^\d]/g, ''), 10);
+    const num = (s: string) => Number(s.replace('$', '').replaceAll('.', '').replace(',', '.'));
     const r = jubilacionAnsesMontoMinimoMaxima2026({ tipo: 'minima' });
     expect(num(r.haberMensual)).toBeGreaterThan(0);
     expect(num(r.bono)).toBeGreaterThan(0);
-    expect(num(r.total)).toBe(num(r.haberMensual) + num(r.bono));
+    expect(num(r.total)).toBeCloseTo(num(r.haberMensual) + num(r.bono), 2);
   });
 
   it('haber maximo no tiene bono', () => {

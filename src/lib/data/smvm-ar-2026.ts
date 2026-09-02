@@ -10,15 +10,13 @@
  * underscores de miles) y toca el `lastUpdated` del calc salario-minimo.
  *
  * Relación oficial: el valor hora jornalizado = mensual / 200 (8 h × 25 días).
- * Jun-2026: 367.800 / 200 = 1.839.
+ * Ago-2026: 376.600 / 200 = 1.883.
  *
- * NOTA: el tope de la prestación por desempleo (ANSES) NO es igual al SMVM
- * vigente — ANSES lo ajusta con ~1 mes de lag (jun-2026: SMVM $367.800 vs
- * techo desempleo $363.000). Para desempleo usar DESEMPLEO_PISO/DESEMPLEO_TECHO
- * (abajo), nunca SMVM_MENSUAL.
+ * La prestación por desempleo usa como piso el 50% del SMVM vigente y como
+ * techo el 100%, según el art. 2 de la Resolución 9/2025.
  */
 
-// Valores oficiales junio 2026 — Res 9/2025 CNEPySMVyM (Boletín Oficial 03-12-2025).
+// Valores oficiales agosto 2026 — Res 9/2025 CNEPySMVyM (Boletín Oficial 03-12-2025).
 export const SMVM_MENSUAL = 376_600;
 export const SMVM_HORA = 1_883;
 export const SMVM_FECHA = 'agosto 2026';
@@ -27,9 +25,7 @@ export const SMVM_RESOLUCION = 'Resolución 9/2025 CNEPySMVyM';
 /**
  * Topes de la PRESTACIÓN POR DESEMPLEO (ANSES, Ley 24.013 / Decreto 267/2006).
  * Cuantía = 75% del promedio de las mejores 6 remuneraciones, acotada entre un
- * piso y un techo que ANSES fija por resolución. Equivalen a ~50%/100% del SMVM,
- * pero ANSES los aplica con rezago: jun-2026 = $181.500/$363.000 (= SMVM de mayo),
- * mientras el SMVM de junio ya es $367.800. ⚠️ ACTUALIZAR mensualmente.
+ * piso y un techo equivalentes al 50%/100% del SMVM vigente.
  */
-export const DESEMPLEO_PISO = 181_500;   // piso ANSES jun-2026
-export const DESEMPLEO_TECHO = 363_000;  // techo ANSES jun-2026
+export const DESEMPLEO_PISO = 188_300;   // 50% del SMVM, agosto 2026
+export const DESEMPLEO_TECHO = 376_600;  // 100% del SMVM, agosto 2026

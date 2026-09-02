@@ -1,3 +1,5 @@
+import { BIENES_PERSONALES_2025 } from '../data/bienes-personales-2025';
+
 /** Bienes Personales 2026 — Ley 23.966 con reforma Ley 27.743 (Bases) */
 export interface Inputs {
   valorBienesPais: number;
@@ -23,16 +25,12 @@ const fmtPesos = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
 // Escala período fiscal 2025 (bienes al 31/12/2025, DDJJ 2026), Ley 27.743: unificación país/exterior
 // MNI período fiscal 2025: $384.728.044,57 (confirmado ARCA)
 // Inmueble casa-habitación: deducción/exención hasta $1.346.548.155,99
-const MNI = 384_728_044.57;
-const DEDUCCION_CASA = 1_346_548_155.99;
+const MNI = BIENES_PERSONALES_2025.minimoNoImponible;
+const DEDUCCION_CASA = BIENES_PERSONALES_2025.casaHabitacionExentaHasta;
 
 // Escala progresiva período fiscal 2025 (sobre el EXCEDENTE del MNI), 3 tramos
 // Ley 27.743: tope general 1,00%; "régimen especial" REIBP (tasa fija 0,45%)
-const ESCALA: Array<{ hasta: number; tasa: number; acumulado: number; }> = [
-  { hasta: 52_664_283.73, tasa: 0.005, acumulado: 0 },
-  { hasta: 114_105_948.16, tasa: 0.0075, acumulado: 263_321.42 },
-  { hasta: Infinity, tasa: 0.01, acumulado: 724_133.89 },
-];
+const ESCALA: Array<{ hasta: number; tasa: number; acumulado: number; }> = [...BIENES_PERSONALES_2025.escala];
 
 export function bienesPersonales(i: Inputs): Outputs {
   const pais = Number(i.valorBienesPais) || 0;

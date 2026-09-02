@@ -120,7 +120,7 @@ export const REGISTRY: FetcherEntry[] = [
   },
   {
     name: 'ganancias-escala',
-    path: 'llm',
+    path: 'deterministic',
     // Los 3 calcs comparten `_ganancias-escala.ts` (MNI + INCREMENTO + ESCALA).
     // sueldo-en-mano y sueldo-neto-a-bruto importan de sueldo-ar.ts que a su
     // vez lee la escala compartida — un solo patch los actualiza a los 3.

@@ -46,7 +46,8 @@ function printCoverageReport() {
   const notImplemented = needsUpdate.filter((c) => !IMPLEMENTED_SLUGS.has(c.slug));
 
   console.log(`\n=== Cobertura del pipeline ===`);
-  console.log(`Total calcs: ${calcs.length}`);
+  console.log(`Manifiestos con dataUpdate: ${calcs.length}`);
+  console.log(`Nota: esta cifra mide la cobertura declarada; no equivale al total de fórmulas/páginas del sitio.`);
   console.log(`Requieren update: ${needsUpdate.length}`);
   console.log(`  ✓ con fetcher: ${implemented.length}`);
   console.log(`  ✗ pendientes: ${notImplemented.length}\n`);

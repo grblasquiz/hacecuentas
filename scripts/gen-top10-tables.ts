@@ -49,7 +49,7 @@ function patchCalc(slug: string, genTables: any[], genExamples: any[], genTitleP
   });
   const tablaUmbral = {
     title: '¿Desde qué sueldo bruto pagás Ganancias en 2026?',
-    caption: 'Sueldo bruto mensual a partir del cual empieza la retención de Ganancias (4ª categoría), según tu situación familiar. Período enero-junio 2026.',
+    caption: 'Sueldo bruto mensual a partir del cual empieza la retención de Ganancias (4ª categoría), según tu situación familiar. Período julio-diciembre 2026.',
     headers: ['Situación familiar', 'Mínimo no imponible + deducciones', 'Pagás Ganancias desde'],
     rows: umbralRows,
     highlightCol: 2,

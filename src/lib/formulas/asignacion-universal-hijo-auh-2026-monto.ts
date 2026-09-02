@@ -20,10 +20,8 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Valores vigentes ago-2026 — ANSES, movilidad mensual IPC (DNU 274/2024): +1,89% (IPC junio)
-  const AUH_GENERAL = 150861.9;      // ARS por hijo sin discapacidad (ago-2026)
-  const AUH_DISCAPACIDAD = 491173;   // ARS por hijo con CUD (ago-2026)
-  const TOPE_POR_INTEGRANTE = 952110; // ARS — tope ingreso por integrante grupo familiar
-  const BONO_REFUERZO_VALOR = 70000; // ARS por hijo — cuando ANSES lo activa
+  const AUH_GENERAL = A.auhGeneral;
+  const AUH_DISCAPACIDAD = A.auhDiscapacidad;
   const PORCENTAJE_MENSUAL = 0.80;
   const PORCENTAJE_RETENIDO = 0.20;
   const MAX_HIJOS_GENERAL = 5;       // tope de hijos para AUH general
@@ -33,7 +31,6 @@ export function compute(i: Inputs): Outputs {
   const hijosDiscapacidad = Math.max(0, Math.floor(Number(i.hijos_discapacidad) || 0));
   const integrantesGrupo = Math.max(1, Math.floor(Number(i.integrantes_grupo) || 1));
   const ingresoFamiliar = Math.max(0, Number(i.ingreso_familiar) || 0);
-  const bonoActivo = i.bono_refuerzo === "si";
 
   // Validaciones básicas
   if (cantidadHijos <= 0) {
@@ -60,25 +57,9 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
-  // Verificar tope de ingreso familiar
-  const topeIngreso = integrantesGrupo * TOPE_POR_INTEGRANTE;
-  if (ingresoFamiliar > topeIngreso) {
-    return {
-      accede: `No accede — ingreso $${ingresoFamiliar.toLocaleString("es-AR")} supera tope de $${topeIngreso.toLocaleString("es-AR")}`,
-      monto_mensual_neto: 0,
-      monto_retenido: 0,
-      monto_total_bruto: 0,
-      bono_mensual: 0,
-      acreditacion_anual: 0,
-      detalle: `El tope vigente es $${TOPE_POR_INTEGRANTE.toLocaleString("es-AR")} por integrante × ${integrantesGrupo} integrantes = $${topeIngreso.toLocaleString("es-AR")}.`,
-      _insight: {
-        title: 'No accedés por ingresos',
-        text: `El ingreso familiar declarado (**$${ingresoFamiliar.toLocaleString("es-AR")}**) supera el tope de **$${topeIngreso.toLocaleString("es-AR")}** para un grupo de ${integrantesGrupo} integrante/s. Por cada integrante adicional el tope sube $${TOPE_POR_INTEGRANTE.toLocaleString("es-AR")}.`,
-        tone: 'warn',
-        icon: '🚫',
-      },
-    };
-  }
+  // AUH no usa la tabla de topes IGF de SUAF. El acceso depende principalmente
+  // de la situación laboral/previsional y de residencia; el ingreso queda sólo
+  // como dato informativo porque no alcanza para decidir elegibilidad.
 
   // Calcular hijos por tipo
   // Los hijos con discapacidad no tienen límite de cantidad; los generales tienen tope de 5
@@ -97,12 +78,12 @@ export function compute(i: Inputs): Outputs {
   // Acreditación anual (20% acumulado 12 meses)
   const acreditacionAnual = montoRetenido * 12;
 
-  // Bono refuerzo (sin retención del 20%)
-  const bonoMensual = bonoActivo ? cantidadHijos * BONO_REFUERZO_VALOR : 0;
+  // El bono previsional de $70.000 no incluye AUH/AUE (Dto. 824/2026).
+  const bonoMensual = 0;
 
   // Detalle textual
   const lines: string[] = [];
-  lines.push(`Tope familiar: ${integrantesGrupo} integrantes × $${TOPE_POR_INTEGRANTE.toLocaleString("es-AR")} = $${topeIngreso.toLocaleString("es-AR")} → Ingreso declarado: $${ingresoFamiliar.toLocaleString("es-AR")} ✓`);
+  lines.push(`Grupo declarado: ${integrantesGrupo} integrante/s; ingreso informado: $${ingresoFamiliar.toLocaleString("es-AR")}. La elegibilidad no se determina con un tope por integrante.`);
   if (hijosGeneralesEfectivos > 0) {
     lines.push(`Hijos generales (tope 5): ${hijosGeneralesEfectivos} × $${AUH_GENERAL.toLocaleString("es-AR")} = $${montoBrutoGeneral.toLocaleString("es-AR")}`);
   }
@@ -111,17 +92,15 @@ export function compute(i: Inputs): Outputs {
   }
   lines.push(`Monto bruto mensual: $${montoBrutoTotal.toLocaleString("es-AR")}`);
   lines.push(`80% cobro mensual: $${montoMensualNeto.toLocaleString("es-AR")}`);
-  lines.push(`20% retenido: $${montoRetenido.toLocaleString("es-AR")} (se acredita en marzo)`);
-  if (bonoActivo) {
-    lines.push(`Bono refuerzo: ${cantidadHijos} hijo/s × $${BONO_REFUERZO_VALOR.toLocaleString("es-AR")} = $${bonoMensual.toLocaleString("es-AR")} (sin retención)`);
-  }
-  lines.push(`Acreditación anual estimada en marzo: $${acreditacionAnual.toLocaleString("es-AR")}`);
+  lines.push(`20% retenido: $${montoRetenido.toLocaleString("es-AR")} (se libera al presentar la Libreta)`);
+  if (i.bono_refuerzo === 'si') lines.push('El bono previsional vigente no corresponde a AUH/AUE; no se suma al resultado.');
+  lines.push(`Acumulado anual estimado del 20%: $${acreditacionAnual.toLocaleString("es-AR")}`);
 
   const chart = {
     type: 'doughnut' as const,
     slices: [
       { label: 'Cobro mensual (80%)', value: Math.round(montoMensualNeto) },
-      { label: 'Retención (20%, se acredita en marzo)', value: Math.round(montoRetenido) },
+      { label: 'Retención (20%, contra Libreta)', value: Math.round(montoRetenido) },
     ],
     prefix: '$',
     centerValue: '$' + Math.round(montoBrutoTotal).toLocaleString('es-AR'),
@@ -131,7 +110,7 @@ export function compute(i: Inputs): Outputs {
 
   const insight = {
     title: 'Cobrás el 80% por mes',
-    text: `De los **$${Math.round(montoBrutoTotal).toLocaleString("es-AR")}** brutos mensuales, ANSES te deposita **$${Math.round(montoMensualNeto).toLocaleString("es-AR")} cada mes** (80%) y retiene **$${Math.round(montoRetenido).toLocaleString("es-AR")}** (20%), que se acumula y se acredita junto en marzo: **$${Math.round(acreditacionAnual).toLocaleString("es-AR")}**${bonoActivo ? `. Sumá el bono de $${Math.round(bonoMensual).toLocaleString("es-AR")} sin retención` : ''}.`,
+    text: `De los **$${Math.round(montoBrutoTotal).toLocaleString("es-AR")}** brutos mensuales, ANSES te deposita **$${Math.round(montoMensualNeto).toLocaleString("es-AR")} cada mes** (80%) y retiene **$${Math.round(montoRetenido).toLocaleString("es-AR")}** (20%), que se libera al presentar la Libreta. El bono previsional vigente no incluye AUH/AUE.`,
     tone: 'good' as const,
     icon: '👶',
   };
@@ -148,3 +127,4 @@ export function compute(i: Inputs): Outputs {
     _insight: insight,
   };
 }
+import { ASIGNACIONES_ANSES_AGO_2026 as A } from '../data/argentina-2026';

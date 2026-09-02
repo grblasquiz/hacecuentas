@@ -1,5 +1,5 @@
 import type { HubData } from './types';
-import { AUH_JUL_2026 } from '../data/argentina-2026';
+import { ASIGNACIONES_ANSES_AGO_2026 as A } from '../data/argentina-2026';
 
 /**
  * Hub de decisión — "AUH y asignaciones familiares: ¿cuánto cobro?"
@@ -15,7 +15,8 @@ import { AUH_JUL_2026 } from '../data/argentina-2026';
  * asignaciones son, en el catálogo, categoría "familia".
  *
  * DE DÓNDE SALEN LOS NÚMEROS:
- *  · AUH general y el 20% retenido: `AUH_JUL_2026` de src/lib/data/argentina-2026.ts
+ *  · AUH, SUAF y ayuda escolar: `ASIGNACIONES_ANSES_AGO_2026` de
+ *    src/lib/data/argentina-2026.ts
  *    — es el único dato de este grupo con fuente y fecha de verificación
  *    escritas (ANSES, movilidad +1,89% = IPC junio; valor vigente ago-2026).
  *    NO se hardcodea acá: si se actualiza ese archivo, el hub cambia solo.
@@ -25,43 +26,27 @@ import { AUH_JUL_2026 } from '../data/argentina-2026';
  *    src/lib/formulas/asignacion-familiar-anses-2026-tramos-ingreso.ts y
  *    src/lib/formulas/asignacion-familiar-empleado-registrado-anses.ts
  *    (las dos fórmulas coinciden en los cuatro tramos, jun-2026).
- *  · Complemento Leche: espejo de src/lib/formulas/anses-complemento-leche-maternidad.ts
+ *  · Complemento Leche: se informa sin importe general; debe consultarse en Mi ANSES.
  *  · AYUDA ESCOLAR: ver el comentario sobre la discrepancia, más abajo.
  */
 
 export const ASIGNACIONES = {
   /** AUH bruta por hijo sin discapacidad. Fuente única del repo. */
-  auhGeneral: AUH_JUL_2026.montoGeneral,
+  auhGeneral: A.auhGeneral,
   /** Se acredita el 80% y se retiene el 20% hasta presentar la Libreta AUH. */
-  pctRetenido: AUH_JUL_2026.pctRetenido,
+  pctRetenido: A.pctRetenido,
   /** AUH por hijo con CUD (sin tope de cantidad). */
-  auhDiscapacidad: 491173,
-  /** Tope de ingreso por integrante del grupo familiar para acceder a la AUH. */
-  topePorIntegrante: 952110,
+  auhDiscapacidad: A.auhDiscapacidad,
   /** Tope de hijos que paga la AUH general (los hijos con CUD no tienen tope). */
   maxHijosGeneral: 5,
-  /** Bono de refuerzo por hijo, cuando ANSES lo activa. Sin retención del 20%. */
-  bonoRefuerzo: 70000,
-  /**
-   * Ayuda escolar anual por hijo, pago único al inicio del ciclo lectivo.
-   * $85.000 CONFIRMADO para todo 2026 (ANSES): aplica a titulares de AUH y de
-   * SUAF, se cobró desde el 9-mar-2026 presentando el certificado de alumno
-   * regular. Tope de ingreso del grupo familiar: $5.603.102.
-   * La discrepancia con la calc suelta ($65.000, sin fecha ni fuente) se
-   * resolvió corrigiendo esa fórmula, no este hub.
-   */
-  ayudaEscolar: 85000,
-  /** Complemento Leche: embarazo, lactancia o hijo menor de 5 años. */
-  complementoLeche: 55841,
+  /** El bono previsional vigente no alcanza a AUH/AUE. */
+  bonoRefuerzo: 0,
+  /** Ayuda escolar anual, Res. ANSES 233/2026, Anexos I y V. */
+  ayudaEscolar: A.ayudaEscolar,
   /** Tramos SUAF por ingreso del grupo familiar (IGF). */
-  tramos: [
-    { limite: 1122074, tramo: 1, asignacion: 72474 },
-    { limite: 1645630, tramo: 2, asignacion: 48888 },
-    { limite: 1899934, tramo: 3, asignacion: 29570 },
-    { limite: 5941936, tramo: 4, asignacion: 15257 },
-  ],
+  tramos: A.suaf.tramos,
   /** Tope de IGF por encima del cual no corresponde la asignación general. */
-  topeIgf: 5941936,
+  topeIgf: A.suaf.topeIgf,
 };
 
 export const CASE_MATH = ASIGNACIONES;
@@ -311,19 +296,19 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué es el Complemento Leche de ANSES?',
-      a: `Un pago mensual adicional —${fmtArs(ASIGNACIONES.complementoLeche)} con el valor vigente— destinado a la compra de leche durante el embarazo, la lactancia y hasta los 5 años del chico. Reemplazó al viejo Plan Más Vida y se acredita junto con la AUH o la asignación familiar, según el caso. Exige tener los controles médicos al día.`,
+      a: `Es un pago mensual del Plan 1000 Días para titulares de AUE y AUH durante el embarazo y hasta el mes en que el hijo cumple 3 años. El importe no está en la tabla general de la Resolución 233/2026: consultá la liquidación vigente en Mi ANSES → Hijos → Mis Asignaciones.`,
     },
     {
       q: '¿La AUH se puede cobrar estando embarazada?',
       a: 'Sí: se llama Asignación por Embarazo para Protección Social (AUE) y se cobra desde la semana 12 de gestación, previa inscripción con certificado médico. Funciona igual que la AUH, con retención del 20% que se libera al presentar la libreta con los controles del embarazo. Lo importante es inscribirse apenas se tiene el certificado: los meses anteriores a la inscripción no se pagan retroactivos.',
     },
     {
-      q: '¿Cuánto tiene que ganar la familia para no perder la AUH?',
-      a: `El tope se mide por integrante del grupo familiar: alrededor de ${fmtArs(ASIGNACIONES.topePorIntegrante)} por persona con los valores vigentes. Un grupo de cuatro integrantes tiene entonces un tope cercano a ${fmtArs(ASIGNACIONES.topePorIntegrante * 4)}. Por encima de eso ANSES considera que no corresponde la AUH. Como todos estos valores se actualizan mensualmente, verificá el vigente antes de darte de baja o de alta.`,
+      q: '¿La AUH usa los mismos topes de ingreso que SUAF?',
+      a: 'No. La tabla de rangos e ingreso del grupo familiar corresponde a SUAF. Para AUH, ANSES evalúa principalmente la situación laboral y previsional, la residencia y los datos del grupo familiar; un monto de ingreso aislado no alcanza para decidir el acceso. Confirmalo en Mi ANSES antes de modificar el beneficio.',
     },
     {
-      q: '¿El bono de refuerzo también tiene retención del 20%?',
-      a: `No. Cuando ANSES activa un bono de refuerzo por hijo —del orden de ${fmtArs(ASIGNACIONES.bonoRefuerzo)}— se paga completo junto con la acreditación del mes, sin la retención del 20%. Los bonos se disponen por decreto mes a mes, así que no son un ingreso garantizado: no cuentes con ellos para un gasto fijo.`,
+      q: '¿El bono previsional de $70.000 se paga con la AUH?',
+      a: 'No. El Decreto 824/2026 incluye jubilaciones y pensiones contributivas, PUAM y pensiones no contributivas; no incluye AUH ni AUE. Por eso el bono no se suma en esta calculadora.',
     },
   ],
 

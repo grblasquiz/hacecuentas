@@ -196,13 +196,13 @@ export const hub: HubData = {
     },
     {
       name: 'Tabla del art. 94 LIG — escala vigente para el período 2026',
-      url: 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/documentos/Tabla-Art-94-LIG-per-ene-a-jun-2026.pdf',
+      url: 'https://www.arca.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/declaracion-jurada/documentos/Tabla-Art-94-LIG-per-jul-a-dic-2026.pdf',
       publisher: 'ARCA (ex AFIP)',
       date: 'período 2026',
     },
     {
       name: 'Deducciones personales del art. 30 — importes vigentes 2026',
-      url: 'https://www.afip.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-ene-a-jun-2026.pdf',
+      url: 'https://www.arca.gob.ar/gananciasYBienes/ganancias/personas-humanas-sucesiones-indivisas/deducciones/documentos/Deducciones-personales-art-30-jul-dic-2026.pdf',
       publisher: 'ARCA (ex AFIP)',
       date: 'período 2026',
     },

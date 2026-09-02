@@ -7,7 +7,7 @@ export interface Outputs { [k: string]: string | number; _insight?: any; }
  * AUH — 20% retenido y Libreta: cuánto acumulaste y cuánto cobrás al presentarla.
  * ANSES acredita el 80% del monto por mes y retiene el 20% hasta que se presenta la
  * Libreta AUH (controles de salud, vacunas y escolaridad). Estimación al valor vigente
- * ago-2026 ($150.861,90/hijo); el pago real toma el valor histórico de cada mes retenido.
+ * ago-2026 ($150.848/hijo); el pago real toma el valor histórico de cada mes retenido.
  */
 export function compute(i: Inputs): Outputs {
   const hijos = Math.min(15, Math.max(1, Math.round(Number(i.hijos) || 1)));

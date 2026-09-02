@@ -1,226 +1,56 @@
-/**
- * DETERMINÍSTICO: parcialmente viable — ARCA publica la escala/deducciones 2x/año
- * (RG semestral por RIPTE) SIN cronograma futuro: se podría cargar como tabla con
- * vigencia al salir cada RG, pero son 9 tramos + 3 deducciones (no trivial, alto
- * riesgo de tipeo). Queda LLM con guard monotónico; candidato a tabla manual.
- *
- * Ganancias escala (biannual) — auto-llm vía Claude + WebSearch en ARCA.
- *
- * ARCA (ex-AFIP) actualiza los valores del MNI y la escala progresiva del
- * Impuesto a las Ganancias (4ta categoría) cada 6 meses por RIPTE.
- * No hay API REST — viene en resoluciones generales con tablas embebidas.
- *
- * Patchea `src/lib/formulas/_ganancias-escala.ts`, que es el módulo compartido
- * que importan `sueldo-ar.ts` y `ganancias-sueldo.ts`. Actualizar acá propaga
- * a 3 calcs de una: impuesto-ganancias-sueldo, sueldo-neto-a-bruto, sueldo-en-mano.
- */
-
-import { join } from 'node:path';
+/** Verificación determinística de Ganancias contra los PDF oficiales de ARCA. */
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { askClaudeStructured } from '../utils/ask-claude.ts';
-import {
-  replaceArrayLiteral,
-  replaceNumericConst,
-  formatNumberWithUnderscores,
-} from '../patchers/ts-constant.ts';
-import { touchLastUpdated } from '../patchers/data-update-date.ts';
+import { join } from 'node:path';
+import { GANANCIAS_2026, GANANCIAS_2026_DEDUCCIONES } from '../../../src/lib/data/ganancias-2026.ts';
 import { createLogger } from '../utils/logger.ts';
+import { reportMode } from '../utils/run-status.ts';
 
 const log = createLogger('ganancias-escala');
-const FILE = join(process.cwd(), 'src/lib/formulas/_ganancias-escala.ts');
+const ROOT = process.cwd();
+const EXTRACTOR = join(ROOT, 'scripts/data-sources/fetch-arca-ganancias.py');
+const SNAPSHOT = join(ROOT, 'db/data-sources/arca-ganancias-jul-dic-2026.json');
 
-interface Tramo {
-  /** Tope mensual del tramo en pesos. null = excedente (último tramo). */
-  hasta: number | null;
-  /** Alícuota marginal 0-1 (0.05 = 5%) */
-  tasa: number;
-  /** Impuesto acumulado al inicio del tramo */
-  acumulado: number;
-}
+type Snapshot = {
+  deducciones_anual: Record<string, number>;
+  escala_anual: Array<{ desde: number; hasta: number | null; monto_fijo: number; porcentaje: number }>;
+  sources: { escala_url: string; deducciones_url: string };
+};
 
-interface EscalaData {
-  fechaVigencia: string;
-  resolucion?: string;
-  fuenteUrl: string;
-  /** MNI mensual = (GNI anual + Deducción Especial anual) / 12, soltero sin cargas. */
-  mniMensual: number;
-  /** Deducción mensual por cónyuge a cargo (= CONYUGE_ANUAL / 12). */
-  incrementoConyugeMensual: number;
-  /** Deducción mensual por hijo regular a cargo (= HIJO_ANUAL / 12). */
-  incrementoHijoMensual: number;
-  tramos: Tramo[];
-}
-
-function formatEscalaItems(tramos: Tramo[]): string {
-  return tramos
-    .map((t) => {
-      const hasta = t.hasta === null ? 'Infinity' : formatNumberWithUnderscores(t.hasta);
-      const acum = formatNumberWithUnderscores(t.acumulado);
-      return `  { hasta: ${hasta}, tasa: ${t.tasa}, acumulado: ${acum} },`;
-    })
-    .join('\n');
-}
+const close = (a: number, b: number) => Math.abs(a - b) < 0.011;
 
 export async function fetchGananciasEscala({ dry = false }: { dry?: boolean }): Promise<boolean> {
-  const year = new Date().getFullYear();
-  log.info(`consultando Claude para escala Ganancias ${year}`);
+  const run = spawnSync('python3', [EXTRACTOR], { cwd: ROOT, encoding: 'utf8', timeout: 120_000 });
+  if (run.status !== 0) throw new Error(`extractor ARCA falló: ${(run.stderr || run.stdout).slice(0, 500)}`);
 
-  const result = await askClaudeStructured<EscalaData>({
-    task:
-      `Buscá en arca.gob.ar / afip.gob.ar / infoleg.gob.ar la tabla VIGENTE del Impuesto a las Ganancias 4ta categoría (trabajadores en relación de dependencia), año ${year}.\n\n` +
-      `ARCA publica 2 PDFs por semestre: "Tabla Art 94 LIG" (escala) y "Deducciones personales Art 30" (MNI, cónyuge, hijo).\n\n` +
-      `Necesito MENSUAL (si la fuente publica anual, dividir por 12):\n` +
-      `- mniMensual: (Ganancia no imponible anual + Deducción especial apartado 1 anual) / 12. ` +
-      `  Para enero-junio 2026 el valor oficial es $1.931.926 (= ($5.151.802,50 + $18.031.308,76) / 12).\n` +
-      `- incrementoConyugeMensual: CONYUGE_ANUAL / 12. Para ene-jun 2026: $404.330.\n` +
-      `- incrementoHijoMensual: HIJO_ANUAL / 12 (hijo regular, NO incapacitado). Para ene-jun 2026: $203.905.\n` +
-      `- tramos: escala progresiva MENSUAL (tabla ENERO del PDF oficial, que es 1/12 de la anual). ` +
-      `  Son 9 tramos (5%, 9%, 12%, 15%, 19%, 23%, 27%, 31%, 35%). Cada uno con:\n` +
-      `    - hasta (tope mensual en pesos; el último tramo usa null para indicar "excedente sin tope")\n` +
-      `    - tasa (alícuota marginal en decimal: 0.05 = 5%)\n` +
-      `    - acumulado (impuesto acumulado al INICIO del tramo, calculado con tramos anteriores)\n` +
-      `- fechaVigencia: YYYY-MM-DD desde cuándo rige.\n` +
-      `- resolucion: número de la RG ARCA (opcional).\n` +
-      `- fuenteUrl: URL oficial al PDF.\n\n` +
-      `Sanity: tasas 5-35%, tramos ascendentes por hasta y por tasa. Cónyuge > Hijo (cónyuge suele ser ~2× que hijo).`,
-    schema: {
-      type: 'object',
-      required: ['fechaVigencia', 'mniMensual', 'incrementoConyugeMensual', 'incrementoHijoMensual', 'tramos', 'fuenteUrl'],
-      properties: {
-        fechaVigencia: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
-        resolucion: { type: 'string' },
-        fuenteUrl: { type: 'string' },
-        mniMensual: { type: 'number', minimum: 500000, maximum: 20000000 },
-        incrementoConyugeMensual: { type: 'number', minimum: 50000, maximum: 5000000 },
-        incrementoHijoMensual: { type: 'number', minimum: 30000, maximum: 3000000 },
-        tramos: {
-          type: 'array',
-          minItems: 5,
-          maxItems: 9,
-          items: {
-            type: 'object',
-            required: ['hasta', 'tasa', 'acumulado'],
-            properties: {
-              hasta: {
-                oneOf: [
-                  { type: 'number', minimum: 10000, maximum: 100000000 },
-                  { type: 'null' },
-                ],
-              },
-              tasa: { type: 'number', minimum: 0.01, maximum: 0.5 },
-              acumulado: { type: 'number', minimum: 0, maximum: 50000000 },
-            },
-          },
-        },
-      },
-    },
-    validate: (data) => {
-      const tramos = data.tramos;
-      // Último tramo debe tener hasta=null (excedente)
-      if (tramos[tramos.length - 1].hasta !== null) {
-        return { ok: false, reason: 'último tramo debe tener hasta=null (excedente)' };
-      }
-      // Los demás deben tener hasta finito, ascendente
-      for (let i = 0; i < tramos.length - 1; i++) {
-        if (tramos[i].hasta === null) {
-          return { ok: false, reason: `tramo ${i} no-final con hasta=null (solo el último)` };
-        }
-        if (i > 0) {
-          const prev = tramos[i - 1].hasta;
-          const curr = tramos[i].hasta;
-          if (prev !== null && curr !== null && curr <= prev) {
-            return { ok: false, reason: `tramo ${i}: hasta no ascendente` };
-          }
-        }
-      }
-      // Tasas ascendentes
-      for (let i = 1; i < tramos.length; i++) {
-        if (tramos[i].tasa < tramos[i - 1].tasa) {
-          return { ok: false, reason: `tasa ${i} menor que anterior` };
-        }
-      }
-      // Acumulado: primer tramo 0, ascendente
-      if (tramos[0].acumulado !== 0) {
-        return { ok: false, reason: 'primer tramo debe tener acumulado=0' };
-      }
-      for (let i = 1; i < tramos.length; i++) {
-        if (tramos[i].acumulado < tramos[i - 1].acumulado) {
-          return { ok: false, reason: `acumulado ${i} no ascendente` };
-        }
-      }
-      return { ok: true };
-    },
+  const snap = JSON.parse(readFileSync(SNAPSHOT, 'utf8')) as Snapshot;
+  const d = snap.deducciones_anual;
+  const expected = GANANCIAS_2026_DEDUCCIONES.second;
+  const pairs: Array<[string, number, number]> = [
+    ['GNI', d.mni, expected.gni],
+    ['cónyuge', d.conyuge, expected.conyuge],
+    ['hijo', d.hijo, expected.hijo],
+    ['hijo incapacitado', d.hijo_incapacitado, expected.hijoIncapacitado],
+    ['deducción especial autónomos', d.deduccion_especial_apartado_1, expected.especialAutonomos],
+    ['deducción especial empleados', d.deduccion_especial_apartado_2, expected.especialEmpleados],
+  ];
+  for (const [name, official, local] of pairs) {
+    if (!close(official, local)) throw new Error(`${name}: ARCA=${official} pero sitio=${local}`);
+  }
+
+  const localScale = GANANCIAS_2026.second;
+  if (snap.escala_anual.length !== localScale.length) throw new Error('cantidad de tramos distinta de ARCA');
+  snap.escala_anual.forEach((row, i) => {
+    const [desde, hasta, fijo, tasa] = localScale[i];
+    const officialHasta = row.hasta ?? Infinity;
+    if (!close(row.desde, desde) || !(officialHasta === hasta || close(officialHasta, hasta)) ||
+        !close(row.monto_fijo, fijo) || !close(row.porcentaje / 100, tasa)) {
+      throw new Error(`tramo ${i + 1} diverge de la tabla oficial ARCA`);
+    }
   });
 
-  if (!result) return false;
-
-  // Guard monotónico: las deducciones nominales NUNCA bajan en Argentina
-  // (se actualizan por RIPTE/IPC). Un valor menor al vigente = el LLM derivó
-  // mal la fórmula (ya pasó: computó GNI×4,5/12 en vez de (GNI+4,8×GNI)/12
-  // y propuso bajar MNI_MENSUAL_BASE de 2.490.038 a 1.931.926, jul-2026).
-  const src = readFileSync(FILE, 'utf8');
-  const currentOf = (name: string): number | null => {
-    const m = src.match(new RegExp(`${name}\\s*=\\s*([\\d_.]+)`));
-    return m ? Number(m[1].replace(/_/g, '')) : null;
-  };
-  for (const [name, nuevo] of [
-    ['MNI_MENSUAL_BASE', result.mniMensual],
-    ['INCREMENTO_CONYUGE_MENSUAL', result.incrementoConyugeMensual],
-    ['INCREMENTO_HIJO_MENSUAL', result.incrementoHijoMensual],
-  ] as const) {
-    const actual = currentOf(name);
-    if (actual !== null && nuevo < actual * 0.999) {
-      log.error(`${name}: propuesto ${nuevo} < vigente ${actual} — rechazado (deducciones no bajan)`);
-      return false;
-    }
-  }
-
-  log.info(`vigencia ${result.fechaVigencia} (RG ${result.resolucion || '?'})`);
-  log.info(`fuente: ${result.fuenteUrl}`);
-  log.info(`MNI: $${result.mniMensual.toLocaleString('es-AR')}/mes · cónyuge: +$${result.incrementoConyugeMensual.toLocaleString('es-AR')} · hijo: +$${result.incrementoHijoMensual.toLocaleString('es-AR')}`);
-  log.info(`${result.tramos.length} tramos: ${result.tramos.map((t) => `${(t.tasa * 100).toFixed(0)}%`).join(' → ')}`);
-
-  const today = new Date().toISOString().slice(0, 10);
-
-  if (dry) {
-    log.info(`would patch MNI_MENSUAL_BASE = ${result.mniMensual}`);
-    log.info(`would patch INCREMENTO_CONYUGE_MENSUAL = ${result.incrementoConyugeMensual}`);
-    log.info(`would patch INCREMENTO_HIJO_MENSUAL = ${result.incrementoHijoMensual}`);
-    log.info(`would patch ESCALA (${result.tramos.length} tramos)`);
-    return true;
-  }
-
-  let anyChanged = false;
-  const mniRes = replaceNumericConst(FILE, 'MNI_MENSUAL_BASE', result.mniMensual);
-  if (mniRes.changed) {
-    log.success(`MNI_MENSUAL_BASE: ${mniRes.oldValue} → ${result.mniMensual}`);
-    anyChanged = true;
-  }
-  const conyRes = replaceNumericConst(FILE, 'INCREMENTO_CONYUGE_MENSUAL', result.incrementoConyugeMensual);
-  if (conyRes.changed) {
-    log.success(`INCREMENTO_CONYUGE_MENSUAL: ${conyRes.oldValue} → ${result.incrementoConyugeMensual}`);
-    anyChanged = true;
-  }
-  const hijoRes = replaceNumericConst(FILE, 'INCREMENTO_HIJO_MENSUAL', result.incrementoHijoMensual);
-  if (hijoRes.changed) {
-    log.success(`INCREMENTO_HIJO_MENSUAL: ${hijoRes.oldValue} → ${result.incrementoHijoMensual}`);
-    anyChanged = true;
-  }
-  if (replaceArrayLiteral(FILE, 'ESCALA', formatEscalaItems(result.tramos))) {
-    log.success(`ESCALA actualizada (${result.tramos.length} tramos)`);
-    anyChanged = true;
-  }
-
-  if (anyChanged) {
-    for (const slug of [
-      'calculadora-impuesto-ganancias-sueldo',
-      'calculadora-sueldo-neto-a-bruto',
-      'sueldo-en-mano-argentina',
-    ]) {
-      touchLastUpdated(slug, today);
-    }
-    return true;
-  }
-  log.skip('sin cambios');
+  reportMode('ganancias-escala', 'deterministic');
+  log.success(`escala y deducciones julio-diciembre verificadas contra ARCA (${dry ? 'dry' : 'sin diferencias'})`);
+  log.info(`fuentes: ${snap.sources.escala_url} · ${snap.sources.deducciones_url}`);
   return false;
 }

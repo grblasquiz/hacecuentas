@@ -50,32 +50,56 @@ export const FRANQUICIA_VIAJERO_2026 = {
   alicuotaExcedente: 0.5,    // 50% sobre el excedente
 } as const;
 
-// ── Cuenta DNI — topes y descuentos JULIO 2026 (Banco Provincia) ──
-// Fuente: Banco Provincia vía prensa (Canal26/El Destape, 30-jun-2026). Refresh mensual.
+// ── Cuenta DNI — topes y descuentos AGOSTO 2026 (Banco Provincia) ──
+// Fuente primaria: páginas y términos de cada promoción de Banco Provincia.
 export interface RubroCuentaDni {
   label: string; pct: number; tope: number | null; periodo: 'semana' | 'mes' | 'finde';
   dias: string;
 }
-export const CUENTA_DNI_JUL_2026: Record<string, RubroCuentaDni> = {
-  gastronomia:   { label: 'Gastronomía', pct: 25, tope: 10000, periodo: 'semana', dias: 'todos los días' },
-  carnicerias:   { label: 'Carnicerías y granjas', pct: 20, tope: 6000, periodo: 'semana', dias: 'lunes a viernes' },
+export const CUENTA_DNI_AGO_2026: Record<string, RubroCuentaDni> = {
+  gastronomia:   { label: 'Gastronomía', pct: 25, tope: 8000, periodo: 'semana', dias: 'sábados y domingos' },
+  carnicerias:   { label: 'Comercios de cercanía (incluye alimentos)', pct: 20, tope: 6000, periodo: 'semana', dias: 'lunes a viernes' },
+  supermercados: { label: 'Supermercados adheridos', pct: 15, tope: 6000, periodo: 'semana', dias: 'martes y miércoles; compra mínima $30.000' },
   ferias:        { label: 'Ferias y mercados bonaerenses', pct: 40, tope: 6000, periodo: 'semana', dias: 'todos los días' },
   garrafas:      { label: 'Garrafas', pct: 40, tope: 18000, periodo: 'mes', dias: 'todos los días' },
   universidades: { label: 'Universidades, clubes y eventos', pct: 40, tope: 6000, periodo: 'semana', dias: 'todos los días' },
-  ypfFull:       { label: 'Tiendas YPF Full', pct: 25, tope: 10000, periodo: 'finde', dias: 'sábados y domingos' },
-  marcas:        { label: 'Marcas destacadas', pct: 30, tope: 15000, periodo: 'mes', dias: 'todos los días' },
+  ypfFull:       { label: 'Tiendas YPF Full', pct: 25, tope: 8000, periodo: 'semana', dias: 'sábados y domingos' },
+  marcas:        { label: 'Comercios de temporada adheridos', pct: 30, tope: 15000, periodo: 'mes', dias: 'todos los días' },
   librerias:     { label: 'Librerías (textos escolares)', pct: 10, tope: null, periodo: 'semana', dias: 'lunes y martes' },
   farmacias:     { label: 'Farmacias y perfumerías', pct: 10, tope: null, periodo: 'semana', dias: 'miércoles y jueves' },
 };
 
-// ── AUH agosto 2026 (ANSES, movilidad +1,89% = IPC junio) ──
-// Fuente: ANSES/Infobae 17-jul-2026. General por hijo; se acredita 80% y se retiene 20% (Libreta AUH).
-// (El nombre del export se mantiene por compatibilidad; el valor es el vigente ago-2026.)
+/** @deprecated Nombre histórico; conserva compatibilidad y apunta a agosto 2026. */
+export const CUENTA_DNI_JUL_2026 = CUENTA_DNI_AGO_2026;
+
+// ── Asignaciones ANSES agosto 2026 (Res. ANSES 233/2026, Anexos I y V) ──
+// Fuente primaria: BORA, IF-2026-70639076 (SUAF) e IF-2026-70638768 (universales).
+// Los importes oficiales se redondean al entero superior (art. 3 de la resolución).
+export const ASIGNACIONES_ANSES_AGO_2026 = {
+  periodo: '2026-08',
+  fuente: 'Resolución ANSES 233/2026 — Anexos I y V',
+  auhGeneral: 150_848,
+  auhDiscapacidad: 491_173,
+  pctRetenido: 0.2,
+  ayudaEscolar: 55_672,
+  suaf: {
+    topeIgf: 6_184_406,
+    topeIndividual: 3_092_203,
+    tramos: [
+      { limite: 1_167_863, tramo: 1, asignacion: 75_433 },
+      { limite: 1_712_784, tramo: 2, asignacion: 50_884 },
+      { limite: 1_977_464, tramo: 3, asignacion: 30_777 },
+      { limite: 6_184_406, tramo: 4, asignacion: 15_881 },
+    ],
+  },
+} as const;
+
+/** @deprecated Nombre histórico; conserva compatibilidad y apunta a agosto 2026. */
 export const AUH_JUL_2026 = {
-  montoGeneral: 150861.9,     // bruto por hijo (ago-2026)
-  pctRetenido: 0.2,           // se libera al presentar la Libreta AUH
-  cobroMensual: 120689.52,    // 80%
-  retenidoMensual: 30172.38,  // 20%
+  montoGeneral: ASIGNACIONES_ANSES_AGO_2026.auhGeneral,
+  pctRetenido: ASIGNACIONES_ANSES_AGO_2026.pctRetenido,
+  cobroMensual: ASIGNACIONES_ANSES_AGO_2026.auhGeneral * 0.8,
+  retenidoMensual: ASIGNACIONES_ANSES_AGO_2026.auhGeneral * 0.2,
 } as const;
 
 // ── Préstamos personales Banco Nación (jul-2026) ──

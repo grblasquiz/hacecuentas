@@ -1,3 +1,5 @@
+import { ANSES_2026 } from '../data/anses-2026';
+
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: any; }
 
@@ -5,11 +7,11 @@ export interface Outputs { [k: string]: any; }
  * Pensión No Contributiva (PNC) por invalidez — ANSES / ANDIS.
  * Ley 13.478, Decreto 432/97. Requiere CUD + grado de invalidez ≥76%.
  * Monto = 70% del haber mínimo jubilatorio garantizado.
- * julio 2026: haber mínimo $411.989,33 → 70% ≈ $288.392 (sin bono extraordinario).
+ * agosto 2026: 70% del haber mínimo vigente (sin bono extraordinario).
  * Fuente: ANSES — PNC por invalidez (movilidad Ley 27.609, IPC INDEC).
  * ANSES actualiza por movilidad mensual (IPC) — revisar cada mes/trimestre.
  */
-const HABER_MINIMO_JUBILATORIO = 411989; // jul-2026 (Res. ANSES 139/2026)
+const HABER_MINIMO_JUBILATORIO = ANSES_2026.haberMinimo;
 const PCT_PNC = 0.70;                     // 70% del haber mínimo (Decreto 432/97)
 export function asignacionDiscapacidadPensionado(i: Inputs): Outputs {
   const c = String(i.cdu || 'no') === 'si';
@@ -21,7 +23,7 @@ export function asignacionDiscapacidadPensionado(i: Inputs): Outputs {
   const _insight = acceso
     ? {
         title: 'Acceso habilitado',
-        text: `Cumplís los requisitos: con **CUD** y grado de invalidez del **${g}%** (≥76%) cobrás la PNC por invalidez = **70% del haber mínimo** = **$${monto.toLocaleString('es-AR')}/mes** (jul-2026, sin contar el bono extraordinario cuando se dispone). ANSES ajusta este monto por movilidad mensual, así que revisá el valor vigente.`,
+        text: `Cumplís los requisitos: con **CUD** y grado de invalidez del **${g}%** (≥76%) cobrás la PNC por invalidez = **70% del haber mínimo** = **$${monto.toLocaleString('es-AR')}/mes** (${ANSES_2026.periodo}, sin contar el bono extraordinario cuando se dispone). ANSES ajusta este monto por movilidad mensual.`,
         tone: 'good',
         icon: '♿',
       }
