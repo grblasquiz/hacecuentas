@@ -1,6 +1,7 @@
 ---
 export const prerender = true;
 
+import officialSources from '../../../lib/seo/iibb-sources.json';
 import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
@@ -26,15 +27,9 @@ const actividades: any[] = actividadesMod.default || actividadesMod;
 const ibMod = await import('../../../content/argentina/ingresos-brutos.json');
 const iibb: any = ibMod.default || ibMod;
 const provData = iibb.provinceData?.[provincia.slug] || {};
-const generalRateText = String(provData.metrics?.['Alicuota general'] || provData.rate || 'la alícuota de tu actividad');
-const generalRate = Number.parseFloat(generalRateText.replace(',', '.'));
-const exampleBase = 1_000_000;
-const exampleTax = Number.isFinite(generalRate) ? Math.round(exampleBase * generalRate / 100) : null;
-const revenueAgency = String(provData.metrics?.['Organismo recaudador'] || 'el organismo recaudador provincial');
-
-const _iibbBase = `Ingresos Brutos ${provincia.name} 2026 — Alícuotas`;
-const title = _iibbBase.length > 54 ? _iibbBase : `${_iibbBase} | Hacé Cuentas`;
-const description = `IIBB en ${provincia.name}: alícuotas 2026 por actividad económica, retenciones bancarias, régimen simplificado y Convenio Multilateral. Datos oficiales.`;
+const source = officialSources[provincia.slug as keyof typeof officialSources];
+const title = `Ingresos Brutos en ${provincia.name}: consulta y cálculo`;
+const description = `Cómo consultar la alícuota de IIBB de tu actividad en ${provincia.name}, distinguir el impuesto de las retenciones y calcular el saldo. Enlaces oficiales.`;
 
 const schema = {
   '@context': 'https://schema.org',
@@ -54,127 +49,39 @@ const schema = {
     <nav class="breadcrumb">
       <a href="/">Inicio</a> › <a href="/iibb">IIBB</a> › <span>{provincia.name}</span>
     </nav>
-    <h1>Ingresos Brutos en {provincia.name} — Alícuotas por actividad 2026</h1>
-    <p class="lead">
-      Elegí tu actividad económica para ver la alícuota de IIBB aplicable en
-      <strong>{provincia.name}</strong> en 2026, junto con retenciones, régimen
-      simplificado y Convenio Multilateral.
-    </p>
-
-    {provData.details && (
-      <section class="prov-details">
-        <h2>Cómo funciona IIBB en {provincia.name}</h2>
-        <p>{provData.details}</p>
-      </section>
-    )}
-
-    {provData.metrics && (
-      <section>
-        <h2>Alícuotas oficiales {provincia.name} 2026</h2>
-        <table class="metrics-table">
-          <tbody>
-            {Object.entries(provData.metrics).map(([k, v]) => (
-              <tr>
-                <th>{k}</th>
-                <td>{v}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
-    )}
-
-    {provData.localNotes && (
-      <aside class="local-notes">
-        <h2>Particularidades de {provincia.name}</h2>
-        <p>{provData.localNotes}</p>
-      </aside>
-    )}
-
+    <h1>Ingresos Brutos en {provincia.name}: cómo consultar y calcular</h1>
+    <p class="lead">La alícuota depende de la actividad, el período y las condiciones del contribuyente. Una tasa genérica por rubro no alcanza para liquidar IIBB en {provincia.name}.</p>
+    <section>
+      <h2>Consultá la fuente de {provincia.name}</h2>
+      <p><a href={source}>Portal oficial de la jurisdicción</a> · <a href="https://www.ca.gob.ar/datos-jurisdicciones">Directorio de organismos de la Comisión Arbitral</a></p>
+      <ol>
+        <li>Identificá tu código de actividad y el régimen en el que estás inscripto.</li>
+        <li>Buscá ese código en la ley impositiva y el nomenclador del período que vas a liquidar.</li>
+        <li>Revisá si la facturación anterior, una exención o una condición especial modifica la tasa.</li>
+        <li>Separá la alícuota del impuesto de las alícuotas de retención o percepción: son conceptos distintos.</li>
+      </ol>
+      {provincia.slug === 'buenos-aires' && <p>ARBA publica la <a href="https://www.arba.gov.ar/archivos/Publicaciones/leyimpositiva2026.pdf">Ley Impositiva 2026</a>. Compará el código y las condiciones de ingresos con la <a href="https://web.arba.gov.ar/preguntas-frecuentes/que-es-la-base-imponible-donde-se-puede-consultar-la-alicuota-aplicar-para-el">explicación oficial de base imponible y alícuota</a>.</p>}
+      {provincia.slug === 'caba' && <p>AGIP informa que CABA se incorporó al Monotributo Unificado desde enero de 2026. Consultá en su <a href={source}>página de Ingresos Brutos</a> si tu inscripción corresponde a ese régimen antes de usar un cálculo porcentual.</p>}
+      {provincia.slug === 'cordoba' && <p>En Córdoba, consultá en <a href={source}>Rentas</a> el nomenclador y los tratamientos especiales aplicables. El código NAES por sí solo no confirma una reducción: también importan las condiciones y los ingresos del contribuyente.</p>}
+    </section>
     <section class="specific-example">
-      <h2>Ejemplo de cálculo y control en {provincia.name}</h2>
-      {provData.specificExample ? (
-        <div set:html={provData.specificExample} />
-      ) : (
-        <>
-          <p>Para una facturación mensual de <strong>$1.000.000</strong> atribuible a {provincia.name}, una alícuota general de <strong>{generalRateText}</strong>{exampleTax !== null ? <> da un impuesto determinado de <strong>${exampleTax.toLocaleString('es-AR')}</strong></> : <> debe aplicarse sobre la base gravada</>}. Después se descuentan retenciones y percepciones informadas para obtener el saldo.</p>
-          <p>El control se hace ante <strong>{revenueAgency}</strong>, en la jurisdicción {provincia.abbr} de la región {provincia.region}. Verificá el código de actividad, el mínimo y el calendario local antes de presentar: no alcanza con trasladar la regla de otra provincia.</p>
-        </>
-      )}
+      <h2>Ejemplo ilustrativo: base, impuesto y saldo</h2>
+      <p>Este ejemplo usa una tasa elegida del 3% para mostrar la operación; <strong>no es una alícuota oficial de {provincia.name}</strong>. Reemplazala por la de tu actividad y período.</p>
+      <table class="metrics-table"><tbody>
+        <tr><th>Base imponible del ejemplo</th><td>$1.000.000</td></tr>
+        <tr><th>Tasa hipotética</th><td>3%</td></tr>
+        <tr><th>Impuesto: $1.000.000 × 3%</th><td>$30.000</td></tr>
+        <tr><th>Retenciones y percepciones del ejemplo</th><td>$8.000</td></tr>
+        <tr><th>Saldo: $30.000 − $8.000</th><td>$22.000</td></tr>
+      </tbody></table>
+      <p>También pueden intervenir mínimos, saldos anteriores y ajustes del régimen. Podés comparar importes con la <a href="/impuestos/ingresos-brutos">calculadora de Ingresos Brutos</a>.</p>
     </section>
-
     <section>
-      <h2>Alícuotas de IIBB en {provincia.name} por actividad</h2>
-      <p>Rangos de alícuota por rubro en {provincia.name}. El valor exacto
-        depende del código de actividad (NAES) y de la facturación anual;
-        verificalo en el nomenclador de la agencia de recaudación provincial.</p>
-      <table class="act-table">
-        <thead>
-          <tr><th>Actividad</th><th>Alícuota base</th></tr>
-        </thead>
-        <tbody>
-          {actividades.map((a) => (
-            <tr>
-              <td>{a.icon} {a.label}</td>
-              <td>{a.rateRange}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
-
-    <section>
-      <h2>Convenio Multilateral en {provincia.name}</h2>
-      <p>
-        Si tu actividad genera ingresos o gastos en {provincia.name} <em>y</em>
-        en otra jurisdicción argentina, debés inscribirte en
-        <strong> Convenio Multilateral (CM)</strong> y distribuir tu base imponible
-        entre las provincias mediante coeficientes calculados sobre ingresos y
-        gastos del año anterior.
-      </p>
-      <ul>
-        <li><strong>Régimen general (Art. 2):</strong> aplica para la mayoría de las actividades. Coeficiente unificado.</li>
-        <li><strong>Régimen especial:</strong> para construcción (Art. 6), entidades financieras (Art. 7), seguros (Art. 8), transporte (Art. 9), profesionales (Art. 10), comisionistas (Art. 11), prestamistas (Art. 12).</li>
-      </ul>
-      <p>
-        El Convenio Multilateral se administra a través de <strong>SIFERE</strong>
-        (Sistema Federal de Recaudación) y la Comisión Arbitral. La presentación
-        es mensual y la liquidación se distribuye automáticamente a {provincia.name}
-        y al resto de las jurisdicciones donde operás.
-      </p>
-    </section>
-
-    <section>
-      <h2>Régimen simplificado de IIBB en {provincia.name}</h2>
-      <p>
-        Para monotributistas y pequeños contribuyentes que operan exclusivamente
-        en {provincia.name} y no superan ciertos topes de ingresos anuales, suele
-        existir un <strong>régimen simplificado</strong> con cuota fija mensual
-        en lugar del porcentaje sobre facturación. Esto simplifica la operatoria
-        (no requiere DDJJ mensual) y unifica el pago.
-      </p>
-      <p>
-        Verificá los topes y requisitos exactos en el portal oficial de la
-        dirección de rentas de {provincia.name}. El régimen suele estar atado
-        al monotributo nacional (categoría máxima permitida) y a la actividad
-        ejercida.
-      </p>
-    </section>
-
-    <section>
-      <h2>Vencimientos y presentación</h2>
-      <p>
-        Las declaraciones juradas de IIBB en {provincia.name} se presentan
-        <strong>mensualmente</strong> mediante el sistema digital del organismo
-        recaudador. Los vencimientos dependen de la terminación del CUIT y se
-        publican en el calendario fiscal anual.
-      </p>
-      <p>
-        El pago se realiza por <strong>VEP, transferencia bancaria o débito
-        automático</strong>. Las retenciones bancarias y percepciones se
-        acreditan como pago a cuenta. Si tenés saldos a favor recurrentes,
-        es común tramitar exención o reducción de retenciones.
-      </p>
+      <h2>Si operás en más de una jurisdicción</h2>
+      <p>Revisá el encuadre en Convenio Multilateral y las reglas de atribución de ingresos. El régimen general y los regímenes especiales no distribuyen la base de la misma manera. La <a href="https://www.ca.gob.ar/">Comisión Arbitral</a> publica la normativa y los accesos oficiales a SIFERE.</p>
+      <h2>Antes de presentar en {provincia.name}</h2>
+      <p>Confirmá el período, los vencimientos según tu inscripción y CUIT, el código de actividad, la tasa y los pagos a cuenta en el portal de la jurisdicción. Los requisitos del régimen simplificado y las exenciones deben verificarse allí.</p>
+      <p>Fuentes consultadas el <time datetime="2026-09-04">4 de septiembre de 2026</time>. Esta guía explica el procedimiento; no reproduce una tabla provincial de alícuotas validada para cada actividad.</p>
     </section>
 
     <section class="otras-prov">

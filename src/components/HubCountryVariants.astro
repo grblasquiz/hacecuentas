@@ -21,6 +21,12 @@ const { path } = Astro.props as Props;
 const key = (path || '/').replace(/\.html$/, '').replace(/\/+$/, '') || '/';
 const entry = (families as Record<string, Entry>)[key];
 const siblings = entry?.siblings ?? [];
+const lang = key.startsWith('/en/') ? 'en' : /^\/pt(?:-pt)?\//.test(key) ? 'pt' : 'es';
+const copy = {
+ en: {title:'Related tools in other countries and languages', sub:'Check the language, units and assumptions of each tool.'},
+ pt: {title:'Ferramentas relacionadas em outros países e idiomas', sub:'Confira o idioma, as unidades e as condições de cada ferramenta.'},
+ es: {title:'Herramientas relacionadas en otros países e idiomas', sub:'Revisá el idioma, las unidades y los supuestos de cada herramienta.'},
+}[lang];
 ---
 {siblings.length > 0 && (
   <section class="hcv" aria-labelledby="hcv-heading" data-hub-country-variants>
@@ -29,8 +35,8 @@ const siblings = entry?.siblings ?? [];
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></svg>
       </span>
       <div>
-        <h2 id="hcv-heading" class="hcv__title">{entry.topic}: la misma cuenta en otros países</h2>
-        <p class="hcv__sub">Cada versión aplica la normativa y los valores vigentes de su país.</p>
+        <h2 id="hcv-heading" class="hcv__title">{copy.title}</h2>
+        <p class="hcv__sub">{copy.sub}</p>
       </div>
     </div>
     <ul class="hcv__list">

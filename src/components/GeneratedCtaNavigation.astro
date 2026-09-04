@@ -1,55 +1,8 @@
 ---
-// Safety net for generated hub mockups whose CTA handler only displayed an
-// "Abriendo…" toast. It resolves a matching real link already on the page and
-// falls back to the site search when a direct destination is unavailable.
+// Navigation is rendered as real anchors in the source components.
+// Never intercept calculator buttons: their local handlers own the action.
 ---
-<script is:inline>
-  (() => {
-    const normalize = (value) => String(value || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, ' ')
-      .trim();
-    const ignored = new Set(['abrir', 'calcular', 'ver', 'mi', 'mis', 'la', 'las', 'el', 'los', 'de', 'del', 'para', 'una', 'un', 'y']);
-    const tokens = (value) => normalize(value).split(/\s+/).filter((word) => word.length > 2 && !ignored.has(word));
-
-    function titleFor(button) {
-      const card = button.closest('article, .card, .toolcard, .tool, .rec, .related');
-      return card?.querySelector('h2, h3, h4, strong, b')?.textContent?.trim()
-        || button.dataset.open
-        || button.dataset.rec
-        || button.textContent?.replace(/[→›»]/g, '').trim()
-        || '';
-    }
-
-    function bestPageLink(title, button) {
-      const wanted = tokens(title);
-      if (!wanted.length) return '';
-      let best = { score: 0, href: '' };
-      document.querySelectorAll('a[href]').forEach((anchor) => {
-        if (button.closest('a') === anchor) return;
-        const raw = anchor.getAttribute('href') || '';
-        if (!raw.startsWith('/') || raw.startsWith('//') || raw === location.pathname || raw.startsWith('/buscar')) return;
-        const haystack = new Set(tokens(`${anchor.textContent || ''} ${raw}`));
-        const matches = wanted.filter((word) => haystack.has(word)).length;
-        const score = matches * 10 - Math.abs(wanted.length - matches);
-        if (matches && score > best.score) best = { score, href: raw };
-      });
-      return best.href;
-    }
-
-    document.addEventListener('click', (event) => {
-      const button = event.target.closest(
-        '[class*="mockup-"] article.card button, [class*="mockup-"] .toolcard button, [class*="mockup-"] .tool button, [class*="mockup-"] .related article button'
-      );
-      if (!button || button.matches('[data-hc-local-action]')) return;
-      const title = titleFor(button);
-      const destination = button.dataset.href || bestPageLink(title, button)
-        || `/buscar?q=${encodeURIComponent(title)}`;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      location.assign(destination);
-    }, true);
-  })();
-</script>
+<style is:global>
+  a.hc-tool-link { display: inline-block; text-decoration: none; text-align: center; cursor: pointer; }
+  a.hc-tool-link:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
+</style>

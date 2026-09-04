@@ -1,6 +1,6 @@
 ---
 import type { HubData, HubCitableStat } from '../../lib/hubs/types';
-import research from '../../lib/hubs/citable-research.json';
+
 
 export interface Props { data: HubData }
 const { data } = Astro.props;
@@ -12,28 +12,28 @@ type Copy = {
 };
 const COPY: Record<string, Copy> = {
   ar: {
-    eyebrow: 'Datos citables', title: 'Qué cubre esta herramienta, en números',
+    eyebrow: 'Datos citables', title: 'Datos de referencia',
     intro: 'Estas cifras salen del alcance editorial y las fuentes declaradas en este hub. Se pueden auditar y citar con atribución a Hacé Cuentas.',
     scenarios: 'escenarios de decisión', variables: 'variables editables', sources: 'fuentes verificables', tools: 'rutas consolidadas',
     quote: 'Cita sugerida', reviewed: 'Datos revisados', method: 'Cómo se construyeron estos datos',
     research: 'Investigación propia', percentile: 'percentil de profundidad temática', publishers: 'organismos o editores distintos', dataset: 'Descargar dataset (CSV)', cohort: 'comparado con hubs de esta temática', report: 'Estadísticas de calculadoras online 2026',
   },
   es: {
-    eyebrow: 'Datos citables', title: 'Qué cubre esta herramienta, en números',
+    eyebrow: 'Datos citables', title: 'Datos de referencia',
     intro: 'Estas cifras proceden del alcance editorial y las fuentes declaradas en este hub. Se pueden auditar y citar con atribución a Hacé Cuentas.',
     scenarios: 'escenarios de decisión', variables: 'variables editables', sources: 'fuentes verificables', tools: 'rutas consolidadas',
     quote: 'Cita sugerida', reviewed: 'Datos revisados', method: 'Cómo se construyeron estos datos',
     research: 'Investigación propia', percentile: 'percentil de profundidad temática', publishers: 'organismos o editores distintos', dataset: 'Descargar dataset (CSV)', cohort: 'comparado con hubs de esta temática', report: 'Estadísticas de calculadoras online 2026',
   },
   en: {
-    eyebrow: 'Citable data', title: 'What this tool covers, by the numbers',
+    eyebrow: 'Citable data', title: 'Reference data',
     intro: 'These figures come from the editorial scope and sources declared for this hub. They are auditable and may be cited with attribution to Hacé Cuentas.',
     scenarios: 'decision scenarios', variables: 'editable variables', sources: 'verifiable sources', tools: 'consolidated routes',
     quote: 'Suggested citation', reviewed: 'Data reviewed', method: 'How these figures were produced',
     research: 'Original research', percentile: 'topic depth percentile', publishers: 'distinct publishers or agencies', dataset: 'Download dataset (CSV)', cohort: 'compared with hubs in this topic', report: 'Online calculator statistics 2026',
   },
   pt: {
-    eyebrow: 'Dados citáveis', title: 'O que esta ferramenta cobre, em números',
+    eyebrow: 'Dados citáveis', title: 'Dados de referência',
     intro: 'Estes números vêm do escopo editorial e das fontes declaradas neste hub. Podem ser auditados e citados com atribuição ao Hacé Cuentas.',
     scenarios: 'cenários de decisão', variables: 'variáveis editáveis', sources: 'fontes verificáveis', tools: 'rotas consolidadas',
     quote: 'Citação sugerida', reviewed: 'Dados revisados', method: 'Como estes dados foram construídos',
@@ -43,33 +43,15 @@ const COPY: Record<string, Copy> = {
 COPY['pt-pt'] = COPY.pt;
 const lang = data.locale === 'en' ? 'en' : data.locale === 'pt' || data.locale === 'pt-pt' ? data.locale : data.locale ? 'es' : 'ar';
 const T = COPY[lang];
-const scenarios = data.cases?.items.length ?? 1;
-const variables = data.fields.length;
-const sources = data.sources.length;
-const tools = Math.max(1, data.replaces?.length ?? 0);
-const researchRow = (research.hubs as Record<string, any>)[data.slug];
-const automatic: HubCitableStat[] = [
-  ...(researchRow ? [
-    { value: `P${researchRow.depthPercentile}`, label: T.percentile, detail: `${T.cohort}: ${researchRow.peerHubs}` },
-    { value: String(researchRow.publishers), label: T.publishers },
-  ] : []),
-  { value: String(scenarios), label: T.scenarios },
-  { value: String(variables), label: T.variables },
-  { value: String(sources), label: T.sources },
-  { value: String(tools), label: T.tools },
-];
-const stats = [...(data.citableStats ?? []), ...automatic];
-const quote = lang === 'en'
-  ? `Hacé Cuentas brings together ${scenarios} decision ${scenarios === 1 ? 'scenario' : 'scenarios'}, ${variables} editable ${variables === 1 ? 'variable' : 'variables'} and ${sources} verifiable ${sources === 1 ? 'source' : 'sources'} in its “${data.h1}” tool.`
-  : lang === 'pt' || lang === 'pt-pt'
-    ? `O Hacé Cuentas reúne ${scenarios} ${scenarios === 1 ? 'cenário de decisão' : 'cenários de decisão'}, ${variables} ${variables === 1 ? 'variável editável' : 'variáveis editáveis'} e ${sources} ${sources === 1 ? 'fonte verificável' : 'fontes verificáveis'} na ferramenta “${data.h1}”.`
-    : `Hacé Cuentas reúne ${scenarios} ${scenarios === 1 ? 'escenario de decisión' : 'escenarios de decisión'}, ${variables} ${variables === 1 ? 'variable editable' : 'variables editables'} y ${sources} ${sources === 1 ? 'fuente verificable' : 'fuentes verificables'} en la herramienta «${data.h1}».`;
+// Only publish substantive figures explicitly supplied with traceable sources.
+// Counts in the editorial model do not prove which controls are usable.
+const stats = (data.citableStats ?? []).filter(stat => stat.source);
 const sectionId = `datos-citables-${data.slug.replaceAll('/', '-')}`;
 ---
 
-<section class="hub-citable-stats" aria-labelledby={sectionId}>
+{stats.length > 0 && <section class="hub-citable-stats" aria-labelledby={sectionId}>
   <div class="hub-citable-stats__head">
-    <p>{researchRow ? T.research : T.eyebrow}</p>
+    <p>{T.eyebrow}</p>
     <h2 id={sectionId}>{T.title}</h2>
     <p>{T.intro}</p>
   </div>
@@ -83,17 +65,13 @@ const sectionId = `datos-citables-${data.slug.replaceAll('/', '-')}`;
       </div>
     ))}
   </dl>
-  <figure>
-    <figcaption>{T.quote}</figcaption>
-    <blockquote>{quote}</blockquote>
-  </figure>
   <p class="hub-citable-stats__meta">
     <span>{T.reviewed}: <time datetime={data.lastReviewed}>{data.lastReviewed}</time></span>
     <a href="/metodologia">{T.method}</a>
     <a href="/estadisticas-calculadoras-online-2026">{T.report}</a>
     <a href="/datasets/hub-citable-research.csv" download>{T.dataset}</a>
   </p>
-</section>
+</section>}
 
 <style>
   .hub-citable-stats{margin:clamp(2rem,5vw,4rem) auto;padding:clamp(1.35rem,3vw,2rem);max-width:1160px;border:1px solid #dce3e9;border-radius:18px;background:#fff;color:#18283a;box-shadow:0 12px 30px rgba(20,43,67,.06)}

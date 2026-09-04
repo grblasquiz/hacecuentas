@@ -10,6 +10,7 @@
  * rinden solos en orgánico. El blog es mucho más débil que los hubs, así que
  * esto reparte autoridad hacia abajo y se usa con cuentagotas.
  */
+import backlinks from '../../lib/blog-backlinks.json';
 import type { HubData } from '../../lib/hubs/types';
 
 interface Props {
@@ -17,7 +18,9 @@ interface Props {
 }
 
 const { posts } = Astro.props;
-const items = (posts || []).slice(0, 2);
+const key = Astro.url.pathname.replace(/^\//, '').replace(/\/$/, '');
+const related = (backlinks as Record<string, {slug:string; title:string}>)[key];
+const items = (posts?.length ? posts : related ? [{href:`/blog/${related.slug}`,title:related.title,note:''}] : []).slice(0, 2);
 ---
 
 {items.length > 0 && (

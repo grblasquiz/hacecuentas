@@ -1,0 +1,65 @@
+---
+import { BLOG_POSTS, PORTUGUESE_POSTS, BLOG_PAGE_SIZE, BLOG_PAGE_COUNT, blogPageUrl } from '../lib/blog/catalog';
+interface Props { page?: number }
+const { page = 1 } = Astro.props;
+const posts = BLOG_POSTS.slice((page - 1) * BLOG_PAGE_SIZE, page * BLOG_PAGE_SIZE);
+const categories = [...new Set(BLOG_POSTS.map(p => p.category || 'guías'))];
+const searchRows = BLOG_POSTS.map(p => ({ href: `/blog/${p.slug}`, title: p.title, description: p.description || '', category: p.category || 'guías' }));
+---
+<section class="blog-catalog" data-blog-catalog>
+  <header class="blog-hero">
+    <p class="eyebrow">Ideas claras para decidir mejor</p>
+    <h1>La economía real,<br/>explicada sin vueltas.</h1>
+    <p>Qué cambió, cuánto te afecta y qué podés hacer. Explorá {BLOG_POSTS.length} artículos con ejemplos, fuentes y herramientas para resolver tu caso.</p>
+    <a href="/guias">Explorar las guías de decisión →</a>
+  </header>
+  <section aria-labelledby="catalog-title">
+    <h2 id="catalog-title">{page === 1 ? 'Últimos artículos' : `Artículos · página ${page}`}</h2>
+    <div class="filters" hidden data-blog-filters>
+      <label>Buscar en todo el blog<input type="search" data-blog-search placeholder="Ej.: alquiler, aguinaldo, monotributo" /></label>
+      <label>Tema<select data-blog-category><option value="">Todos los temas</option>{categories.map(c => <option value={c}>{c}</option>)}</select></label>
+    </div>
+    <p role="status" data-blog-status>Página {page} de {BLOG_PAGE_COUNT} · {BLOG_POSTS.length} artículos</p>
+    <div class="blog-cards" data-blog-page>
+      {posts.map(p => <article><p class="eyebrow">{p.category || 'Guía'} · <time datetime={p.datePublished ?? p.date}>{p.datePublished ?? p.date}</time></p><h3><a href={`/blog/${p.slug}`}>{p.title}</a></h3><p>{p.description}</p><a href={`/blog/${p.slug}`}>Leer artículo →</a></article>)}
+    </div>
+    <div class="blog-cards" data-blog-results hidden></div>
+    <nav aria-label="Páginas del blog" class="pagination" data-blog-pagination>
+      {page > 1 && <a href={blogPageUrl(page - 1)} rel="prev">← Anterior</a>}
+      {Array.from({ length: BLOG_PAGE_COUNT }, (_, i) => i + 1).map(n => <a href={blogPageUrl(n)} aria-current={n === page ? 'page' : undefined}>{n}</a>)}
+      {page < BLOG_PAGE_COUNT && <a href={blogPageUrl(page + 1)} rel="next">Siguiente →</a>}
+    </nav>
+    {PORTUGUESE_POSTS.length > 0 && <aside lang="pt-BR"><h2>Artigos em português</h2><ul>{PORTUGUESE_POSTS.map(p=><li><a href={`/pt/blog/${p.slug}`}>{p.title}</a></li>)}</ul></aside>}
+  </section>
+</section>
+<script is:inline define:vars={{ searchRows }}>
+(() => {
+  const root = document.querySelector('[data-blog-catalog]');
+  const input = root.querySelector('[data-blog-search]');
+  const category = root.querySelector('[data-blog-category]');
+  const results = root.querySelector('[data-blog-results]');
+  const status = root.querySelector('[data-blog-status]');
+  const initialStatus = status.textContent;
+  const normal = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  root.querySelector('[data-blog-filters]').hidden = false;
+  function render() {
+    const query = normal(input.value.trim()), filter = category.value;
+    const active = Boolean(query || filter);
+    root.querySelector('[data-blog-page]').hidden = active;
+    root.querySelector('[data-blog-pagination]').hidden = active;
+    results.hidden = !active;
+    results.replaceChildren();
+    if (!active) { status.textContent = initialStatus; return; }
+    const matches = searchRows.filter(p => (!filter || p.category === filter) && normal(`${p.title} ${p.description}`).includes(query));
+    status.textContent = `${matches.length} resultados en todo el blog`;
+    for (const p of matches) {
+      const article = document.createElement('article'), h = document.createElement('h3'), a = document.createElement('a'), description = document.createElement('p');
+      a.href = p.href; a.textContent = p.title; h.append(a); description.textContent = p.description; article.append(h, description); results.append(article);
+    }
+  }
+  input.addEventListener('input', render); category.addEventListener('change', render);
+})();
+</script>
+<style>
+.blog-catalog{max-width:1160px;margin:auto;padding:40px 22px 64px;color:var(--text,#19282f)}.blog-hero{padding:40px 0 54px;max-width:860px}.eyebrow{font-size:.76rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#366c82}h1{font-size:clamp(2.5rem,6vw,4.8rem);line-height:1.04;letter-spacing:-.045em;margin:18px 0}h2{font-size:1.8rem}h3{font-size:1.2rem;line-height:1.35}p{line-height:1.7}.blog-hero>p:not(.eyebrow){font-size:1.15rem}.filters{display:flex;gap:20px;flex-wrap:wrap;margin:24px 0}.filters label{display:grid;gap:8px;flex:1;min-width:min(100%,260px);font-weight:700}input,select{padding:14px;border:1px solid #aebec7;border-radius:10px;background:var(--bg,#fff);color:inherit;font:inherit;min-width:0}.blog-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.blog-cards article{padding:24px;border:1px solid var(--border,#dce3e9);border-radius:18px;background:var(--bg-soft,#f8fafb)}a{color:#175787;text-underline-offset:3px}h3 a{text-decoration:none}.pagination{display:flex;gap:8px;flex-wrap:wrap;margin:32px 0}.pagination a{padding:10px 15px;border:1px solid #b8cbd5;border-radius:9px;text-decoration:none}.pagination [aria-current]{background:#174b7a;color:#fff}a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #e57f45;outline-offset:3px}[hidden]{display:none!important}@media(max-width:850px){.blog-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.blog-cards{grid-template-columns:1fr}.blog-catalog{padding:20px 16px 40px}}
+</style>

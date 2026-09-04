@@ -1,0 +1,11 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import BlogCatalog from '../../../components/BlogCatalog.astro';
+import { BLOG_PAGE_COUNT, blogPageUrl } from '../../../lib/blog/catalog';
+export function getStaticPaths() { return Array.from({ length: BLOG_PAGE_COUNT - 1 }, (_, i) => ({ params: { page: String(i + 2) }, props: { page: i + 2 } })); }
+const { page } = Astro.props;
+---
+<Layout title={`Blog · página ${page} — Hacé Cuentas`} description="Más artículos, ejemplos y guías de Hacé Cuentas para resolver tus cuentas." canonical={`https://hacecuentas.com${blogPageUrl(page)}`}><Header slot="header" /><BlogCatalog page={page} /><Footer slot="footer" /></Layout>

@@ -29,8 +29,11 @@ import HubCitableStats from './HubCitableStats.astro';
 
 export interface Props {
   data: HubData;
+  supplemental?: boolean;
 }
-const { data } = Astro.props;
+const { data, supplemental = false } = Astro.props;
+const hubId = `full-${data.slug.replaceAll("/", "-")}`;
+const inputId = (id: string) => `${hubId}-${id}`;
 const siblingHubs = hubsOfSilo(data.siloHref)
   .filter((hub) => hub.slug !== data.slug)
   .slice(0, 4);
@@ -277,18 +280,18 @@ const initialWarn = defaultCase?.warn ?? data.answer?.warn ?? [];
 const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
 ---
 
-<div class="hc-hub">
+<div class:list={["hc-hub", {"hc-hub--supplemental": supplemental}]} id={hubId}>
   <div class="wrap">
-    <nav class="crumbs" aria-label={T.migas}>
+    {!supplemental && <nav class="crumbs" aria-label={T.migas}>
       <a href={HOME}>{T.home}</a><span aria-hidden="true">›</span>
       <a href={data.siloHref}>{data.silo}</a><span aria-hidden="true">›</span>
       <span aria-current="page">{data.h1}</span>
-    </nav>
+    </nav>}
 
     <header class="decision-hero">
       <div class="hero-copy">
         <p class="eyebrow">{data.eyebrow}</p>
-        <h1>{data.h1}</h1>
+        {supplemental ? <h2>{data.locale === "en" ? "All calculation modes" : "Todos los modos de cálculo"}</h2> : <h1>{data.h1}</h1>}
         <p class="lede">{data.lede}</p>
         <p class="stamp">
           {data.stamps.map((s, i) => (
@@ -317,7 +320,7 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
       </aside>
     </header>
 
-    <main class="journey">
+    <div class="journey">
       <section class="panel context-panel direct-answer">
         <div class="panel-head">
           <p class="panel-kicker">{T.respuesta}</p>
@@ -380,18 +383,18 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
         <div class="fields">
           {data.fields.map((f, index) => (
             <div class:list={["f", { "is-advanced-field": index >= essentialFieldCount }]} hidden={index >= essentialFieldCount}>
-              <label for={f.id}>{f.label}</label>
+              <label for={inputId(f.id)}>{f.label}</label>
               <div class="f-in">
                 {f.prefix && <span class="pre">{f.prefix}</span>}
                 {f.type === 'select' ? (
-                  <select id={f.id} data-field data-thousands={f.thousands ? '1' : null}>
+                  <select id={inputId(f.id)} data-key={f.id} data-field data-thousands={f.thousands ? '1' : null}>
                     {f.options?.map((o) => (
                       <option value={o.value} selected={String(f.value) === o.value}>{o.label}</option>
                     ))}
                   </select>
                 ) : (
                   <input
-                    id={f.id}
+                    id={inputId(f.id)} data-key={f.id}
                     data-field
                     data-thousands={f.thousands ? '1' : null}
                     type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
@@ -451,7 +454,7 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
       </section>
 
       <CompareGrid cases={compareItems} title={T.comparar} kicker={T.comoSeForma} />
-    </main>
+    </div>
 
     <HubCitableStats data={data} />
 
@@ -554,9 +557,10 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
   @media(max-width:680px){.hc-hub .editorial-review{grid-template-columns:1fr}}
 </style>
 
-<script is:inline define:vars={{ PUNTO_DECIMAL, NUM_LOCALE, MONEDA, CASES: cases, HAS_CASES: !!data.cases, COMPARE: data.compareCases ?? [], CHIP_USER: T.tuEstimacion }}>
+<script is:inline define:vars={{ hubId, PUNTO_DECIMAL, NUM_LOCALE, MONEDA, CASES: cases, HAS_CASES: !!data.cases, COMPARE: data.compareCases ?? [], CHIP_USER: T.tuEstimacion }}>
   (function () {
-    const $ = (id) => document.getElementById(id);
+    const root = document.getElementById(hubId);
+    const $ = (id) => root.querySelector(`[id="${id}"], [data-key="${id}"]`);
     const ars = (n) => MONEDA + Math.round(n || 0).toLocaleString(NUM_LOCALE);
     /**
      * Parseo numérico consciente del formato es-AR.
@@ -602,13 +606,13 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
     /** Valores de los campos, ya parseados. */
     function values() {
       const out = {};
-      document.querySelectorAll('[data-field]').forEach((el) => {
+      root.querySelectorAll('[data-field]').forEach((el) => {
         if (el.type === 'number') {
           // El navegador ya normaliza a punto decimal y sin miles.
           const n = Number(el.value);
-          out[el.id] = el.value === '' ? 0 : (isFinite(n) ? n : 0);
+          out[el.dataset.key || el.id] = el.value === '' ? 0 : (isFinite(n) ? n : 0);
         } else {
-          out[el.id] = el.dataset.thousands ? num(el.value) : el.value;
+          out[el.dataset.key || el.id] = el.dataset.thousands ? num(el.value) : el.value;
         }
       });
       return out;
@@ -679,7 +683,7 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
       // El tipo lo declara el hub en chart.type y viaja en data-chart. Un donut
       // sirve para composición; para "dónde caigo yo" (IMC, semana de embarazo,
       // tramo de Ganancias) hace falta una barra con posición marcada.
-      const viz = document.querySelector('.result-viz');
+      const viz = root.querySelector('.result-viz');
       const kind = viz.dataset.chart || 'donut';
       const segs = res.chart || [];
       const sum = segs.reduce((a, s) => a + (s.value || 0), 0);
@@ -808,11 +812,11 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
     function select(c) {
       current = c;
       $('default-case')?.setAttribute('aria-selected', c.id === CASES[0].id ? 'true' : 'false');
-      document.querySelectorAll('.opt').forEach((b) =>
+      root.querySelectorAll('.opt').forEach((b) =>
         b.setAttribute('aria-selected', b.dataset.case === c.id ? 'true' : 'false'));
       fill($('yes-list'), c.yes);
       fill($('warn-list'), c.warn);
-      $('plazo').textContent = c.plazo;
+      if ($('plazo')) $('plazo').textContent = c.plazo || '';
       // Nivel 1: "Próximo paso" bajo el resultado con el plazo del caso activo.
       // Un sello tipo "Datos revisados el…" no es un próximo paso: se oculta.
       const nextStep = $('next-step');
@@ -825,13 +829,13 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
       $('calc-name').textContent = c.label;
       $('answer-title').textContent = c.answer;
       $('answer-copy').textContent = c.yes[0] || '';
-      document.querySelector('.other-cases')?.classList.toggle('has-alt', c.id !== CASES[0].id);
+      root.querySelector('.other-cases')?.classList.toggle('has-alt', c.id !== CASES[0].id);
       run();
     }
 
     if (HAS_CASES) {
       $('default-case')?.addEventListener('click', () => select(CASES[0]));
-      document.querySelectorAll('.opt').forEach((b) =>
+      root.querySelectorAll('.opt').forEach((b) =>
         b.addEventListener('click', () => select(CASES.find((c) => c.id === b.dataset.case))));
       select(CASES[0]);
     }
@@ -839,17 +843,17 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
     $('go').addEventListener('click', () => {
       markUserEstimate();
       run();
-      document.querySelector('.result-panel').scrollIntoView({
+      root.querySelector('.result-panel').scrollIntoView({
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
         block: 'start',
       });
     });
 
-    const advancedToggle = document.querySelector('.advanced-fields-toggle');
+    const advancedToggle = root.querySelector('.advanced-fields-toggle');
     advancedToggle?.addEventListener('click', () => {
       const open = advancedToggle.getAttribute('aria-expanded') !== 'true';
       advancedToggle.setAttribute('aria-expanded', String(open));
-      document.querySelectorAll('.is-advanced-field').forEach((field) => { field.hidden = !open; });
+      root.querySelectorAll('.is-advanced-field').forEach((field) => { field.hidden = !open; });
       const label = advancedToggle.querySelector('[data-advanced-label]');
       if (label) label.textContent = open ? advancedToggle.dataset.closeLabel : advancedToggle.dataset.openLabel;
       const icon = advancedToggle.querySelector('span');
@@ -866,9 +870,9 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
       chip.classList.add('is-user');
     }
 
-    document.querySelectorAll('[data-field]').forEach((el) =>
+    root.querySelectorAll('[data-field]').forEach((el) =>
       el.addEventListener('input', () => { markUserEstimate(); runSoon(); }));
-    document.querySelectorAll('[data-thousands]').forEach((el) =>
+    root.querySelectorAll('[data-thousands]').forEach((el) =>
       el.addEventListener('input', (e) => {
         const v = num(e.target.value);
         e.target.value = v ? v.toLocaleString(NUM_LOCALE) : '';
@@ -883,6 +887,6 @@ const initialPlazo = defaultCase?.plazo ?? data.answer?.plazo ?? '';
     // Estado inicial deliberado: $0 hasta que el usuario aprieta el botón.
     // Ver types.ts — es una decisión de producto, no un bug.
     $('total').style.setProperty('--amount-len', 7);
-    $('sub').textContent = 'Actualizá la estimación para ver el resultado.';
+    $('sub').textContent = NUM_LOCALE.startsWith('en') ? 'Calculate to see the result.' : NUM_LOCALE.startsWith('pt') ? 'Calcule para ver o resultado.' : 'Actualizá la estimación para ver el resultado.';
   })();
 </script>

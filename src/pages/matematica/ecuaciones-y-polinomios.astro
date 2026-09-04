@@ -12,6 +12,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import DecisionHubClassic from '../../components/hub/DecisionHubClassic.astro';
 import HubSeoAnswer from '../../components/hub/HubSeoAnswer.astro';
 import EcuacionesPolinomiosExperience from '../../components/generated/EcuacionesPolinomiosExperience.astro';
 import { hub } from '../../lib/hubs/ecuaciones-y-polinomios';
@@ -53,7 +54,695 @@ const schema = {
 >
   <Header />
   <EcuacionesPolinomiosExperience data={hub} />
+  <DecisionHubClassic data={hub} supplemental />
   <HubSeoAnswer data={hub} />
   <Footer />
 </Layout>
 
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    /**
+     * Acá NO hay plata en ninguna rama y el default de HubRow es 'ars'. Toda
+     * fila declara su formato explícito: 'plain' para números y 'unit' para
+     * grados.
+     */
+    const PLAIN = { format: 'plain', decimals: 2 };
+    const PLAIN4 = { format: 'plain', decimals: 4 };
+    const ENTERO = { format: 'plain', decimals: 0 };
+    const GRADO = { format: 'unit', unit: 'grado', decimals: 0 };
+
+    /**
+     * Redondeo anti-artefacto: el motor de raíces es iterativo (Durand-Kerner),
+     * así que devuelve 1.9999999999 donde la respuesta es 2. Todo lo que quede
+     * a menos de 1e-10 de un entero se vuelve el entero, y el −0 se vuelve 0.
+     */
+    const R = (n) => {
+      if (!isFinite(n)) return n;
+      const r = Math.round(n);
+      return Math.abs(n - r) < 1e-10 ? (r === 0 ? 0 : r) : n;
+    };
+
+    const fmt = (n) => {
+      n = R(n);
+      if (!isFinite(n)) return '—';
+      return Number(n.toFixed(6)).toLocaleString('es-AR', { maximumFractionDigits: 6 });
+    };
+
+    const err = (msg, k, v) => ({
+      total: '—',
+      sub: msg,
+      rows: [{ k: k, v: v || 0, ...PLAIN }],
+      chart: [],
+      format: 'plain',
+      decimals: 2,
+    });
+
+    // ---- utilidades de polinomios ---------------------------------------
+    // Mismo criterio de parseo que la fórmula original: los coeficientes se
+    // separan por espacios, comas o punto y coma. Por eso el decimal DENTRO de
+    // un coeficiente va con punto.
+    function parseCoefs(s) {
+      const a = String(s == null ? '' : s).split(/[;,\s]+/).filter(Boolean).map(Number);
+      if (a.length < 2 || a.some((x) => !isFinite(x)) || a[0] === 0) return null;
+      return a;
+    }
+
+    function polyEval(c, x) {
+      return c.reduce((acc, k) => acc * x + k, 0);
+    }
+
+    function polyText(c, variable) {
+      variable = variable || 'x';
+      const d = c.length - 1;
+      const s = c
+        .map((a, k) => ({ a: R(a), p: d - k }))
+        .filter((t) => Math.abs(t.a) > 1e-10)
+        .map((t, k) => {
+          const sign = k && t.a > 0 ? '+' : '';
+          const coef = t.a === -1 && t.p ? '−' : t.a === 1 && t.p ? '' : fmt(t.a);
+          return sign + coef + (t.p ? variable : '') + (t.p > 1 ? '^' + t.p : '');
+        })
+        .join('');
+      return s || '0';
+    }
+
+    // División larga: mismo algoritmo que src/lib/formulas/matematica-avanzada.ts
+    function divide(a, b) {
+      const q = new Array(Math.max(1, a.length - b.length + 1)).fill(0);
+      const r = a.slice();
+      for (let i = 0; i <= a.length - b.length; i++) {
+        const f = r[i] / b[0];
+        q[i] = f;
+        for (let j = 0; j < b.length; j++) r[i + j] -= f * b[j];
+      }
+      return {
+        q: q.map((x) => (Math.abs(x) < 1e-10 ? 0 : x)),
+        r: r.slice(q.length).map((x) => (Math.abs(x) < 1e-10 ? 0 : x)),
+      };
+    }
+
+    // Aritmética compleja + Durand-Kerner (port literal del motor original).
+    const ca = (a, b) => ({ re: a.re + b.re, im: a.im + b.im });
+    const cs = (a, b) => ({ re: a.re - b.re, im: a.im - b.im });
+    const cm = (a, b) => ({ re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re });
+    const cd = (a, b) => {
+      const d = b.re * b.re + b.im * b.im;
+      return { re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d };
+    };
+
+    function roots(input) {
+      const lead = input[0];
+      const c = input.map((x) => x / lead);
+      const degree = c.length - 1;
+      let z = Array.from({ length: degree }, (_, k) => {
+        const ang = (2 * Math.PI * k) / degree;
+        return { re: Math.cos(ang) * (1.1 + k / degree), im: Math.sin(ang) * (1.1 + k / degree) };
+      });
+      const pc = (x) => c.reduce((acc, b) => ca(cm(acc, x), { re: b, im: 0 }), { re: 0, im: 0 });
+      for (let it = 0; it < 150; it++) {
+        let move = 0;
+        z = z.map((x, i) => {
+          let den = { re: 1, im: 0 };
+          z.forEach((y, j) => {
+            if (i !== j) den = cm(den, cs(x, y));
+          });
+          const nx = cs(x, cd(pc(x), den));
+          move = Math.max(move, Math.hypot(nx.re - x.re, nx.im - x.im));
+          return nx;
+        });
+        if (move < 1e-11) break;
+      }
+      return z
+        .map((x) => ({
+          re: R(Number(x.re.toFixed(8))),
+          im: R(Number((Math.abs(x.im) < 1e-7 ? 0 : x.im).toFixed(8))),
+        }))
+        .sort((a, b) => a.re - b.re || a.im - b.im);
+    }
+
+    const cfmt = (z) =>
+      z.im === 0 ? fmt(z.re) : fmt(z.re) + (z.im >= 0 ? ' + ' : ' − ') + fmt(Math.abs(z.im)) + 'i';
+
+    // ---- motor de inecuaciones por tabla de signos ------------------------
+    // Sirve para polinómica, racional y valor absoluto. La idea es siempre la
+    // misma: los PUNTOS CRÍTICOS son los únicos lugares donde la expresión
+    // puede cambiar de signo, así que parten la recta en tramos y en cada tramo
+    // basta con probar un valor.
+    const realRoots = (c) => roots(c).filter((z) => z.im === 0).map((z) => R(z.re));
+
+    function inecuacionGeneral(v, tipo, op, signo, cumple) {
+      const P = parseCoefs(v.coefs);
+      if (!P) return err('Cargá al menos dos coeficientes válidos de P(x), del mayor grado al independiente, y que el primero no sea 0.', 'Coeficientes leídos', 0);
+      const Q = tipo === 'racional' ? parseCoefs(v.denom) : null;
+      if (tipo === 'racional' && !Q) return err('En la racional también hace falta el denominador Q(x): al menos dos coeficientes y el primero distinto de 0.', 'Coeficientes de Q(x)', 0);
+      const lim = tipo === 'absoluta' ? H.num(v.limAbs) : 0;
+
+      const cerradoOp = op.indexOf('=') >= 0;
+      const expr =
+        tipo === 'racional'
+          ? 'P(x) ÷ Q(x)'
+          : tipo === 'absoluta'
+            ? '|P(x)| − ' + fmt(lim)
+            : 'P(x)';
+
+      // La expresión, siempre comparada contra 0.
+      const F = (x) =>
+        tipo === 'racional'
+          ? polyEval(P, x) / polyEval(Q, x)
+          : tipo === 'absoluta'
+            ? Math.abs(polyEval(P, x)) - lim
+            : polyEval(P, x);
+
+      // --- paso 1: los puntos críticos ---
+      // 'cero'  → anula la expresión: entra si el signo es ≤ o ≥
+      // 'excl'  → anula el denominador: NUNCA entra, va con paréntesis
+      // 'abs'   → ahí |P(x)| = c, o sea la expresión vale 0
+      let crit = [];
+      if (tipo === 'absoluta') {
+        // Un valor absoluto nunca es negativo: con c < 0 no hay cortes.
+        if (lim >= 0) {
+          realRoots(P.map((x, k) => (k === P.length - 1 ? x - lim : x))).forEach((x) => crit.push({ x: x, t: 'abs' }));
+          realRoots(P.map((x, k) => (k === P.length - 1 ? x + lim : x))).forEach((x) => crit.push({ x: x, t: 'abs' }));
+        }
+      } else {
+        realRoots(P).forEach((x) => crit.push({ x: x, t: 'cero' }));
+        if (Q) realRoots(Q).forEach((x) => crit.push({ x: x, t: 'excl' }));
+      }
+      crit.sort((p, q) => p.x - q.x);
+      // Dedupe con tolerancia. Si un punto es cero de P y de Q a la vez, gana
+      // la exclusión: ahí la expresión sigue sin estar definida.
+      const xs = [];
+      crit.forEach((p) => {
+        const prev = xs[xs.length - 1];
+        if (prev && Math.abs(prev.x - p.x) < 1e-7) {
+          if (p.t === 'excl') prev.t = 'excl';
+        } else xs.push({ x: p.x, t: p.t });
+      });
+
+      // --- paso 2: la tabla de signos ---
+      const cuts = [-Infinity].concat(xs.map((p) => p.x)).concat([Infinity]);
+      const atoms = [];
+      for (let k = 0; k < cuts.length - 1; k++) {
+        const lo = cuts[k];
+        const hi = cuts[k + 1];
+        // Si no hay ningún punto crítico el tramo es toda la recta y los dos
+        // extremos son infinitos: ahí el valor de prueba es el 0.
+        const xm = !isFinite(lo) && !isFinite(hi) ? 0 : !isFinite(lo) ? hi - 1 : !isFinite(hi) ? lo + 1 : (lo + hi) / 2;
+        const val = R(F(xm));
+        atoms.push({ kind: 'int', idx: k, x: xm, val: val, sat: cumple(val) });
+        if (k < xs.length) {
+          const p = xs[k];
+          // En el punto crítico la expresión vale exactamente 0 (salvo que esté
+          // excluido). No se evalúa numéricamente para no arrastrar el error
+          // del método iterativo de raíces.
+          atoms.push({ kind: 'pt', idx: k, x: p.x, t: p.t, sat: p.t === 'excl' ? false : cerradoOp });
+        }
+      }
+
+      // --- paso 3: unir los tramos que cumplen, en notación de intervalo ---
+      // Se agrupan los tramos consecutivos que cumplen (incluyendo el punto
+      // crítico del medio si entra), así no salen cosas como [1, 2] ∪ [2, 3].
+      const partes = [];
+      let i = 0;
+      while (i < atoms.length) {
+        if (!atoms[i].sat) { i++; continue; }
+        let j = i;
+        while (j + 1 < atoms.length && atoms[j + 1].sat) j++;
+        const A = atoms[i];
+        const B = atoms[j];
+        if (i === j && A.kind === 'pt') {
+          partes.push('{' + fmt(A.x) + '}');
+        } else {
+          const lo = A.kind === 'pt' ? A.x : cuts[A.idx];
+          const hi = B.kind === 'pt' ? B.x : cuts[B.idx + 1];
+          // El ±∞ nunca lleva corchete: no es un número, no pertenece a nada.
+          const izq = (isFinite(lo) && A.kind === 'pt' ? '[' : '(') + (isFinite(lo) ? fmt(lo) : '−∞');
+          const der = (isFinite(hi) ? fmt(hi) : '+∞') + (isFinite(hi) && B.kind === 'pt' ? ']' : ')');
+          partes.push(izq + ', ' + der);
+        }
+        i = j + 1;
+      }
+      const solucion = partes.length ? partes.join(' ∪ ') : '∅';
+      const total = solucion === '(−∞, +∞)' ? 'ℝ' : solucion;
+
+      // --- filas: el procedimiento completo ---
+      const rows = [
+        { k: 'P(x) = ' + polyText(P), ref: 'el polinomio que cargaste', v: P.length - 1, ...GRADO },
+      ];
+      if (Q) rows.push({ k: 'Q(x) = ' + polyText(Q), ref: 'denominador: sus ceros se excluyen', v: Q.length - 1, ...GRADO });
+      if (tipo === 'absoluta') rows.push({ k: 'c — el límite de |P(x)|', ref: lim < 0 ? 'negativo: un valor absoluto nunca llega ahí' : 'se compara |P(x)| contra este número', v: R(lim), ...PLAIN4 });
+      rows.push({ k: 'La inecuación: ' + expr + ' ' + signo + ' 0', ref: 'paso 0: todo de un solo lado del signo', v: 0, ...ENTERO });
+      rows.push({ k: 'Puntos críticos encontrados', ref: 'paso 1: los únicos lugares donde puede cambiar el signo', v: xs.length, extra: true, ...ENTERO });
+
+      xs.forEach((p, k) => {
+        rows.push({
+          k: 'Punto crítico ' + (k + 1) + ': x = ' + fmt(p.x),
+          ref:
+            p.t === 'excl'
+              ? 'cero de Q(x) → EXCLUIDO, va con paréntesis aunque el signo sea ≤ o ≥'
+              : p.t === 'abs'
+                ? '|P(x)| = ' + fmt(lim) + ' → la expresión vale 0 acá' + (cerradoOp ? ', y con ' + signo + ' el extremo ENTRA' : ', pero con ' + signo + ' NO entra')
+                : 'raíz de P(x) → la expresión vale 0 acá' + (cerradoOp ? ', y con ' + signo + ' el extremo ENTRA' : ', pero con ' + signo + ' NO entra'),
+          v: p.x,
+          ...PLAIN4,
+        });
+      });
+
+      atoms.filter((at) => at.kind === 'int').forEach((at) => {
+        const lo = cuts[at.idx];
+        const hi = cuts[at.idx + 1];
+        rows.push({
+          k:
+            'Tramo (' + (isFinite(lo) ? fmt(lo) : '−∞') + ', ' + (isFinite(hi) ? fmt(hi) : '+∞') + ') — pruebo x = ' + fmt(at.x),
+          ref: 'paso 2: la expresión da ' + (at.val > 0 ? 'POSITIVO (+)' : at.val < 0 ? 'NEGATIVO (−)' : 'cero') + ' → ' + (at.sat ? 'CUMPLE' : 'no cumple'),
+          v: at.val,
+          extra: at.sat,
+          ...PLAIN4,
+        });
+      });
+
+      rows.push({ k: 'Tramos que cumplen, sobre el total', ref: 'paso 3: se unen los que quedan pegados', v: atoms.filter((at) => at.kind === 'int' && at.sat).length, ...ENTERO });
+
+      // Verificación: un valor de adentro tiene que cumplir de verdad.
+      const testigo = atoms.filter((at) => at.kind === 'int' && at.sat)[0];
+      if (testigo) {
+        rows.push({ k: 'Verificación: ' + expr + ' en x = ' + fmt(testigo.x), ref: 'un punto de la solución: tiene que cumplir ' + signo + ' 0', v: testigo.val, ...PLAIN4 });
+      }
+      if (Q) {
+        xs.filter((p) => p.t === 'excl').forEach((p) => {
+          rows.push({ k: 'Q(' + fmt(p.x) + ')', ref: 'da 0: ahí P(x) ÷ Q(x) no está definida', v: R(polyEval(Q, p.x)), ...PLAIN4 });
+        });
+      }
+
+      const subPorTipo =
+        tipo === 'racional'
+          ? 'Ojo: el denominador NO se pasa multiplicando, porque no se sabe su signo. Sus ceros se excluyen siempre.'
+          : tipo === 'absoluta'
+            ? (op.charAt(0) === '<'
+                ? 'Con |P(x)| ' + signo + ' c se piden las dos condiciones a la vez (intersección): queda un tramo solo.'
+                : 'Con |P(x)| ' + signo + ' c alcanza con cumplir una de las dos (unión): quedan tramos separados.')
+            : 'De grado 2 en adelante hay que ir por la tabla de signos: despejar la x sin más no alcanza.';
+
+      return {
+        total: total,
+        sub:
+          (xs.length
+            ? 'Puntos críticos en ' + xs.map((p) => fmt(p.x)).join(', ') + '. '
+            : 'No hay puntos críticos: la expresión no cambia de signo en toda la recta. ') + subPorTipo,
+        rows: rows,
+        format: 'plain',
+        decimals: 4,
+        chart: atoms
+          .filter((at) => at.kind === 'int')
+          .map((at) => ({
+            label:
+              '(' + (isFinite(cuts[at.idx]) ? fmt(cuts[at.idx]) : '−∞') + ', ' +
+              (isFinite(cuts[at.idx + 1]) ? fmt(cuts[at.idx + 1]) : '+∞') + ') → ' + (at.sat ? 'cumple' : 'no'),
+            value: Math.abs(at.val) || 0.001,
+            tone: at.sat ? 'good' : 'bad',
+          })),
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const a = H.num(v.a);
+      const b = H.num(v.b);
+      const c = H.num(v.c);
+      const rIn = H.num(v.r);
+      const op = String(v.op || '>=');
+      const id = (kase && kase.id) || 'cuadratica';
+
+      // ---- 1) Ecuación cuadrática (resolvente) --------------------------
+      if (id === 'cuadratica') {
+        // a = 0 no es un error: deja de ser cuadrática y pasa a ser una recta.
+        if (a === 0) {
+          if (b === 0) {
+            return err(
+              c === 0
+                ? 'Con a = 0, b = 0 y c = 0 la igualdad se cumple para cualquier x.'
+                : 'Con a = 0 y b = 0 queda "c = 0", que es falso: no hay solución.',
+              'Término independiente c', c
+            );
+          }
+          const xl = -c / b;
+          return {
+            total: fmt(xl),
+            sub: 'Con a = 0 no es una cuadrática sino una recta: la única solución es x = −c ÷ b = ' + fmt(xl) + '.',
+            rows: [
+              { k: 'a — coeficiente de x²', v: 0, ...ENTERO },
+              { k: 'b — coeficiente de x', v: b, ...PLAIN },
+              { k: 'c — término independiente', v: c, ...PLAIN },
+              { k: '−c', ref: 'paso 1: pasar c al otro lado', v: -c, ...PLAIN },
+              { k: 'Dividido b → x', ref: 'paso 2: el despeje', v: xl, extra: true, ...PLAIN4 },
+              { k: 'Verificación: b·x + c', ref: 'tiene que dar 0', v: R(b * xl + c), ...PLAIN },
+            ],
+            format: 'plain',
+            decimals: 2,
+            chart: [
+              { label: 'b = ' + fmt(b), value: Math.abs(b), tone: 'prop' },
+              { label: 'c = ' + fmt(c), value: Math.abs(c), tone: 'exit' },
+              { label: 'x = ' + fmt(xl), value: Math.abs(xl), tone: 'main' },
+            ],
+          };
+        }
+
+        const bb = b * b;
+        const fourac = 4 * a * c;
+        const disc = R(bb - fourac);
+        const vx = -b / (2 * a);
+        const vy = c - bb / (4 * a);
+
+        const base = [
+          { k: 'a — coeficiente de x²', v: a, ...PLAIN },
+          { k: 'b — coeficiente de x', v: b, ...PLAIN },
+          { k: 'c — término independiente', v: c, ...PLAIN },
+          { k: 'b²', ref: 'paso 1: sustitución', v: R(bb), ...PLAIN },
+          { k: '4 · a · c', ref: 'paso 1: sustitución', v: R(fourac), ...PLAIN },
+          { k: 'D = b² − 4ac → discriminante', ref: 'paso 2', v: disc, extra: true, ...PLAIN },
+        ];
+
+        if (disc > 0) {
+          const raiz = Math.sqrt(disc);
+          const x1 = R((-b + raiz) / (2 * a));
+          const x2 = R((-b - raiz) / (2 * a));
+          return {
+            total: fmt(x1) + ' y ' + fmt(x2),
+            sub:
+              'D = ' + fmt(disc) + ' > 0: dos raíces reales distintas. x = (−' + fmt(b) + ' ± √' +
+              fmt(disc) + ') ÷ ' + fmt(2 * a) + '. La parábola abre ' + (a > 0 ? 'hacia arriba' : 'hacia abajo') +
+              ' y corta el eje x en los dos puntos.',
+            rows: base.concat([
+              { k: '√D', ref: 'paso 3', v: R(raiz), ...PLAIN4 },
+              { k: '−b', ref: 'paso 4', v: R(-b), ...PLAIN },
+              { k: '2a — el divisor', ref: 'paso 4', v: R(2 * a), ...PLAIN },
+              { k: 'x₁ = (−b + √D) ÷ 2a', ref: 'paso 5: el signo +', v: x1, extra: true, ...PLAIN4 },
+              { k: 'x₂ = (−b − √D) ÷ 2a', ref: 'paso 5: el signo −', v: x2, extra: true, ...PLAIN4 },
+              { k: 'Verificación: x₁ + x₂', ref: 'tiene que dar −b ÷ a = ' + fmt(-b / a), v: R(x1 + x2), ...PLAIN4 },
+              { k: 'Verificación: x₁ · x₂', ref: 'tiene que dar c ÷ a = ' + fmt(c / a), v: R(x1 * x2), ...PLAIN4 },
+              { k: 'Vértice — abscisa (−b ÷ 2a)', ref: 'el eje de simetría', v: R(vx), ...PLAIN4 },
+              { k: 'Vértice — ordenada', ref: 'c − b² ÷ 4a', v: R(vy), ...PLAIN4 },
+            ]),
+            format: 'plain',
+            decimals: 4,
+            chart: [
+              { label: 'b² = ' + fmt(bb), value: Math.abs(bb), tone: 'prop' },
+              { label: '4ac = ' + fmt(fourac), value: Math.abs(fourac), tone: 'exit' },
+              { label: 'D = ' + fmt(disc), value: Math.abs(disc), tone: 'good' },
+            ],
+          };
+        }
+
+        if (disc === 0) {
+          const x1 = R(-b / (2 * a));
+          return {
+            total: fmt(x1),
+            sub:
+              'D = 0: una sola raíz real, doble. La parábola apoya en el eje x justo en el vértice (' +
+              fmt(x1) + ', 0) en vez de cruzarlo.',
+            rows: base.concat([
+              { k: '√D', ref: 'paso 3', v: 0, ...PLAIN },
+              { k: '−b', ref: 'paso 4', v: R(-b), ...PLAIN },
+              { k: '2a — el divisor', ref: 'paso 4', v: R(2 * a), ...PLAIN },
+              { k: 'x = −b ÷ 2a → raíz doble', ref: 'paso 5', v: x1, extra: true, ...PLAIN4 },
+              { k: 'Verificación: x₁ + x₂ = 2x', ref: 'tiene que dar −b ÷ a = ' + fmt(-b / a), v: R(2 * x1), ...PLAIN4 },
+              { k: 'Verificación: x₁ · x₂ = x²', ref: 'tiene que dar c ÷ a = ' + fmt(c / a), v: R(x1 * x1), ...PLAIN4 },
+              { k: 'Vértice — ordenada', ref: 'c − b² ÷ 4a (da 0)', v: R(vy), ...PLAIN4 },
+            ]),
+            format: 'plain',
+            decimals: 4,
+            chart: [
+              { label: 'b² = ' + fmt(bb), value: Math.abs(bb), tone: 'prop' },
+              { label: '4ac = ' + fmt(fourac), value: Math.abs(fourac), tone: 'exit' },
+              { label: 'D = 0', value: 0, tone: 'warn' },
+            ],
+          };
+        }
+
+        // D < 0 → dos raíces complejas conjugadas
+        const re = R(-b / (2 * a));
+        const im = R(Math.sqrt(-disc) / Math.abs(2 * a));
+        return {
+          total: fmt(re) + ' ± ' + fmt(im) + 'i',
+          sub:
+            'D = ' + fmt(disc) + ' < 0: no hay raíces reales. La parábola queda entera ' +
+            (a > 0 ? 'por encima' : 'por debajo') + ' del eje x y las dos soluciones son complejas conjugadas.',
+          rows: base.concat([
+            { k: '−D — lo que sí tiene raíz cuadrada', ref: 'paso 3', v: R(-disc), ...PLAIN },
+            { k: '√|D|', ref: 'paso 3', v: R(Math.sqrt(-disc)), ...PLAIN4 },
+            { k: '|2a| — el divisor', ref: 'paso 4', v: R(Math.abs(2 * a)), ...PLAIN },
+            { k: 'Parte real de las dos raíces (−b ÷ 2a)', ref: 'paso 5', v: re, extra: true, ...PLAIN4 },
+            { k: 'Parte imaginaria (√|D| ÷ |2a|)', ref: 'paso 5: la que lleva la i', v: im, extra: true, ...PLAIN4 },
+            { k: 'Verificación: x₁ + x₂ = 2 · parte real', ref: 'tiene que dar −b ÷ a = ' + fmt(-b / a), v: R(2 * re), ...PLAIN4 },
+            { k: 'Verificación: x₁ · x₂ = real² + imag²', ref: 'tiene que dar c ÷ a = ' + fmt(c / a), v: R(re * re + im * im), ...PLAIN4 },
+            { k: 'Vértice — ordenada', ref: 'c − b² ÷ 4a', v: R(vy), ...PLAIN4 },
+          ]),
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'b² = ' + fmt(bb), value: Math.abs(bb), tone: 'prop' },
+            { label: '4ac = ' + fmt(fourac), value: Math.abs(fourac), tone: 'exit' },
+            { label: '|D| = ' + fmt(Math.abs(disc)), value: Math.abs(disc), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ---- 2) Inecuaciones ----------------------------------------------
+      // Cuatro tipos: lineal (despeje directo) y polinómica / racional / con
+      // valor absoluto (tabla de signos sobre los puntos críticos).
+      if (id === 'inecuacion') {
+        const cumple = (y) => (op === '>' ? y > 0 : op === '>=' ? y >= 0 : op === '<' ? y < 0 : y <= 0);
+        const signo = { '>': '>', '>=': '≥', '<': '<', '<=': '≤' }[op] || '≥';
+        const tipoIneq = String(v.tipoIneq || 'lineal');
+
+        if (tipoIneq !== 'lineal') return inecuacionGeneral(v, tipoIneq, op, signo, cumple);
+
+        if (a === 0) {
+          const vale = cumple(b);
+          return {
+            total: vale ? 'ℝ' : '∅',
+            sub:
+              'Con a = 0 la x desaparece y queda "' + fmt(b) + ' ' + signo + ' 0", que es ' +
+              (vale ? 'verdadero: la cumplen TODOS los reales.' : 'falso: no la cumple ningún x.'),
+            rows: [
+              { k: 'a — coeficiente de x', v: 0, ...ENTERO },
+              { k: 'b — término independiente', v: b, ...PLAIN },
+              { k: 'La inecuación se reduce a b ' + signo + ' 0', ref: vale ? 'se cumple' : 'no se cumple', v: b, extra: true, ...PLAIN },
+            ],
+            format: 'plain',
+            decimals: 2,
+            chart: [{ label: vale ? 'Todos los reales' : 'Conjunto vacío', value: 1, tone: vale ? 'good' : 'bad' }],
+          };
+        }
+
+        const x0 = R(-b / a);
+        // Dividir por un a negativo INVIERTE el sentido de la desigualdad.
+        const flip = { '>': '<', '>=': '<=', '<': '>', '<=': '>=' };
+        const opFinal = a > 0 ? op : flip[op];
+        const cerrado = opFinal.indexOf('=') >= 0;
+        const haciaArriba = opFinal.charAt(0) === '>';
+        const intervalo = haciaArriba
+          ? (cerrado ? '[' : '(') + fmt(x0) + ', +∞)'
+          : '(−∞, ' + fmt(x0) + (cerrado ? ']' : ')');
+        const signoFinal = { '>': '>', '>=': '≥', '<': '<', '<=': '≤' }[opFinal];
+        const xt = haciaArriba ? x0 + 1 : x0 - 1;
+        const xf = haciaArriba ? x0 - 1 : x0 + 1;
+
+        return {
+          total: intervalo,
+          sub:
+            'x ' + signoFinal + ' ' + fmt(x0) + ' · ' +
+            (a > 0
+              ? 'a es positivo, así que el sentido de la desigualdad se conserva.'
+              : 'a es NEGATIVO: al dividir por él, el signo se dio vuelta (de ' + signo + ' pasó a ' + signoFinal + ').'),
+          rows: [
+            { k: 'a — coeficiente de x', v: a, ...PLAIN },
+            { k: 'b — término independiente', v: b, ...PLAIN },
+            { k: '−b', ref: 'paso 1: pasar b al otro lado', v: R(-b), ...PLAIN },
+            { k: 'x₀ = −b ÷ a → la frontera', ref: 'paso 2: el despeje', v: x0, extra: true, ...PLAIN4 },
+            { k: 'El extremo x₀ ' + (cerrado ? 'ENTRA en la solución' : 'NO entra'), ref: cerrado ? 'corchete [ ]' : 'paréntesis ( )', v: x0, ...PLAIN4 },
+            { k: 'Prueba: a·x + b en x = ' + fmt(xt), ref: 'adentro del intervalo → cumple', v: R(a * xt + b), ...PLAIN4 },
+            { k: 'Prueba: a·x + b en x = ' + fmt(xf), ref: 'afuera del intervalo → no cumple', v: R(a * xf + b), ...PLAIN4 },
+          ],
+          format: 'plain',
+          decimals: 2,
+          chart: [
+            { label: 'f(' + fmt(xf) + ') = ' + fmt(a * xf + b), value: Math.abs(a * xf + b), tone: 'bad' },
+            { label: 'f(x₀) = 0 — la frontera', value: 0, tone: 'warn' },
+            { label: 'f(' + fmt(xt) + ') = ' + fmt(a * xt + b), value: Math.abs(a * xt + b), tone: 'good' },
+          ],
+        };
+      }
+
+      // ---- 3) Factorización de un polinomio ----------------------------
+      if (id === 'factorizacion') {
+        const cs2 = parseCoefs(v.coefs);
+        if (!cs2) return err('Cargá al menos dos coeficientes válidos, del mayor grado al independiente, y que el primero no sea 0.', 'Coeficientes leídos', 0);
+        const rs = roots(cs2);
+        const real = rs.filter((z) => z.im === 0);
+        const complejas = rs.length - real.length;
+        const factores = real.map((z) => '(x ' + (z.re >= 0 ? '−' : '+') + ' ' + fmt(Math.abs(z.re)) + ')').join('');
+        const lead = R(cs2[0]);
+        const resto = complejas > 0 ? ' · (factor cuadrático irreducible)' : '';
+
+        const rows = [
+          { k: 'Polinomio: ' + polyText(cs2), ref: 'lo que cargaste', v: cs2.length - 1, ...GRADO },
+          { k: 'Coeficiente principal (se saca como factor)', v: lead, ...PLAIN },
+          { k: 'Raíces reales encontradas', ref: 'cada una da un factor (x − r)', v: real.length, ...ENTERO },
+          { k: 'Raíces complejas (van de a pares)', ref: 'no dan factores lineales reales', v: complejas, ...ENTERO },
+        ];
+        real.forEach((z, k) => {
+          rows.push({
+            k: 'Raíz r' + (k + 1) + ' → factor (x ' + (z.re >= 0 ? '−' : '+') + ' ' + fmt(Math.abs(z.re)) + ')',
+            ref: 'teorema del factor',
+            v: z.re, extra: true, ...PLAIN4,
+          });
+        });
+        rows.push({
+          k: 'Verificación: P(x) evaluado en la primera raíz',
+          ref: 'tiene que dar 0',
+          v: real.length ? R(polyEval(cs2, real[0].re)) : 0,
+          ...PLAIN4,
+        });
+
+        return {
+          total: (lead === 1 ? '' : fmt(lead)) + (factores || '—') + resto,
+          sub:
+            polyText(cs2) + ' tiene ' + real.length + ' raíz/raíces reales de un total de ' + (cs2.length - 1) +
+            '. Cada raíz r aporta el factor (x − r).',
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: real.length
+            ? real.map((z, k) => ({ label: 'r' + (k + 1) + ' = ' + fmt(z.re), value: Math.abs(z.re) || 0.001, tone: k === 0 ? 'main' : 'prop' }))
+            : [{ label: 'Sin raíces reales', value: 1, tone: 'bad' }],
+        };
+      }
+
+      // ---- 4) Raíces reales y complejas --------------------------------
+      if (id === 'raices') {
+        const cs3 = parseCoefs(v.coefs);
+        if (!cs3) return err('Cargá al menos dos coeficientes válidos, del mayor grado al independiente, y que el primero no sea 0.', 'Coeficientes leídos', 0);
+        const rs = roots(cs3);
+        const real = rs.filter((z) => z.im === 0);
+        const suma = R(rs.reduce((s, z) => s + z.re, 0));
+        const vieta = R(-cs3[1] / cs3[0]);
+
+        const rows = [
+          { k: 'Grado del polinomio ' + polyText(cs3), ref: 'tiene exactamente esa cantidad de raíces', v: cs3.length - 1, ...GRADO },
+          { k: 'Raíces reales', v: real.length, ...ENTERO },
+          { k: 'Raíces complejas', ref: 'siempre en cantidad par', v: rs.length - real.length, ...ENTERO },
+        ];
+        rs.forEach((z, k) => {
+          rows.push({ k: 'Raíz ' + (k + 1) + ' — parte real', ref: z.im === 0 ? 'raíz real: corta el eje x' : 'compleja', v: z.re, extra: z.im === 0, ...PLAIN4 });
+          if (z.im !== 0) rows.push({ k: 'Raíz ' + (k + 1) + ' — parte imaginaria', ref: 'el coeficiente de i', v: z.im, ...PLAIN4 });
+        });
+        rows.push({ k: 'Verificación: suma de todas las raíces', ref: 'tiene que dar −b ÷ a = ' + fmt(vieta), v: suma, ...PLAIN4 });
+
+        return {
+          total: rs.map(cfmt).join(' · '),
+          sub:
+            'Grado ' + (cs3.length - 1) + ': ' + real.length + ' raíz/raíces reales y ' + (rs.length - real.length) +
+            ' complejas. Las complejas de un polinomio con coeficientes reales vienen siempre de a pares conjugados.',
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: rs.map((z, k) => ({
+            label: 'Raíz ' + (k + 1) + ' = ' + cfmt(z),
+            value: Math.hypot(z.re, z.im) || 0.001,
+            tone: z.im === 0 ? 'good' : 'warn',
+          })),
+        };
+      }
+
+      // ---- 5) División larga de polinomios ------------------------------
+      if (id === 'division') {
+        const dd = parseCoefs(v.coefs);
+        const dv = parseCoefs(v.divisor);
+        if (!dd || !dv) return err('Cargá dividendo y divisor como listas de coeficientes válidas (el primero no puede ser 0).', 'Coeficientes leídos', 0);
+        if (dd.length < dv.length) return err('El grado del dividendo tiene que ser mayor o igual que el del divisor.', 'Grado del dividendo', dd.length - 1);
+
+        const d = divide(dd, dv);
+        const q = d.q;
+        const rest = d.r;
+        // Verificación numérica: divisor × cociente + resto en un punto.
+        const xp = 2;
+        const recon = polyEval(dv, xp) * polyEval(q, xp) + (rest.length ? polyEval(rest, xp) : 0);
+
+        const rows = [
+          { k: 'Dividendo: ' + polyText(dd), v: dd.length - 1, ...GRADO },
+          { k: 'Divisor: ' + polyText(dv), v: dv.length - 1, ...GRADO },
+          { k: 'Cociente: ' + polyText(q), ref: 'grado del dividendo − grado del divisor', v: q.length - 1, extra: true, ...GRADO },
+        ];
+        q.forEach((x, k) => {
+          rows.push({ k: 'Coeficiente ' + (k + 1) + ' del cociente', ref: 'paso ' + (k + 1) + ': término líder ÷ término líder', v: R(x), ...PLAIN4 });
+        });
+        rows.push({ k: 'Resto: ' + polyText(rest.length ? rest : [0]), ref: 'siempre de grado menor que el divisor', v: rest.length ? R(rest[rest.length - 1]) : 0, extra: true, ...PLAIN4 });
+        rows.push({ k: 'Verificación: divisor × cociente + resto en x = 2', ref: 'tiene que dar el dividendo en x = 2', v: R(recon), ...PLAIN4 });
+        rows.push({ k: 'Dividendo evaluado en x = 2', ref: 'el valor de control', v: R(polyEval(dd, xp)), ...PLAIN4 });
+
+        return {
+          total: polyText(q),
+          sub:
+            polyText(dd) + ' = (' + polyText(dv) + ')(' + polyText(q) + ') + (' + polyText(rest.length ? rest : [0]) + ')' +
+            (rest.every((x) => x === 0) ? ' · Resto 0: el divisor es factor exacto.' : ''),
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: q.map((x, k) => ({
+            label: 'Cociente, coef. ' + (k + 1) + ' = ' + fmt(x),
+            value: Math.abs(x) || 0.001,
+            tone: k === 0 ? 'main' : 'prop',
+          })).concat([{ label: 'Resto = ' + polyText(rest.length ? rest : [0]), value: Math.abs(rest.length ? rest[rest.length - 1] : 0), tone: 'exit' }]),
+        };
+      }
+
+      // ---- 6) Regla de Ruffini ------------------------------------------
+      const cs4 = parseCoefs(v.coefs);
+      if (!cs4) return err('Cargá al menos dos coeficientes válidos, del mayor grado al independiente, y que el primero no sea 0.', 'Coeficientes leídos', 0);
+
+      const q4 = [cs4[0]];
+      const productos = [];
+      for (let k = 1; k < cs4.length; k++) {
+        productos.push(q4[k - 1] * rIn);
+        q4.push(cs4[k] + productos[k - 1]);
+      }
+      const resto4 = R(q4.pop());
+      const esFactor = Math.abs(resto4) < 1e-9;
+
+      const rows4 = [
+        { k: 'Polinomio: ' + polyText(cs4), v: cs4.length - 1, ...GRADO },
+        { k: 'r — se divide por (x ' + (rIn >= 0 ? '−' : '+') + ' ' + fmt(Math.abs(rIn)) + ')', ref: 'la raíz que probás', v: rIn, ...PLAIN },
+        { k: 'Fila 1 — coeficiente bajado tal cual', ref: 'el primero no se toca', v: R(cs4[0]), extra: true, ...PLAIN4 },
+      ];
+      for (let k = 1; k < cs4.length; k++) {
+        rows4.push({ k: 'Producto ' + k + ': ' + fmt(q4[k - 1] !== undefined ? q4[k - 1] : resto4) + ' × ' + fmt(rIn), ref: 'paso ' + k + 'a', v: R(productos[k - 1]), ...PLAIN4 });
+        const suma = k < cs4.length - 1 ? q4[k] : resto4;
+        rows4.push({
+          k: 'Suma ' + k + ': ' + fmt(cs4[k]) + ' + ' + fmt(productos[k - 1]),
+          ref: k < cs4.length - 1 ? 'paso ' + k + 'b: coeficiente del cociente' : 'paso ' + k + 'b: ES EL RESTO',
+          v: R(suma), extra: k === cs4.length - 1, ...PLAIN4,
+        });
+      }
+      rows4.push({ k: 'Resto de la división', ref: esFactor ? '0 → (x − r) SÍ es factor' : 'distinto de 0 → no es factor', v: resto4, extra: true, ...PLAIN4 });
+      rows4.push({ k: 'Verificación: P(' + fmt(rIn) + ') evaluado directo', ref: 'teorema del resto: tiene que coincidir', v: R(polyEval(cs4, rIn)), ...PLAIN4 });
+
+      return {
+        total: polyText(q4),
+        sub:
+          'Cociente ' + polyText(q4) + ' y resto ' + fmt(resto4) + '. ' +
+          (esFactor
+            ? 'El resto da 0: (x ' + (rIn >= 0 ? '−' : '+') + ' ' + fmt(Math.abs(rIn)) + ') es factor exacto y ' + fmt(rIn) + ' es raíz del polinomio.'
+            : 'El resto no es 0, así que ' + fmt(rIn) + ' no es raíz: por el teorema del resto, P(' + fmt(rIn) + ') = ' + fmt(resto4) + '.'),
+        rows: rows4,
+        format: 'plain',
+        decimals: 4,
+        chart: q4
+          .map((x, k) => ({ label: 'Cociente, coef. ' + (k + 1) + ' = ' + fmt(x), value: Math.abs(x) || 0.001, tone: 'prop' }))
+          .concat([{ label: 'Resto = ' + fmt(resto4), value: Math.abs(resto4) || 0.001, tone: esFactor ? 'good' : 'bad' }]),
+      };
+    });
+  })();
+</script>

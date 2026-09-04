@@ -358,5 +358,5 @@ export const hub: HubData = {
     '/en/gcd-lcm-two-integers',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-09-04',
 };

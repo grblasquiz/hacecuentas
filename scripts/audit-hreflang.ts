@@ -83,7 +83,7 @@ export function normalizeInternalPath(href: string): string | null {
   try {
     const url = new URL(href, SITE);
     if (url.origin !== SITE) return null;
-    let path = url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/');
+    let path = url.pathname.replace(/\.html$/, '');
     if (!path.startsWith('/')) path = `/${path}`;
     if (path.length > 1) path = path.replace(/\/+$/, '');
     return path || '/';

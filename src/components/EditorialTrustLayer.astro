@@ -36,6 +36,82 @@ const {
   professionalReviewer,
 } = Astro.props;
 
+const language = Astro.url.pathname.startsWith('/en') ? 0 : /^\/pt(?:-pt)?(?:\/|$)/.test(Astro.url.pathname) ? 1 : -1;
+const translations: Record<string, string[]> = {
+  "Transparencia editorial": [
+    "Editorial transparency",
+    "Transparência editorial"
+  ],
+  "Autor y editor responsable": [
+    "Author and responsible editor",
+    "Autor e editor responsável"
+  ],
+  "Fundador y editor responsable de Hacé Cuentas.": [
+    "Founder and responsible editor of Hacé Cuentas.",
+    "Fundador e editor responsável do Hacé Cuentas."
+  ],
+  "Cómo se verifica": [
+    "How it is checked",
+    "Como é verificado"
+  ],
+  "Fuentes y método": [
+    "Sources and method",
+    "Fontes e método"
+  ],
+  "Ver metodología →": [
+    "View methodology →",
+    "Ver metodologia →"
+  ],
+  "Política editorial": [
+    "Editorial policy",
+    "Política editorial"
+  ],
+  "Reportar una corrección": [
+    "Report a correction",
+    "Informar uma correção"
+  ],
+  "Contacto editorial": [
+    "Editorial contact",
+    "Contato editorial"
+  ],
+  "Revisión profesional documentada": [
+    "Documented professional review",
+    "Revisão profissional documentada"
+  ],
+  "Revisión editorial documentada": [
+    "Documented editorial review",
+    "Revisão editorial documentada"
+  ],
+  "Fuentes específicas documentadas": [
+    "Specific sources documented",
+    "Fontes específicas documentadas"
+  ],
+  "Pruebas automatizadas documentadas": [
+    "Automated checks documented",
+    "Testes automatizados documentados"
+  ],
+  "Estado editorial visible en metodología": [
+    "Editorial status explained in methodology",
+    "Estado editorial explicado na metodologia"
+  ],
+  "Las pruebas no reemplazan una revisión profesional.": [
+    "Tests do not replace professional review.",
+    "Os testes não substituem uma revisão profissional."
+  ],
+  "Para decisiones personales, consultá a un profesional matriculado.": [
+    "For personal decisions, consult a qualified professional.",
+    "Para decisões pessoais, consulte um profissional habilitado."
+  ],
+  "La autoría y el método están explicados en las páginas editoriales.": [
+    "Authorship and methodology are explained on our editorial pages.",
+    "A autoria e o método estão explicados nas páginas editoriais."
+  ],
+  "La página explica sus supuestos y límites.": [
+    "This page explains its assumptions and limitations.",
+    "A página explica suas premissas e limitações."
+  ]
+};
+const tr = (value:string) => language < 0 ? value : translations[value]?.[language] ?? value;
 const validReviewer = Boolean(
   professionalReviewer?.name &&
   professionalReviewer?.profession &&
@@ -61,7 +137,7 @@ const stateDetail = validReviewer
       ? 'Para decisiones personales, consultá a un profesional matriculado.'
       : 'La autoría y el método están explicados en las páginas editoriales.';
 const formattedDate = reviewedAt
-  ? new Date(`${reviewedAt.slice(0, 10)}T00:00:00Z`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+  ? new Date(`${reviewedAt.slice(0, 10)}T00:00:00Z`).toLocaleDateString(language === 0 ? 'en-US' : language === 1 ? 'pt-BR' : 'es-AR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
   : '';
 const pageLabel = pageType === 'calculator' ? 'esta calculadora' : pageType === 'hub' ? 'esta guía' : 'esta página';
 ---
@@ -70,34 +146,34 @@ const pageLabel = pageType === 'calculator' ? 'esta calculadora' : pageType === 
   <section class="editorial-trust" aria-labelledby="editorial-trust-title">
     <div class="editorial-trust__head">
       <div>
-        <p class="editorial-trust__eyebrow">Transparencia editorial</p>
-        <h2 id="editorial-trust-title">Quién responde por {pageLabel}</h2>
+        <p class="editorial-trust__eyebrow">{tr("Transparencia editorial")}</p>
+        <h2 id="editorial-trust-title">{language === 0 ? 'Who is responsible for this page' : language === 1 ? 'Quem é responsável por esta página' : `Quién responde por ${pageLabel}`}</h2>
       </div>
-      <span class="editorial-trust__status" data-state={validReviewer ? 'professional' : isSensitive ? 'sensitive' : 'editorial'}>{state}</span>
+      <span class="editorial-trust__status" data-state={validReviewer ? 'professional' : isSensitive ? 'sensitive' : 'editorial'}>{tr(state)}</span>
     </div>
 
     <div class="editorial-trust__grid">
       <div>
-        <strong>Autor y editor responsable</strong>
+        <strong>{tr("Autor y editor responsable")}</strong>
         <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a>
-        <span>Fundador y editor responsable de Hacé Cuentas.</span>
+        <span>{tr("Fundador y editor responsable de Hacé Cuentas.")}</span>
       </div>
       <div>
-        <strong>Cómo se verifica</strong>
-        <span>{stateDetail}</span>
+        <strong>{tr("Cómo se verifica")}</strong>
+        <span>{tr(stateDetail)}</span>
         {formattedDate && <time datetime={reviewedAt}>{formattedDate}</time>}
       </div>
       <div>
-        <strong>Fuentes y método</strong>
-        <span>{sources.length > 0 ? `${sources.length} fuente${sources.length === 1 ? '' : 's'} declarada${sources.length === 1 ? '' : 's'}.` : 'La página explica sus supuestos y límites.'}</span>
-        <a href="/metodologia">Ver metodología →</a>
+        <strong>{tr("Fuentes y método")}</strong>
+        <span>{sources.length > 0 ? language === 0 ? `${sources.length} declared sources.` : language === 1 ? `${sources.length} fontes declaradas.` : `${sources.length} fuentes declaradas.` : tr('La página explica sus supuestos y límites.')}</span>
+        <a href="/metodologia">{tr("Ver metodología →")}</a>
       </div>
     </div>
 
     <div class="editorial-trust__links">
-      <a href="/politica-editorial">Política editorial</a>
-      <a href="/correcciones">Reportar una corrección</a>
-      <a href="/contacto">Contacto editorial</a>
+      <a href="/politica-editorial">{tr("Política editorial")}</a>
+      <a href="/correcciones">{tr("Reportar una corrección")}</a>
+      <a href="/contacto">{tr("Contacto editorial")}</a>
     </div>
   </section>
 )}

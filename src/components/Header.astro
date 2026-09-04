@@ -1,7 +1,8 @@
 ---
 import Icon from './ui/Icon.astro';
 export interface Props { lang?: 'es' | 'en' | 'pt'; }
-const { lang = 'es' } = Astro.props;
+const inferredLang = Astro.url.pathname.startsWith('/en/') || Astro.url.pathname === '/en' ? 'en' : /^\/pt(?:-pt)?(?:\/|$)/.test(Astro.url.pathname) ? 'pt' : 'es';
+const { lang = inferredLang } = Astro.props;
 const currentPath = Astro.url.pathname;
 const isActive = (path: string) => currentPath.startsWith(path);
 // NOTA: el array de calcs ya NO se inlinea en cada página.
@@ -30,7 +31,7 @@ const translations = {
 };
 const t = translations[lang as keyof typeof translations] || translations.es;
 const isIntl = lang === 'en' || lang === 'pt';
-const intlHome = lang === 'en' ? '/en' : '/pt';
+const intlHome = lang === 'en' ? '/en' : Astro.url.pathname.startsWith('/pt-pt') ? '/pt-pt' : '/pt';
 
 // #13 Acciones rápidas del overlay de búsqueda (command-palette liviano): atajos
 // de navegación arriba de los resultados. Lang-aware — /valores-bcra y

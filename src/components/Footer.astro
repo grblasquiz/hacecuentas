@@ -19,7 +19,8 @@ export interface Props { lang?: 'es' | 'en' | 'pt'; }
 import HubDisclaimer from './hub/HubDisclaimer.astro';
 import PriorityPages31To100 from './PriorityPages31To100.astro';
 import { ALL_HUBS } from '../lib/hubs/registry';
-const { lang = 'es' } = Astro.props;
+const inferredLang = Astro.url.pathname.startsWith('/en/') || Astro.url.pathname === '/en' ? 'en' : /^\/pt(?:-pt)?(?:\/|$)/.test(Astro.url.pathname) ? 'pt' : 'es';
+const { lang = inferredLang } = Astro.props;
 const year = new Date().getFullYear();
 const isEn = lang === 'en';
 const isPt = lang === 'pt';
@@ -78,7 +79,7 @@ const T = isNeutralSpanish ? {
 
 // Columna "Empezá por acá": pilares + superficies de flujo (ES). EN/PT usan su índice.
 const startLinks = isEn ? [
-  ['/en', 'All calculators'], ['/en/bmi-calculator', 'BMI'], ['/en/compound-interest-calculator', 'Compound interest'], ['/en/percentage-calculator', 'Percentages'], ['/guias', 'Guides'],
+  ['/en', 'All calculators'], ['/en/health/body-weight', 'BMI'], ['/en/money/grow-your-money', 'Compound interest'], ['/en/math/percentages', 'Percentages'], ['/guias', 'Guides'],
 ] : isPt ? [
   ['/pt', 'Todas as calculadoras'], ['/pt/calculadora-imc-tabela-oms-classificacao', 'IMC'], ['/pt/salario-liquido-clt-inss-irrf-2026', 'Salário líquido'], ['/pt/calculadora-juros-compostos-investimento-mensal', 'Juros compostos'], ['/guias', 'Guias'],
 ] : isNeutralSpanish ? [

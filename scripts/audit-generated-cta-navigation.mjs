@@ -16,7 +16,13 @@ const brokenTargets = [
 
 const failures = [];
 if (!layout.includes("import GeneratedCtaNavigation from '../components/GeneratedCtaNavigation.astro'")) failures.push('Layout no importa GeneratedCtaNavigation.astro');
-if (!layout.includes('<GeneratedCtaNavigation />')) failures.push('Layout no monta el safety net de navegación');
+const navigation = JSON.parse(readFileSync(join(root, 'src/lib/seo/category-navigation.json'), 'utf8'));
+for (const {component, title, href} of navigation) {
+  const html = readFileSync(join(root, component), 'utf8');
+  if (!html.includes(`href="${href}"`)) failures.push(`${component}: falta enlace de ${title} a ${href}`);
+}
+const handler = readFileSync(join(root, 'src/components/GeneratedCtaNavigation.astro'), 'utf8');
+if (/bestPageLink|location.assign|stopImmediatePropagation/.test(handler)) failures.push('Un handler global sigue interceptando acciones locales');
 if (search.includes('data-open=') || search.includes('data-rec=')) failures.push('/buscar todavía genera botones simulados sin href');
 const searchRows = [...search.matchAll(/\{href:"(\/[^"]+)"[^}]+title:"([^"]+)"/g)];
 if (searchRows.length < 17) failures.push(`/buscar sólo tiene ${searchRows.length}/17 destinos explícitos`);
@@ -46,4 +52,4 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`  - ${failure}`));
   process.exit(1);
 }
-console.log(`[cta-navigation] PASS — ${covered.length} hubs generados cubiertos; /buscar tiene ${searchRows.length} destinos explícitos`);
+console.log(`[cta-navigation] PASS — ${navigation.length} enlaces explícitos comprobados; /buscar tiene ${searchRows.length} destinos explícitos`);

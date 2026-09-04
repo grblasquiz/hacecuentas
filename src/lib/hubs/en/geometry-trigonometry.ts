@@ -304,5 +304,5 @@ export const hub: HubData = {
     '/en/radians-to-degrees-angle',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-09-04',
 };

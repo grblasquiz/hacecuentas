@@ -24,6 +24,7 @@ export interface Props {
 }
 
 const { data } = Astro.props;
+const fullCalculation = ["en/math/algebra", "en/math/geometry-trigonometry"].includes(data.slug);
 const approved = import.meta.glob('../../mockups/approved/en/*.html', {
   query: '?raw',
   import: 'default',
@@ -130,7 +131,7 @@ const sourceHasH1 = !!source && (
   ? (
     <>
       <ApprovedMockupPage source={source} baseStyles={baseStyles} sharedScript={sharedScript} seoTitle={ssrTitle} />
-      <HubEditorialSupport data={data} renderH1={!sourceHasH1} />
+      {fullCalculation ? <DecisionHubClassic data={data} supplemental /> : <HubEditorialSupport data={data} renderH1={!sourceHasH1} />}
     </>
   )
   : <DecisionHubClassic data={data} />

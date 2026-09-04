@@ -361,6 +361,6 @@ export const hub: HubData = {
     '/calculadora-regla-ruffini',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-09-04',
   audience: 'global',
 };
