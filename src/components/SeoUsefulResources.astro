@@ -1,0 +1,26 @@
+---
+interface Props {path:string}
+const {path} = Astro.props;
+const resources:Record<string,Array<[string,string]>>={
+ '/iibb/cordoba':[['/argentina/cordoba/calculadora-ingresos-brutos-provincial','Calculadora provincial de Ingresos Brutos de Córdoba']],
+ '/calendarios':[['/cuanto-falta-para-Navidad-2026','Cuánto falta para Navidad 2026'],['/dia-del-nino-2026-cuando-es','Día del Niño 2026: fecha y calendario'],['/vacaciones-invierno-2026','Calendario de vacaciones de invierno 2026']],
+ '/co':[['/dolar-hoy-colombia','Dólar hoy en Colombia']],
+ '/mx':[['/dolar-hoy-mexico','Dólar hoy en México']],
+ '/pe':[['/dolar-hoy-peru','Dólar hoy en Perú'],['/pe/datos-soat-uit-peru-2026','Datos de SOAT y UIT 2026']],
+ '/uy':[['/dolar-hoy-uruguay','Dólar hoy en Uruguay']],
+ '/familia':[['/familia/fallecimiento-y-tramites','Trámites después de un fallecimiento'],['/familia/tener-un-hijo','Planificar la llegada de un hijo']],
+ '/finanzas-personales':[['/finanzas-personales/perfil-crediticio','Revisar mi perfil crediticio']],
+ '/tecnologia':[['/guia/tecnologia-electronica','Guía de tecnología y electrónica']],
+ '/impuestos':[['/impuestos/elegir-regimen','Elegir el régimen tributario']],
+ '/pt-pt':[['/pt-pt/calculadoras','Todas as calculadoras para Portugal']],
+ '/trabajo':[['/que-sueldo-necesito','Qué sueldo necesitás para cubrir tus gastos'],['/trabajo/contratar-personal-casas-particulares','Contratar personal de casas particulares']],
+ '/finanzas-personales/prestamo':[['/tabla/tabla-amortizacion-prestamo','Tabla de amortización de un préstamo']],
+ '/salud/calorias-de-los-alimentos':[['/tabla/tabla-calorias-alimentos','Tabla de calorías de los alimentos']],
+};
+const items=resources[path]??[];
+const title=path.startsWith('/pt-pt')?'Dados e guias úteis':'Datos y guías útiles';
+---
+{items.length>0&&<nav class="useful-resources" aria-label={title}><h2>{title}</h2><ul>{items.map(([href,label])=><li><a href={href}>{label}</a></li>)}</ul></nav>}
+<style>
+.useful-resources{max-width:1100px;margin:2rem auto;padding:1.5rem;border:1px solid var(--border,#dce3e9);border-radius:16px}.useful-resources h2{font-size:1.2rem;margin:0 0 1rem}.useful-resources ul{display:flex;flex-wrap:wrap;gap:1rem 2rem;padding-left:1.2rem}.useful-resources a{text-underline-offset:3px}
+</style>
