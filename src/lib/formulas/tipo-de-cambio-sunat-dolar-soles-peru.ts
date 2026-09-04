@@ -24,7 +24,7 @@ function fmtUSD(n: number): string {
 export function compute(i: Inputs): Outputs {
   const monto = Number(i.monto) || 0;
   const direccion = String(i.direccion || 'usd_pen');
-  const tc = Number(i.tipoCambio) || 3.36; // referencial (venta SUNAT 03-sep-2026); el TC real lo publica SUNAT a diario
+  const tc = Number(i.tipoCambio) || 3.365; // referencial (venta SUNAT 04-sep-2026); el TC real lo publica SUNAT a diario
   if (monto <= 0) throw new Error('Ingresá el monto a convertir');
   if (tc <= 0) throw new Error('Ingresá un tipo de cambio válido');
 
