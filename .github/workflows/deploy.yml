@@ -244,7 +244,14 @@ jobs:
       # Reemplazamos wrangler-action@v3 por npx directo para poder ver el
        # stderr completo en el log (la action envuelve la salida y con
       # runs anónimos no podemos leer los logs detallados del job).
+      # Un job en cola puede terminar después de una versión más nueva publicada
+      # localmente. Nunca volver a publicar código superado por main.
+      - name: Check that this release is still current
+        id: release_head
+        run: node scripts/check-deploy-head.mjs
+
       - name: Deploy to Cloudflare Workers
+        if: steps.release_head.outputs.can_deploy == 'true'
         working-directory: dist/server
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -264,6 +271,7 @@ jobs:
           npx wrangler@latest deploy 2>&1
 
       - name: Purge Cloudflare cache
+        if: steps.release_head.outputs.can_deploy == 'true'
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
@@ -280,6 +288,7 @@ jobs:
       # HTMLs rotos). Threshold relajado a 5% + retry once para tolerar
       # race conditions de CF propagation post-deploy.
       - name: Smoke test post-deploy
+        if: steps.release_head.outputs.can_deploy == 'true'
         run: |
           set -e
           echo "Esperando 60s a que CF Pages termine de propagar..."
@@ -400,6 +409,7 @@ jobs:
       # Quota Bing: 10.000 URLs/día. sitemap-priority tiene ~180 URLs, holgura
       # enorme. Non-blocking: continue-on-error en caso de quota o API issue.
       - name: Bing Webmaster URL Submission
+        if: steps.release_head.outputs.can_deploy == 'true'
         continue-on-error: true
         env:
           BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
