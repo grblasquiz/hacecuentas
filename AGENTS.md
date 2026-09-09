@@ -104,3 +104,21 @@ Una página nueva **no requiere full por sí sola**: si es una ruta plana estát
 Para una landing/editorial aislada que tenga que salir en ~1 minuto, usar `public/_fast-pages/<slug>.html` y registrar `"/<slug>": "<slug>.html"` en `public/fast-pages.json`. Luego usar el comando normal: `npm run deploy`.
 
 El detector elige automáticamente el modo `fast` si el commit sólo modifica esos archivos; no ejecuta Astro y actualiza sólo el asset HTML, el mapa mínimo del Worker y la caché de esa URL. `npm run deploy:fast-page` queda disponible sólo para pruebas/manual. Es para páginas autónomas; calculadoras, rutas dinámicas y cualquier cambio de componentes/layouts siguen por el deploy normal.
+
+## 10. Una sola vía automática de publicación (incidente 2026-09-09)
+
+GitHub Actions (`deploy.yml`) es la vía automática de producción. La integración
+Git de Cloudflare Workers Builds conserva la compilación, pero su comando de
+implementación es `npx wrangler versions upload`: genera una vista previa, sin
+reemplazar producción. No restaurar `wrangler deploy` allí mientras GitHub
+Actions también publique el mismo Worker.
+
+Se comprobó que dos builds nativos de commits anteriores terminaron después de
+un deploy local sano y borraron las correcciones SEO de producción. El control
+`scripts/check-deploy-head.mjs` evita que CI publique una revisión superada por
+cambios relevantes en `origin/main`; no quitarlo ni saltear su resultado.
+
+Para un deploy local, integrar y pushear primero los cambios terminados a
+`origin/main`, y después ejecutar `npm run deploy`. Así un job automático no
+puede considerar vigente una revisión que todavía desconoce las correcciones
+locales. Verificar contenido público después de publicar y de purgar caché.
