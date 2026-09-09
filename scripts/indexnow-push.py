@@ -59,7 +59,7 @@ LOCALE_PREFIX = {
     'calcs-pe': '/pe', 'calcs-ec': '/ec', 'calcs-ve': '/ve', 'calcs-py': '/py',
     'calcs-uy': '/uy', 'calcs-do': '/do', 'calcs-es': '/es', 'calcs-en': '/en',
     'calcs-pt': '/pt', 'calcs-pt-pt': '/pt-pt',
-    'guias': '/guia', 'comparaciones': '/comparar',
+    'guias': '/guia', 'comparaciones': '/comparar', 'blog': '/blog', 'blog-pt': '/pt/blog',
 }
 
 def all_sitemap_urls() -> set:
@@ -70,8 +70,11 @@ def all_sitemap_urls() -> set:
     filtrar contra él evita gastar presupuesto de submission en 301s y noindex.
     """
     urls = set()
-    for f in PUBLIC.glob('sitemap-*.xml'):
-        for u in urls_from_sitemap(f.name):
+    for ref in urls_from_sitemap('sitemap.xml'):
+        filename = ref.rsplit('/', 1)[-1]
+        if not filename.startswith('sitemap-') or not filename.endswith('.xml'):
+            continue
+        for u in urls_from_sitemap(filename):
             urls.add(u.rstrip('/'))
     return urls
 
@@ -98,7 +101,7 @@ def urls_from_git_diff(before: str, after: str) -> list:
              # eran INVISIBLES para este detector — los 478 hubs de la migración
              # 7-27 jamás se avisaron a Bing (forense 8-07). El slug real está
              # DENTRO del .ts (`slug: 'trabajo/aguinaldo'`), nunca el filename.
-             'src/lib/hubs/*.ts', 'src/lib/hubs/*/*.ts'],
+             'src/lib/hubs/*.ts', 'src/lib/hubs/*/*.ts', 'src/pages/**/*.astro'],
             cwd=ROOT, capture_output=True, text=True, check=True,
         ).stdout
     except subprocess.CalledProcessError as e:
@@ -144,6 +147,13 @@ def urls_from_git_diff(before: str, after: str) -> list:
                 continue
             url = f'https://{HOST}/{m.group(1).lstrip("/")}'
             (deleted if status == 'D' else candidates).append(url)
+            continue
+        if rel.startswith('src/pages/') and rel.endswith('.astro'):
+            route = rel[len('src/pages/'):-len('.astro')]
+            if '[' not in route and not any(part.startswith('_') for part in route.split('/')):
+                route = re.sub(r'(^|/)index$', '', route).rstrip('/')
+                url = f'https://{HOST}/' + route
+                (deleted if status == 'D' else candidates).append(url)
             continue
         if len(parts) < 4:
             continue

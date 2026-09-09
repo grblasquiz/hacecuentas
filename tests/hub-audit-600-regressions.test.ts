@@ -8,9 +8,11 @@ const tools = JSON.parse(read('src/lib/current-tools-index.json'));
 const decision = read('src/components/SitewideHubDecisionLayer.astro');
 const accessibility = read('src/components/AccessibilityBaseline.astro');
 
-describe('auditoría transversal de los 600 hubs', () => {
+describe('auditoría transversal de los hubs canónicos', () => {
   it('cubre el catálogo canónico completo sin alterar analytics', () => {
-    expect(tools).toHaveLength(600);
+    const published = [...read('public/sitemap-hubs.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+    expect(new Set(tools.map((t: any) => t.url)).size).toBe(tools.length);
+    expect(tools.map((t: any) => t.url).sort()).toEqual(published.sort());
     expect(read('src/layouts/Layout.astro')).toContain('<HubCalculationTracking />');
   });
 

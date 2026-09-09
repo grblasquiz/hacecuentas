@@ -926,6 +926,28 @@ const core = (path: string, priority: string, changefreq: string, dynamic = fals
 sitemaps.push({
   name: 'sitemap-core.xml',
   urls: [
+    // Publicaciones existentes con herramienta o seguimiento explícito; no son proyecciones de valores.
+    core('/cl/datos-sueldo-chile-2027', '0.7', 'monthly'),
+    core('/co/datos-salario-minimo-colombia-2027', '0.7', 'monthly'),
+    core('/datos-salario-basico-ecuador-2027', '0.7', 'monthly'),
+    core('/datos-salario-minimo-latam-2027', '0.7', 'monthly'),
+    core('/feriados-2027', '0.7', 'monthly'),
+    core('/feriados-argentina-2027', '0.7', 'monthly'),
+    core('/feriados-chile-2027', '0.7', 'monthly'),
+    core('/feriados-colombia-2027', '0.7', 'monthly'),
+    core('/feriados-ecuador-2027', '0.7', 'monthly'),
+    core('/feriados-mexico-2027', '0.7', 'monthly'),
+    core('/feriados-peru-2027', '0.7', 'monthly'),
+    core('/impuestos/cuando-hacerme-monotributista', '0.7', 'monthly'),
+    core('/impuestos/cuota-monotributo-empleado-jubilado', '0.7', 'monthly'),
+    core('/impuestos/diagnostico-convenio-multilateral', '0.7', 'monthly'),
+    core('/impuestos/precio-unitario-maximo-monotributo', '0.7', 'monthly'),
+    core('/impuestos/saldo-a-favor-iibb', '0.7', 'monthly'),
+    core('/legal/actualizacion-sentencias', '0.7', 'monthly'),
+    core('/mx/datos-salario-minimo-mexico-2027', '0.7', 'monthly'),
+    core('/negocios/costo-fiscal-venta-online', '0.7', 'monthly'),
+    core('/pe/datos-sueldo-minimo-peru-2027', '0.7', 'monthly'),
+    core('/trabajo/salario-real-por-gremio', '0.7', 'monthly'),
     core('/',                                    '1.0',  'daily',   true),
     // Pilares (jul-2026): los 4 hubs que concentran la autoridad interna.
     core('/sueldos-y-trabajo',                   '0.95', 'weekly'),

@@ -1,36 +1,26 @@
 ---
-/**
- * Links de un hub hacia las notas del blog que lo profundizan.
- *
- * Vive aparte de DecisionHub porque 56 hubs tienen componente bespoke
- * (src/components/generated/*) y no pasan por la plantilla común. Cualquiera de
- * los dos caminos lo renderiza igual.
- *
- * Criterio de uso en types.ts (`HubData.relatedPosts`): sólo hacia posts que ya
- * rinden solos en orgánico. El blog es mucho más débil que los hubs, así que
- * esto reparte autoridad hacia abajo y se usa con cuentagotas.
- */
+/** Guías del tema: combina la selección del hub con su relación editorial
+ * primaria. Footer lo integra también en las páginas con diseño propio. */
 import backlinks from '../../lib/blog-backlinks.json';
-import type { HubData } from '../../lib/hubs/types';
+import { ALL_HUBS } from '../../lib/hubs/registry';
+interface Props { path: string }
+const { path } = Astro.props;
 
-interface Props {
-  posts: HubData['relatedPosts'];
-}
-
-const { posts } = Astro.props;
-const key = Astro.url.pathname.replace(/^\//, '').replace(/\/$/, '');
-const related = (backlinks as Record<string, {slug:string; title:string}>)[key];
-const items = (posts?.length ? posts : related ? [{href:`/blog/${related.slug}`,title:related.title,note:''}] : []).slice(0, 2);
+const key = path.replace(/^\//, '').replace(/\.html$/, '').replace(/\/$/, '');
+const declared = ALL_HUBS.find(h => h.slug === key)?.relatedPosts ?? [];
+const related = (backlinks as Record<string, Array<{slug:string; title:string}>>)[key] ?? [];
+const items = [...declared, ...related.map(p => ({href:`/blog/${p.slug}`,title:p.title,note:''}))]
+  .filter((p,i,all) => p.href && !p.href.includes('undefined') && all.findIndex(x=>x.href===p.href)===i).slice(0,8);
 ---
 
 {items.length > 0 && (
-  <nav class="hub-posts" aria-label="Notas relacionadas">
+  <nav class="hub-posts" data-hc-blog-guides aria-label="Notas relacionadas">
     <p>Para entrar en detalle</p>
     <div>
       {items.map((p) => (
         <a href={p.href}>
           <strong>{p.title}</strong>
-          <small>{p.note}</small>
+          {p.note && <small>{p.note}</small>}
         </a>
       ))}
     </div>
@@ -41,7 +31,8 @@ const items = (posts?.length ? posts : related ? [{href:`/blog/${related.slug}`,
   /* Mismo chasis que .cluster-links de DecisionHub, con nota al pie para que se
      lea como "profundizar" y no como otra herramienta más. */
   .hub-posts {
-    margin: 28px 0 0;
+    margin: 28px auto;
+    max-width: 1100px;
     padding: 24px;
     border: 1px solid var(--hc-rule, #dbe3ed);
     border-radius: 18px;
@@ -57,10 +48,4 @@ const items = (posts?.length ? posts : related ? [{href:`/blog/${related.slug}`,
   .hub-posts a:hover strong { text-decoration: underline; }
   .hub-posts strong { display: block; font-weight: 700; }
   .hub-posts small { display: block; margin-top: 3px; color: var(--hc-muted, #738196); font-size: .85rem; }
-</style>
-
-<style is:global>
-  /* En los hubs bespoke el bloque va suelto entre la experiencia y el footer:
-     sin este wrapper queda pegado a los bordes en mobile. */
-  .hub-posts-wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px 40px; }
 </style>

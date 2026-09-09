@@ -1,4 +1,8 @@
-# Backlink Bot autónomo
+# Backlink Bot — publicación desactivada
+
+Desde el 9 de septiembre de 2026, `publishing_enabled` es `false`: los comandos de publicación no envían contenido. La publicación en volumen de enlaces fabricados no constituye una estrategia de recuperación. El historial, reportes y verificación quedan disponibles. No se eliminan publicaciones existentes ni se envían desautorizaciones masivas. Los launch agents de este bot ya no estaban cargados al revisar el equipo.
+
+## Documentación histórica
 
 Genera backlinks a hacecuentas.com **solo**: elige temas reales del site, escribe una nota única,
 la publica en plataformas con API abierta (sin login, sin CAPTCHA), arma un hub crawlable para que

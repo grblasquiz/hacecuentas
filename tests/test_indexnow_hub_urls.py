@@ -41,6 +41,19 @@ class HubUrlDetectionTests(unittest.TestCase):
             "https://hacecuentas.com/uy/trabajo/estudio-y-vida-cotidiana",
         )
 
+    def test_blog_post_uses_blog_prefix(self):
+        self.detect('src/content/blog/como-calcular-el-monotributo-paso-a-paso.json',
+                    'https://hacecuentas.com/blog/como-calcular-el-monotributo-paso-a-paso')
+
+    def test_static_page_uses_route_not_file_extension(self):
+        self.detect('src/pages/mx/datos-salario-minimo-mexico-2027.astro',
+                    'https://hacecuentas.com/mx/datos-salario-minimo-mexico-2027')
+
+    def test_noindex_account_is_not_submitted(self):
+        with (patch.object(INDEXNOW.subprocess, 'run', return_value=Completed('src/pages/mi-hacecuentas.astro\n')),
+              patch.object(INDEXNOW, 'all_sitemap_urls', return_value=set())):
+            self.assertEqual(INDEXNOW.urls_from_git_diff('before', 'after'), [])
+
     def test_deleted_content_is_submitted_even_after_leaving_sitemap(self):
         old_json = '{"slug":"calculadora-que-ya-no-existe"}'
         with (

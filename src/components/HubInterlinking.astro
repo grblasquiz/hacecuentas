@@ -1,5 +1,6 @@
 ---
 import currentTools from '../lib/current-tools-index.json';
+import { BLOG_POSTS } from '../lib/blog/catalog';
 import { PRIORITY_HUB_LINKS } from '../lib/priority-hub-links';
 
 interface Props {
@@ -89,8 +90,11 @@ const semanticRelated = current
       .map((item) => item.tool)
   : [];
 const editorial = /^\/(?:guia|blog|tabla|historias)\//.test(path);
+const blogPost = BLOG_POSTS.find(p => path === `/blog/${p.slug}`);
+const editorialLocale = blogPost?.audience && String(blogPost.audience).toUpperCase() !== 'AR' ? `es-${String(blogPost.audience).toUpperCase()}` : 'es';
 const editorialRelated = !current && editorial
   ? tools
+      .filter(tool => tool.locale === editorialLocale)
       .map((tool) => {
         const haystack = `${tool.title} ${tool.h1} ${tool.description} ${tool.category}`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
         return { tool, score: tokens.reduce((sum, token) => sum + (haystack.includes(token) ? 1 : 0), 0) };
@@ -111,7 +115,7 @@ if (current) {
   PRIORITY_HUB_LINKS
     .filter((priority) => {
       if (priority.path === path) return false;
-      if ('locale' in priority && priority.locale !== current.locale) return false;
+      if (byPath.get(priority.path)?.locale !== current.locale) return false;
       if ('localeWide' in priority && priority.localeWide) return true;
       return priority.categories.some((category) => category === current.category);
     })

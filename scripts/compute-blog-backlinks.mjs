@@ -1,23 +1,9 @@
 #!/usr/bin/env node
 /**
- * compute-blog-backlinks.mjs — invierte blog.relatedCalcs → calc.blogPost.
- *
- * POR QUÉ: auditoría de internal linking (2026-07-24). El blog emitía 1.684
- * links hacia calcs y recibía sólo ~80 (≈1 por post): 69 de 75 posts del
- * sitemap tenían ≤2 links entrantes. Como el blog es el canal que factura en
- * Bing, el flujo unidireccional le estaba drenando autoridad.
- *
- * Este script genera src/lib/blog-backlinks.json con { <clave calc>: {slug,
- * title} }, que CalcLayoutV2 renderiza como "Seguí leyendo" bajo el contenido.
- *
- * Clave: '<slug>' para AR root, '<cc>/<slug>' para las colecciones de país
- * (blog resuelve calcs de AR, CO y MX).
- *
- * Un calc apunta a UN solo post: gana el post donde el calc aparece más arriba
- * en relatedCalcs (señal de relevancia del autor); desempata el más reciente.
- * Se excluyen posts noindex (no tiene sentido mandarles equity).
- *
- * Uso: npm run blog-backlinks   (o node scripts/compute-blog-backlinks.mjs)
+ * Invierte la relación primaria de cada guía hacia su herramienta vigente.
+ * Resuelve redirecciones y excluye artículos retirados o no indexables.
+ * Genera { ruta: [{ slug, title }] }, con hasta seis guías por herramienta,
+ * ordenadas por fecha editorial. HubRelatedPosts las muestra antes del footer.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -46,12 +32,13 @@ if (fs.existsSync(pruning)) {
 }
 /** Resuelve un slug de calc a su URL final: null si es 410, el destino si es 301. */
 function liveSlug(slug) {
-  const url = `/${slug}`;
-  if (gone.has(url)) return null;
-  const to = redirect.get(url);
-  if (!to) return slug;
-  if (gone.has(to)) return null;
-  return to.replace(/^\//, '');
+  let url = '/' + String(slug).replace(/^\/+/, '');
+  const visited = new Set();
+  while (redirect.has(url)) {
+    if (visited.has(url) || gone.has(url)) return null;
+    visited.add(url); url = redirect.get(url);
+  }
+  return gone.has(url) ? null : url.replace(/^\//, '');
 }
 
 // Mismas colecciones que resuelve src/pages/blog/[slug].astro.
@@ -73,12 +60,18 @@ for (const [dir, prefix] of CALC_DIRS) {
   }
 }
 
+// Los destinos actuales son hubs: relatedCalcs ya contiene rutas con '/' inicial.
+for (const tool of JSON.parse(fs.readFileSync(path.join(ROOT, 'src/lib/current-tools-index.json'), 'utf8'))) {
+  const key = String(tool.slug).replace(/^\//, '');
+  calcKey.set(key, key);
+}
+
 const entries = []; // { post, title, when, keys: [claves calc en orden] }
 let dropped = 0;
 for (const f of fs.readdirSync(BLOG_DIR).sort()) {
   if (!f.endsWith('.json')) continue;
   const p = JSON.parse(fs.readFileSync(path.join(BLOG_DIR, f), 'utf8'));
-  if (p.noindex === true) continue;
+  if (p.noindex || p.canonicalUrl || p.canonicalSlug) continue;
   // El JSON del post puede seguir vivo con la URL podada (410/301). Ya pasó:
   // /blog/guia-imc-peso-saludable responde 410 y el JSON sigue en la colección.
   const postUrl = `/blog/${p.slug}`;
@@ -90,7 +83,7 @@ for (const f of fs.readdirSync(BLOG_DIR).sort()) {
   for (const rawSlug of p.relatedCalcs || []) {
     const slug = liveSlug(rawSlug);
     if (!slug) { dropped++; console.warn(`  ⚠️  ${p.slug}: calc "${rawSlug}" está en 410`); continue; }
-    const key = calcKey.get(slug);
+    const key = calcKey.get(slug) || (fs.existsSync(path.join(ROOT, 'src/pages', `${slug}.astro`)) ? slug : null);
     if (!key) {
       dropped++;
       console.warn(`  ⚠️  ${p.slug}: relatedCalcs "${slug}" no existe en ninguna colección`);
@@ -107,43 +100,19 @@ for (const f of fs.readdirSync(BLOG_DIR).sort()) {
 }
 const posts = entries.length;
 
-// Asignación en dos pasadas para que NINGÚN post quede sin link entrante:
-//  1) cada post reserva su primer calc todavía libre (garantiza cobertura);
-//  2) los calcs que sobran se reparten al post que los lista más arriba.
-// Sin la pasada 1, los posts nuevos pierden siempre contra los viejos que ya
-// reclamaron las calcs grandes y quedan igual de huérfanos que antes.
-const best = new Map(); // clave calc → { post, title, rank, when }
-const second = new Map(); // clave calc → segundo post (overflow de la pasada 1)
+// Primario = relación editorial explícita, sin repartir notas hacia temas ajenos
+// para llenar cupos. Hasta seis guías útiles por herramienta, orden estable.
+const grouped = new Map();
 for (const e of entries) {
-  const free = e.keys.find((k) => !best.has(k));
-  if (free) best.set(free, { post: e.post, title: e.title, rank: e.keys.indexOf(free), when: e.when });
+  const key = e.keys[0];
+  if (!key) continue;
+  if (!grouped.has(key)) grouped.set(key, []);
+  grouped.get(key).push(e);
 }
-// Posts que quedaron sin ningún calc libre: les damos el segundo slot de una
-// de sus calcs (cada calc muestra hasta 2 links de "Seguí leyendo").
-for (const e of entries) {
-  if ([...best.values()].some((v) => v.post === e.post)) continue;
-  const k = e.keys.find((k) => !second.has(k));
-  if (k) second.set(k, { post: e.post, title: e.title });
-}
-for (const e of entries) {
-  e.keys.forEach((key, rank) => {
-    const prev = best.get(key);
-    if (!prev) { best.set(key, { post: e.post, title: e.title, rank, when: e.when }); return; }
-    // No robar el único link de un post que sólo tiene ése.
-    const prevCount = [...best.values()].filter((v) => v.post === prev.post).length;
-    if (prevCount <= 1) return;
-    if (rank < prev.rank || (rank === prev.rank && e.when > prev.when)) {
-      best.set(key, { post: e.post, title: e.title, rank, when: e.when });
-    }
-  });
-}
-
 const out = {};
-for (const key of [...new Set([...best.keys(), ...second.keys()])].sort()) {
-  const list = [];
-  if (best.has(key)) list.push({ slug: best.get(key).post, title: best.get(key).title });
-  if (second.has(key)) list.push({ slug: second.get(key).post, title: second.get(key).title });
-  out[key] = list;
+for (const [key, rows] of [...grouped.entries()].sort()) {
+  out[key] = rows.sort((a,b) => b.when.localeCompare(a.when) || a.post.localeCompare(b.post))
+    .slice(0, 6).map(e => ({slug:e.post, title:e.title}));
 }
 fs.writeFileSync(OUT, JSON.stringify(out, null, 2) + '\n');
 

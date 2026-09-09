@@ -168,9 +168,9 @@ const categoryLabel = categoryLabels[post.category] || post.category;
 // El blog nació sólo-AR y tenía audience e idioma hardcodeados. Ahora sale del
 // post para poder publicar notas CO/MX; AR sigue siendo el default, así que los
 // posts que no declaran `audience` se comportan igual que antes.
-const AUDIENCE_LOCALES: Record<string, string> = { AR: 'es-AR', CO: 'es-CO', MX: 'es-MX' };
+const AUDIENCE_LOCALES: Record<string, string> = { AR: 'es-AR', CO: 'es-CO', MX: 'es-MX', PY: 'es-PY' };
 const rawAudience = String(post.audience || 'AR').toUpperCase();
-const audience = (AUDIENCE_LOCALES[rawAudience] ? rawAudience : 'AR') as 'AR' | 'CO' | 'MX';
+const audience = (AUDIENCE_LOCALES[rawAudience] ? rawAudience : 'AR') as 'AR' | 'CO' | 'MX' | 'PY';
 const locale = AUDIENCE_LOCALES[audience];
 
 // Los disclaimers YMYL citaban regulación argentina (Ley 26.831 / RG CNV 840/2020)
@@ -179,6 +179,7 @@ const locale = AUDIENCE_LOCALES[audience];
 const ymylCopy = {
   AR: { regulador: ' en inversión (Ley 26.831, RG CNV 840/2020)', consulta: 'consultá', recorda: 'Recordá', registro: 'no es un asesor financiero registrado ante la CNV' },
   CO: { regulador: ' en inversión', consulta: 'consulte', recorda: 'Recuerde', registro: 'no es un asesor financiero vigilado por la Superintendencia Financiera de Colombia' },
+  PY: { regulador: ' en inversión', consulta: 'consultá', recorda: 'Recordá', registro: 'no presta asesoramiento financiero personalizado' },
   MX: { regulador: ' en inversión', consulta: 'consulta', recorda: 'Recuerda', registro: 'no es un asesor financiero registrado ante la CNBV' },
 }[audience];
 
@@ -212,17 +213,18 @@ const authorInitials = displayAuthor
 interface TocItem { id: string; text: string }
 function buildToc(html: string): TocItem[] {
   const toc: TocItem[] = [];
-  const re = /<h2[^>]*>(.*?)<\/h2>/gi;
+  const re = /<h2([^>]*)>(.*?)<\/h2>/gi;
   let match: RegExpExecArray | null;
   while ((match = re.exec(html)) !== null) {
-    const rawText = match[1].replace(/<[^>]+>/g, '').trim();
+    const rawText = match[2].replace(/<[^>]+>/g, '').trim();
+    const explicitId = match[1].match(/\bid=["']([^"']+)["']/)?.[1];
     const id = rawText
       .toLowerCase()
       .normalize('NFD').replace(/[̀-ͯ]/g, '')
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .slice(0, 80);
-    toc.push({ id, text: rawText });
+    toc.push({ id: explicitId || id, text: rawText });
   }
   return toc;
 }
@@ -268,7 +270,7 @@ const calcCta = {
   label: post.calcCta?.label || 'Usar la calculadora',
 };
 const sidebarCta = {
-  title: post.sidebarCta?.title || '¿Necesitás el número exacto?',
+  title: post.sidebarCta?.title || 'Hacé la cuenta con tus datos',
   desc: post.sidebarCta?.desc || 'Hacé el cálculo gratis con tus propios datos.',
   label: post.sidebarCta?.label || 'Calcular ahora',
 };
@@ -461,7 +463,7 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
                 <span class="bp-byline__dot" aria-hidden="true">·</span>
                 <span class="bp-verified">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                  Verificado con fuentes oficiales
+                  Fuentes consultadas
                 </span>
               </>
             )}
@@ -565,7 +567,7 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
         {sources.length > 0 && (
           <section class="bp-sources">
             <p class="bp-eyebrow">Transparencia editorial</p>
-            <h2 class="bp-sources__title">Fuentes oficiales</h2>
+            <h2 class="bp-sources__title">Fuentes consultadas</h2>
             <p class="bp-sources__desc">Última revisión editorial: {reviewedFormatted}. Contrastamos montos y procedimiento con documentación pública.</p>
             <div class="bp-sources__list">
               {sources.map((s) => (

@@ -88,6 +88,9 @@ def _days_since_last(c, platform):
 
 # ---------- ciclo principal ----------
 def run_once(dry=False):
+    if not dry and not CFG.get("publishing_enabled", False):
+        print("Publicación automática desactivada: se conservan reportes y verificación.")
+        return []
     c = db.conn()
     topics = load_topics()
     rng = random.Random()  # no determinista: cada corrida varía
@@ -190,6 +193,9 @@ def run_once(dry=False):
 
 
 def parasite(topic_key, dry=False):
+    if not dry and not CFG.get("publishing_enabled", False):
+        print("Publicación automática desactivada: se conservan reportes y verificación.")
+        return []
     """Publica un artículo keyword-targeted en TODOS los hosts parasite a la vez (SERP domination)."""
     c = db.conn()
     hosts = CFG.get('parasite_hosts', ['blogger', 'wpcom', 'github', 'telegraph', 'graphorg'])
