@@ -1,0 +1,33 @@
+---
+import { sdiMexico } from '../../lib/hubs/recovery-calculations';
+const result=sdiMexico(500,false,1,15,25);
+const money=(n:number)=>n.toLocaleString('es-MX',{style:'currency',currency:'MXN'});
+---
+<section id="calcular-sdi" class="recovered" aria-labelledby="sdi-title">
+  <div><p class="eyebrow">Salario diario integrado · México 2026</p><h2 id="sdi-title">¿Con qué salario deberías cotizar ante el IMSS?</h2><p>Calcula tu SDI, el factor de integración y el SBC limitado a 25 UMA. Para salario fijo y prestaciones conocidas; no incluye promedios de remuneraciones variables.</p></div>
+  <form id="sdi-form">
+    <div class="fields">
+      <label>Salario pactado (MXN)<input name="salary" type="number" min="0.01" step="0.01" value="500" required /></label>
+      <label>Período del salario<select name="period"><option value="daily">Diario</option><option value="monthly">Mensual (se divide entre 30)</option></select></label>
+      <label>Año de antigüedad<input name="years" type="number" min="1" max="60" step="1" value="1" required /><small>1 corresponde al primer año de servicio.</small></label>
+      <label>Aguinaldo (días al año)<input name="bonus" type="number" min="15" max="365" step="1" value="15" required /></label>
+      <label>Prima vacacional (%)<input name="premium" type="number" min="25" max="1000" step="0.01" value="25" required /></label>
+      <label>Prestaciones fijas adicionales que integran (MXN/mes)<input name="extra" type="number" min="0" step="0.01" value="0" required /><small>Solo conceptos integrables, sin volver a sumar aguinaldo o prima.</small></label>
+    </div>
+    <button type="submit">Calcular mi SDI</button>
+    <p id="sdi-error" role="alert" hidden></p>
+  </form>
+  <div class="result" aria-live="polite"><span>Salario diario integrado</span><strong id="sdi-value">{money(result.integrated)}</strong><p id="sdi-summary">Factor {result.factor.toFixed(6)} · {result.vacation} días de vacaciones · SBC diario {money(result.sbc)}</p></div>
+  <dl><div><dt>Salario diario</dt><dd id="sdi-daily">{money(result.daily)}</dd></div><div><dt>Aguinaldo por día</dt><dd id="sdi-bonus">{money(result.bonusDaily)}</dd></div><div><dt>Prima vacacional por día</dt><dd id="sdi-premium">{money(result.premiumDaily)}</dd></div><div><dt>Otros integrables por día</dt><dd id="sdi-extra">{money(result.extraDaily)}</dd></div></dl>
+  <p id="sdi-cap">Tope de SBC: {money(result.cap)} por día, 25 UMA vigentes desde febrero de 2026. El SDI y el neto depositado son conceptos distintos.</p>
+  <p>Fórmula: salario diario × [1 + aguinaldo/365 + vacaciones × prima/100/365] + otros integrables diarios. No se redondea el factor antes de calcular.</p>
+  <p>Fuentes: <a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf">LFT, artículos 76, 80 y 87</a>; <a href="https://www.diputados.gob.mx/LeyesBiblio/pdf/LSS.pdf">LSS, artículos 27–30</a>; <a href="https://www.inegi.org.mx/temas/uma/">UMA INEGI</a>. Contrasta el SBC con tu recibo y los conceptos que efectivamente integran.</p>
+</section>
+<script>
+import { sdiMexico } from '../../lib/hubs/recovery-calculations';
+const form=document.querySelector<HTMLFormElement>('#sdi-form');
+form?.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const d=new FormData(form),error=document.querySelector<HTMLElement>('#sdi-error')!;try{const r=sdiMexico(Number(d.get('salary')),d.get('period')==='monthly',Number(d.get('years')),Number(d.get('bonus')),Number(d.get('premium')),Number(d.get('extra')));const money=(n:number)=>n.toLocaleString('es-MX',{style:'currency',currency:'MXN'});document.querySelector('#sdi-value')!.textContent=money(r.integrated);document.querySelector('#sdi-summary')!.textContent=`Factor ${r.factor.toFixed(6)} · ${r.vacation} días de vacaciones · SBC diario ${money(r.sbc)}${r.integrated>r.cap?' (limitado a 25 UMA)':''}`;for(const [id,n] of [['daily',r.daily],['bonus',r.bonusDaily],['premium',r.premiumDaily],['extra',r.extraDaily]] as const)document.querySelector('#sdi-'+id)!.textContent=money(n);error.hidden=true;}catch(err){error.textContent=(err as Error).message;error.hidden=false;}});
+</script>
+<style>
+.recovered{scroll-margin-top:100px;max-width:1100px;margin:40px auto;padding:32px;border:1px solid #cbdedc;border-radius:20px;background:#f1faf7;color:#173c46}.eyebrow{font-weight:750;color:#176654}h2{font-size:clamp(24px,3vw,36px);line-height:1.15}p{line-height:1.65}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}label{font-size:15px;font-weight:650}input,select{display:block;width:100%;box-sizing:border-box;margin-top:8px;padding:12px;border:1px solid #9db5b6;border-radius:8px;background:white;color:#173c46;font-size:18px}small{display:block;font-size:13px;line-height:1.5;margin-top:6px}button{background:#176654;color:white;font:inherit;font-weight:700;border:0;border-radius:10px;padding:14px 22px;margin-top:20px;cursor:pointer}input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #267daa;outline-offset:3px}.result{padding:22px;background:#dceddf;border-radius:12px;margin-top:22px}.result strong{display:block;font-size:clamp(28px,4vw,42px)}dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}dd{margin:6px 0;font-weight:700}a{text-decoration:underline;color:#145e7c}@media(max-width:600px){.recovered{margin:24px 14px;padding:22px}.fields,dl{grid-template-columns:1fr}}
+</style>

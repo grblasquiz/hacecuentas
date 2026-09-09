@@ -1,0 +1,24 @@
+---
+import { arlColombia } from '../../lib/hubs/recovery-calculations';
+import { COLOMBIA_2026 } from '../../lib/data/colombia-2026';
+const initial=arlColombia(2000000,'I',1);
+const money=(v:number)=>v.toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0});
+---
+<section id="calcular-arl" aria-labelledby="arl-title" class="arl-tool">
+<p>ARL · trabajador dependiente</p><h2 id="arl-title">¿Cuánto paga el empleador de ARL?</h2>
+<p>Introduce el ingreso base de cotización ya determinado y la clase de riesgo registrada. Esta cuenta no determina la clase por profesión ni liquida aportes de independientes.</p>
+<form id="arl-form"><div class="fields">
+<label>IBC mensual por trabajador (COP)<input type="number" name="base" min="1" step="0.01" value="2000000" required /></label>
+<label>Clase de riesgo<select name="risk">{Object.entries(COLOMBIA_2026.aportes.arl).map(([risk,rate])=><option value={risk}>Clase {risk} · {(rate*100).toLocaleString('es-CO',{maximumFractionDigits:3})}%</option>)}</select></label>
+<label>Trabajadores con ese mismo IBC y clase<input type="number" name="workers" min="1" max="100000" step="1" value="1" required /></label></div><button type="submit">Calcular aporte ARL</button><p id="arl-error" role="alert" hidden></p></form>
+<div class="answer" aria-live="polite"><span>Aporte mensual por trabajador</span><strong id="arl-value">{money(initial.monthly)}</strong><p id="arl-summary">Total empresa: {money(initial.total)}/mes · {money(initial.annual)}/año · descuento al empleado: $0</p></div>
+<p>IBC × tarifa de riesgo × trabajadores. El cálculo anual supone doce meses con iguales datos; no incluye otros aportes ni redondeos propios de PILA. El aporte del dependiente está a cargo del empleador.</p>
+<p>Fuentes: <a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=72173">Decreto 1072 de 2015, tabla de cotizaciones por clase</a> y <a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=2629">Decreto-Ley 1295 de 1994</a>. Confirma IBC y clasificación con tu ARL antes de pagar.</p>
+</section>
+<script>
+import { arlColombia } from '../../lib/hubs/recovery-calculations';
+const form=document.querySelector<HTMLFormElement>('#arl-form');form?.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;const d=new FormData(form),error=document.querySelector<HTMLElement>('#arl-error')!;try{const r=arlColombia(Number(d.get('base')),String(d.get('risk')),Number(d.get('workers')));const money=(v:number)=>v.toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0});document.querySelector('#arl-value')!.textContent=money(r.monthly);document.querySelector('#arl-summary')!.textContent=`Total empresa: ${money(r.total)}/mes · ${money(r.annual)}/año · descuento al empleado: $0`;error.hidden=true;}catch(err){error.textContent=(err as Error).message;error.hidden=false;}});
+</script>
+<style>
+.arl-tool{scroll-margin-top:100px;max-width:1100px;margin:40px auto;padding:32px;border:1px solid #cbdedc;border-radius:20px;background:#f1faf7;color:#173c46}h2{font-size:clamp(24px,3vw,36px);line-height:1.15}p{line-height:1.65}.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}label{font-weight:650;font-size:15px}input,select{display:block;box-sizing:border-box;width:100%;padding:12px;margin-top:8px;font-size:18px;color:#173c46;border:1px solid #9db5b6;border-radius:8px;background:white}button{padding:14px 22px;margin-top:20px;border:0;border-radius:10px;background:#176654;color:white;font:inherit;font-weight:700;cursor:pointer}.answer{margin-top:22px;padding:22px;background:#dceddf;border-radius:12px}.answer strong{display:block;font-size:36px}a{text-decoration:underline;color:#145e7c}:is(input,select,button,a):focus-visible{outline:3px solid #267daa;outline-offset:3px}@media(max-width:700px){.arl-tool{margin:24px 14px;padding:22px}.fields{grid-template-columns:1fr}}
+</style>

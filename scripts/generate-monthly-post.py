@@ -123,10 +123,10 @@ def generate_post():
         pf_table = '<p><em>Datos de plazo fijo no disponibles.</em></p>'
 
     # --- Narrative ---
-    content_html = f'''<p>Informe mensual con la foto financiera de Argentina al comienzo de <strong>{mes_es} {today.year}</strong>: cotización del dólar en todas sus variantes, inflación reciente, tasas de plazo fijo y qué conviene hacer con tus pesos este mes. Datos actualizados desde fuentes oficiales (BCRA, INDEC, dolarapi).</p>
+    content_html = f'''<p>Informe mensual con la foto financiera de Argentina con corte al <strong>{today.day} de {mes_es} de {today.year}</strong>: cotización del dólar en todas sus variantes, inflación reciente, tasas de plazo fijo y qué conviene hacer con tus pesos este mes. Datos actualizados desde fuentes oficiales (BCRA, INDEC, dolarapi).</p>
 
 <h2 id="dolar">Dólar hoy: oficial, blue, MEP, CCL</h2>
-<p>Al {today.strftime('%d de %B').lower()} la cotización del dólar en sus distintas variantes:</p>
+<p>Al {today.day} de {mes_es} de {today.year} la cotización del dólar en sus distintas variantes:</p>
 {dolar_table}
 '''
 
@@ -148,7 +148,7 @@ def generate_post():
 <p>Si tu ahorro está en pesos, el interés tiene que <strong>superar la inflación</strong> para que realmente rinda. Consultá nuestro <a href="/inflacion-argentina">hub de inflación argentina</a> para ver cuánto perdió tu dinero.</p>
 
 <h2 id="plazo-fijo">Plazo fijo: top 10 bancos</h2>
-<p>Tasas TNA de plazo fijo tradicional a 30 días al {today.strftime('%d de %B').lower()}:</p>
+<p>Tasas TNA de plazo fijo tradicional a 30 días al {today.day} de {mes_es} de {today.year}:</p>
 {pf_table}
 <p>Para simular tu rendimiento exacto con esta tasa, usá el <a href="/inversiones/plazo-fijo">hub de plazo fijo</a>. Comparalo con la inflación: si la TNA mensual equivalente es <em>menor</em> al IPC, tu dinero pierde poder adquisitivo aunque el saldo nominal crezca.</p>
 

@@ -384,5 +384,5 @@ export const hub: HubData = {
     '/co/calculadora-costo-despido-empleador-colombia-2026',
   ],
 
-  lastReviewed: '2026-08-16',
+  lastReviewed: '2026-09-09',
 };

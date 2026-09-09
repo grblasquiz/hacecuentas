@@ -279,7 +279,7 @@ export const hub: HubData = {
     },
     {
       name: 'Ley 2466 de 2025 — reforma laboral: jornada nocturna desde las 19:00 y recargo dominical',
-      url: 'https://www.mintrabajo.gov.co/',
+      url: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=260676',
       publisher: 'Ministerio del Trabajo',
       date: '2025',
     },
@@ -314,5 +314,5 @@ export const hub: HubData = {
     '/co/calculadora-festivos-colombia-2026-calendario-puentes',
   ],
 
-  lastReviewed: '2026-08-16',
+  lastReviewed: '2026-09-09',
 };

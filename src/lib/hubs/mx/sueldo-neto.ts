@@ -110,7 +110,7 @@ export const hub: HubData = {
         warn: [
           DISCLAIMER_TAX,
           'Esta vista ignora la cuota del IMSS a propósito: sirve para entender el impuesto, no para estimar el depósito',
-          'Si el subsidio rebasa al ISR, la diferencia se te entrega en efectivo y suma al neto',
+          'Si el subsidio rebasa al ISR, el excedente no se entrega en efectivo ni se acumula',
         ],
         plazo: 'la tarifa y el subsidio se actualizan por decreto al cierre del año, con vigencia desde enero.',
         answer:
@@ -243,7 +243,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué es el subsidio para el empleo y a quién le toca?',
-      a: 'Es un monto fijo mensual que fija el decreto publicado en el DOF y que se acredita contra el ISR de quien no rebasa un tope de ingreso mensual. Si tu subsidio es mayor que tu ISR no te retienen impuesto y la diferencia se te entrega en efectivo, sumando a tu neto. Si rebasas el tope, el subsidio es cero y retienes el ISR completo.',
+      a: 'Es un monto fijo mensual que fija el decreto publicado en el DOF y que se acredita contra el ISR de quien no rebasa un tope de ingreso mensual. Si tu subsidio es mayor que tu ISR no te retienen impuesto y la diferencia no se entrega en efectivo ni se acumula para otro mes. Si rebasas el tope, el subsidio es cero y retienes el ISR completo.',
     },
     {
       q: '¿De cuánto es la cuota obrera del IMSS?',
@@ -263,7 +263,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Cómo se calcula el salario diario integrado (SDI) para el IMSS?',
-      a: 'El SDI es tu salario diario multiplicado por el factor de integración, que suma la parte proporcional de aguinaldo y prima vacacional. Con las prestaciones mínimas de ley (15 días de aguinaldo y prima vacacional de 25% sobre 12 días de vacaciones), el factor del primer año es 1.0493: un sueldo de $500 diarios da un SDI de $524.65. Con ese SDI el patrón te registra ante el IMSS como salario base de cotización, topado a 25 UMA.',
+      a: 'El SDI es tu salario diario multiplicado por el factor de integración, que suma la parte proporcional de aguinaldo y prima vacacional. Con las prestaciones mínimas de ley (15 días de aguinaldo y prima vacacional de 25% sobre 12 días de vacaciones), el factor del primer año es 1.0493: un sueldo de $500 diarios da un SDI de $524.66. Con ese SDI el patrón te registra ante el IMSS como salario base de cotización, topado a 25 UMA.',
     },
     {
       q: '¿Qué es el factor de integración y por qué sube con la antigüedad?',
@@ -298,7 +298,7 @@ export const hub: HubData = {
   sources: [
     {
       name: 'SAT — Anexo 8 de la RMF 2026, tarifas de ISR (DOF 28-dic-2025)',
-      url: 'https://www.sat.gob.mx/normatividad/22186/resolucion-miscelanea-fiscal-(rmf)',
+      url: 'https://www.sat.gob.mx/minisitio/NormatividadRMFyRGCE/documentos2026/rmf/anexos/Anexo-8-RMF-2026_DOF-28122025.pdf',
       publisher: 'Servicio de Administración Tributaria',
       date: '28-12-2025',
     },
@@ -309,7 +309,7 @@ export const hub: HubData = {
     },
     {
       name: 'Decreto del subsidio para el empleo (DOF 31-dic-2025)',
-      url: 'https://www.dof.gob.mx/',
+      url: 'https://sidof.segob.gob.mx/notas/docFuente/5777649',
       publisher: 'Diario Oficial de la Federación',
       date: '31-12-2025',
     },
@@ -345,6 +345,6 @@ export const hub: HubData = {
     '/trabajo/sueldo-neto-mexico',
   ],
 
-  lastReviewed: '2026-08-16',
+  lastReviewed: '2026-09-09',
   locale: 'mx',
 };
