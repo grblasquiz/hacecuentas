@@ -421,16 +421,15 @@ jobs:
         id: indexnow
         if: steps.release_head.outputs.can_deploy == 'true'
         continue-on-error: true
-        env:
-          PUSH_BEFORE: ${{ github.event.before }}
         run: |
-          BEFORE="$PUSH_BEFORE"
+          # Un push anterior puede haberse omitido por quedar obsoleto. Sin
+          # cache, empezar en el baseline de adopción, nunca en HEAD~1: eso
+          # perdería los cambios incluidos en los releases omitidos.
+          BEFORE=$(cat scripts/indexnow-baseline.txt)
           if [ -f .indexnow-state/commit ]; then
             BEFORE=$(cat .indexnow-state/commit)
           fi
-          if [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
-            BEFORE=$(git rev-parse HEAD~1)
-          fi
+          git cat-file -e "$BEFORE^{commit}"
           git merge-base --is-ancestor "$BEFORE" HEAD
           python3 scripts/indexnow-push.py --git-changed "$BEFORE" "$GITHUB_SHA"
           mkdir -p .indexnow-state
