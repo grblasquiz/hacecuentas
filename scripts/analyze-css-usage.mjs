@@ -31,13 +31,19 @@ function walk(dir, ext) {
 const htmls = walk(DIST, '.html');
 const csss = readdirSync(ASTRO).filter((f) => f.endsWith('.css')).map((f) => join(ASTRO, f));
 
-// Para cada CSS, encontrar HTMLs que lo referencien
-const cssToHtmls = new Map();
-for (const css of csss) {
-  const base = css.replace(DIST, '');
-  cssToHtmls.set(css, []);
-  for (const h of htmls) {
-    const content = readFileSync(h, 'utf8');
+// Leer cada HTML una sola vez. El bucle CSS × HTML anterior volvía a leer
+// cientos de MB por cada CSS y demoraba varios minutos cada publicación.
+const cssToHtmls = new Map(csss.map((css) => [css, []]));
+const classesByHtml = new Map();
+const cssPaths = csss.map((css) => [css, css.replace(DIST, '')]);
+for (const h of htmls) {
+  const content = readFileSync(h, 'utf8');
+  const used = new Set();
+  for (const m of content.match(/class="([^"]+)"/g) || []) {
+    m.slice(7, -1).split(/\s+/).forEach((c) => used.add(c));
+  }
+  classesByHtml.set(h, used);
+  for (const [css, base] of cssPaths) {
     if (content.includes(base)) cssToHtmls.get(css).push(h);
   }
 }
@@ -52,12 +58,7 @@ function extractClasses(css) {
 function extractUsedClasses(htmls) {
   const used = new Set();
   for (const h of htmls) {
-    const content = readFileSync(h, 'utf8');
-    const classMatches = content.match(/class="([^"]+)"/g) || [];
-    for (const m of classMatches) {
-      const classes = m.slice(7, -1).split(/\s+/);
-      classes.forEach((c) => used.add(c));
-    }
+    for (const c of classesByHtml.get(h)) used.add(c);
   }
   return used;
 }
