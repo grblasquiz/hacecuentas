@@ -35,6 +35,16 @@ class HubUrlDetectionTests(unittest.TestCase):
             "https://hacecuentas.com/trabajo/aguinaldo",
         )
 
+    def test_hub_ignores_embedded_calculator_slug(self):
+        self.detect('src/lib/hubs/casamiento.ts',
+                    'https://hacecuentas.com/eventos/casamiento')
+
+    def test_tabla_uses_its_public_route(self):
+        path = next((ROOT / 'src/content/tablas').glob('*.json'))
+        import json
+        slug = json.loads(path.read_text()).get('slug') or path.stem
+        self.detect(str(path.relative_to(ROOT)), 'https://hacecuentas.com/tabla/' + slug)
+
     def test_regional_hub_does_not_duplicate_locale(self):
         self.detect(
             "src/lib/hubs/uy/estudio-y-vida-cotidiana.ts",

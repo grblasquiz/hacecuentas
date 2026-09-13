@@ -1,117 +1,37 @@
-name: IndexNow push (post-deploy)
+name: IndexNow manual recovery
 
-# Avisa a IndexNow (Bing + Yandex) SÓLO de las URLs que cambiaron en este push.
-#
-# Modo STREAMING, no batch. Bing desaconseja explícitamente el "batch mode"
-# (re-enviar el sitio entero) y a genfy.net le mostró el warning por hacer
-# exactamente esto con un cron diario de 1443 URLs.
-#
-# Acá el workflow corría `--all` (~3117 URLs) + priority (243) en cada push a
-# main. origin/main recibe ~5 pushes/día (todos de bots: data-live, sitemap,
-# arca, audit, reddit-queue) y ~2 matcheaban el paths filter viejo:
-#   2 x 3360 + 3117 del cron diario ≈ 9840 URLs/día ≈ 295k/mes.
-# Bing honra ~1700/mes (GetUrlSubmissionQuota) → ~173x. Un solo `--all` gasta
-# 1,8 meses de presupuesto. Y era ruido puro: esos 2 pushes son chore(data-live)
-# y chore(sitemap), que no tocan ningún JSON de calc.
-#
-# ⚠️ Ojo al medir esto: el trabajo de Martin vive en main LOCAL (que va ~1000+
-# commits adelante de origin y NO se reconcilia — el deploy real es wrangler
-# local). Contar `git log main` cuenta commits que nunca llegan a GitHub y no
-# disparan nada. Lo que dispara workflows es `git log origin/main`.
-#
-# Para un evento sitewide (migración de slugs) está indexnow-full-resubmit.yml,
-# a mano.
-
+# Los envíos automáticos viven al final de deploy.yml: después del smoke test.
+# Este workflow sólo reintenta un rango explícito ya publicado.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'src/content/calcs/**'
-      - 'src/content/calcs-*/**'
-      - 'src/content/guias/**'
-      - 'src/content/comparaciones/**'
-      - 'src/lib/hubs/**'
-      - 'src/content/blog/**'
-      - 'src/content/blog-pt/**'
-      - 'src/pages/**/*.astro'
   workflow_dispatch:
+    inputs:
+      before:
+        description: 'Commit anterior ya publicado (exclusivo)'
+        required: true
+      after:
+        description: 'Commit final ya publicado (inclusivo)'
+        required: true
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
-  push-to-indexnow:
+  retry:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          # Hace falta alcanzar github.event.before para diffear el push entero
-          # (no sólo el último commit). 50 cubre cualquier push real; el repo
-          # tiene .git de 1.5G, así que fetch-depth: 0 no es opción.
-          fetch-depth: 50
-
-      - name: Detectar URLs cambiadas
-        id: detect
-        run: |
-          BEFORE="${{ github.event.before }}"
-          if [ -z "$BEFORE" ] \
-            || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
-            || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
-            echo "github.event.before no alcanzable → fallback a HEAD~1"
-            BEFORE="HEAD~1"
-          fi
-          echo "before=$BEFORE" >> "$GITHUB_OUTPUT"
-          set -o pipefail
-          python3 scripts/indexnow-push.py --git-changed "$BEFORE" "${{ github.sha }}" --dry-run \
-            2>&1 | tee /tmp/detect.log
-          if grep -q 'nada que enviar' /tmp/detect.log; then
-            echo "changed=0" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=1" >> "$GITHUB_OUTPUT"
-          fi
-
-      # Sólo esperamos al deploy si hay algo para avisar. La mayoría de los
-      # pushes no tocan contenido → el job sale en segundos.
-      - name: Esperar a que Cloudflare termine el deploy
-        if: steps.detect.outputs.changed == '1'
-        run: sleep 180
-
-      - name: Push streaming a IndexNow (Bing + Yandex + Seznam + Naver)
-        if: steps.detect.outputs.changed == '1'
-        run: |
-          set -o pipefail
-          python3 scripts/indexnow-push.py \
-            --git-changed "${{ steps.detect.outputs.before }}" "${{ github.sha }}" \
-            2>&1 | tee /tmp/indexnow.log
-          if grep -qE '⚠️|❌|status=4[0-9]{2}|status=5[0-9]{2}' /tmp/indexnow.log; then
-            echo "::error::IndexNow streaming push falló"; exit 1
-          fi
-
-      - name: Open GitHub issue if push failed
-        if: failure()
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run sitemap
+      - name: Reintentar URLs del rango publicado
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BEFORE: ${{ inputs.before }}
+          AFTER: ${{ inputs.after }}
         run: |
-          TITLE="🚨 IndexNow post-deploy push falló"
-          BODY=$(cat <<EOF
-          El push IndexNow tras el deploy ($GITHUB_SHA) falló.
-
-          **Workflow:** [\`${{ github.workflow }}\` run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          **Commit:** \`${{ github.sha }}\`
-          **Fecha:** $(date -u +'%Y-%m-%d %H:%M UTC')
-
-          ## Log
-          \`\`\`
-          $(tail -30 /tmp/indexnow.log 2>/dev/null || echo 'sin log')
-          \`\`\`
-          EOF
-          )
-          EXISTING=$(gh issue list --label indexnow-failure --state open --json number --jq '.[0].number' || echo '')
-          if [ -n "$EXISTING" ]; then
-            gh issue comment "$EXISTING" --body "$BODY"
-          else
-            gh issue create --title "$TITLE" --body "$BODY" --label indexnow-failure 2>/dev/null || \
-              gh issue create --title "$TITLE" --body "$BODY"
-          fi
+          git merge-base --is-ancestor "$AFTER" HEAD
+          python3 scripts/indexnow-push.py --git-changed "$BEFORE" "$AFTER"

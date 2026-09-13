@@ -1,4 +1,7 @@
 import type { APIRoute } from 'astro';
+import { readFileSync } from 'node:fs';
+import { resolve, basename } from 'node:path';
+import { validFreshDate, filterFreshEntries } from '../lib/seo/fresh-feed';
 import { canDistributeCalc } from '../lib/content-policy';
 import { GONE_410_URLS } from '../lib/gone-410';
 import { PRUNING_REDIRECTS } from '../lib/pruning-redirects';
@@ -79,10 +82,18 @@ interface Entry {
   priority: string;
 }
 
-function getDateValid(s: any): string | null {
-  if (!s || typeof s !== 'string') return null;
-  if (!/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
-  return s.slice(0, 10);
+// Read the generated primary index at build time; never resurrect an orphan XML.
+function primaryUrls(): Set<string> {
+  const root = resolve('public');
+  const index = readFileSync(resolve(root, 'sitemap.xml'), 'utf8');
+  const urls = new Set<string>();
+  for (const match of index.matchAll(/<loc>([^<]+)<\/loc>/g)) {
+    const ref = new URL(match[1]);
+    if (ref.origin !== SITE) throw new Error('Sitemap fuera del dominio');
+    const xml = readFileSync(resolve(root, basename(ref.pathname)), 'utf8');
+    for (const entry of xml.matchAll(/<loc>([^<]+)<\/loc>/g)) urls.add(entry[1]);
+  }
+  return urls;
 }
 
 function buildEntries(modules: Record<string, any>, prefix: string): Entry[] {
@@ -92,11 +103,11 @@ function buildEntries(modules: Record<string, any>, prefix: string): Entry[] {
     const calc = m.default || m;
     // Path-aware: un slug local no debe quedar afuera por colisionar con una
     // redirección del mismo slug en la raíz u otro mercado.
-    if (!canDistributeCalc(calc, prefix)) continue;
+    if (!canDistributeCalc(calc, prefix) || calc.canonicalSlug) continue;
     // Solo dataUpdate.lastUpdated cuenta para freshness signal.
     // lastReviewed se bumpea con backfills metadata y NO refleja
     // cambio editorial real — incluirlo infla el fresh con falsos positivos.
-    const du = getDateValid(calc.dataUpdate?.lastUpdated);
+    const du = validFreshDate(calc.dataUpdate?.lastUpdated);
     if (!du) continue;
     const t = Date.parse(du + 'T00:00:00Z');
     if (Number.isNaN(t) || now - t > FOURTEEN_DAYS_MS) continue;
@@ -120,8 +131,9 @@ export const GET: APIRoute = () => {
   const now = Date.now();
   for (const m of Object.values(blogModules)) {
     const p = m.default || m;
+    if (p.noindex === true || p.status === 'draft' || p.draft === true) continue;
     const dateStr = p.updatedDate || p.date;
-    const valid = getDateValid(dateStr);
+    const valid = validFreshDate(dateStr);
     if (!valid) continue;
     const t = Date.parse(valid + 'T00:00:00Z');
     if (Number.isNaN(t) || now - t > FOURTEEN_DAYS_MS) continue;
@@ -139,7 +151,7 @@ export const GET: APIRoute = () => {
 
   // Cap a 5000 — sitemap protocol max 50k pero queremos mantenerlo lean
   // (Bing prefiere sitemaps focalizados)
-  const capped = entries.slice(0, 5000);
+  const capped = filterFreshEntries(entries, primaryUrls(), now).slice(0, 5000);
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

@@ -44,7 +44,8 @@ let changedFiles = 0;
 let rewritten = 0;
 for (const file of files(DIST)) {
   const before = readFileSync(file, 'utf8');
-  const after = before.replace(/href=(["'])(\/[^"'?#\s]*)([^"']*)\1/g, (full, quote, path, suffix) => {
+  const after = before.replace(/href=(["'])((?:https?:\/\/hacecuentas\.com)?\/[^"'?#\s]*)([^"']*)\1/g, (full, quote, href, suffix) => {
+    const path = href.replace(/^https?:\/\/hacecuentas\.com/, '');
     const target = canonicalTarget(path);
     if (!target || target === path) return full;
     rewritten++;

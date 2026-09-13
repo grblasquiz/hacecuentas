@@ -405,17 +405,50 @@ jobs:
               print('\n✅ Smoke test OK')
           PYEOF
 
-      # Bing Webmaster Submit URL — pushea sitemap-priority al índice prioritario.
-      # Quota Bing: 10.000 URLs/día. sitemap-priority tiene ~180 URLs, holgura
-      # enorme. Non-blocking: continue-on-error en caso de quota o API issue.
-      - name: Bing Webmaster URL Submission
+      # IndexNow sólo recibe URLs después de publicar, purgar y validar producción.
+      # El cursor avanza únicamente si el envío completo fue aceptado. Si una
+      # revisión quedó obsoleta o falló el envío, el siguiente release la incluye.
+      - name: Restaurar último envío IndexNow confirmado
+        if: steps.release_head.outputs.can_deploy == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: .indexnow-state
+          key: indexnow-production-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            indexnow-production-
+
+      - name: IndexNow después de publicar
+        id: indexnow
+        if: steps.release_head.outputs.can_deploy == 'true'
+        continue-on-error: true
+        env:
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          BEFORE="$PUSH_BEFORE"
+          if [ -f .indexnow-state/commit ]; then
+            BEFORE=$(cat .indexnow-state/commit)
+          fi
+          if [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            BEFORE=$(git rev-parse HEAD~1)
+          fi
+          git merge-base --is-ancestor "$BEFORE" HEAD
+          python3 scripts/indexnow-push.py --git-changed "$BEFORE" "$GITHUB_SHA"
+          mkdir -p .indexnow-state
+          printf '%s\n' "$GITHUB_SHA" > .indexnow-state/commit
+
+      - name: Guardar cursor IndexNow aceptado
+        if: steps.indexnow.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: .indexnow-state
+          key: indexnow-production-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Actualizar sitemap en Bing
         if: steps.release_head.outputs.can_deploy == 'true'
         continue-on-error: true
         env:
           BING_WEBMASTER_API_KEY: ${{ secrets.BING_WEBMASTER_API_KEY }}
         run: |
-          if [ -z "$BING_WEBMASTER_API_KEY" ]; then
-            echo "⚠️  BING_WEBMASTER_API_KEY no configurado — skip"
-            exit 0
+          if [ -n "$BING_WEBMASTER_API_KEY" ]; then
+            python3 scripts/bing-submit-feed.py
           fi
-          python3 scripts/bing-submit.py 2>&1 || echo "⚠️  Bing submit falló (no bloqueante)"

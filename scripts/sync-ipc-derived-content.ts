@@ -41,7 +41,8 @@ const monthsSummary = yearRows.map((row: any) => {
   return `${MONTHS[index]} +${pct(row.value)}%`;
 }).join(', ');
 
-calc.answerSnippet = `El IPC del INDEC mide la inflación mensual oficial de Argentina: en ${year} acumula +${pct(ytd)}% de enero a ${latestMonth} (${latestMonth} +${pct(latest.value)}%), un factor de ${factor.toLocaleString('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}. Con esta calculadora actualizás cualquier monto entre dos meses y obtenés el valor a hoy, el factor de ajuste y la pérdida real de poder adquisitivo, con datos IPC ${year} al día.`;
+calc.title = `IPC ${latestMonth} ${year}: calculadora de inflación INDEC`;
+calc.answerSnippet = `El IPC del INDEC mide la inflación mensual oficial de Argentina: en ${latestMonth} ${year} fue +${pct(latest.value)}%. Componiendo las tasas mensuales redondeadas, la variación enero-${latestMonth} es aproximadamente +${pct(ytd)}% (${latestMonth} +${pct(latest.value)}%), un factor de ${factor.toLocaleString('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}. Con esta calculadora actualizás cualquier monto entre dos meses y obtenés el valor a hoy, el factor de ajuste y la pérdida real de poder adquisitivo, con datos IPC ${year} al día.`;
 calc.keyTakeaway = `**Fórmula**: Monto × (1 + inflación/100). **Factor ${factor.toLocaleString('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}** (${pct(ytd)}% YTD ${year}). **Poder adquisitivo**: $100 de enero equivalen a $${(100 * factor).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} en ${latestMonth}.`;
 
 const monthlyTable = (calc.referenceTables ?? []).find((table: any) => String(table.title).startsWith('IPC mes a mes'));

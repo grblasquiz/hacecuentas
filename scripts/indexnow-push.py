@@ -60,6 +60,7 @@ LOCALE_PREFIX = {
     'calcs-uy': '/uy', 'calcs-do': '/do', 'calcs-es': '/es', 'calcs-en': '/en',
     'calcs-pt': '/pt', 'calcs-pt-pt': '/pt-pt',
     'guias': '/guia', 'comparaciones': '/comparar', 'blog': '/blog', 'blog-pt': '/pt/blog',
+    'tablas': '/tabla', 'glosario': '/glosario', 'argentina': '/argentina',
 }
 
 def all_sitemap_urls() -> set:
@@ -105,8 +106,8 @@ def urls_from_git_diff(before: str, after: str) -> list:
             cwd=ROOT, capture_output=True, text=True, check=True,
         ).stdout
     except subprocess.CalledProcessError as e:
-        print(f'❌ git log falló ({before}..{after}): {e.stderr.strip()[:200]}')
-        return []
+        print(f'❌ git log falló ({before}..{after}): {(e.stderr or '').strip()[:200]}')
+        raise RuntimeError('No se pudo resolver el rango de commits; no avanzar el cursor IndexNow') from e
 
     candidates = []
     deleted = []
@@ -142,7 +143,9 @@ def urls_from_git_diff(before: str, after: str) -> list:
             # El slug dentro del archivo ya es la ruta canónica COMPLETA, incluido
             # el locale cuando corresponde (`uy/trabajo/...`). No anteponer el
             # directorio: produciría rutas inválidas como `/uy/uy/trabajo/...`.
-            m = re.search(r"slug:\s*['\"]([^'\"]+)['\"]", source_text)
+            hub_start = source_text.find('export const hub')
+            hub_source = source_text[hub_start:] if hub_start >= 0 else source_text
+            m = re.search(r"^\s*slug:\s*['\"]([^'\"]+)['\"]", hub_source, re.MULTILINE)
             if not m:
                 continue
             url = f'https://{HOST}/{m.group(1).lstrip("/")}'
@@ -187,7 +190,7 @@ def urls_from_git_diff(before: str, after: str) -> list:
 def urls_from_sitemap(name: str) -> list:
     path = PUBLIC / name
     if not path.exists():
-        return []
+        raise FileNotFoundError(f'Sitemap requerido ausente: {path}')
     tree = ET.parse(path)
     return [el.text for el in tree.getroot().iter(f'{NAMESPACE}loc')]
 
@@ -284,10 +287,7 @@ def main():
         urls = [ln.strip() for ln in changed_file.read_text().splitlines() if ln.strip()]
         batch = 500
     elif args and args[0] == '--all':
-        urls = []
-        for f in PUBLIC.glob('sitemap-*.xml'):
-            urls.extend(urls_from_sitemap(f.name))
-        urls = list(dict.fromkeys(urls))  # dedupe preservando orden
+        urls = sorted(all_sitemap_urls())
     elif args and args[0].startswith('/') or args and args[0].startswith('http'):
         urls = [u if u.startswith('http') else f'https://{HOST}{u}' for u in args]
     else:
