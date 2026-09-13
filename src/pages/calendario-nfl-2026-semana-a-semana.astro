@@ -57,14 +57,16 @@ const updatedLabel = new Intl.DateTimeFormat('es-MX', {
 }).format(new Date(nfl.fetchedAt));
 
 // ── SEO ──────────────────────────────────────────────────────────────────────
-const title = 'Calendario NFL 2026: las 18 semanas con horario de tu país';
+const title = 'Calendario NFL 2026 completo: 18 semanas y horarios México';
 const description =
-  'Calendario completo de la NFL 2026 semana a semana: los 272 partidos con día, horario de México, Colombia y Argentina, canal de TV y estadio.';
+  'Calendario completo de la NFL 2026 semana a semana: los 272 partidos con día, horario de México, Colombia y Argentina, TV de EE.UU., estadio y juegos internacionales.';
 const ogTitle = 'Calendario NFL 2026 semana a semana (hora LATAM)';
 const keywords = ['calendario nfl 2026','calendario nfl 2026 semana a semana','nfl semana 1','horarios nfl méxico','calendario nfl horario colombia','calendario nfl argentina','partidos nfl por semana','nfl 2026 calendario completo'];
 const newsKeywords = ['calendario NFL 2026','NFL semana a semana','horarios NFL','NFL México','NFL 2026'];
 
 const faqs = [
+  { q: '¿El horario de México corresponde a Ciudad de México?', a: 'Sí. La columna México usa America/Mexico_City (hora del centro). No representa automáticamente Tijuana, Ciudad Juárez u otras zonas. Usá la columna de tu país y revisá también el día: un cambio de huso puede cambiar la fecha.' },
+  { q: '¿Los canales del calendario transmiten en Latinoamérica?', a: 'La columna TV muestra la señal informada para Estados Unidos. Los derechos y plataformas de México, Colombia o Argentina pueden ser distintos; confirmá la disponibilidad local del partido antes de contratar una transmisión.' },
   {
     q: '¿Cómo leo este calendario de la NFL 2026?',
     a: 'Cada semana tiene su tabla con todos los partidos: día (en hora de México), cruce, horario en México, Colombia y Argentina, canal de TV en EE.UU. y estadio. El marcador "+1" indica que en ese país el partido cae ya en el día siguiente. Perú y Ecuador comparten horario con Colombia; Chile coincide con Argentina durante toda la temporada regular por el horario de verano.',
@@ -126,7 +128,7 @@ const dataset = {
   license: 'https://creativecommons.org/licenses/by/4.0/',
   creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
   isBasedOn: ['https://www.nfl.com/schedules/', 'https://www.espn.com/nfl/schedule/'],
-  temporalCoverage: '2026-09-10/2027-01-13',
+  temporalCoverage: `${regularGames[0].date.slice(0, 10)}/${regularGames[regularGames.length - 1].date.slice(0, 10)}`,
   dateModified: nfl.fetchedAt,
   url: PAGE_URL,
 };
@@ -162,7 +164,7 @@ const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, webPag
       <h1>Calendario NFL 2026 semana a semana</h1>
       <p class="hero-sub">
         Los {nfl.regularSeasonGames} partidos de la temporada regular, semana por semana, con horario de
-        <strong>🇲🇽 México</strong>, <strong>🇨🇴 Colombia</strong> y <strong>🇦🇷 Argentina</strong>, canal de TV y estadio.
+        <strong>🇲🇽 México</strong>, <strong>🇨🇴 Colombia</strong> y <strong>🇦🇷 Argentina</strong>, TV de EE.UU. y estadio.
         Kickoff: <strong>{kickoffDayMx}</strong>. Perú y Ecuador comparten hora con Colombia; Chile, con Argentina.
       </p>
       <p class="hero-links">
@@ -170,6 +172,16 @@ const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, webPag
         <a class="btn ghost" href="/posiciones-nfl-2026">Tabla de posiciones AFC/NFC</a>
       </p>
     </header>
+
+    <section class="seo-block" id="internacionales" aria-labelledby="internacionales-h">
+      <h2 id="internacionales-h">Partidos internacionales NFL 2026 y juego en México</h2>
+      <p>El calendario registra {internationalGames.length} partidos fuera de Estados Unidos. Las fechas y horas de esta tabla están expresadas en <strong>Ciudad de México</strong>; pueden diferir del día local de la sede.</p>
+      <div class="twrap"><table>
+        <thead><tr><th scope="col">Semana</th><th scope="col">Partido</th><th scope="col">Sede</th><th scope="col">Fecha y hora CDMX</th></tr></thead>
+        <tbody>{internationalGames.map(g => (<tr><td><a href={`#semana-${g.week}`}>{g.week}</a></td><th scope="row">{gameTitle(g)}</th><td>{COUNTRY_ES[g.country] || g.country} · {g.venue}</td><td>{fmtDay(g.date, MX_ZONE)} · {g.timeValid === false ? 'Por confirmar' : fmtTime(g.date, MX_ZONE)}</td></tr>))}</tbody>
+      </table></div>
+      <p>Para el fixture de cada jornada, usá los accesos a las 18 semanas. Los horarios se convierten desde el calendario de datos del sitio; las señales de TV de las tablas semanales corresponden a EE.UU. Para resultados, consultá <a href="/nfl-2026">NFL 2026: partidos y marcadores</a>.</p>
+    </section>
 
     <nav class="weeknav" aria-label="Ir a una semana">
       <span>Ir a:</span>

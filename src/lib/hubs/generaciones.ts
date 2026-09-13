@@ -23,7 +23,7 @@ export const hub: HubData = {
   h1: 'Generaciones por edad y año de nacimiento',
   lede:
     'Poné tu año de nacimiento y te decimos de qué generación sos y qué edad cumplís en 2026. Abajo tenés la tabla completa de generaciones por año y edad.',
-  stamps: ['Actualizado 07-08-2026', 'Rangos Pew Research · McCrindle', '17 calculadoras adentro'],
+  stamps: ['Actualizado 13-09-2026', 'Rangos Pew Research · McCrindle', '17 calculadoras adentro'],
 
   resultLabel: 'Tu generación',
 
@@ -82,8 +82,8 @@ export const hub: HubData = {
       'Baby Boomer: 1946–1964. El baby boom de posguerra, la TV y el rock',
       'Generación X: 1965–1980. Analógicos de chicos, digitales de adultos',
       'Millennial (Gen Y): 1981–1996. Los primeros nativos de internet',
-      'Generación Z: 1997–2012. No conocieron un mundo sin smartphone',
-      'Generación Alpha: 2013–2024. Tablets, asistentes de voz e IA desde bebés',
+      'Generación Z: 1997–2012 en la tabla adoptada por este sitio',
+      'Generación Alpha: 2013–2024 aquí; McCrindle usa 2010–2024',
       'Generación Beta: 2025 en adelante, todavía en formación',
     ],
     warn: [
@@ -97,13 +97,17 @@ export const hub: HubData = {
   },
 
   faq: [
+    { q: '¿Qué edad tiene la Generación X en 2026?', a: 'Con el rango 1965–1980, la Generación X cumple entre 46 y 61 años en 2026. Antes del cumpleaños tiene un año menos. Por ejemplo, alguien nacido en 1977 cumple 49 y pertenece a la Generación X según este criterio.' },
+    { q: '¿Los Millennials de qué año a qué año son?', a: 'Pew Research Center usa 1981–1996: cumplen entre 30 y 45 años en 2026. Millennial y Generación Y nombran esa misma cohorte. La edad exacta de hoy depende del día y mes de nacimiento.' },
+    { q: '¿Qué generación empieza en 1997?', a: 'En la clasificación utilizada aquí, 1997 marca el inicio de la Generación Z. Una persona nacida ese año cumple 29 en 2026. Para este sitio cerramos el tramo en 2012; los cortes de otras fuentes pueden ser diferentes.' },
+    { q: '¿Si nací en 2010 soy Generación Z o Alpha?', a: 'Depende de la convención: esta tabla usa Z hasta 2012 y Alpha desde 2013 para evitar superposiciones. McCrindle define Alpha desde 2010 hasta 2024. Por eso una persona nacida en 2010, 2011 o 2012 puede aparecer como Z o Alpha según la tabla consultada.' },
     {
       q: '¿De qué generación soy si nací en 1990?',
-      a: 'Sos Millennial, también llamada Generación Y: el tramo va de 1981 a 1996 según Pew Research Center. Los nacidos en 1990 tienen memoria del mundo previo al smartphone pero adoptaron internet en la adolescencia, que es justamente el rasgo que define al tramo.',
+      a: 'Sos Millennial, también llamada Generación Y: el tramo va de 1981 a 1996 según Pew Research Center. En 2026 cumplís 36 años; el rango generacional se asigna por el año, no por tus hábitos tecnológicos.',
     },
     {
       q: '¿A qué generación pertenezco según mi año de nacimiento?',
-      a: 'Generación Silenciosa 1928–1945; Baby Boomer 1946–1964; Generación X 1965–1980; Millennial 1981–1996; Generación Z 1997–2012; Generación Alpha 2013–2024; Generación Beta desde 2025. Los cuatro primeros cortes son los de Pew Research Center y los dos últimos los de la consultora McCrindle, que fue la que acuñó los nombres Alpha y Beta.',
+      a: 'Generación Silenciosa 1928–1945; Baby Boomer 1946–1964; Generación X 1965–1980; Millennial 1981–1996; Generación Z 1997–2012; Generación Alpha 2013–2024; Generación Beta desde 2025. La tabla adopta cortes editoriales sin superposiciones. Pew fundamenta los tramos hasta Millennials y el inicio de Z en 1997; McCrindle sitúa Alpha en 2010–2024, mientras aquí usamos 2013–2024 para continuar después de Z.',
     },
     {
       q: '¿Un nacido en 1996 es Millennial o Gen Z?',
@@ -111,7 +115,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué es la Generación Alpha y qué la Beta?',
-      a: 'Alpha son los nacidos entre 2013 y 2024, hijos mayormente de Millennials y la primera camada criada con tablets y asistentes de voz desde bebés. Beta arrancó el 1 de enero de 2025 y se proyecta hasta 2039: nace en un mundo donde la inteligencia artificial generativa ya es cotidiana.',
+      a: 'En esta tabla Alpha abarca 2013–2024, una adaptación para no superponerla con Z (1997–2012); McCrindle usa 2010–2024. Beta es el nombre que esa consultora propone para 2025–2039. Son convenciones, no una clasificación oficial universal.',
     },
     {
       q: '¿Quién decide dónde empieza y termina una generación?',
@@ -188,7 +192,7 @@ export const hub: HubData = {
     '/calculadora-nombre-elfo',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-09-13',
   audience: 'global',
 };
 

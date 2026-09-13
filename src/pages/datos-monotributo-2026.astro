@@ -23,8 +23,8 @@ import {
 // Patrón espejado de /datasets: schema Dataset + licencia CC-BY 4.0 + bloque "Cómo citar"
 // → cuando un medio o blog cita la tabla, atribuye con link = backlink editorial.
 
-const ULTIMA_REVISION = '2026-08-16';
-const ULTIMA_REVISION_LABEL = '16/8/2026';
+const ULTIMA_REVISION = '2026-09-13';
+const ULTIMA_REVISION_LABEL = '13/9/2026';
 const VIGENCIA_LABEL = '1 de agosto de 2026';
 
 // Filas de la tabla maestra (computadas desde la fuente única).
@@ -70,6 +70,9 @@ const description =
 const PAGE_URL = 'https://hacecuentas.com/datos-monotributo-2026';
 
 const faq = [
+  { q: '¿El promedio mensual de la tabla es un límite de facturación por mes?', a: `No. Es el tope anual dividido por 12, solo como orientación. Para la categoría A equivale a ${fmtARS(TOPES.A / 12)}, pero superar ese promedio en un mes no implica por sí solo cambiar de categoría: se evalúan los ingresos acumulados y los demás parámetros aplicables.` },
+  { q: '¿Qué categoría corresponde si tengo ingresos variables?', a: 'Sumá los ingresos brutos de los últimos 12 meses del período evaluado y compará ese total con la escala. No multipliques tu mejor mes por 12 si ya contás con el historial completo. Revisá también alquileres, superficie y energía cuando correspondan.' },
+  { q: '¿Qué pasa si un parámetro me ubica en una categoría más alta?', a: 'La categoría debe cubrir todos los parámetros que te resulten aplicables. No alcanza con mirar solo facturación: por ejemplo, un alquiler anual puede exigir un encuadre superior al que indicarían tus ingresos.' },
   {
     q: '¿Cuántas categorías de monotributo hay en 2026?',
     a: `Hay 11 categorías, de la A a la K. La A es la más baja (tope de facturación de ${fmtARS(topeMin)} anuales) y la K la más alta (${fmtARS(topeMax)} anuales).`,
@@ -509,6 +512,19 @@ const schema = {
         </div>
       </section>
     </div>
+
+    <section class="cf-section" id="categoria-ingresos-variables">
+      <h2 class="cf-section__title">Qué categoría me corresponde si facturo distinto cada mes</h2>
+      <p class="cf-section__lead">Para un historial completo de 12 meses, compará el <strong>total real</strong> con el tope anual. El promedio mensual de la tabla sirve para planificar: no es un cupo independiente que se reinicia cada mes.</p>
+      <div class="cf-tablewrap"><table class="cf-table">
+        <thead><tr><th scope="col">Ejemplo de facturación</th><th scope="col">Total de 12 meses</th><th scope="col">Lectura por ingresos</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">6 meses de {fmtARS(TOPES.A / 24)} y 6 de {fmtARS(TOPES.A / 8)}</th><td>{fmtARS(TOPES.A)}</td><td>Llega al tope A aunque algunos meses superen su promedio.</td></tr>
+          <tr><th scope="row">Total anual entre los topes A y B</th><td>{fmtARS((TOPES.A + TOPES.B) / 2)}</td><td>Corresponde B por ingresos; revisar los demás parámetros.</td></tr>
+        </tbody>
+      </table></div>
+      <p>Son ejemplos matemáticos con la escala vigente; los importes de cada mes se muestran redondeados. La <a href="https://www.arca.gob.ar/monotributo/ayuda/parametros.asp">guía de parámetros de ARCA</a> también contempla superficie, energía y alquileres. Una actividad con menos de 12 meses requiere revisar las reglas de inicio y anualización en la <a href="https://www.arca.gob.ar/monotributo/ayuda/recategorizacion.asp">ayuda de recategorización</a>.</p>
+    </section>
 
     <!-- Franja: recategorización -->
     <div class="cf-band cf-band--warm" data-domain="knowledge">

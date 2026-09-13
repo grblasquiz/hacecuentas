@@ -19,7 +19,7 @@ describe('oportunidades CTR observadas en Bing', () => {
 
   it('hace visible la respuesta directa y refuerza el cluster salarial', () => {
     expect(read('src/pages/datos-salario-basico-ecuador-2026.astro')).toContain(
-      '<h1>Sueldo básico Ecuador 2026: $470 y neto con IESS</h1>',
+      '<h1>Sueldo básico Ecuador 2026: {f(SBU)} y neto con IESS</h1>',
     );
     expect(read('src/pages/mx/datos-uma-imss-2026.astro')).toContain(
       'href="/mx/datos-salario-minimo-mexico-2026"',

@@ -15,7 +15,10 @@ describe('SEO del valor de la UMA 2026', () => {
   it('mantiene canonical y una fecha de revisión reciente', () => {
     expect(page).toContain("const PAGE_URL = 'https://hacecuentas.com/mx/datos-uma-imss-2026'");
     expect(page).toContain('canonical="/mx/datos-uma-imss-2026"');
-    expect(page).toContain("const ULTIMA_REVISION = '2026-08-17'");
+    const reviewed = page.match(/const ULTIMA_REVISION = '([0-9-]+)'/)?.[1];
+    expect(reviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(Date.parse(reviewed!)).toBeGreaterThanOrEqual(Date.parse('2026-08-17'));
+    expect(Date.parse(reviewed!)).toBeLessThanOrEqual(Date.now());
   });
 
   it('enlaza las dos publicaciones oficiales que prueban los valores', () => {

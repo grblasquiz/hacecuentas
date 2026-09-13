@@ -8,7 +8,7 @@ import Footer from '../../components/Footer.astro';
 // 2026. Datos: resolución CONASAMI/DOF (salario general $315.04/día), UMA
 // $117.31/día + LFT. Patrón [[linkable-data-pages-strategy]] (Dataset+CC-BY).
 
-const ULTIMA_REVISION = '2026-08-17';
+const ULTIMA_REVISION = '2026-09-13';
 const PAGE_URL = 'https://hacecuentas.com/mx/datos-salario-minimo-mexico-2026';
 
 const salarios = [
@@ -18,6 +18,8 @@ const salarios = [
   { c: 'UMA mensual', v: '$3,566.22', n: '' },
   { c: 'UMA anual', v: '$42,794.64', n: 'tope de muchas deducciones y multas' },
 ];
+
+const periodos: Array<[string, number]> = [["7 días", 7], ["15 días", 15], ["30 días", 30], ["Promedio mensual (365 ÷ 12)", 365 / 12]];
 
 const prestaciones = [
   { c: 'Aguinaldo', v: '15 días (mínimo)', n: 'LFT Art. 87 · antes del 20-dic' },
@@ -30,6 +32,9 @@ const title = 'Salario mínimo México 2026: $315.04 diarios y $9,582.47 al mes'
 const description = 'Salario mínimo México 2026: $315.04 diarios y $9,582.47 mensuales; $440.87 diarios en la Frontera Norte. Montos oficiales CONASAMI.';
 
 const faq = [
+  { q: '¿Cuánto es el salario mínimo semanal y quincenal en 2026?', a: 'Multiplicando el mínimo diario por 7 días, son $2,205.28 en la zona general y $3,086.09 en la Frontera Norte. Por 15 días son $4,725.60 y $6,613.05, respectivamente. Son equivalencias brutas, sin horas extra ni otras prestaciones.' },
+  { q: '¿Por qué aparecen dos montos mensuales del salario mínimo?', a: 'El mínimo legal se fija por día. Treinta días a $315.04 suman $9,451.20, mientras que el promedio de 365 días dividido entre 12 meses es $9,582.47. Son períodos de cálculo distintos; el segundo no es el importe de una quincena ni de un mes de exactamente 30 días.' },
+  { q: '¿El salario mínimo profesional puede ser más alto?', a: 'Sí. CONASAMI publica una tabla para ocupaciones, oficios y trabajos especiales. Para comparar tu pago, primero identifica si tu ocupación está incluida y cuál zona geográfica corresponde; no uses automáticamente el mínimo general.' },
   { q: '¿Cuál es el salario mínimo en México 2026?', a: 'El salario mínimo general 2026 es de $315.04 pesos diarios, equivalentes a $9,582.47 al mes al multiplicar por 365 días y dividir entre 12. En la Zona Libre de la Frontera Norte es de $440.87 diarios ($13,407.30 mensuales).' },
   { q: '¿Cuánto vale la UMA en 2026?', a: 'La UMA (Unidad de Medida y Actualización) 2026 es de $117.31 diaria, $3,566.22 mensual y $42,794.64 anual, vigente desde el 1 de febrero de 2026 (INEGI). Se usa como referencia de multas, trámites, créditos Infonavit y topes de deducciones.' },
   { q: '¿Por qué se usa la UMA y no el salario mínimo?', a: 'Desde 2016 la mayoría de obligaciones, multas y topes se calculan en UMA y no en salarios mínimos, para desvincular esos montos de los aumentos al salario. El salario mínimo se usa solo para lo laboral.' },
@@ -79,7 +84,7 @@ const schema = {
         <nav class="crumbs" aria-label="Migas de pan"><a href="/mx">México</a> <span>›</span> <span>Salario mínimo 2026</span></nav>
         <h1>Salario mínimo México 2026: $315.04 diarios</h1>
         <p class="lede">El salario mínimo general 2026 es de <strong>$315.04 diarios</strong> (<strong>$9,582.47 al mes</strong>); en la Zona Libre de la Frontera Norte, <strong>$440.87 diarios</strong>. Son los montos vigentes desde el 1 de enero según CONASAMI. La <strong>UMA 2026</strong> es de <strong>$117.31</strong> diaria.</p>
-        <p class="updated">Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-MX')}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)</p>
+        <p class="updated">Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-MX', { timeZone: 'UTC' })}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)</p>
       </header>
 
       <section class="stats-callout">
@@ -95,6 +100,17 @@ const schema = {
           <thead><tr><th>Concepto</th><th>Valor 2026</th></tr></thead>
           <tbody>{salarios.map((r) => (<tr><td data-label="Concepto"><strong>{r.c}</strong>{r.n ? <span class="sub"> · {r.n}</span> : null}</td><td data-label="Valor">{r.v}</td></tr>))}</tbody>
         </table></div>
+      </section>
+
+      <section id="salario-semanal-quincenal">
+        <h2>Salario mínimo 2026 por semana, quincena y mes</h2>
+        <p>La referencia legal es <strong>diaria</strong>. Estas equivalencias multiplican $315.04 o $440.87 por los días indicados; no agregan aguinaldo, horas extra ni descuentos de nómina.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th scope="col">Período</th><th scope="col">Zona general</th><th scope="col">Frontera Norte</th></tr></thead>
+          <tbody>{periodos.map(([periodo, dias]) => (<tr><th scope="row">{periodo}</th><td>{(315.04 * Number(dias)).toLocaleString('es-MX', {style: 'currency', currency: 'MXN'})}</td><td>{(440.87 * Number(dias)).toLocaleString('es-MX', {style: 'currency', currency: 'MXN'})}</td></tr>))}</tbody>
+        </table></div>
+        <p>Por eso <strong>$9,451.20 por 30 días</strong> y <strong>$9,582.47 como promedio mensual anualizado</strong> no se contradicen. Para tu recibo, revisa el período pagado y la base aplicable. Si ejerces una ocupación con mínimo profesional, consulta su renglón en la <a href="https://www.gob.mx/conasami/documentos/tabla-de-salarios-minimos-generales-y-profesionales-por-areas-geograficas?state=published">tabla oficial de CONASAMI</a>.</p>
+        <p>Para pasar del bruto al depósito, usa la <a href="/mx/trabajo/sueldo-neto">calculadora de sueldo neto México</a>. Para multas y referencias administrativas, consulta el <a href="/mx/datos-uma-imss-2026">valor de la UMA 2026</a>.</p>
       </section>
 
       <section>

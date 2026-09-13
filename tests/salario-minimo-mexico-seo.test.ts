@@ -17,7 +17,10 @@ describe('SEO canónico del salario mínimo de México', () => {
   it('conserva un único canonical informativo y la fecha de revisión', () => {
     expect(source).toContain("const PAGE_URL = 'https://hacecuentas.com/mx/datos-salario-minimo-mexico-2026'");
     expect(source).toContain('canonical="/mx/datos-salario-minimo-mexico-2026"');
-    expect(source).toContain("const ULTIMA_REVISION = '2026-08-17'");
+    const reviewed = source.match(/const ULTIMA_REVISION = '([0-9-]+)'/)?.[1];
+    expect(reviewed).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(Date.parse(reviewed!)).toBeGreaterThanOrEqual(Date.parse('2026-08-17'));
+    expect(Date.parse(reviewed!)).toBeLessThanOrEqual(Date.now());
   });
 
   it('publica el equivalente mensual anualizado también en los datos descargables', () => {

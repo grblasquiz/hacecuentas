@@ -21,8 +21,9 @@ const f = fmtUSDec;
 
 const SITE = 'https://hacecuentas.com';
 const URL = `${SITE}/datos-salario-basico-ecuador-2026`;
-const title = "Sueldo básico Ecuador 2026: $470 y cuánto te queda neto";
-const description = `Salario Básico Unificado (SBU) de Ecuador 2026: ${f(SBU)} al mes. Sueldo neto tras IESS, décimo tercero y cuarto, fondos de reserva. Datos del Ministerio del Trabajo. Uso libre con atribución (CC-BY 4.0).`;
+const title = `Sueldo básico Ecuador 2026: $${SBU} y neto con IESS`;
+const CONTENT_REVIEWED = '2026-09-13';
+const description = `Salario Básico Unificado (SBU) de Ecuador 2026: ${f(SBU)} al mes. Sueldo neto tras IESS, décimo tercero y cuarto, fondos de reserva. Aumento frente a 2025 y ejemplo del descuento personal del 9,45%.`;
 
 const tabla = [
   ['Salario Básico Unificado (SBU) mensual', f(SBU)],
@@ -35,6 +36,8 @@ const tabla = [
 ];
 
 const faq = [
+  { q: '¿El sueldo básico 2026 es de 470 o 482 dólares?', a: `En 2026 es de ${f(SBU)}: los $470 corresponden a 2025. El aumento es de $12 mensuales (aproximadamente 2,55%) y rige desde el 1 de enero de 2026.` },
+  { q: '¿Cuánto es el aporte patronal al IESS sobre el básico?', a: `En relación de dependencia privada, el aporte patronal del 11,15% sobre ${f(SBU)} es ${f(SBU * ECUADOR_2026.iessPatronal)}. Lo paga el empleador: no se suma al descuento personal del 9,45% de tu recibo.` },
   { q: '¿Cuánto es el salario básico en Ecuador 2026?', a: `El Salario Básico Unificado (SBU) de 2026 es de ${f(SBU)} mensuales, fijado por el Ministerio del Trabajo. Equivale a ${f(anual)} al año (sin contar décimos).` },
   { q: '¿Cuánto queda de sueldo neto del salario básico?', a: `Sobre el SBU de ${f(SBU)} se descuenta el aporte personal al IESS del 9,45% (${f(aporteIESS)}), por lo que el neto aproximado es ${f(neto)}. Pueden aplicarse otros descuentos según el caso.` },
   { q: '¿Qué es el décimo tercer sueldo (bono navideño)?', a: 'Es un sueldo adicional equivalente a la doceava parte (1/12) de todo lo recibido en el año. Para quien gana el SBU todo el año equivale a un sueldo completo. Se paga hasta el 24 de diciembre (o de forma mensualizada si el trabajador lo pidió).' },
@@ -51,14 +54,14 @@ const datasetSchema = {
   name: 'Salario Básico Unificado Ecuador 2026 — SBU, décimos y aportes',
   description: 'Salario Básico Unificado (SBU) de Ecuador en 2026, sueldo neto tras IESS, décimo tercero y cuarto sueldo, y fondos de reserva. Fuente: Ministerio del Trabajo e IESS.',
   url: URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
-  inLanguage: 'es-EC', dateModified: DATA_AS_OF, temporalCoverage: '2026', spatialCoverage: { '@type': 'Place', name: 'Ecuador' },
+  inLanguage: 'es-EC', dateModified: CONTENT_REVIEWED, temporalCoverage: '2026', spatialCoverage: { '@type': 'Place', name: 'Ecuador' },
   creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
   sourceOrganization: { '@type': 'GovernmentOrganization', name: 'Ministerio del Trabajo del Ecuador', url: 'https://www.trabajo.gob.ec/' },
   keywords: ['salario básico', 'SBU', 'Ecuador', '2026', 'décimo tercero', 'décimo cuarto', 'IESS'],
   variableMeasured: ['SBU mensual (USD)', 'Aporte IESS (%)', 'Décimo cuarto (USD)', 'Fondos de reserva (%)'],
 };
 const schema = { '@context': 'https://schema.org', '@graph': [
-  { '@type': 'WebPage', '@id': `${URL}#webpage`, name: title, description, url: URL, inLanguage: 'es-EC', dateModified: DATA_AS_OF, mainEntity: { '@id': `${URL}#dataset` } },
+  { '@type': 'WebPage', '@id': `${URL}#webpage`, name: title, description, url: URL, inLanguage: 'es-EC', dateModified: CONTENT_REVIEWED, mainEntity: { '@id': `${URL}#dataset` } },
   datasetSchema,
   { '@type': 'BreadcrumbList', itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
@@ -73,9 +76,9 @@ const schema = { '@context': 'https://schema.org', '@graph': [
     <article class="datos-page">
       <header>
         <nav class="crumbs"><a href="/">Inicio</a> <span>›</span> <span>Salario básico Ecuador 2026</span></nav>
-        <h1>Sueldo básico Ecuador 2026: $470 y neto con IESS</h1>
+        <h1>Sueldo básico Ecuador 2026: {f(SBU)} y neto con IESS</h1>
         <p class="lede"><strong>Respuesta corta:</strong> el Salario Básico Unificado (SBU) de Ecuador en 2026 es de <strong>{f(SBU)} mensuales</strong>; después del aporte personal al IESS queda en aproximadamente <strong>{f(neto)}</strong>. También determina décimos y fondos de reserva.</p>
-        <p class="updated">Última revisión: <time datetime={DATA_AS_OF}>{DATA_AS_OF}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a></p>
+        <p class="updated">Última revisión: <time datetime={CONTENT_REVIEWED}>{CONTENT_REVIEWED}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a></p>
       </header>
 
       <section class="stats-callout">
@@ -93,6 +96,20 @@ const schema = { '@context': 'https://schema.org', '@graph': [
           </table>
         </div>
         <p class="note">Ecuador está dolarizado: todos los valores son en dólares estadounidenses (USD).</p>
+      </section>
+
+      <section id="aumento-sbu-2026">
+        <h2>SBU 2025 vs. 2026: aumento y descuento del IESS</h2>
+        <p>El básico pasó de $470 a <strong>{f(SBU)}</strong>: son $12 más por mes, un aumento aproximado del 2,55%. El <a href="https://www.trabajo.gob.ec/wp-content/plugins/download-monitor/download.php?force=1&amp;id=4933">acuerdo del Ministerio del Trabajo</a> fija su vigencia desde el 1 de enero de 2026.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th scope="col">Concepto mensual</th><th scope="col">2025</th><th scope="col">2026</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Sueldo bruto</th><td>{f(470)}</td><td>{f(SBU)}</td></tr>
+            <tr><th scope="row">Aporte personal: 9,45%</th><td>{f(470 * ECUADOR_2026.iessPersonal)}</td><td>{f(aporteIESS)}</td></tr>
+            <tr><th scope="row">Neto, antes de otros descuentos</th><td>{f(470 - Math.round(470 * ECUADOR_2026.iessPersonal * 100) / 100)}</td><td>{f(neto)}</td></tr>
+          </tbody>
+        </table></div>
+        <p>Ejemplo para un trabajador privado en relación de dependencia, con un mes completo y solo el básico. El aporte patronal de <strong>{f(SBU * ECUADOR_2026.iessPatronal)}</strong> es a cargo del empleador; no se resta de ese neto. Los porcentajes provienen del <a href="https://www.iess.gob.ec/es/preguntas-frecuentes-afiliacion">IESS</a>. Décimos, horas extra, anticipos y otros conceptos se calculan por separado.</p>
       </section>
 
       <section>
