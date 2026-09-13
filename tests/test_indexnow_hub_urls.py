@@ -59,6 +59,12 @@ class HubUrlDetectionTests(unittest.TestCase):
         self.detect('src/pages/mx/datos-salario-minimo-mexico-2027.astro',
                     'https://hacecuentas.com/mx/datos-salario-minimo-mexico-2027')
 
+    def test_root_page_pathspec_includes_top_level_routes(self):
+        with (patch.object(INDEXNOW.subprocess, 'run', return_value=Completed('')) as run,
+              patch.object(INDEXNOW, 'all_sitemap_urls', return_value=set())):
+            INDEXNOW.urls_from_git_diff('before', 'after')
+            self.assertIn('src/pages/*.astro', run.call_args.args[0])
+
     def test_noindex_account_is_not_submitted(self):
         with (patch.object(INDEXNOW.subprocess, 'run', return_value=Completed('src/pages/mi-hacecuentas.astro\n')),
               patch.object(INDEXNOW, 'all_sitemap_urls', return_value=set())):

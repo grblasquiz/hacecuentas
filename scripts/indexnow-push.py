@@ -102,7 +102,7 @@ def urls_from_git_diff(before: str, after: str) -> list:
              # eran INVISIBLES para este detector — los 478 hubs de la migración
              # 7-27 jamás se avisaron a Bing (forense 8-07). El slug real está
              # DENTRO del .ts (`slug: 'trabajo/aguinaldo'`), nunca el filename.
-             'src/lib/hubs/*.ts', 'src/lib/hubs/*/*.ts', 'src/pages/**/*.astro'],
+             'src/lib/hubs/*.ts', 'src/lib/hubs/*/*.ts', 'src/pages/*.astro', 'src/pages/**/*.astro'],
             cwd=ROOT, capture_output=True, text=True, check=True,
         ).stdout
     except subprocess.CalledProcessError as e:
