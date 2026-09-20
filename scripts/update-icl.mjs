@@ -50,6 +50,18 @@ const nuevos = detalle
   .filter((d) => d.fecha > lastDate)
   .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
+// Reject invalid or discontinuous input before replacing the trusted series.
+let previous = lastDate;
+for (const row of nuevos) {
+  const next = new Date(`${previous}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  if (row.fecha !== next.toISOString().slice(0, 10) || row.fecha > today ||
+      !Number.isFinite(row.valor) || row.valor <= 0) {
+    throw new Error('Serie ICL inválida o incompleta; se conserva el archivo anterior.');
+  }
+  previous = row.fecha;
+}
+
 if (nuevos.length === 0) {
   console.log('[icl] ya está al día, nada para agregar.');
   process.exit(0);
@@ -84,7 +96,8 @@ console.log(`[icl] +${nuevos.length} días (hasta ${ultimo.fecha} = ${fmtNum(ult
 // "ICL hoy", "coeficiente ICL {mes}") a partir de la serie recién actualizada.
 // Aislado en try: si falla, el update del índice igual quedó persistido.
 try {
-  await import('./gen-icl-tables.mjs');
+  const legacy = path.join(process.cwd(), 'src/content/calcs/alquiler-icl.json');
+  if (await fs.access(legacy).then(() => true, () => false)) await import('./gen-icl-tables.mjs');
 } catch (e) {
   console.warn('[icl] aviso: no se pudieron regenerar las tablas del calc:', e.message);
 }

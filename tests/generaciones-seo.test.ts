@@ -4,7 +4,7 @@ import { hub, GENERACIONES } from '../src/lib/hubs/generaciones';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects';
 
 const component = readFileSync(
-  new URL('../src/components/GeneracionesExperience.astro', import.meta.url),
+  new URL('../src/components/GeneracionesCompleteExperience.astro', import.meta.url),
   'utf8',
 );
 
@@ -16,8 +16,8 @@ describe('hub canónico de generaciones', () => {
   it('responde explícitamente la intención de búsqueda observada', () => {
     expect(hub.title.toLowerCase()).toContain('de qué generación soy');
     expect(hub.description.toLowerCase()).toContain('generaciones por edad');
-    expect(component).toContain('¿De qué generación soy según mi año de nacimiento?');
-    expect(component).toContain('Tabla de generaciones por año de nacimiento');
+    expect(component).toContain('Generaciones por edad y año de nacimiento en 2026');
+    expect(component).toContain('Generaciones por año y edad en 2026');
   });
 
   it('la tabla usa los siete rangos canónicos sin huecos', () => {

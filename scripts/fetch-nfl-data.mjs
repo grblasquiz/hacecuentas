@@ -94,14 +94,24 @@ const normalizeStandings = (payload) => (payload.children || []).flatMap((confer
 
 async function main() {
   try {
-    const [preseasonPayload, regularPayload, calendarPayload, standingsPayload] = await Promise.all([
-      fetchJson(`${SCOREBOARD}?dates=20260806-20260909&limit=200`),
-      fetchJson(`${SCOREBOARD}?dates=20260909-20270113&limit=1000`),
+    // Date-range requests return HTTP 400. Fetch each explicit season week;
+    // the annual endpoint omits some completed games and cannot be the dataset.
+    const requests = [
+      ...Array.from({ length: 4 }, (_, i) => ({ type: 1, week: i + 1 })),
+      ...Array.from({ length: 18 }, (_, i) => ({ type: 2, week: i + 1 })),
+    ];
+    const payloads = [];
+    for (let i = 0; i < requests.length; i += 4) {
+      payloads.push(...await Promise.all(requests.slice(i, i + 4).map(({ type, week }) =>
+        fetchJson(`${SCOREBOARD}?dates=2026&seasontype=${type}&week=${week}&limit=100`),
+      )));
+    }
+    const [calendarPayload, standingsPayload] = await Promise.all([
       fetchJson(`${SCOREBOARD}?dates=2026&limit=1000`),
       fetchJson(STANDINGS),
     ]);
 
-    const games = [...(preseasonPayload.events || []), ...(regularPayload.events || [])]
+    const games = payloads.flatMap(payload => payload.events || [])
       .filter((event, index, all) => event.season?.year === 2026 && all.findIndex((item) => item.id === event.id) === index)
       .map(normalizeGame)
       .sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -132,6 +142,9 @@ async function main() {
         })),
       }));
 
+    if (games.filter(game => game.seasonType === 2).length !== 272 || teams.length !== 32) {
+      throw new Error('Incomplete NFL season: refusing to overwrite the previous snapshot');
+    }
     mkdirSync(join(process.cwd(), 'src/data/live'), { recursive: true });
     writeFileSync(OUT, JSON.stringify({
       fetchedAt: new Date().toISOString(),
@@ -147,6 +160,7 @@ async function main() {
   } catch (error) {
     if (existsSync(OUT)) console.log(`[nfl] source unavailable; keeping previous snapshot (${error.message})`);
     else throw error;
+    process.exitCode = 1;
   }
 }
 

@@ -136,10 +136,10 @@ def generate(dry_run=False):
         'heroEmoji': '📈',
         'content': content,
         'relatedCalcs': [
-            'calculadora-inflacion-acumulada-periodo',
-            'calculadora-plazo-fijo',
-            'calculadora-retorno-real-inversion-descontando-inflacion',
-            'calculadora-dolar-blue-vs-oficial-brecha',
+            '/trabajo/sueldo-vs-inflacion',
+            '/inversiones/plazo-fijo',
+            '/finanzas-personales',
+            '/finanzas-personales/dolar',
         ],
         'faq': [
             {'q': f'¿Cuál fue la inflación de {mes_nombre} {year}?',

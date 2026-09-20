@@ -44,6 +44,11 @@ const byesOf = (list: typeof regularGames) => {
   return resting.length && resting.length < allAbbrs.size ? resting : [];
 };
 
+// Resolve the next game at build time; the daily data workflow rebuilds this page.
+const todayMx = new Intl.DateTimeFormat('en-CA', { timeZone: MX_ZONE }).format(new Date());
+const upcomingGame = regularGames.find(g => g.state !== 'post' &&
+  new Intl.DateTimeFormat('en-CA', { timeZone: MX_ZONE }).format(new Date(g.date)) >= todayMx);
+const upcomingWeek = upcomingGame?.week;
 const pendingPreseason = preseasonGames.filter((g) => g.state !== 'post');
 const playedPreseason = preseasonGames.length - pendingPreseason.length;
 
@@ -162,28 +167,21 @@ const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, webPag
 
     <header class="hero">
       <h1>Calendario NFL 2026 semana a semana</h1>
+      <p>Datos del calendario actualizados el <time datetime={nfl.fetchedAt}>{updatedLabel}</time> (hora de Ciudad de México).</p>
       <p class="hero-sub">
         Los {nfl.regularSeasonGames} partidos de la temporada regular, semana por semana, con horario de
         <strong>🇲🇽 México</strong>, <strong>🇨🇴 Colombia</strong> y <strong>🇦🇷 Argentina</strong>, TV de EE.UU. y estadio.
         Kickoff: <strong>{kickoffDayMx}</strong>. Perú y Ecuador comparten hora con Colombia; Chile, con Argentina.
       </p>
       <p class="hero-links">
+        {upcomingWeek && <a class="btn" href={`#semana-${upcomingWeek}`}>Ver semana {upcomingWeek}: próximos partidos</a>}
+        <a class="btn ghost" href="#semanas">Elegir otra semana</a>
         <a class="btn" href="/nfl-2026">← Hub NFL 2026: partidos de hoy y resultados</a>
         <a class="btn ghost" href="/posiciones-nfl-2026">Tabla de posiciones AFC/NFC</a>
       </p>
     </header>
 
-    <section class="seo-block" id="internacionales" aria-labelledby="internacionales-h">
-      <h2 id="internacionales-h">Partidos internacionales NFL 2026 y juego en México</h2>
-      <p>El calendario registra {internationalGames.length} partidos fuera de Estados Unidos. Las fechas y horas de esta tabla están expresadas en <strong>Ciudad de México</strong>; pueden diferir del día local de la sede.</p>
-      <div class="twrap"><table>
-        <thead><tr><th scope="col">Semana</th><th scope="col">Partido</th><th scope="col">Sede</th><th scope="col">Fecha y hora CDMX</th></tr></thead>
-        <tbody>{internationalGames.map(g => (<tr><td><a href={`#semana-${g.week}`}>{g.week}</a></td><th scope="row">{gameTitle(g)}</th><td>{COUNTRY_ES[g.country] || g.country} · {g.venue}</td><td>{fmtDay(g.date, MX_ZONE)} · {g.timeValid === false ? 'Por confirmar' : fmtTime(g.date, MX_ZONE)}</td></tr>))}</tbody>
-      </table></div>
-      <p>Para el fixture de cada jornada, usá los accesos a las 18 semanas. Los horarios se convierten desde el calendario de datos del sitio; las señales de TV de las tablas semanales corresponden a EE.UU. Para resultados, consultá <a href="/nfl-2026">NFL 2026: partidos y marcadores</a>.</p>
-    </section>
-
-    <nav class="weeknav" aria-label="Ir a una semana">
+    <nav class="weeknav" id="semanas" aria-label="Ir a una semana">
       <span>Ir a:</span>
       {weekNumbers.map((w) => <a href={`#semana-${w}`}>S{w}</a>)}
       <a href="#pretemporada">Pretemporada</a>
@@ -230,6 +228,17 @@ const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, webPag
         </section>
       );
     })}
+
+    <section class="seo-block" id="internacionales" aria-labelledby="internacionales-h">
+      <h2 id="internacionales-h">Partidos internacionales NFL 2026 y juego en México</h2>
+      <p>El calendario registra {internationalGames.length} partidos fuera de Estados Unidos. Las fechas y horas de esta tabla están expresadas en <strong>Ciudad de México</strong>; pueden diferir del día local de la sede.</p>
+      <div class="twrap"><table>
+        <thead><tr><th scope="col">Semana</th><th scope="col">Partido</th><th scope="col">Sede</th><th scope="col">Fecha y hora CDMX</th></tr></thead>
+        <tbody>{internationalGames.map(g => (<tr><td><a href={`#semana-${g.week}`}>{g.week}</a></td><th scope="row">{gameTitle(g)}</th><td>{COUNTRY_ES[g.country] || g.country} · {g.venue}</td><td>{fmtDay(g.date, MX_ZONE)} · {g.timeValid === false ? 'Por confirmar' : fmtTime(g.date, MX_ZONE)}</td></tr>))}</tbody>
+      </table></div>
+      <p>Para el fixture de cada jornada, usá los accesos a las 18 semanas. Los horarios se convierten desde el calendario de datos del sitio; las señales de TV de las tablas semanales corresponden a EE.UU. Para resultados, consultá <a href="/nfl-2026">NFL 2026: partidos y marcadores</a>.</p>
+    </section>
+
 
     <section id="pretemporada" aria-labelledby="pre-h">
       <div class="sec-head">

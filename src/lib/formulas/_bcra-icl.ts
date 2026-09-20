@@ -1,10 +1,10 @@
 // Histórico del Índice para Contratos de Locación (ICL) del BCRA.
 // Fuente: api.bcra.gob.ar/estadisticas/v4.0/Monetarias/40 (base 30.6.20=1).
 // Actualizado en build. Para refrescar: npm run bcra:update-icl
-// Última fecha: 2026-08-16, valor: 35.25
-// Total: 2238 días hábiles desde 2020-07-01.
+// Última fecha: 2026-09-20, valor: 36.3
+// Total: 2273 días hábiles desde 2020-07-01.
 
-export const ICL_LAST_UPDATED = '2026-08-16';
+export const ICL_LAST_UPDATED = '2026-09-20';
 
 // Arrays paralelos ordenados por fecha ascendente (búsqueda binaria).
 export const ICL_FECHAS: ReadonlyArray<string> = [
@@ -2246,6 +2246,41 @@ export const ICL_FECHAS: ReadonlyArray<string> = [
   '2026-08-14',
   '2026-08-15',
   '2026-08-16',
+  '2026-08-17',
+  '2026-08-18',
+  '2026-08-19',
+  '2026-08-20',
+  '2026-08-21',
+  '2026-08-22',
+  '2026-08-23',
+  '2026-08-24',
+  '2026-08-25',
+  '2026-08-26',
+  '2026-08-27',
+  '2026-08-28',
+  '2026-08-29',
+  '2026-08-30',
+  '2026-08-31',
+  '2026-09-01',
+  '2026-09-02',
+  '2026-09-03',
+  '2026-09-04',
+  '2026-09-05',
+  '2026-09-06',
+  '2026-09-07',
+  '2026-09-08',
+  '2026-09-09',
+  '2026-09-10',
+  '2026-09-11',
+  '2026-09-12',
+  '2026-09-13',
+  '2026-09-14',
+  '2026-09-15',
+  '2026-09-16',
+  '2026-09-17',
+  '2026-09-18',
+  '2026-09-19',
+  '2026-09-20',
 ];
 
 export const ICL_VALORES: ReadonlyArray<number> = [
@@ -4487,4 +4522,39 @@ export const ICL_VALORES: ReadonlyArray<number> = [
   35.22,
   35.23,
   35.25,
+  35.28,
+  35.31,
+  35.34,
+  35.37,
+  35.4,
+  35.43,
+  35.46,
+  35.49,
+  35.52,
+  35.56,
+  35.59,
+  35.62,
+  35.65,
+  35.68,
+  35.71,
+  35.74,
+  35.77,
+  35.8,
+  35.83,
+  35.87,
+  35.9,
+  35.93,
+  35.96,
+  35.99,
+  36.02,
+  36.05,
+  36.08,
+  36.12,
+  36.15,
+  36.18,
+  36.21,
+  36.23,
+  36.25,
+  36.28,
+  36.3,
 ];

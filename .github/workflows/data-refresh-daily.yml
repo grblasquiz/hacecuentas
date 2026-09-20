@@ -19,6 +19,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write
+      actions: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,15 +55,30 @@ jobs:
           fi
           exit 0
 
+      - name: Refresh rental ICL series
+        run: node scripts/update-icl.mjs
+
+      - name: Refresh NFL schedule
+        run: node scripts/fetch-nfl-data.mjs
+
       - name: Commit if changed
+        id: commit
         run: |
           # Verifica cambios en datos live (src/data/live/) Y en datasets públicos (public/datasets/)
-          if git diff --quiet src/data/live/ public/datasets/; then
+          if git diff --quiet src/data/live/ public/datasets/ src/lib/formulas/_bcra-icl.ts; then
             echo "No changes — skipping commit"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/live/ public/datasets/
+          git add src/data/live/ public/datasets/ src/lib/formulas/_bcra-icl.ts
           git commit -m "chore(data-live): refresh datos + datasets BCRA/INDEC/Dolar $(date -u +%Y-%m-%d)"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # A push with GITHUB_TOKEN does not trigger the push-based deploy workflow.
+      - name: Publish refreshed data through the production workflow
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy.yml --ref main
