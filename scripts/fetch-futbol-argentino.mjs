@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { getJson as json, scoreboard } from './lib/espn-football.mjs';
 
 const TZ = 'America/Argentina/Buenos_Aires';
 const OUT = new URL('../src/data/live/futbol-argentino.json', import.meta.url);
@@ -8,20 +9,6 @@ const visibleName = (name = '') => { const value=normalize(name); return !policy
 const dateKey = (value) => new Intl.DateTimeFormat('en-CA', {
   timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit',
 }).format(new Date(value)).replaceAll('-', '');
-const json = async (url) => {
-  let error;
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const response = await fetch(url, { headers: { 'user-agent': 'hacecuentas-data-refresh/2.0' } });
-      if (!response.ok) throw new Error(`${response.status} ${url}`);
-      return response.json();
-    } catch (cause) {
-      error = cause;
-      if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
-    }
-  }
-  throw error;
-};
 const eventVisible = (event) => {
   const competitors = event.competitions?.[0]?.competitors || [];
   return competitors.length >= 2 && competitors.every((entry) => visibleName(entry.team?.displayName) && visibleName(entry.team?.shortDisplayName));
@@ -37,7 +24,7 @@ const cleanGroups = (payload) => (payload.children || []).map((group) => ({
 async function league(code, start, end) {
   const base = 'https://site.api.espn.com/apis';
   const [scores, standings] = await Promise.all([
-    json(`${base}/site/v2/sports/soccer/${code}/scoreboard?dates=${start}-${end}&limit=100`),
+    scoreboard(code, start, end),
     json(`${base}/v2/sports/soccer/${code}/standings?season=${new Date().getFullYear()}`),
   ]);
   return {

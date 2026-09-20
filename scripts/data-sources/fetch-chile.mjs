@@ -8,14 +8,13 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getJsonWithRetry } from "../lib/fetch-json.mjs";
 
 const OUT = "src/data/live/chile.json";
 const URL = "https://mindicador.cl/api";
 
 async function main() {
-  const res = await fetch(URL, { headers: { "User-Agent": "hacecuentas-data-refresh/1.0" } });
-  if (!res.ok) throw new Error(`mindicador.cl ${res.status}`);
-  const d = await res.json();
+  const d = await getJsonWithRetry(URL);
 
   const pick = (k) => ({ valor: d[k]?.valor ?? null, fecha: d[k]?.fecha ?? null });
   const out = {

@@ -163,6 +163,7 @@ async function main() {
     warnings: warns,
   };
   console.log(`SUMMARY::${JSON.stringify(summary)}`);
+  if (errors > 0) process.exitCode = 1;
 }
 
 main().catch((err) => {

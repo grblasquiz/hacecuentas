@@ -1,15 +1,9 @@
 name: Update data (daily)
 
-# Corre todos los días a las 10:00 UTC (~07:00 ARG).
-# Fetchers daily actuales:
-#   - dolar (dolarapi.com)
-#   - bcra-series (ICL/UVA/CER/TM20/plazo-fijo-30d → db/*.json)
-# Si detecta cambios, abre un PR en vez de commitear a main directo — así
-# cualquier regression queda visible antes de deployar.
-
+# Deterministic public data: validate it before committing, then explicitly
+# dispatch production. Bot-created PRs were expiring awaiting approval, and
+# their GITHUB_TOKEN merges did not trigger push-based deployments.
 on:
-  # Minuto no-redondo + jitter in-job (0-30min) → ejecución real distribuida
-  # ~ entre 09:23 y 09:53 UTC, evitando patrón "todos los crons a las :00".
   schedule:
     - cron: '23 9 * * *'
   workflow_dispatch:
@@ -19,23 +13,25 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: content-writers-main
+  cancel-in-progress: false
+
 permissions:
   contents: write
-  pull-requests: write
+  actions: write
 
 jobs:
   update:
-    name: Fetch y proponer PR
+    name: Fetch, validar y publicar datos
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: Checkout current main
         uses: actions/checkout@v4
-
-      - name: Jitter pre-fetch
-        # Distribuye el horario real de actualización dentro de una ventana de
-        # 30 min — los bumps de lastUpdated no caen todos a la misma hora UTC.
-        if: github.event_name == 'schedule'
-        run: sleep $((RANDOM % 1800))
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -47,54 +43,32 @@ jobs:
         run: npm ci
 
       - name: Run daily fetchers
-        id: run
         run: |
           FLAGS="--frequency=daily"
           if [ "${{ inputs.dry }}" = "true" ]; then FLAGS="$FLAGS --dry"; fi
-          node --experimental-strip-types scripts/update-data/index.ts $FLAGS | tee /tmp/update.log
-          SUMMARY=$(grep '^SUMMARY::' /tmp/update.log | tail -1 | sed 's/^SUMMARY:://')
-          echo "summary=$SUMMARY" >> $GITHUB_OUTPUT
-          CHANGED=$(echo "$SUMMARY" | node -e "const s=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(s.changed||0)")
-          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+          node --experimental-strip-types scripts/update-data/index.ts $FLAGS
 
-      - name: Create pull request
-        id: cpr
-        if: steps.run.outputs.changed != '0' && inputs.dry != true
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: auto/update-daily
-          delete-branch: true
-          commit-message: |
-            chore(data): actualización automática diaria
+      - name: Validate updated data and formulas
+        run: npm test
 
-            Fetchers: dolar, bcra-series
-            ${{ steps.run.outputs.summary }}
-          title: '🔄 Update data (daily) — ${{ github.run_number }}'
-          body: |
-            Pipeline automático de actualización diaria.
+      - name: Commit validated data
+        id: commit
+        if: inputs.dry != true
+        run: |
+          git add db/*.json src/content/calcs*/ src/lib/formulas/
+          if git diff --cached --quiet; then
+            echo "No data changes"
+            exit 0
+          fi
+          git config user.name "hacecuentas-data-bot"
+          git config user.email "bot@hacecuentas.com"
+          git commit -m "chore(data): actualización automática diaria validada"
+          git pull --rebase origin main
+          git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
-            **Summary:**
-            ```json
-            ${{ steps.run.outputs.summary }}
-            ```
-
-            Fetchers que corrieron:
-            - `dolar` — dolarapi.com (cotizaciones USD/ARS)
-            - `bcra-series` — api.bcra.gob.ar (ICL, UVA, CER, TM20, plazo fijo 30d → `db/*.json`)
-
-            Auto-merge activado: la data viene de APIs públicas determinísticas (dolarapi/BCRA), no de un LLM.
-          labels: |
-            data-update
-            automated
-
-      # Auto-merge: la data daily viene de APIs públicas determinísticas
-      # (dolarapi, BCRA), no de un LLM → no requiere revisión humana. Se mergea
-      # sola a main el mismo día para que `lastUpdated` no se congele. Ese
-      # congelamiento (PRs sin mergear ~1 mes) fue la causa del warning
-      # "feed was empty" en sitemap-fresh.xml de Bing (jul-2026).
-      - name: Auto-merge PR
-        if: steps.cpr.outputs.pull-request-number != ''
+      - name: Publish through production workflow
+        if: steps.commit.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --squash --delete-branch
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main
