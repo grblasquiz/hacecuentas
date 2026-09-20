@@ -93,7 +93,8 @@ export const GET: APIRoute = async ({ url }) => {
   end.setDate(end.getDate() + 14);
 
   try {
-    const { scoreboard } = createFootballClient();
+    // The web endpoint accepts Workers traffic; site.api rejects it with 403.
+    const { scoreboard } = createFootballClient({ apiBase: ESPN_HOSTS[0] });
     const leagues = await Promise.all(market.codes.map((code) => fetchLeague(
       code,
       dateKey(start, market.timeZone),

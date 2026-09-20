@@ -17,7 +17,7 @@ export function calendarDays(start, end) {
 }
 // Workers may reuse a module across requests. Never share pending I/O or
 // semaphore waiters between requests: Cloudflare cancels cross-request waits.
-export function createFootballClient() {
+export function createFootballClient({ apiBase = 'https://site.api.espn.com/apis' } = {}) {
   const getJson = (url) => limited(() => getJsonWithRetry(url));
   let active = 0;
   const waiting = [];
@@ -29,7 +29,7 @@ export function createFootballClient() {
   }
   async function scoreboard(code, start, end) {
     const pages = await Promise.all(calendarDays(start, end).map(async (day) => {
-      const page = await getJson(`https://site.api.espn.com/apis/site/v2/sports/soccer/${code}/scoreboard?dates=${day}&limit=100`);
+      const page = await getJson(`${apiBase}/site/v2/sports/soccer/${code}/scoreboard?dates=${day}&limit=100`);
       if (!Array.isArray(page.events)) throw new Error(`Invalid scoreboard for ${code} on ${day}`);
       return page.events;
     }));

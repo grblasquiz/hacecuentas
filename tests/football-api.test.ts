@@ -4,6 +4,7 @@ afterEach(()=>vi.unstubAllGlobals());
 it('serves the public refresh without requesting rejected ESPN date ranges', async()=>{
   const mock=vi.fn(async(url:string)=>{
     if(url.includes('/scoreboard?')){
+      expect(new URL(url).hostname).toBe('site.web.api.espn.com');
       expect(new URL(url).searchParams.get('dates')).toMatch(/^\d{8}$/);
       return {ok:true,json:async()=>({events:[]})};
     }
