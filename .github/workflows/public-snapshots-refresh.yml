@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   refresh:
@@ -19,6 +20,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -40,6 +44,7 @@ jobs:
           if [ "$code" = "1" ]; then exit 1; fi
 
       - name: Commit if changed
+        id: commit
         run: |
           if git diff --quiet -- src/lib/data/nafta-precios.ts src/data/live/formula-1-2026.json src/content/calcs-pe/calculadora-tipo-de-cambio-sunat-dolar-soles-peru.json; then
             echo "No changes"
@@ -49,4 +54,12 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/lib/data/nafta-precios.ts src/data/live/formula-1-2026.json src/content/calcs-pe/calculadora-tipo-de-cambio-sunat-dolar-soles-peru.json
           git commit -m "chore(data): refresh combustibles, F1 y TC SUNAT/SBS"
+          git pull --rebase origin main
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Publish refreshed snapshots
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main
