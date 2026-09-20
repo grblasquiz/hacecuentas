@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { scoreboard as fetchScoreboard } from '../../../scripts/lib/espn-football.mjs';
+import { createFootballClient } from '../../../scripts/lib/espn-football.mjs';
 import { footballMarkets } from '../../lib/football-markets';
 import { footballEventAllowed, footballNameAllowed } from '../../lib/football-policy';
 
@@ -55,7 +55,7 @@ const cleanStandings = (payload: any) => (payload?.children || []).map((group: a
   },
 }));
 
-const fetchLeague = async (code: string, start: string, end: string) => {
+const fetchLeague = async (code: string, start: string, end: string, fetchScoreboard: ReturnType<typeof createFootballClient>['scoreboard']) => {
   const [scoreboard, standings] = await Promise.all([
     fetchScoreboard(code, start, end),
     fetchJson(`/v2/sports/soccer/${code}/standings?season=${new Date().getFullYear()}`),
@@ -93,10 +93,12 @@ export const GET: APIRoute = async ({ url }) => {
   end.setDate(end.getDate() + 14);
 
   try {
+    const { scoreboard } = createFootballClient();
     const leagues = await Promise.all(market.codes.map((code) => fetchLeague(
       code,
       dateKey(start, market.timeZone),
       dateKey(end, market.timeZone),
+      scoreboard,
     )));
     const payload = {
       fetchedAt: now.toISOString(),
