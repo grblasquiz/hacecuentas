@@ -19,5 +19,7 @@ describe('production release freshness',()=>{
  it('permits the current revision',()=>{const r=repo();expect(checkDeployHead(r.dir,r.before,r.before).allowed).toBe(true);});
  it('rejects a queued build after new production code arrives',()=>{const r=repo();const next=r.commit('app.js','fixed');expect(checkDeployHead(r.dir,r.before,next).allowed).toBe(false);});
  it('allows documentation-only successors that do not trigger a replacement deploy',()=>{const r=repo();mkdirSync(join(r.dir,'docs'));const next=r.commit('docs/note.md','notes');expect(checkDeployHead(r.dir,r.before,next).allowed).toBe(true);});
+ it('allows an audit report written during a build',()=>{const r=repo();mkdirSync(join(r.dir,'audits'));const next=r.commit('audits/2026-09-20.md','report');expect(checkDeployHead(r.dir,r.before,next).allowed).toBe(true);});
+ it('still blocks changes to non-report files in audits',()=>{const r=repo();mkdirSync(join(r.dir,'audits'));const next=r.commit('audits/config.json','{}');expect(checkDeployHead(r.dir,r.before,next).allowed).toBe(false);});
  it('rejects a built revision outside the current main history',()=>{const r=repo();const next=r.commit('app.js','unpublished');expect(checkDeployHead(r.dir,next,r.before).allowed).toBe(false);});
 });

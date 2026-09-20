@@ -9,6 +9,7 @@ on:
       - 'docs/**'
       - '*.md'
       - 'cerebro/**'
+      - 'audits/**/*.md'
   workflow_dispatch:  # permite correr manual desde Github UI
 
 concurrency:
@@ -23,6 +24,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
     # Build local: ~90s. CI con npm ci + 2700+ páginas: ~6-10 min observado.
     # Antes era 15 → cortaba. Subimos a 30 con margen.
     timeout-minutes: 30
@@ -249,6 +253,14 @@ jobs:
       - name: Check that this release is still current
         id: release_head
         run: node scripts/check-deploy-head.mjs
+
+      # Data bots may advance main without triggering push workflows. Keep the
+      # stale-release gate, but ensure the current revision gets a replacement.
+      - name: Requeue current main when this build was superseded
+        if: steps.release_head.outputs.can_deploy == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --ref main
 
       - name: Deploy to Cloudflare Workers
         if: steps.release_head.outputs.can_deploy == 'true'

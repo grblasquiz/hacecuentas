@@ -4,7 +4,7 @@ import { appendFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
-const ignored = path => path.startsWith('docs/') || path.startsWith('cerebro/') || (!path.includes('/') && path.endsWith('.md'));
+const ignored = path => path.startsWith('docs/') || path.startsWith('cerebro/') || (path.startsWith('audits/') && path.endsWith('.md')) || (!path.includes('/') && path.endsWith('.md'));
 
 export function checkDeployHead(cwd, built = 'HEAD', latest = 'origin/main') {
   const builtSha = git(cwd, 'rev-parse', built);
