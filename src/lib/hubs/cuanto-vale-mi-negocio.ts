@@ -90,9 +90,9 @@ export const MESES_ANIO = 12;
 
 export const hub: HubData = {
   slug: 'negocios/cuanto-vale-mi-negocio',
-  title: '¿Cuánto vale mi negocio? Capital para abrir, rentabilidad y valuación',
+  title: 'Cuánto vale mi negocio: rango y ejemplo con EBITDA',
   description:
-    'Del capital inicial al múltiplo de venta: cuánta plata necesitás para abrir con colchón, en cuántos meses la recuperás, cuánto rinde el negocio por mes y cuánto vale por EBITDA o por método Berkus. Incluye WACC y depreciación.',
+    'Estimá un rango de valor con EBITDA, múltiplos y deuda neta. Ejemplo con supuestos claros y simulador orientativo: no es una tasación ni un precio garantizado.',
   silo: 'Negocios',
   siloHref: '/negocios',
 
@@ -100,7 +100,7 @@ export const hub: HubData = {
   h1: '¿Cuánta plata necesito, cuánto rinde y cuánto vale mi negocio?',
   lede:
     'Son tres preguntas encadenadas por la misma cuenta. El capital que ponés para abrir es el denominador de la rentabilidad; esa rentabilidad, anualizada y con la depreciación sumada de vuelta, es el EBITDA que un comprador multiplica; y el costo de tu capital es la vara mínima que ese negocio tiene que superar para que valga la pena.',
-  stamps: ['Actualizado 27-07-2026', 'Del capital inicial al múltiplo de venta', '8 calculadoras adentro'],
+  stamps: ['Revisado 30-09-2026', 'Del capital inicial al múltiplo de venta', '8 calculadoras adentro'],
 
   resultLabel: 'El número de la rama que elegiste',
 
@@ -646,6 +646,6 @@ export const hub: HubData = {
     '/calculadora-depreciacion-activos-linea-recta',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-09-30',
   audience: 'AR',
 };

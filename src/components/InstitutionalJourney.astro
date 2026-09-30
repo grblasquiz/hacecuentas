@@ -1,4 +1,5 @@
 ---
+import CreditQuickGuide from './hub/CreditQuickGuide.astro';
 import type { InstitutionalJourney } from '../lib/institutional-journeys';
 interface Props { data: InstitutionalJourney }
 const { data } = Astro.props;
@@ -8,8 +9,9 @@ const sourceMap = Object.fromEntries(data.sources.map((source, index) => [`sourc
   <nav class="ij-crumb" aria-label="Migas de pan"><a href="/">Inicio</a><span>›</span><a href={data.siloHref}>{data.silo}</a><span>›</span><span>Recorrido</span></nav>
   <header class="ij-hero">
     <p class="ij-eyebrow">{data.eyebrow}</p><h1>{data.h1}</h1><p>{data.lede}</p>
-    <div class="ij-stamps"><span>Fuentes oficiales</span><span>Revisado agosto 2026</span><span>Sin registro</span></div>
+    <div class="ij-stamps"><span>Fuentes oficiales</span><span>{data.slug === 'finanzas-personales/perfil-crediticio' ? 'Revisado 30/9/2026' : 'Revisado agosto 2026'}</span><span>Sin registro</span></div>
   </header>
+  {data.slug === 'finanzas-personales/perfil-crediticio' && <CreditQuickGuide data={data} />}
   <section class="ij-decision" aria-labelledby="ij-question">
     <div class="ij-picker"><p class="ij-kicker">Empezá por tu situación</p><h2 id="ij-question">{data.question}</h2>
       <div class="ij-options">{data.options.map((option, index) => <button type="button" class:list={['ij-option', { active: index === 0 }]} data-option={option.id} aria-pressed={index === 0 ? 'true' : 'false'}><span>{String(index + 1).padStart(2, '0')}</span>{option.label}</button>)}</div>

@@ -20,9 +20,9 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'tecnologia/internet-y-red',
-  title: '¿Me alcanzan los megas? Cuánto tarda una descarga — Calculadora de velocidad e internet',
+  title: 'Mbps a megas: 100, 300 y 500 megas de internet',
   description:
-    'Calculá cuánto tarda una descarga con tu velocidad real, cuántos MB/s son tus Mbps, qué porcentaje de lo contratado te está dando el ISP, cuánto pierde el wifi contra el cable, qué categoría de cable ethernet necesitás y cuántos GB de datos móviles te come el streaming.',
+    'Convertí Mbps a MB/s, compará 100, 300 y 500 megas y estimá tiempos de descarga. Diferenciá velocidad de datos y revisá cobertura Wi‑Fi y equipos.',
   silo: 'Tecnología',
   siloHref: '/tecnologia',
 
@@ -30,7 +30,7 @@ export const hub: HubData = {
   h1: '¿Me alcanzan los megas? ¿Cuánto tarda esta descarga?',
   lede:
     'Los megas del plan son megabits; lo que baja el archivo son megabytes. Entre medio están el overhead del protocolo, el techo del wifi y el cable que llega a la compu. Con tu velocidad medida y el tamaño del archivo sale el tiempo real, cuánto te está cumpliendo el ISP y cuánto ganarías enchufando un cable.',
-  stamps: ['Actualizado 27-07-2026', 'Fibra, wifi 2,4 / 5 / 6, ethernet y datos móviles', '7 calculadoras adentro'],
+  stamps: ['Revisado 30-09-2026', 'Fibra, wifi 2,4 / 5 / 6, ethernet y datos móviles', '7 calculadoras adentro'],
 
   resultLabel: 'Tiempo que tarda la descarga',
 
@@ -205,7 +205,7 @@ export const hub: HubData = {
       'Descontá el overhead: en fibra por cable se aprovecha cerca del 85%, en wifi 5 apenas el 60%',
       'El medio pone un techo: por wifi 2,4 GHz no vas a bajar a 500 Mbps aunque los tengas contratados',
       'Compará la velocidad medida con la contratada: el piso razonable es el 80%',
-      'Un archivo de 1 GB son 1024 MB, no 1000: por eso el tiempo da un poco más de lo esperado',
+      '1 GB equivale a 1.000 MB; si el tamaño está en GiB, convertí a bytes antes de calcular el tiempo',
       'Para transferencias entre computadoras de tu casa manda la LAN, no el plan de internet',
     ],
     warn: [
@@ -223,11 +223,11 @@ export const hub: HubData = {
   faq: [
     {
       q: '¿Cuánto tarda en bajar un archivo con mi velocidad de internet?',
-      a: 'Dividí el tamaño en megabytes por la velocidad efectiva en MB/s. La velocidad efectiva son los Mbps medidos divididos por 8 y multiplicados por la eficiencia del medio: alrededor del 85% con la computadora enchufada al router. Con 300 Mbps medidos, la velocidad efectiva ronda los 31,9 MB/s, así que un archivo de 8 GB (8192 MB) tarda cerca de 4 minutos y medio.',
+      a: 'Dividí el tamaño en megabytes por la velocidad efectiva en MB/s. La velocidad efectiva son los Mbps medidos divididos por 8 y multiplicados por la eficiencia del medio: alrededor del 85% con la computadora enchufada al router. Con 300 Mbps medidos, la velocidad efectiva ronda los 31,9 MB/s, así que un archivo de 8 GB (8.000 MB) tarda cerca de 4 minutos y 11 segundos.',
     },
     {
       q: '¿Cuántos MB/s son 100 Mbps?',
-      a: 'Son 12,5 MB/s teóricos: un byte son 8 bits, así que se divide por 8. Los planes se venden en megabits por segundo y los programas de descarga muestran megabytes por segundo, y de ahí viene la sensación de que el plan rinde ocho veces menos de lo prometido. A 12,5 MB/s, 1 GB tarda alrededor de 1 minuto y 22 segundos.',
+      a: 'Son 12,5 MB/s teóricos: un byte son 8 bits, así que se divide por 8. Los planes se venden en megabits por segundo y los programas de descarga muestran megabytes por segundo, y de ahí viene la sensación de que el plan rinde ocho veces menos de lo prometido. A 12,5 MB/s, 1 GB decimal tarda 1 minuto y 20 segundos como mínimo teórico.',
     },
     {
       q: '¿Qué porcentaje de la velocidad contratada me tiene que dar el ISP?',
@@ -263,7 +263,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Por qué 1 GB tarda más de lo que da la cuenta redonda?',
-      a: 'Porque un gigabyte de archivo son 1024 megabytes, no 1000, y porque los Mbps del plan son la velocidad del enlace, no la de los datos útiles. Entre las cabeceras de TCP/IP, las retransmisiones y el control de flujo se va entre un 10% y un 15% en cable, y bastante más en wifi. Por eso la eficiencia se aplica antes de dividir por 8.',
+      a: 'Un GB decimal equivale a 1.000 MB; un GiB binario, a 1.024 MiB. Aclarar la unidad evita mezclar tamaños. Además, los Mbps del plan no garantizan esa velocidad de datos útiles: cabeceras, retransmisiones, otros equipos y el servidor pueden alargar la descarga. Usá una velocidad efectiva medida en las mismas condiciones.',
     },
     {
       q: '¿Cuánto me sale cada mega que realmente recibo?',
@@ -272,8 +272,9 @@ export const hub: HubData = {
   ],
 
   sources: [
+    { name: 'Bits, bytes y prefijos decimales y binarios', url: 'https://physics.nist.gov/cuu/Units/binary.html', publisher: 'NIST' },
     {
-      name: 'Reglamento de Calidad de los Servicios de TIC — parámetros de velocidad',
+      name: 'Reglamento de Calidad de los Servicios de TIC — Argentina',
       url: 'https://www.enacom.gob.ar/calidad-de-servicio',
       publisher: 'ENACOM',
     },
@@ -318,7 +319,7 @@ export const hub: HubData = {
     '/calculadora-tiempo-descarga-archivo-internet',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-09-30',
   audience: 'global',
 };
 
