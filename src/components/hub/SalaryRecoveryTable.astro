@@ -1,0 +1,44 @@
+---
+import { SUELDO_DATA as D } from '../../lib/hubs/sueldo-alcanza';
+import { salaryRecovery } from '../../lib/hubs/decision-math';
+const rows = salaryRecovery(1100000,D.mensual);
+const money=(n:number)=>n.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0});
+---
+<section class="recovery" aria-labelledby="recovery-title">
+ <p class="eyebrow">Un cálculo que podés reproducir</p><h2 id="recovery-title">Recuperación salarial, mes a mes.</h2>
+ <p id="recovery-period">Ejemplo: sueldo base de $1.100.000 al cierre del mes anterior al primer IPC de la tabla. Ajustá el sueldo base y el período arriba. El período siempre termina en el último IPC publicado: {D.inflacionAsOf.slice(0,7)}.</p>
+ <p>Podés cargar el sueldo que cobraste en cada mes. Una celda vacía significa que no informaste ese sueldo: no suponemos aumentos ni proyectamos salarios.</p>
+ <div class="table-scroll"><table><caption>IPC nacional publicado y salario necesario para conservar el poder de compra</caption><thead><tr><th scope="col">Mes</th><th scope="col">IPC mensual</th><th scope="col">Factor acumulado</th><th scope="col">Para empatar</th><th scope="col">Sueldo cargado ($)</th><th scope="col">Variación real</th><th scope="col">Aumento para recuperar</th></tr></thead><tbody id="recovery-rows">{rows.map(r=><tr><th scope="row">{r.key}</th><td>{r.ipc.toLocaleString('es-AR')}%</td><td>{r.factor.toFixed(6)}</td><td>{money(r.needed)}</td><td>Sin cargar</td><td>—</td><td>—</td></tr>)}</tbody></table></div>
+ <button id="download-recovery" type="button">Descargar tabla CSV</button>
+ <details open><summary>Metodología, períodos y fuente</summary><p>Factor acumulado = producto de (1 + IPC mensual / 100). Sueldo para empatar = sueldo base × factor. Variación real = (sueldo cargado / sueldo para empatar − 1) × 100. Aumento para recuperar = máximo entre 0 y (sueldo para empatar / sueldo cargado − 1) × 100. No se calcula una tasa de recuperación si el sueldo cargado es cero.</p><p>Se componen tasas mensuales publicadas redondeadas a un decimal, sin redondear los pasos intermedios. El resultado puede diferir unas décimas del interanual oficial obtenido con índices sin redondear. Los salarios son datos que cargás, no estadísticas del INDEC. Usá el mismo criterio bruto o neto en todos los meses. El CSV incluye tasas, factores, base, salarios y fuente para repetir el cálculo.</p><p><a href={D.publicacion?.url || 'https://www.indec.gob.ar/'} target="_blank" rel="noopener">Fuente: INDEC, IPC nacional</a>. Publicación: {D.publicacion?.fecha || 'ver fuente'}. Consulta de datos: {D.consultado}. Sin IPC de meses aún no publicados ni extrapolaciones.</p></details>
+</section>
+<script>
+ import { SUELDO_DATA as D } from '../../lib/hubs/sueldo-alcanza';
+ import { salaryRecovery, recoveryCsv } from '../../lib/hubs/decision-math';
+ const body=document.querySelector<HTMLElement>('#recovery-rows')!;
+ const previous=document.querySelector<HTMLInputElement>('#previous')!;
+ const current=document.querySelector<HTMLInputElement>('#current')!;
+ const months=document.querySelector<HTMLInputElement>('#months')!;
+ const wages:Record<string,number|null>={};
+ const parse=(v:string)=>Number(v.replaceAll('.','').replace(',','.'))||0;
+ const money=(n:number)=>n.toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:0});
+ const pct=(n:number|null)=>n==null?'—':n.toLocaleString('es-AR',{maximumFractionDigits:2})+'%';
+ let rows:ReturnType<typeof salaryRecovery>=[];
+ function update(){
+   const count=Number(months.value),base=parse(previous.value);
+   if(!Number.isInteger(count)||count<1||count>D.mensual.length||base<=0){rows=[];body.innerHTML='<tr><td colspan="7">Cargá un sueldo base positivo y un período cubierto por la serie.</td></tr>';return;}
+   const series=D.mensual.slice(-count),last=series.at(-1)!.key;
+   rows=salaryRecovery(base,series,{...wages,[last]:parse(current.value)});
+   const start=new Date(series[0].key+'-15T12:00:00Z');start.setUTCMonth(start.getUTCMonth()-1);
+   document.querySelector('#recovery-period')!.textContent=`Sueldo base: ${money(base)} al cierre de ${start.toISOString().slice(0,7)}. IPC de ${series[0].key} a ${last}. El último sueldo usa el valor de arriba; los meses intermedios quedan vacíos hasta que los cargues.`;
+   body.innerHTML=rows.map(r=>`<tr><th scope="row">${r.key}</th><td>${pct(r.ipc)}</td><td>${r.factor.toFixed(6).replace('.',',')}</td><td>${money(r.needed)}</td><td>${r.key===last?money(r.wage!):`<input type="number" min="0" step="0.01" data-wage="${r.key}" aria-label="Sueldo cobrado en ${r.key}" placeholder="Sin cargar" value="${wages[r.key]??''}" />`}</td><td>${pct(r.real)}</td><td>${pct(r.recovery)}</td></tr>`).join('');
+ }
+ body.addEventListener('input',e=>{const el=e.target as HTMLInputElement;if(!el.dataset.wage)return;wages[el.dataset.wage]=el.value===''?null:Math.max(0,Number(el.value)||0);const tr=el.closest('tr')!;const r=salaryRecovery(parse(previous.value),D.mensual.slice(-Number(months.value)),wages).find(r=>r.key===el.dataset.wage)!;tr.children[5].textContent=pct(r.real);tr.children[6].textContent=pct(r.recovery);});
+ [previous,current,months].forEach(el=>el.addEventListener('input',update));
+ document.querySelector('#resetBtn')!.addEventListener('click',()=>{Object.keys(wages).forEach(k=>delete wages[k]);queueMicrotask(update)});
+ document.querySelectorAll('[data-months],#resetBtn,#calcBtn').forEach(el=>el.addEventListener('click',()=>queueMicrotask(update)));
+ document.querySelector('#download-recovery')!.addEventListener('click',()=>{update();if(!rows.length)return;const blob=new Blob([recoveryCsv(parse(previous.value),rows,D.publicacion?.url||'https://www.indec.gob.ar/')],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`recuperacion-salarial-${rows[0].key}-${rows.at(-1)!.key}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});update();
+</script>
+<style>
+.recovery{max-width:1180px;margin:0 auto;padding:48px 24px 64px;color:#10192d}.eyebrow{color:#2e876c;text-transform:uppercase;font-weight:800;letter-spacing:.1em;font-size:.8rem}h2{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em}p{line-height:1.65}.table-scroll{overflow-x:auto;border:1px solid #dce2df;border-radius:14px;background:#fff;margin:24px 0}table{width:100%;border-collapse:collapse;min-width:820px;font-size:.88rem}caption{text-align:left;padding:16px;font-weight:750}th,td{text-align:left;border-top:1px solid #dce2df;padding:12px;vertical-align:middle;font-variant-numeric:tabular-nums}thead{background:#eaf1ff}.table-scroll :global(input){width:130px;padding:8px;border:1px solid #aebbc6;border-radius:6px;color:#10192d;background:#fff}button{background:#3e6ed6;color:#fff;border:0;border-radius:10px;padding:14px 20px;cursor:pointer;font-weight:750}details{margin-top:26px}summary{font-weight:750;cursor:pointer}a{color:#174b7a}button:focus-visible,a:focus-visible,.table-scroll :global(input:focus-visible){outline:3px solid #dc9b32;outline-offset:3px}
+</style>

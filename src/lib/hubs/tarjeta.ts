@@ -59,7 +59,7 @@ export const hub: HubData = {
   lede:
     'El pago mínimo no es una cuota: es el permiso para seguir debiendo. El interés se suma al saldo todos los meses y el mínimo se recalcula sobre ese saldo nuevo, así que la deuda se estira años y el total termina siendo varias veces lo que gastaste. Acá ves el número completo, y también qué pasa si pagás un poco más, o si conviene la compra en cuotas.',
   stamps: [
-    'Actualizado 27-07-2026',
+    'Revisado 30-09-2026',
     `Inflación mensual de referencia: ${INFLACION_MES.valor.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`,
     '8 calculadoras adentro',
   ],
@@ -382,7 +382,7 @@ export const hub: HubData = {
     '/calculadora-cuota-simple-ahora-12-costo-cuotas',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-09-30',
   audience: 'AR',
 };
 

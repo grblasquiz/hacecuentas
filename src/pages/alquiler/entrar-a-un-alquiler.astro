@@ -1,13 +1,6 @@
 ---
-/**
- * Hub de decisión — "¿Cuánta plata necesito para entrar a un alquiler?"
- * Reemplaza 8 URLs de calculadora suelta (ver hub.replaces).
- *
- * La página sólo aporta los datos (src/lib/hubs/entrar-a-un-alquiler.ts) y su
- * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
- *
- * Las constantes NO se inventan: salen de las fórmulas reales de
- * src/lib/formulas/ (comisión, caución, expensas por m², regla del 30%).
+/** Entrada a un alquiler: importes pactados y cotizados, presupuesto y comparación.
+ * La experiencia conserva los casos actuales y obtiene su metodología del hub.
  */
 export const prerender = true;
 
@@ -16,26 +9,10 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import HubSeoAnswer from '../../components/hub/HubSeoAnswer.astro';
 import EntrarAlquilerExperience from '../../components/generated/EntrarAlquilerExperience.astro';
-import {
-  hub,
-  COMISION,
-  IVA,
-  CAUCION_TASA,
-  EXPENSAS_M2_MEDIO,
-  DEPOSITO_MESES,
-  DEPOSITO_MESES_LEY_VIEJA,
-} from '../../lib/hubs/entrar-a-un-alquiler';
+import { hub } from '../../lib/hubs/entrar-a-un-alquiler';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
 
-const CONST = {
-  COMISION,
-  IVA,
-  CAUCION_TASA,
-  EXPENSAS_M2_MEDIO,
-  DEPOSITO_MESES,
-  DEPOSITO_MESES_LEY_VIEJA,
-};
 
 const schema = {
   '@context': 'https://schema.org',
@@ -64,6 +41,7 @@ const schema = {
   title={hub.title}
   description={hub.description}
   canonical={CANONICAL}
+  articleModifiedTime={hub.lastReviewed}
   schema={schema}
   audience={hub.audience}
   lang="es"

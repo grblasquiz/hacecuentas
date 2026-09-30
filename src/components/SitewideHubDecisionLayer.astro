@@ -95,8 +95,28 @@ const add = (candidate?: (typeof candidatePool)[number]) => {
 };
 intent.target.forEach((pattern) => add(candidatePool.find(({ tool }) => pattern.test(normalized(`${tool.path} ${tool.title} ${tool.h1}`)))));
 candidatePool.forEach((candidate) => { if (selected.length < 3) add(candidate); });
-const routes = selected.slice(0, 3).map(({ tool }, index) => ({ tool, prompt: intent.prompts[index] || intent.prompts.at(-1)! }));
-const nextSteps = routes.length > 1 ? [...routes.slice(1), routes[0]].slice(0, 3) : routes;
+const contextualRoutes: Record<string, Array<{ path: string; prompt: string; label?: string }>> = {
+  '/alquiler/entrar-a-un-alquiler': [
+    { path: '/alquiler/aumento-de-alquiler', prompt: '¿Cómo cambia el alquiler en el próximo ajuste?' },
+    { path: '/finanzas-personales/gastos-del-mes', prompt: '¿El alquiler entra en tu presupuesto mensual?' },
+  ],
+  '/alquiler/aumento-de-alquiler': [
+    { path: '/finanzas-personales/gastos-del-mes', prompt: '¿Cómo acomodás el presupuesto después del aumento?' },
+    { path: '/alquiler/entrar-a-un-alquiler', prompt: '¿Estás comparando una nueva propiedad?' },
+  ],
+  '/finanzas-personales/tarjeta-de-credito': [
+    { path: '/finanzas-personales/tarjeta-de-credito#cuotas-o-contado', prompt: '¿Vas a comprar en cuotas o al contado?', label: 'Compará descuento, recargo y capacidad de pago' },
+    { path: '/finanzas-personales/salir-de-deudas', prompt: '¿Necesitás ordenar el saldo que ya debés?' },
+    { path: '/finanzas-personales/gastos-del-mes', prompt: '¿Cuánto margen te queda para pagar la tarjeta?' },
+  ],
+};
+const routes = contextualRoutes[path]
+  ? contextualRoutes[path].flatMap(({ path: target, prompt, label }) => {
+    const tool = tools.find(tool => tool.path === target.split('#')[0]);
+    return tool ? [{ tool: { ...tool, path: target, h1: label || tool.h1 }, prompt }] : [];
+  })
+  : selected.slice(0, 3).map(({ tool }, index) => ({ tool, prompt: intent.prompts[index] || intent.prompts.at(-1)! }));
+const nextSteps = contextualRoutes[path] ? routes : routes.length > 1 ? [...routes.slice(1), routes[0]].slice(0, 3) : routes;
 
 const COPY = {
   es: { eyebrow: 'Elegí tu situación', focus: 'Consulta principal', routeTitle: '¿Qué querés resolver?', nextEyebrow: 'Tu próximo paso', nextTitle: 'Seguí con la decisión', nextIntro: 'Usá el resultado que acabás de obtener para avanzar con una cuenta directamente relacionada.', trust: 'Datos y metodología', checked: 'Cálculo ejecutado en tu navegador; revisá los supuestos y fuentes de esta página.', editor: 'Responsable: Martín Rodríguez, fundador y editor', reviewed: 'Revisión de experiencia', freshness: 'La fecha de vigencia de cada valor se informa junto a su fuente.', method: 'Ver fuentes y metodología', share: 'Guardar o compartir este resultado', shareHelp: 'El enlace conserva tus datos en el navegador y no crea una página indexable.', copy: 'Copiar enlace', copied: 'Enlace copiado', native: 'Compartir', print: 'Descargar / imprimir', privacy: 'No guardamos estos datos en el servidor.' },

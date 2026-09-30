@@ -1,0 +1,37 @@
+<section class="purchase" id="cuotas-o-contado" aria-labelledby="purchase-title">
+  <div class="intro"><p class="eyebrow">Antes de comprar</p><h2 id="purchase-title">¿Cuotas o contado?</h2><p>Compará descuento, recargo y costo de oportunidad. Después comprobá si cada alternativa entra en tu presupuesto.</p></div>
+  <form id="purchase-form">
+    <div class="fields">
+      <label>Precio de lista ($)<input name="price" type="number" min="0" value="500000" required  step="0.01" /></label>
+      <label>Descuento al contado (%)<input name="discount" type="number" min="0" max="100" step="any" value="10" required /></label>
+      <label>Recargo total de las cuotas (%)<input name="surcharge" type="number" min="0" max="1000" step="any" value="0" required /></label>
+      <label>Cantidad de cuotas<input name="months" type="number" min="1" max="120" value="6" required /></label>
+      <label>Rendimiento neto mensual esperado (%)<input name="rate" type="number" min="0" max="100" step="any" value="0" required /><small>Supuesto editable, después de costos e impuestos. No es una rentabilidad garantizada ni inflación futura observada.</small></label>
+      <label>Primera cuota<select name="first"><option value="1">Dentro de un mes</option><option value="0">Hoy</option></select></label>
+      <label>Dinero disponible hoy ($)<input name="available" type="number" min="0" value="500000" required  step="0.01" /></label>
+      <label>Margen mensual para esta compra ($)<input name="monthlyBudget" type="number" min="0" value="90000" required  step="0.01" /><small>Después de gastos, deudas y otras cuotas.</small></label>
+    </div>
+    <button type="submit">Comparar formas de pago</button>
+  </form>
+  <div class="comparison" aria-live="polite" id="purchase-result"><p>Completá los datos y compará.</p></div>
+  <p class="method">Valor presente = suma de cada cuota ÷ (1 + tasa mensual)<sup>mes de pago</sup>. Cuotas iguales y tasa constante; cargá todos los cargos en el recargo total. El resultado supone que pagás el resumen completo en cada vencimiento.</p>
+  <a href="/finanzas-personales/salir-de-deudas">Si las cuotas no entran en tu presupuesto, armá un plan para salir de deudas →</a>
+</section>
+<script>
+  import { comparePurchase } from '../../lib/hubs/decision-math';
+  const form = document.querySelector<HTMLFormElement>('#purchase-form')!;
+  const result = document.querySelector<HTMLElement>('#purchase-result')!;
+  const money = (n: number) => n.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+  function calculate() {
+    if (!form.reportValidity()) return;
+    const values = Object.fromEntries([...new FormData(form)].map(([k,v]) => [k, Number(v)])) as unknown as Parameters<typeof comparePurchase>[0];
+    const r = comparePurchase(values);
+    const economic = Math.abs(r.saving) < .01 ? 'Empate en valor presente' : r.saving > 0 ? 'Las cuotas cuestan menos en plata de hoy' : 'El contado cuesta menos en plata de hoy';
+    const capacity = !r.cashAffordable && !r.installmentsAffordable ? 'Ninguna alternativa entra en el presupuesto cargado. Revisá el monto o postergá la compra.' : `${r.cashAffordable ? 'El contado entra en el dinero disponible.' : 'El contado supera el dinero disponible.'} ${r.installmentsAffordable ? 'La cuota entra en tu margen mensual.' : 'La cuota supera tu capacidad de pago.'}`;
+    result.innerHTML = `<div><small>CONTADO CON DESCUENTO</small><strong>${money(r.cash)}</strong></div><div><small>CADA UNA DE ${r.months} CUOTAS</small><strong>${money(r.installment)}</strong><span>Total nominal: ${money(r.financed)}</span></div><div><small>CUOTAS EN PLATA DE HOY</small><strong>${money(r.present)}</strong><span>Diferencia: ${money(Math.abs(r.saving))}</span></div><p class="verdict"><b>${economic}.</b> ${capacity}</p>`;
+  }
+  form.addEventListener('submit', e => { e.preventDefault(); calculate(); });
+</script>
+<style>
+  .purchase{max-width:1180px;margin:0 auto;padding:48px 24px 64px;color:#182332;background:#fff;scroll-margin-top:90px}.eyebrow{color:#b5592b;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em}h2{font-size:clamp(28px,4vw,40px);letter-spacing:-.035em;margin:8px 0}p{line-height:1.6}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin:28px 0}label{font-weight:750;font-size:.9rem}input,select{display:block;width:100%;color:#182332;background:#fff;border:1px solid #bac8d0;border-radius:10px;padding:12px;min-height:48px;margin-top:7px;font:inherit}small{display:block;font-weight:400;line-height:1.5;margin-top:6px;color:#52616c}button{background:#174b7a;color:white;border:0;border-radius:10px;padding:13px 22px;font-weight:800;cursor:pointer}.comparison{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:28px}.comparison :global(strong){display:block;font-size:clamp(22px,3vw,32px);overflow-wrap:anywhere}.comparison :global(div){background:#fff0e8;border:1px solid #eacabb;padding:20px;border-radius:14px}.comparison :global(.verdict){grid-column:1/-1;border-left:4px solid #d97946;padding:16px;background:#fff8df}.method{font-size:.9rem;color:#52616c}a{color:#174b7a;font-weight:750}input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #d97946;outline-offset:3px}@media(max-width:600px){.fields,.comparison{grid-template-columns:1fr}.purchase{padding:32px 20px}}
+</style>

@@ -1,4 +1,6 @@
 import type { HubData } from './types';
+import ripteData from '../../../db/ripte.json';
+import inflacionLive from '../../data/live/inflacion.json';
 import dolarLive from '../../data/live/dolar.json';
 import {
   INFLACION_SERIE_MENSUAL,
@@ -6,7 +8,8 @@ import {
   INFLACION_AS_OF,
 } from '../data/inflacion-serie-ar';
 import { SMVM_MENSUAL, SMVM_HORA, SMVM_FECHA, SMVM_RESOLUCION } from '../data/smvm-ar-2026';
-import { RIPTE_NOMINAL, RIPTE_BASE_MONTH } from '../formulas/sueldo-vs-promedio-argentino';
+const RIPTE_NOMINAL = Number(ripteData.ultimoValor);
+const RIPTE_BASE_MONTH = ripteData.ultimaFecha.slice(0, 7);
 
 /**
  * Hub de decisión — "¿Mi sueldo le gana a la inflación?"
@@ -35,7 +38,7 @@ import { RIPTE_NOMINAL, RIPTE_BASE_MONTH } from '../formulas/sueldo-vs-promedio-
  *    scripts/update-data/fetchers/smvm.ts). Se actualiza por resolución del
  *    CNEPySMVyM, así que el valor y su fecha viajan juntos al copy.
  *  - Cotizaciones: src/data/live/dolar.json (DolarAPI, cron de datos).
- *  - RIPTE: constante del módulo real src/lib/formulas/sueldo-vs-promedio-argentino.ts.
+ *  - RIPTE: último registro publicado de db/ripte.json, con su período.
  *
  * NOTA DE CONTRATO: toda fila que no sea plata declara `format`/`unit`/`decimals`
  * explícitos — el runtime hace Object.assign y una fila sin format cae a pesos.
@@ -48,6 +51,13 @@ const DOLAR_FECHA = String((dolarLive as any)._meta?.fetchedAt || '').slice(0, 1
 export const SUELDO_DATA = {
   /** IPC mensual %, orden ascendente (ventana móvil de ~12 meses del INDEC). */
   serie: INFLACION_SERIE_MENSUAL.map((m) => m.valor),
+  mensual: INFLACION_SERIE_MENSUAL,
+  // Cifras y fecha verificadas en el informe oficial, no derivadas de tasas redondeadas.
+  publicacion: INFLACION_AS_OF === '2026-08-31' ? {
+    fecha: '2026-09-10', interanual: 33.5,
+    url: 'https://biblioteca.indec.gob.ar/bases/minde/ipc_09_26.pdf',
+  } : null,
+  consultado: inflacionLive._meta.fetchedAt.slice(0, 10),
   inflacion12m: INFLACION_INTERANUAL_PCT,
   inflacionAsOf: INFLACION_AS_OF,
   smvmMensual: SMVM_MENSUAL,
@@ -106,7 +116,7 @@ export const hub: HubData = {
         warn: [
           DISCLAIMER_LABOR,
           'Compará siempre bruto contra bruto o neto contra neto: mezclar los dos infla o desinfla el resultado',
-          'La serie viva del INDEC cubre los últimos doce meses; para períodos más largos el tramo faltante se estima con el promedio mensual',
+          'Sólo se calculan períodos completos cubiertos por la serie disponible; no extrapolamos meses faltantes ni IPC futuro',
         ],
         plazo:
           'el IPC se publica alrededor del día 12 de cada mes: recién ahí se puede cerrar el mes anterior.',
@@ -207,11 +217,11 @@ export const hub: HubData = {
     },
     {
       id: 'meses',
-      label: 'Hace cuántos meses cobrabas ese sueldo',
+      label: 'Meses hasta el último IPC publicado',
       type: 'number',
       min: 1,
-      max: 120,
-      value: 12,
+      max: INFLACION_SERIE_MENSUAL.length,
+      value: Math.min(12, INFLACION_SERIE_MENSUAL.length),
       help: 'Con eso tomamos la inflación acumulada real del INDEC para ese período.',
     },
     {
@@ -254,7 +264,7 @@ export const hub: HubData = {
     },
     {
       q: '¿De dónde sale la inflación que usa la calculadora?',
-      a: 'Del índice de precios al consumidor del INDEC, con la serie mensual de los últimos doce meses. Para períodos más largos que la serie disponible, el tramo faltante se estima con el promedio geométrico mensual de la serie conocida y el resultado lo aclara.',
+      a: 'Del IPC nacional del INDEC. Se componen las variaciones mensuales publicadas y redondeadas a un decimal; por eso el acumulado reproducible puede diferir unas décimas del interanual oficial calculado con índices sin redondear. Sólo se usan meses cubiertos por la serie: no hay proyecciones de meses faltantes. La tabla y su CSV incluyen cada tasa, período y factor.',
     },
     {
       q: '¿Cuánto es el salario mínimo vital y móvil hoy?',
@@ -297,13 +307,13 @@ export const hub: HubData = {
   sources: [
     {
       name: 'INDEC — Índice de precios al consumidor (IPC)',
-      url: 'https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31',
+      url: SUELDO_DATA.publicacion?.url || 'https://www.indec.gob.ar/',
       publisher: 'INDEC',
       date: INFLACION_AS_OF,
     },
     {
       name: `Salario Mínimo Vital y Móvil — ${SMVM_RESOLUCION}`,
-      url: 'https://www.argentina.gob.ar/trabajo/consejodelsalario',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/norma-429565/texto',
       publisher: 'Consejo Nacional del Empleo, la Productividad y el SMVM',
       date: SMVM_FECHA,
     },
@@ -341,6 +351,6 @@ export const hub: HubData = {
     '/calculadora-sueldo-en-dolares-poder-compra',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-09-30',
   audience: 'AR',
 };
