@@ -92,15 +92,15 @@ export const hub: HubData = {
   slug: 'negocios/cuanto-vale-mi-negocio',
   title: 'Cuánto vale mi negocio: rango y ejemplo con EBITDA',
   description:
-    'Estimá un rango de valor con EBITDA, múltiplos y deuda neta. Ejemplo con supuestos claros y simulador orientativo: no es una tasación ni un precio garantizado.',
+    'Ejemplo educativo con EBITDA y simulador separado sobre ganancia operativa. Escenarios hipotéticos con deuda neta y supuestos claros; no es una tasación.',
   silo: 'Negocios',
   siloHref: '/negocios',
 
   eyebrow: 'Negocios y valuación',
-  h1: '¿Cuánta plata necesito, cuánto rinde y cuánto vale mi negocio?',
+  h1: 'Cuánto vale mi negocio: escenarios hipotéticos y ejemplo con EBITDA',
   lede:
-    'Son tres preguntas encadenadas por la misma cuenta. El capital que ponés para abrir es el denominador de la rentabilidad; esa rentabilidad, anualizada y con la depreciación sumada de vuelta, es el EBITDA que un comprador multiplica; y el costo de tu capital es la vara mínima que ese negocio tiene que superar para que valga la pena.',
-  stamps: ['Revisado 30-09-2026', 'Del capital inicial al múltiplo de venta', '8 calculadoras adentro'],
+    'Un ejemplo educativo con EBITDA y un simulador independiente sobre ganancia operativa permiten explorar supuestos. No estiman un precio de mercado ni reemplazan una evaluación específica.',
+  stamps: ['Revisado 03-10-2026', 'Supuestos hipotéticos explícitos', 'Ejemplo EBITDA separado del simulador'],
 
   resultLabel: 'El número de la rama que elegiste',
 
@@ -548,90 +548,49 @@ export const hub: HubData = {
 
   faq: [
     {
-      q: '¿Cuánta plata necesito para abrir un negocio?',
-      a: 'La inversión fija más un colchón de supervivencia. La inversión fija es lo que pagás antes de vender el primer peso: alquiler y depósito, equipamiento, mercadería inicial, habilitaciones y marketing de apertura. El colchón son los meses que querés bancar multiplicados por los gastos mensuales de operación, porque el negocio no factura a nivel de crucero desde el primer día. Tres meses es el default conservador; en rubros de maduración lenta conviene seis. Abrir sin colchón es la causa número uno de cierre temprano.',
+      q: "¿Qué calcula este simulador?",
+      a: "Calcula tres escenarios: ganancia operativa anual × 2, 3 o 4 × factor combinado − deuda neta, y limita cada salida a un mínimo de cero. Los múltiplos y ajustes son supuestos hipotéticos propios; no son precios observados ni un modelo de mercado validado.",
     },
     {
-      q: '¿Qué diferencia hay entre margen neto y rentabilidad sobre el capital?',
-      a: 'El numerador es el mismo —la ganancia del mes— pero el denominador cambia todo. El margen neto divide la ganancia por los ingresos y te dice cuánto te queda de cada peso vendido. La rentabilidad divide la ganancia por el capital invertido y te dice cuánto rinde tu plata. Un kiosco puede tener 8% de margen y rendir 6% mensual sobre el capital porque rota rapidísimo; una inmobiliaria puede tener 40% de margen y rendir 1% porque el capital inmovilizado es enorme. Para decidir si invertir, manda la rentabilidad sobre capital.',
+      q: "¿Ganancia operativa y EBITDA son lo mismo?",
+      a: "No necesariamente. EBITDA excluye intereses, impuestos, depreciaciones y amortizaciones. El simulador usa la ganancia operativa que ingresás y no la transforma en EBITDA ni normaliza gastos. El ejemplo educativo con EBITDA de esta página es independiente.",
     },
     {
-      q: '¿Cómo se calcula el payback de una inversión?',
-      a: 'Inversión inicial dividida por el flujo de caja mensual neto. Si pusiste 13 millones y el negocio deja 1,4 millones limpios por mes, el payback es de 9,3 meses. La lectura habitual es: hasta 6 meses excelente, hasta 12 muy bueno, hasta 24 bueno, hasta 36 aceptable y más allá largo. El payback no descuenta inflación ni costo de oportunidad, así que en un contexto de precios en movimiento es un piso optimista: recuperar el capital nominal no es recuperar el poder de compra.',
+      q: "¿Los múltiplos 2, 3 y 4 corresponden a mi sector?",
+      a: "No. Son tres supuestos para explorar sensibilidad y no se asignan a sectores. Los datos agregados de NYU/Damodaran sirven como referencia de comparables; no respaldan estos tres coeficientes ni una banda para una PyME argentina.",
     },
     {
-      q: '¿Cómo se valúa un negocio en marcha?',
-      a: 'El método más usado en compraventa de PyMEs es el múltiplo de EBITDA. Se toma el EBITDA anual —resultado operativo antes de intereses, impuestos, depreciaciones y amortizaciones—, se lo multiplica por el múltiplo que paga el mercado en ese sector y se obtiene el Enterprise Value. A eso se le resta la deuda neta, que es la deuda total menos la caja, y queda el Equity Value: lo que cobra el vendedor. Un rango de negociación razonable es ese equity más y menos 15%.',
+      q: "¿Cómo se combinan los ajustes de recurrencia, dueño, clientes y marca?",
+      a: "Se multiplican sólo los ajustes activos: recurrencia ×1,20, dependencia del dueño ×0,80, cliente concentrado ×0,85 y marca fuerte ×1,10. Sin ajustes el factor es 1. Recurrencia está activa al inicio, por eso el factor inicial es 1,20. Son supuestos propios sin calibración de mercado; no se suman los porcentajes.",
     },
     {
-      q: '¿Qué múltiplo de EBITDA corresponde a mi sector?',
-      a: 'El múltiplo lo pone el mercado, no el dueño. Por debajo de 3× se ubican los negocios de alto riesgo o sin ingresos recurrentes. Entre 3× y 5× es conservador: construcción, agricultura y servicios profesionales muy dependientes del fundador. Entre 5× y 8× está el estándar PyME de servicios B2B, manufactura y retail tradicional. De 8× a 12× es premium: salud, e-commerce consolidado, SaaS mid-market. De 12× a 18× ya es alto y sólo lo sostienen empresas de tecnología con crecimiento firme. Arriba de 18× hace falta justificarlo con crecimiento mayor al 40% y recurrencia arriba del 90%.',
+      q: "¿Cómo ingreso la deuda neta y en qué moneda?",
+      a: "Ingresá deuda menos caja, calculada por vos. Usá la misma moneda y fecha que para la ganancia anual; el símbolo $ no hace una conversión. Si la caja supera la deuda, el importe puede ser negativo y la resta suma ese saldo al escenario.",
     },
     {
-      q: '¿Qué es el método Berkus y cuándo se usa?',
-      a: 'Es un método de valuación para startups que todavía no facturan, donde no hay EBITDA que multiplicar. Le asigna hasta 500.000 dólares a cada uno de cinco factores que reducen riesgo: la idea y su valor base, el prototipo o tecnología funcionando, el equipo de gestión, las relaciones estratégicas y las primeras ventas o tracción. El techo del método es 2.500.000 dólares de valuación pre-money. Se usa en rondas ángel y deja de aplicar en cuanto hay facturación recurrente: ahí manda el múltiplo.',
+      q: "¿Por qué un escenario muestra cero?",
+      a: "La interfaz conserva un piso de cero: si ganancia × múltiplo × factor − deuda neta da negativo, muestra cero y oculta el déficit. Ese cero no demuestra que el negocio tenga valor real cero ni determina un precio de venta.",
     },
     {
-      q: '¿Por qué EBITDA y método Berkus dan números tan distintos?',
-      a: 'Porque miden cosas distintas. El múltiplo de EBITDA valúa lo que el negocio ya genera: es una foto del pasado proyectada hacia adelante, y por eso un negocio rentable pero chico vale poco. Berkus valúa riesgo eliminado: cuánto menos incierto es el proyecto gracias al equipo, al prototipo y a los acuerdos, sin exigir un solo peso de facturación. Una startup sin ventas puede valer un millón de dólares por Berkus y cero por EBITDA; un kiosco muy rentable puede valer bien por EBITDA y no encajar en Berkus ni un poco. Si tenés facturación estable, usá el múltiplo; si no la tenés, Berkus.',
+      q: "¿Por qué no se pide facturación anual?",
+      a: "La cuenta de este simulador usa ganancia operativa anual y deuda neta. Facturación no es ganancia ni EBITDA y no participa de esta fórmula. Por eso no se pide un dato que no cambia las salidas.",
     },
     {
-      q: '¿Qué es la deuda neta y por qué se resta de la valuación?',
-      a: 'Es la deuda total del negocio menos la caja y los equivalentes. Se resta porque el comprador, además de pagarte, se hace cargo de esos pasivos: el Enterprise Value es lo que vale la operación completa, y el Equity Value es lo que queda para los dueños después de la deuda. Si la caja supera la deuda, la deuda neta es negativa y suma valor. Si la deuda supera el Enterprise Value, el equity da negativo: en la práctica el negocio no se vende, se reestructura.',
-    },
-    {
-      q: '¿Qué es el WACC y por qué un proyecto puede dar ganancia y destruir valor?',
-      a: 'El WACC es el costo promedio ponderado del capital: el peso del capital propio por su costo, más el peso de la deuda por su costo después de impuestos. Es el retorno mínimo que el negocio tiene que generar para dejar contentos a dueños y acreedores. Si tu capital cuesta 30% anual y el negocio rinde 20%, el resultado contable puede ser ganancia, pero estás destruyendo diez puntos de valor por año: ese mismo capital rendía más en otro lado. La cuenta que importa no es "¿gané?" sino "¿gané más que mi costo de capital?".',
-    },
-    {
-      q: '¿Por qué la deuda cuesta menos que el capital propio?',
-      a: 'Por dos razones. Primero, el acreedor cobra antes que el dueño y con garantías, así que asume menos riesgo y pide menos retorno. Segundo, los intereses son deducibles de Ganancias: si la tasa es 60% y la alícuota 35%, el costo real de esa deuda es 39%, porque el fisco te devuelve parte vía menor impuesto. Eso se llama escudo fiscal y sólo existe si tenés ganancia imponible contra la cual deducir. Ojo: más deuda baja el WACC hasta cierto punto y después lo sube, porque el riesgo de default encarece todas las fuentes.',
-    },
-    {
-      q: '¿Qué es la depreciación y por qué separa el EBITDA de la ganancia neta?',
-      a: 'La depreciación reparte el costo de un activo a lo largo de su vida útil. Por línea recta se calcula como valor de compra menos valor residual, dividido por los años de vida útil. Es un cargo contable que baja la ganancia pero no sale de la caja: la plata ya se fue el día que compraste la máquina. Por eso el EBITDA, que suma de vuelta las depreciaciones y amortizaciones, se usa para valuar: aproxima la generación de caja operativa y hace comparables empresas con políticas de amortización distintas. La contracara es que el EBITDA ignora que esa máquina hay que reponerla.',
-    },
-    {
-      q: '¿Sirve proyectar ventas con una tasa de crecimiento fija?',
-      a: 'Sirve como escenario, no como pronóstico. Aplicar un porcentaje compuesto mes a mes muestra bien el efecto acumulativo —un 4% mensual multiplica la facturación por 1,6 en un año— pero ninguna empresa sostiene una tasa constante: hay estacionalidad, capacidad instalada y saturación de mercado. Además, en un contexto inflacionario, crecer en pesos corrientes puede ser caer en términos reales. Usá la proyección para dimensionar necesidades de capital de trabajo y para comparar escenarios, y contrastala cada trimestre con lo que pasó de verdad.',
+      q: "¿Puedo usar estos escenarios para fijar un precio de compraventa?",
+      a: "No constituyen asesoría, una tasación ni una valuación válida para una transacción. Son ejercicios orientativos. La evaluación específica requiere revisar cuentas, activos, contratos, impuestos, contingencias y comparables adecuados; el ejemplo con EBITDA tampoco fija un precio garantizado.",
     },
   ],
 
   sources: [
     {
-      name: 'Damodaran Online — EV/EBITDA multiples by industry sector',
-      url: 'https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datacurrent.html',
+      name: 'British Business Bank — What is EBITDA?',
+      url: 'https://www.british-business-bank.co.uk/business-guidance/guidance-articles/finance/what-is-ebitda',
+      publisher: 'British Business Bank',
+    },
+    {
+      name: 'Damodaran / NYU — Enterprise Value Multiples by Industry',
+      url: 'https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/vebitda.htm',
       publisher: 'Stern School of Business, New York University',
-    },
-    {
-      name: 'Dave Berkus — The Berkus Method: valuing the early stage investment',
-      url: 'https://berkonomics.com/?p=2752',
-      publisher: 'Berkonomics',
-    },
-    {
-      name: 'Corporate Finance Institute — EV/EBITDA multiple',
-      url: 'https://corporatefinanceinstitute.com/resources/valuation/ev-ebitda/',
-      publisher: 'Corporate Finance Institute',
-    },
-    {
-      name: 'Weighted Average Cost of Capital (WACC): definición y fórmula',
-      url: 'https://www.investopedia.com/terms/w/wacc.asp',
-      publisher: 'Investopedia',
-    },
-    {
-      name: 'Ley 20.628 de Impuesto a las Ganancias — amortizaciones de bienes de uso (texto actualizado)',
-      url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/40000-44999/44911/texact.htm',
-      publisher: 'InfoLEG — Ministerio de Justicia',
-    },
-    {
-      name: 'ARCA — Impuesto a las Ganancias: alícuotas para sociedades',
-      url: 'https://www.arca.gob.ar/gananciasYBienes/',
-      publisher: 'Agencia de Recaudación y Control Aduanero',
-    },
-    {
-      name: 'FACPCE — Resoluciones Técnicas de valuación y medición contable',
-      url: 'https://www.facpce.org.ar/normativa/',
-      publisher: 'Federación Argentina de Consejos Profesionales de Ciencias Económicas',
     },
   ],
 
@@ -646,6 +605,6 @@ export const hub: HubData = {
     '/calculadora-depreciacion-activos-linea-recta',
   ],
 
-  lastReviewed: '2026-09-30',
+  lastReviewed: '2026-10-03',
   audience: 'AR',
 };
