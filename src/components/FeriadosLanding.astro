@@ -5,6 +5,7 @@ import Footer from './Footer.astro';
 import CalendarGrid from './CalendarGrid.astro';
 import type { FeriadosPais } from '../lib/data/feriados-latam-2026';
 import { sourceRel } from '../lib/source-rel';
+import { calcularPuentes } from '../lib/feriados-puentes';
 
 // Landing de feriados por país (mismo rol que la calc de feriados AR de la home,
 // replicada para LATAM). Tabla-calendario crawleable + próximo feriado (client) +
@@ -62,14 +63,12 @@ const fmtLarga = (iso: string) => { const [, m, d] = iso.split('-'); return `${N
 // ── Puentes y próximo fin de semana largo (derivados de los datos; sin inventar) ──
 // Puente clásico: feriado en martes → pedís el lunes; en jueves → pedís el viernes.
 // En ambos casos armás un fin de semana de 4 días con un solo día de licencia.
-const puentes = feriados
-  .filter((f) => f.dia === 'Martes' || f.dia === 'Jueves')
-  .map((f) => ({ ...f, pedir: f.dia === 'Martes' ? 'el lunes anterior' : 'el viernes siguiente' }));
+const puentes = calcularPuentes(feriados);
 const puentesPend = puentes.filter((f) => f.fecha >= buildHoy);
 // Próximo finde largo: feriado lunes/viernes (pega solo) o martes/jueves (con puente).
 const findesYPuentes = feriados.filter((f) => ['Lunes', 'Viernes', 'Martes', 'Jueves'].includes(f.dia));
 const proxFindeLargo = findesYPuentes.find((f) => f.fecha >= buildHoy) ?? null;
-const proxFindeEsPuente = proxFindeLargo ? (proxFindeLargo.dia === 'Martes' || proxFindeLargo.dia === 'Jueves') : false;
+const proxFindeEsPuente = proxFindeLargo ? puentes.some((f) => f.fecha === proxFindeLargo.fecha) : false;
 
 // Interlink transaccional: "trabajás el feriado → cuánto cobrás" hacia la calc de
 // recargo / horas extra del mismo país. Mapea audience → calc real existente.
@@ -89,7 +88,7 @@ const faq = [
   { q: `¿Cuántos feriados hay en ${pais} en ${anio}?`, a: `En ${anio} hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de arriba.` },
   { q: `¿Cuándo es el próximo feriado en ${pais}?`, a: proximo ? `El próximo feriado en ${pais} es el ${fmtLarga(proximo.fecha)} (${proximo.dia}): ${proximo.nombre}${diasHasta !== null && diasHasta > 1 ? `, faltan ${diasHasta} días` : ''}. Quedan ${quedanEnAnio} feriado${quedanEnAnio === 1 ? '' : 's'} en lo que resta de ${anio}. La tabla marca el próximo automáticamente según la fecha de hoy.` : `Ya pasaron todos los feriados nacionales de ${anio} en ${pais}. Usá el calendario para planificar tus días libres del próximo año.` },
   { q: `¿Cuántos fines de semana largos hay en ${anio}?`, a: `En ${anio} hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo por sí solos.${proxFindeLargo ? ` El próximo es ${proxFindeLargo.dia} ${fmtLarga(proxFindeLargo.fecha)} (${proxFindeLargo.nombre}).` : ''}` },
-  { q: `¿Cómo armo un puente en ${anio} en ${pais}?`, a: puentes.length ? `Un puente se arma cuando un feriado cae martes o jueves: pedís el lunes anterior o el viernes siguiente y te quedan 4 días seguidos. En ${pais} hay ${puentes.length} feriado${puentes.length === 1 ? '' : 's'} en martes o jueves en ${anio} para aprovechar así. El detalle está en la sección "Puentes ${anio}" de esta página.` : `En ${anio} no hay feriados nacionales en martes o jueves en ${pais}, así que no se arma un puente clásico de 4 días con un solo día de licencia. Los fines de semana largos vienen de los feriados que caen lunes o viernes.` },
+  { q: `¿Cómo armo un puente en ${anio} en ${pais}?`, a: puentes.length ? `Un puente se arma cuando un feriado cae martes o jueves y el lunes anterior o el viernes siguiente es hábil: pedís ese día y te quedan 4 días seguidos. En ${pais} hay ${puentes.length} oportunidades de ese tipo en ${anio}. Si el día contiguo también es feriado, no necesitás pedir licencia. El detalle está en la sección "Puentes ${anio}" de esta página.` : `En ${anio} no hay puentes clásicos que requieran un solo día de licencia entre los feriados listados. Si el lunes anterior a un martes feriado o el viernes posterior a un jueves feriado también es feriado, el descanso ya está unido sin pedir licencia.` },
   { q: `¿Estos feriados son nacionales o también hay locales?`, a: `La tabla lista los feriados nacionales de ${pais} (válidos en todo el país). Además puede haber feriados locales o provinciales según la ciudad o región, que no están incluidos acá.` },
   { q: `¿Se trabaja en los feriados? ¿Cómo se paga si trabajo un feriado en ${pais}?`, a: `${notaTipo || 'Los feriados son días de descanso; si trabajás, suele corresponder un pago con recargo según la legislación laboral vigente.'}${recargoCalc ? ` Para calcular exactamente cuánto cobrás por trabajar un feriado, usá la ${recargoCalc.label.toLowerCase()}, enlazada en esta página.` : ''}` },
   { q: `¿De dónde salen estas fechas?`, a: `De las normas oficiales de ${pais} (${marco}). Verificamos cada fecha y su día de la semana contra el calendario real ${anio}. Última revisión: ${dataAsOf}.` },
@@ -98,7 +97,7 @@ const faq = [
 
 const datasetSchema = {
   '@type': 'Dataset', '@id': `${URL}#dataset`,
-  name: `Feriados ${pais} ${anio} — calendario oficial`,
+  name: `Feriados ${pais} ${anio} — calendario${data.notaEstado ? ' según normativa vigente' : ' oficial'}`,
   description: `Calendario de feriados nacionales de ${pais} en ${anio}: fecha observada, día de la semana y tipo de cada feriado. ${marco}.`,
   url: URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
   inLanguage: 'es', dateModified: dataAsOf, temporalCoverage: String(anio),
@@ -125,6 +124,7 @@ const schema = { '@context': 'https://schema.org', '@graph': [
         <nav class="crumbs"><a href="/">Inicio</a> <span>›</span> <span>Calendario {pais} {anio}</span></nav>
         <h1>Calendario {pais} {anio}: feriados y días festivos</h1>
         <p class="lede">Todos los <strong>feriados y días festivos de {pais}</strong> en {anio}, con la fecha exacta, el día de la semana y los <strong>fines de semana largos</strong>. Para que {gentilicio} planifiquen sus días libres.</p>
+        {data.notaEstado && <p class="answer-box">{data.notaEstado}</p>}
         <p class="updated">Última revisión: <time datetime={dataAsOf}>{dataAsOf}</time> · Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a></p>
         {proximo && (
           <div class="proximo-hero" data-proximo>
@@ -140,7 +140,7 @@ const schema = { '@context': 'https://schema.org', '@graph': [
         {proximo
           ? <span>El próximo es <strong>{proximo.dia} {fmtLarga(proximo.fecha)}</strong> ({proximo.nombre}), {diasHastaTxt}. </span>
           : <span>Ya pasaron todos los feriados nacionales de {anio}. </span>}
-        Hay <strong>{findesLargos.length} {findesLargos.length === 1 ? 'fin de semana largo' : 'fines de semana largos'}</strong>{puentes.length > 0 && <span> y <strong>{puentes.length} {puentes.length === 1 ? 'puente' : 'puentes'}</strong> aprovechables (feriados en martes o jueves)</span>}.
+        Hay <strong>{findesLargos.length} {findesLargos.length === 1 ? 'fin de semana largo' : 'fines de semana largos'}</strong>{puentes.length > 0 && <span> y <strong>{puentes.length} {puentes.length === 1 ? 'puente' : 'puentes'}</strong> aprovechables pidiendo un día hábil de licencia</span>}.
       </p>
 
       <section class="stats-callout">
@@ -152,7 +152,7 @@ const schema = { '@context': 'https://schema.org', '@graph': [
       <section class="cal-visual">
         <h2>Calendario {pais} {anio} mes a mes</h2>
         <p>El año completo en un vistazo: los <strong>{total} feriados</strong> están marcados en <span style="background:var(--accent,#2c5cdc);color:#fff;padding:0 .4rem;border-radius:5px;font-weight:600;">color</span>. Más abajo tenés la tabla con la fecha exacta, el día y el tipo de cada uno.</p>
-        <CalendarGrid feriados={feriados.map((f) => ({ fecha: f.fecha, nombre: f.nombre }))} pais={pais} />
+        <CalendarGrid feriados={feriados.map((f) => ({ fecha: f.fecha, nombre: f.nombre }))} pais={pais} year={anio} />
       </section>
 
       <section>

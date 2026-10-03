@@ -15,7 +15,8 @@ import type { Feriado, FeriadosPais } from './feriados-latam-2026';
 
 // ─────────────────────────────────────────── ARGENTINA ────────────────────────
 // Ley 27.399: inamovibles + trasladables (mar/mié → lunes anterior; jue/vie →
-// lunes siguiente). Soberanía Nacional 20-nov cae sábado → no se traslada.
+// lunes siguiente). Soberanía Nacional 20-nov cae sábado: eventual traslado
+// sujeto a decisión de la autoridad (Decreto 614/2025), no automático.
 export const FERIADOS_AR_2027: Feriado[] = [
   { fecha: '2027-01-01', dia: 'Viernes', nombre: 'Año Nuevo', tipo: 'Inamovible' },
   { fecha: '2027-02-08', dia: 'Lunes', nombre: 'Carnaval', tipo: 'Inamovible' },
@@ -30,7 +31,7 @@ export const FERIADOS_AR_2027: Feriado[] = [
   { fecha: '2027-07-09', dia: 'Viernes', nombre: 'Día de la Independencia', tipo: 'Inamovible' },
   { fecha: '2027-08-16', dia: 'Lunes', nombre: 'Paso a la Inmortalidad del Gral. José de San Martín', tipo: 'Trasladable', nota: 'El 17-ago cae martes: se traslada al lunes anterior' },
   { fecha: '2027-10-11', dia: 'Lunes', nombre: 'Día del Respeto a la Diversidad Cultural', tipo: 'Trasladable', nota: 'El 12-oct cae martes: se traslada al lunes anterior' },
-  { fecha: '2027-11-20', dia: 'Sábado', nombre: 'Día de la Soberanía Nacional', tipo: 'Trasladable', nota: 'Cae sábado: la regla de traslado no aplica, se mantiene el 20-nov' },
+  { fecha: '2027-11-20', dia: 'Sábado', nombre: 'Día de la Soberanía Nacional', tipo: 'Trasladable', nota: 'Fecha de conmemoración; eventual traslado al viernes anterior o lunes posterior pendiente de decisión oficial (Decreto 614/2025)' },
   { fecha: '2027-12-08', dia: 'Miércoles', nombre: 'Inmaculada Concepción de María', tipo: 'Inamovible' },
   { fecha: '2027-12-25', dia: 'Sábado', nombre: 'Navidad', tipo: 'Inamovible' },
 ];
@@ -142,11 +143,13 @@ export const FERIADOS_LATAM_2027: Record<string, FeriadosPais> = {
   argentina: {
     pais: 'Argentina', gentilicio: 'los argentinos', audience: 'AR',
     slug: 'feriados-argentina-2027', totalLabel: '16 feriados nacionales',
-    dataAsOf: '2026-08-18',
-    marco: 'Ley 27.399 de feriados nacionales; traslados según su art. 6',
-    notaTipo: 'Los trasladables de 2027 surgen de aplicar la regla del art. 6 de la Ley 27.399. Los feriados con fines turísticos (puentes) se fijan por decreto del Poder Ejecutivo hacia fines de 2026 y se sumarán cuando se publiquen.',
+    dataAsOf: '2026-10-03',
+    marco: 'Ley 27.399 de feriados nacionales y Decreto 614/2025',
+    notaEstado: 'Calendario 2027 calculado según la normativa vigente: incluye los feriados de la Ley 27.399 y los traslados automáticos de su art. 6. Los días con fines turísticos aún no están incorporados y se sumarán al publicarse la norma oficial. El eventual traslado del 20 de noviembre, que cae sábado, requiere decisión oficial. Carnaval es el lunes 8 y martes 9 de febrero: con el fin de semana del 6 y 7 son cuatro días seguidos sin pedir licencia, si no trabajás esos días.',
+    notaTipo: 'Los traslados de martes/miércoles y jueves/viernes siguen el art. 6 de la Ley 27.399. El Decreto 614/2025 permite trasladar feriados trasladables de sábado o domingo por decisión de la autoridad; no es automático. Los días con fines turísticos se incorporarán al publicarse la norma correspondiente. Pedir un día hábil de licencia para armar un puente no lo convierte en feriado oficial.',
     fuentes: [
       { nombre: 'Ley 27.399 — texto oficial (InfoLeg / argentina.gob.ar)', url: 'https://www.argentina.gob.ar/normativa/nacional/ley-27399-281835/texto' },
+      { nombre: 'Decreto 614/2025 — traslado de feriados que caen sábado o domingo', url: 'https://www.argentina.gob.ar/normativa/nacional/norma-416911/texto' },
       { nombre: 'Boletín Oficial — Ley 27.399', url: 'https://www.boletinoficial.gob.ar/detalleAviso/primera/172415/20171018' },
     ],
     feriados: FERIADOS_AR_2027,
