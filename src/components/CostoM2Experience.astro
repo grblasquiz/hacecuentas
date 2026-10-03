@@ -1,7 +1,10 @@
 ---
 interface Props { data:any }
 const { data } = Astro.props;
-import { M2, SHARES, MURO_ARS_M2 } from '../lib/hubs/costo-por-m2';
+import { M2, SHARES } from '../lib/hubs/costo-por-m2';
+import { CONSTRUCTION_DEFAULTS, calculateConstructionScenario, constructionScenarioView, constructionMoney } from '../lib/construction-cost-scenario';
+const initial = calculateConstructionScenario(CONSTRUCTION_DEFAULTS, M2[CONSTRUCTION_DEFAULTS.category][CONSTRUCTION_DEFAULTS.zone]);
+const initialView = constructionScenarioView(initial);
 const cats = ['economica','estandar','media','alta','premium','ampliacion','reforma'];
 const zones = [
   ['caba','CABA'],['gba_norte','GBA norte'],['gba_sur','GBA sur / oeste'],['cordoba','Córdoba'],
@@ -18,7 +21,7 @@ const zones = [
           <h1>Calculadora de costo<br>por m² de construcción<br>2026.</h1>
           <p>Armá un rango orientativo según metros, terminaciones y zona. Podés reemplazar nuestra referencia por un precio local por m².</p>
           <div class="chips"><span>🏗️ Rango, no precio cerrado</span><span>💵 Conversión MEP</span><span>✓ Supuestos visibles</span></div>
-          <div class="house-art"><div class="blueprint"><div class="gridlines"></div><div class="house"><div class="roof"></div><div class="door"></div><div class="window"></div></div><span class="measure">130 m² computables</span></div><span class="budget-tag">Casa estándar · GBA sur/oeste</span></div>
+          <div class="house-art"><div class="blueprint"><div class="gridlines"></div><div class="house"><div class="roof"></div><div class="door"></div><div class="window"></div></div><span class="measure">{initialView.measure}</span></div><span class="budget-tag">Casa estándar · GBA sur/oeste</span></div>
         </div>
         <form class="calc">
           <div class="calc-title"><div><h2>Calculá tu obra</h2><p>Empezamos con una casa estándar.</p></div><span class="tag">Valores actualizados</span></div>
@@ -26,19 +29,19 @@ const zones = [
           <div class="types"><button type="button" class="type" data-cat="economica"><i>🏠</i>Económica</button><button type="button" class="type active" data-cat="estandar"><i>🏡</i>Estándar</button><button type="button" class="type" data-cat="media"><i>🏘️</i>Media alta</button><button type="button" class="type" data-cat="alta"><i>🏰</i>Alta</button><button type="button" class="type" data-cat="premium"><i>✨</i>Premium</button><button type="button" class="type" data-cat="ampliacion"><i>➕</i>Ampliación</button><button type="button" class="type" data-cat="reforma"><i>🔨</i>Reforma integral</button></div>
           <div class="section-label">Datos principales</div>
           <div class="fields">
-            <div class="field"><label for="m2-covered">m² cubiertos</label><div class="inline"><input id="m2-covered" type="number" min="0" value="120"><b>m²</b></div></div>
-            <div class="field"><label for="m2-semi">m² semicubiertos</label><div class="inline"><input id="m2-semi" type="number" min="0" value="20"><b>m²</b></div></div>
-            <div class="field"><label for="m2-semi-factor">Cómputo semicubierto</label><div class="inline"><input id="m2-semi-factor" type="number" min="0" max="100" value="50"><b>%</b></div></div>
-            <div class="field wide"><label for="m2-zone">Zona de la obra</label><select id="m2-zone">{zones.map(([v,l])=><option value={v} selected={v==='gba_sur'}>{l}</option>)}</select></div>
+            <div class="field"><label for="m2-covered">m² cubiertos</label><div class="inline"><input id="m2-covered" type="number" min="0" value={CONSTRUCTION_DEFAULTS.covered}><b>m²</b></div></div>
+            <div class="field"><label for="m2-semi">m² semicubiertos</label><div class="inline"><input id="m2-semi" type="number" min="0" value={CONSTRUCTION_DEFAULTS.semi}><b>m²</b></div></div>
+            <div class="field"><label for="m2-semi-factor">Cómputo semicubierto</label><div class="inline"><input id="m2-semi-factor" type="number" min="0" max="100" value={CONSTRUCTION_DEFAULTS.semiFactorPercent}><b>%</b></div></div>
+            <div class="field wide"><label for="m2-zone">Zona de la obra</label><select id="m2-zone">{zones.map(([v,l])=><option value={v} selected={v===CONSTRUCTION_DEFAULTS.zone}>{l}</option>)}</select></div>
             <div class="field"><label for="m2-custom">Cotización local por m² (opcional)</label><div class="inline"><input id="m2-custom" type="number" min="0" placeholder="Usar referencia"><b>$</b></div></div>
-            <div class="field"><label for="m2-contingency">Contingencia</label><div class="inline"><input id="m2-contingency" type="number" min="0" max="50" value="10"><b>%</b></div></div>
-            <div class="field"><label for="m2-extra">Otros costos presupuestados</label><div class="inline"><input id="m2-extra" type="number" min="0" value="0"><b>$</b></div></div>
+            <div class="field"><label for="m2-contingency">Contingencia</label><div class="inline"><input id="m2-contingency" type="number" min="0" max="50" value={CONSTRUCTION_DEFAULTS.contingencyPercent}><b>%</b></div></div>
+            <div class="field"><label for="m2-extra">Otros costos presupuestados</label><div class="inline"><input id="m2-extra" type="number" min="0" value={CONSTRUCTION_DEFAULTS.extras}><b>$</b></div></div>
           </div>
-          <div class="advanced"><span>El rango editorial tiene ±15% de incertidumbre antes de adicionales.</span><b id="m2-plan-label">Valores de hoy</b></div>
+          <div class="advanced"><span>El rango editorial tiene ±15% de incertidumbre antes de adicionales.</span><b id="m2-plan-label">{initialView.plan}</b></div>
           <section class="result">
-            <div class="result-top"><div><small>Costo total estimado</small><div class="price" id="m2-total">$199.420.000</div></div><div class="sqm"><small>Costo por m²</small><strong id="m2-unit">$1.534.000</strong></div></div>
-            <div class="stats"><span>Superficie computable<b id="m2-area">130 m²</b></span><span>Referencia en dólares<b id="m2-usd">US$130.000</b></span><span>Rango probable<b id="m2-monthly">—</b></span></div>
-            <div class="verdict" id="m2-verdict"></div>
+            <div class="result-top"><div><small>Costo total estimado</small><div class="price" id="m2-total">{initialView.total}</div></div><div class="sqm"><small>Costo por m²</small><strong id="m2-unit">{initialView.unit}</strong></div></div>
+            <div class="stats"><span>Superficie computable<b id="m2-area">{initialView.area}</b></span><span>Referencia en dólares<b id="m2-usd">{initialView.usd}</b></span><span>Rango probable<b id="m2-monthly">{initialView.range}</b></span></div>
+            <div class="verdict" id="m2-verdict" set:html={initialView.verdict}></div>
             <button class="go" id="m2-update" type="button">Actualizar presupuesto</button>
           </section>
         </form>
@@ -48,8 +51,8 @@ const zones = [
       <header class="center"><span>La obra, rubro por rubro</span><h2>Entendé en qué se va el presupuesto</h2><p>Una estimación llave en mano separada como la armaría un director de obra.</p></header>
       <div class="detail-grid">
         <article class="card"><h3>Desglose estimado</h3>
-          {SHARES.map((share,i)=><div class="row"><span>{['🧱','👷','📐','📋'][i]} {share.label}</span><div class="bar"><i style={`width:${share.share/Math.max(...SHARES.map(x=>x.share))*100}%`}></i></div><b data-m2-share={share.share}>—</b></div>)}
-          <div class="total"><strong>Total de obra</strong><strong id="m2-detail-total">$199.420.000</strong></div>
+          {SHARES.map((share,i)=><div class="row"><span>{['🧱','👷','📐','📋'][i]} {share.label}</span><div class="bar"><i style={`width:${share.share/Math.max(...SHARES.map(x=>x.share))*100}%`}></i></div><b data-m2-share={share.share}>{constructionMoney(initial.work*share.share)}</b></div>)}
+          <div class="total"><strong>Total de obra</strong><strong id="m2-detail-total">{initialView.total}</strong></div>
         </article>
         <article class="card plan"><h3>Cómo ordenar los pagos</h3><div class="timeline">
           <div class="phase"><i>1</i><span>Proyecto y permisos<small>Planos, visados y derechos</small></span><b>10%</b></div>
@@ -65,10 +68,16 @@ const zones = [
     <section class="support wrap"><div><h2>Preguntas frecuentes</h2>{data.faq.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><aside><h2>Fuentes y alcance</h2><p>INDEC y CAMARCO sirven para seguir variaciones; no publican nuestros valores absolutos por m². Esos valores son escenarios editoriales fechados y por eso se muestran como rango editable.</p>{data.sources.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}<small>{s.publisher}</small></a>)}</aside></section>
   </div>
 
-<script is:inline define:vars={{ COSTS:M2, PARTS:SHARES }}>
-(()=>{const $=id=>document.getElementById(id),money=n=>'$'+Math.round(n||0).toLocaleString('es-AR'),num=id=>Math.max(0,Number($(id).value)||0);let cat='estandar';
-const calc=()=>{const covered=num('m2-covered'),semi=num('m2-semi'),semiFactor=Math.min(100,num('m2-semi-factor'))/100,area=covered+semi*semiFactor,zone=$('m2-zone').value,reference=COSTS[cat][zone],custom=num('m2-custom'),unitArs=custom||reference.ars,contingency=Math.min(50,num('m2-contingency'))/100,extras=num('m2-extra'),work=unitArs*area,subtotal=work+extras,total=subtotal*(1+contingency),low=(custom?total:work*.85+extras)*(1+contingency),high=(custom?total:work*1.15+extras)*(1+contingency);$('m2-total').textContent=money(total);$('m2-unit').textContent=money(unitArs);$('m2-area').textContent=area.toLocaleString('es-AR')+' m²';$('m2-usd').textContent=custom?'Cotización propia':'US$'+Math.round(reference.usd*area).toLocaleString('es-AR');$('m2-monthly').textContent=custom?'Total configurado':money(low)+' – '+money(high);$('m2-plan-label').textContent='Contingencia '+Math.round(contingency*100)+'%';
-const v=$('m2-verdict');if(v){v.innerHTML='<b>'+money(subtotal)+' antes de contingencia; '+money(total)+' con reserva.</b><br><i>⚠️ '+(custom?'Usamos tu cotización local.':'La referencia editorial se muestra como rango ±15%.')+' No incluye terreno ni lo que no cargues en otros costos.</i>'}$('m2-detail-total').textContent=money(total);document.querySelectorAll('[data-m2-share]').forEach(el=>el.textContent=money(work*Number(el.dataset.m2Share)));document.querySelector('.measure').textContent=area.toLocaleString('es-AR')+' m² computables';document.querySelectorAll('[data-cat]').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat));document.querySelectorAll('[data-cat-card]').forEach(b=>{const on=b.dataset.catCard===cat;b.classList.toggle('selected',on);b.querySelector('em').textContent=on?'Seleccionada':'US$'+COSTS[b.dataset.catCard].gba_sur.usd.toLocaleString('es-AR')})};
+<script id="m2-reference-data" type="application/json" is:inline set:html={JSON.stringify({ COSTS:M2, defaults:CONSTRUCTION_DEFAULTS }).replace(/</g, '\\u003c')} />
+<script>
+import { calculateConstructionScenario, constructionScenarioView, constructionMoney } from '../lib/construction-cost-scenario';
+(()=>{const $=id=>document.getElementById(id),money=constructionMoney,num=id=>Math.max(0,Number($(id).value)||0);
+const { COSTS, defaults } = JSON.parse($('m2-reference-data').textContent);let cat=defaults.category;
+const calc=()=>{const zone=$('m2-zone').value,reference=COSTS[cat][zone];
+const result=calculateConstructionScenario({covered:$('m2-covered').value,semi:$('m2-semi').value,semiFactorPercent:$('m2-semi-factor').value,customUnitPrice:$('m2-custom').value,contingencyPercent:$('m2-contingency').value,extras:$('m2-extra').value},reference);
+const view=constructionScenarioView(result);
+$('m2-total').textContent=view.total;$('m2-unit').textContent=view.unit;$('m2-area').textContent=view.area;$('m2-usd').textContent=view.usd;$('m2-monthly').textContent=view.range;$('m2-plan-label').textContent=view.plan;
+const v=$('m2-verdict');if(v)v.innerHTML=view.verdict;$('m2-detail-total').textContent=view.total;document.querySelectorAll('[data-m2-share]').forEach(el=>el.textContent=money(result.work*Number(el.dataset.m2Share)));document.querySelector('.measure').textContent=view.measure;document.querySelectorAll('[data-cat]').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat));document.querySelectorAll('[data-cat-card]').forEach(b=>{const on=b.dataset.catCard===cat;b.classList.toggle('selected',on);b.querySelector('em').textContent=on?'Seleccionada':'US$'+COSTS[b.dataset.catCard].gba_sur.usd.toLocaleString('es-AR')})};
 document.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click',()=>{cat=b.dataset.cat;calc()}));document.querySelectorAll('[data-cat-card]').forEach(b=>b.addEventListener('click',()=>{cat=b.dataset.catCard;calc();document.querySelector('.calc').scrollIntoView({behavior:'smooth',block:'center'})}));document.querySelectorAll('.calc input,.calc select').forEach(el=>el.addEventListener('input',calc));$('m2-update').addEventListener('click',()=>{calc();window.dataLayer?.push({event:'calculator_submit',calculator:'costo_m2_construccion',category:cat,uses_custom_price:num('m2-custom')>0});$('m2-update').textContent='Presupuesto actualizado ✓';setTimeout(()=>$('m2-update').textContent='Actualizar presupuesto',1500)});calc()})();
 </script>
 
@@ -82,4 +91,13 @@ document.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click',()
     .plan{background:#f8fbfe}.timeline{display:grid;gap:13px}.phase{display:grid;grid-template-columns:33px 1fr auto;gap:11px;align-items:center}.phase i{font-style:normal;width:33px;height:33px;border-radius:10px;background:#eaf3ff;display:grid;place-items:center}.phase:nth-child(2) i{background:#fff2dc}.phase:nth-child(3) i{background:#eaf8f2}.phase:nth-child(4) i{background:#f2ecff}.phase span{font-size:10px;font-weight:800}.phase small{display:block;color:#74869a;font-size:8px;margin-top:3px}.phase b{font-size:11px}.notice{background:#fff7e8;border:1px solid #efd7a5;border-radius:12px;padding:14px;margin-top:16px;display:flex;gap:10px;color:#76541d;font-size:10px;line-height:1.55}.notice i{font-style:normal;font-size:18px}
     .catalog{background:#f5f8fc;padding:69px 0}.catalog-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:27px}.catalog-head h2{font-size:34px;letter-spacing:-.04em;margin:8px 0 0}.catalog-head>div>span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#1770e6;font-weight:850}.legend{font-size:9px;color:#64778d}.categories{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.category{appearance:none;text-align:left;color:#12223b;background:#fff;border:1px solid #dce5ee;border-radius:13px;padding:17px;min-height:132px;cursor:pointer}.category.selected{border:2px solid #2779ed;box-shadow:0 10px 26px #226dcc14}.category i{font-style:normal;font-size:21px}.category h3{font-size:12px;margin:10px 0 4px}.category p{font-size:8px;color:#77899c;line-height:1.5;margin:0}.cat-price{display:flex;justify-content:space-between;align-items:end;margin-top:13px}.cat-price b{font-size:14px}.cat-price em{font-style:normal;font-size:8px;color:#168158;background:#e9f8f1;padding:4px 6px;border-radius:99px}.selected .cat-price em{color:#1769db;background:#edf4ff}.support{display:grid;grid-template-columns:1.2fr .8fr;gap:40px;padding:70px 0}.support h2{font-size:24px}.support details{border-bottom:1px solid #dfe6ed;padding:14px 0}.support summary{font-size:12px;font-weight:750;cursor:pointer}.support p{font-size:11px;line-height:1.65;color:#687a8f}.support a{display:block;border:1px solid #dce5ee;border-radius:10px;padding:12px;margin:8px 0;color:#1769db;text-decoration:none;font-size:10px;font-weight:700}.support small{display:block;color:#78899c;margin-top:4px}
     @media(max-width:800px){.links{display:none}.hero-grid,.detail-grid,.support{grid-template-columns:1fr}.copy{text-align:center}.copy h1{font-size:40px}.eyebrow,.chips{justify-content:center}.house-art{max-width:390px;margin-inline:auto}.categories{grid-template-columns:1fr 1fr}.catalog-head{display:block}.legend{margin-top:10px}.tools span:not(:last-child){display:none}}
+    @media(max-width:600px){
+      .calc{padding:22px 16px}.calc-title{flex-wrap:wrap;gap:10px}.types{grid-template-columns:repeat(2,minmax(0,1fr))}.type{min-width:0;overflow-wrap:anywhere}
+      .result{padding:18px 16px}.result-top{flex-direction:column;gap:12px}
+      .result-top>div,.stats>span{min-width:0;max-width:100%}.price{font-size:clamp(22px,6vw,30px);overflow-wrap:anywhere}
+      .sqm{text-align:left}.stats{grid-template-columns:1fr 1fr}.stats>span:last-child{grid-column:1/-1}.stats b{overflow-wrap:anywhere}
+      .row{grid-template-columns:minmax(0,1fr) auto;gap:8px}.row .bar{grid-row:2;grid-column:1/-1}.row b{overflow-wrap:anywhere}
+      .total{flex-wrap:wrap;gap:8px}.blueprint{left:0;width:min(280px,100%)}
+      .cat-price{flex-wrap:wrap;gap:6px}.category{min-width:0}
+    }
   </style>
