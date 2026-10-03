@@ -23,6 +23,7 @@ export interface FeriadosPais {
   dataAsOf: string;        // 'YYYY-MM-DD'
   marco: string;           // marco legal en una línea
   notaTipo?: string;       // nota al pie sobre la columna "Tipo"
+  notaEstado?: string;     // alcance y definiciones pendientes, visible al inicio
   fuentes: { nombre: string; url: string }[];
   feriados: Feriado[];
 }
