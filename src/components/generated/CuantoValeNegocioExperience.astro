@@ -4,13 +4,61 @@ import HubCitableStats from '../hub/HubCitableStats.astro';
 interface Props { data?: any }
 const { data } = Astro.props;
 ---
-<div class="mockup-cuanto-vale-negocio"><div class="crumb">Negocios / Valuación</div><h1>Un negocio no vale sólo por lo que factura.</h1><p class="lead">Compará múltiplos sobre ganancia y ajustá el rango por recurrencia, dependencia y concentración.</p><BusinessValuationAnswer /><section id="simulador-valuacion" class="valuation"><aside class="ledger"><h2>Números normalizados</h2><label>Facturación anual<input id="revenue" type="number" value="48000000"></label><label>Ganancia operativa anual<input id="profit" type="number" value="9600000"></label><label>Deuda neta<input id="debt" type="number" value="1500000"></label><div class="quality"><button class="on" data-score="1.2">Ingresos recurrentes</button><button data-score=".8">Depende del dueño</button><button data-score=".85">Cliente concentrado</button><button data-score="1.1">Marca fuerte</button></div></aside><section class="range"><h2>Rango de conversación</h2><div class="scale"><i id="marker"></i></div><div class="figures"><span>Piso<br><b id="low"></b></span><span>Centro<br><b id="mid"></b></span><span>Techo<br><b id="high"></b></span></div><div class="methods"><div class="method"><b>2× ganancia</b><span>Escenario conservador</span></div><div class="method"><b>3× ganancia</b><span>Empresa estable</span></div><div class="method"><b>4× ganancia</b><span>Calidad y crecimiento</span></div></div><div class="note">Es una referencia para negociar, no una tasación. Contratos, activos, impuestos y contingencias requieren revisión profesional.</div></section></section></div>
+<div class="mockup-cuanto-vale-negocio">
+  <div class="crumb">Negocios / Valuación</div>
+  <h1>Un negocio no vale sólo por lo que factura.</h1>
+  <p class="lead">Explorá escenarios aritméticos sobre ganancia operativa con supuestos explícitos. No son múltiplos observados de mercado ni precios de compraventa.</p>
+  <BusinessValuationAnswer />
+  <section id="simulador-valuacion" class="valuation">
+    <aside class="ledger">
+      <h2>Supuestos del escenario</h2>
+      <label>Ganancia operativa anual<input id="profit" type="number" step="any" value="9600000" aria-describedby="valuation-input-help" /></label>
+      <label>Deuda neta<input id="debt" type="number" step="any" value="1500000" aria-describedby="valuation-input-help" /></label>
+      <p id="valuation-input-help">Usá la misma moneda y fecha. Ingresá deuda menos caja como deuda neta; puede ser negativa. Esta herramienta no calcula EBITDA ni normaliza tus cuentas.</p>
+      <div class="quality" aria-label="Ajustes hipotéticos propios">
+        <button type="button" class="on" data-score="1.2" aria-pressed="true">Recurrencia: supuesto +20%</button>
+        <button type="button" data-score=".8" aria-pressed="false">Depende del dueño: supuesto −20%</button>
+        <button type="button" data-score=".85" aria-pressed="false">Cliente concentrado: supuesto −15%</button>
+        <button type="button" data-score="1.1" aria-pressed="false">Marca fuerte: supuesto +10%</button>
+      </div>
+      <p>Los ajustes son supuestos de este simulador, sin calibración de mercado. Se combinan multiplicando ×1,20, ×0,80, ×0,85 y ×1,10; recurrencia está activada al inicio.</p>
+      <p id="factor-note">Factor combinado activo: 1,20.</p>
+    </aside>
+    <section class="range" aria-labelledby="valuation-scenarios">
+      <h2 id="valuation-scenarios">Escenarios aritméticos hipotéticos</h2>
+      <div aria-live="polite" aria-atomic="true">
+        <p id="valuation-error" role="status" hidden>Revisá los importes: completá ambos campos con números finitos y valores que permitan calcular un escenario finito.</p>
+        <div id="valuation-values">
+          <div class="figures"><span><small>Escenario 2×</small><b id="low">$ 21.540.000</b></span><span><small>Escenario 3×</small><b id="mid">$ 33.060.000</b></span><span><small>Escenario 4×</small><b id="high">$ 44.580.000</b></span></div>
+          <p>Cuenta: ganancia operativa anual × 2, 3 o 4 × factor combinado − deuda neta; luego se aplica el piso de cero.</p>
+        </div>
+      </div>
+      <div class="note">El piso de cero es un límite de esta interfaz: si la resta es negativa, muestra cero y oculta el déficit. Ese cero no significa que el negocio valga cero. Los escenarios son orientativos; no son asesoría, una tasación ni una valuación válida para una transacción. Activos, contratos, impuestos y contingencias requieren una evaluación específica.</div>
+    </section>
+  </section>
+</div>
 <script is:inline>
-(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-cuanto-vale-negocio')?document.currentScript.previousElementSibling:document.querySelector('.mockup-cuanto-vale-negocio');
-
-let factor=1.2;const $=x=>root.querySelector("#"+x),money=n=>'$ '+Math.round(n).toLocaleString('es-AR');function render(){let p=+$('profit').value,d=+$('debt').value,mid=Math.max(0,p*3*factor-d),low=Math.max(0,p*2*factor-d),high=Math.max(0,p*4*factor-d);$('low').textContent=money(low);$('mid').textContent=money(mid);$('high').textContent=money(high);$('marker').style.left='50%'}
-root.querySelectorAll('[data-score]').forEach(b=>b.onclick=()=>{b.classList.toggle('on');factor=[...root.querySelectorAll('[data-score].on')].reduce((p,x)=>p*+x.dataset.score,1);render()});root.querySelectorAll('input').forEach(x=>x.oninput=render);render();
-
+(()=>{
+  const root=document.currentScript.previousElementSibling?.matches('.mockup-cuanto-vale-negocio')?document.currentScript.previousElementSibling:document.querySelector('.mockup-cuanto-vale-negocio');
+  const $=id=>root.querySelector('#'+id),money=n=>'$ '+Math.round(n).toLocaleString('es-AR');
+  let factor=1.2;
+  function render(){
+    const profit=$('profit'),debt=$('debt'),p=+profit.value,d=+debt.value;
+    const validProfit=profit.value.trim()!==''&&Number.isFinite(p),validDebt=debt.value.trim()!==''&&Number.isFinite(d);
+    profit.setAttribute('aria-invalid',String(!validProfit));debt.setAttribute('aria-invalid',String(!validDebt));
+    $('factor-note').textContent='Factor combinado activo: '+factor.toLocaleString('es-AR',{maximumFractionDigits:6})+'.';
+    // Preserve the existing order of operations, coefficients and zero floor.
+    const rawLow=p*2*factor-d,rawMid=p*3*factor-d,rawHigh=p*4*factor-d;
+    const valid=validProfit&&validDebt&&[rawLow,rawMid,rawHigh].every(Number.isFinite);
+    $('valuation-error').hidden=valid;$('valuation-values').hidden=!valid;
+    if(!valid){for(const id of ['low','mid','high'])$(id).textContent='—';return;}
+    $('low').textContent=money(Math.max(0,rawLow));$('mid').textContent=money(Math.max(0,rawMid));$('high').textContent=money(Math.max(0,rawHigh));
+  }
+  root.querySelectorAll('[data-score]').forEach(b=>b.onclick=()=>{
+    b.classList.toggle('on');b.setAttribute('aria-pressed',String(b.classList.contains('on')));
+    factor=[...root.querySelectorAll('[data-score].on')].reduce((p,x)=>p*+x.dataset.score,1);render();
+  });
+  root.querySelectorAll('#profit, #debt').forEach(x=>x.oninput=render);render();
 })();
 </script>
 <style is:global>
@@ -50,3 +98,17 @@ root.querySelectorAll('[data-score]').forEach(b=>b.onclick=()=>{b.classList.togg
   .mockup-cuanto-vale-negocio .method span { overflow-wrap: anywhere; }
 </style>
 {data && <><HubCitableStats data={data} /><section class="mockup-cuanto-vale-negocio support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section></>}
+
+<style is:global>
+  .mockup-cuanto-vale-negocio .ledger p { font-size:.9rem; line-height:1.55; }
+  .mockup-cuanto-vale-negocio .figures { margin:24px 0; }
+  .mockup-cuanto-vale-negocio .figures small { display:block; font-size:inherit; }
+  @media(max-width:600px) {
+    .mockup-cuanto-vale-negocio .figures { flex-direction:column; gap:16px; }
+    .mockup-cuanto-vale-negocio .figures span { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); align-items:baseline; gap:10px; }
+    .mockup-cuanto-vale-negocio .figures b { font-size:18px; text-align:right; }
+  }
+  .mockup-cuanto-vale-negocio #valuation-error { color:#842c24; font-weight:750; }
+  .mockup-cuanto-vale-negocio [hidden] { display:none !important; }
+  .mockup-cuanto-vale-negocio input:focus-visible, .mockup-cuanto-vale-negocio button:focus-visible { outline:3px solid #174b7a; outline-offset:3px; }
+</style>
