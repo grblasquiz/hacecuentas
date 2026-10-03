@@ -29,14 +29,14 @@ export const hub: HubData = {
   eyebrow: 'Velocidad, descargas y red doméstica',
   h1: '¿Me alcanzan los megas? ¿Cuánto tarda esta descarga?',
   lede:
-    'Los megas del plan son megabits; lo que baja el archivo son megabytes. Entre medio están el overhead del protocolo, el techo del wifi y el cable que llega a la compu. Con tu velocidad medida y el tamaño del archivo sale el tiempo real, cuánto te está cumpliendo el ISP y cuánto ganarías enchufando un cable.',
-  stamps: ['Revisado 30-09-2026', 'Fibra, wifi 2,4 / 5 / 6, ethernet y datos móviles', '7 calculadoras adentro'],
+    'Los megas del plan son megabits; lo que baja el archivo son megabytes. Entre medio están el overhead del protocolo, el techo del wifi y el cable que llega a la compu. Con la velocidad y el tamaño del archivo podés estimar el tiempo de descarga; el resultado depende de que esa velocidad se mantenga.',
+  stamps: ['Revisado 03-10-2026', 'Fibra, wifi 2,4 / 5 / 6, ethernet y datos móviles', '7 calculadoras adentro'],
 
   resultLabel: 'Tiempo que tarda la descarga',
 
   inputsTitle: 'Poné tu velocidad medida y el archivo que querés bajar',
   inputsIntro:
-    'Con el medio, la velocidad real del speedtest y el tamaño del archivo ya tenés el tiempo. El resto afina el cumplimiento del ISP, el cable y los datos móviles.',
+    'Ingresá Mbps, tamaño y unidad (MB, GB, MiB o GiB). Elegí velocidad del plan para un mínimo teórico o velocidad efectiva que mediste para una estimación a ritmo constante.',
   fields: [
     {
       id: 'medio',
@@ -199,10 +199,10 @@ export const hub: HubData = {
   answer: {
     title: 'Por qué la descarga tarda más de lo que dice el plan',
     copy:
-      'Un plan de 300 Mbps no baja a 300 MB por segundo: baja a 37,5 MB/s como máximo teórico, porque un byte son 8 bits. De ahí todavía se descuenta el overhead del protocolo y, si vas por wifi, el techo real de la banda. El tiempo de descarga sale de dividir el tamaño del archivo por esa velocidad efectiva, no por la del plan.',
+      'Un plan de 300 Mbps no baja a 300 MB por segundo: baja a 37,5 MB/s como máximo teórico, porque un byte son 8 bits. Si usás la velocidad del plan, obtenés un mínimo teórico. Si ingresás una velocidad efectiva medida, el tiempo es una estimación a ritmo constante: no volvemos a descontar un porcentaje fijo de eficiencia. El servidor, el Wi-Fi y otros equipos pueden cambiar esa velocidad.',
     yes: [
       'Dividí los Mbps por 8 para tener MB/s: 300 Mbps son 37,5 MB/s teóricos',
-      'Descontá el overhead: en fibra por cable se aprovecha cerca del 85%, en wifi 5 apenas el 60%',
+      'Usá la velocidad efectiva que mediste para estimar; no descuentes otra pérdida fija sobre esa medición',
       'El medio pone un techo: por wifi 2,4 GHz no vas a bajar a 500 Mbps aunque los tengas contratados',
       'Compará la velocidad medida con la contratada: el piso razonable es el 80%',
       '1 GB equivale a 1.000 MB; si el tamaño está en GiB, convertí a bytes antes de calcular el tiempo',
@@ -223,7 +223,7 @@ export const hub: HubData = {
   faq: [
     {
       q: '¿Cuánto tarda en bajar un archivo con mi velocidad de internet?',
-      a: 'Dividí el tamaño en megabytes por la velocidad efectiva en MB/s. La velocidad efectiva son los Mbps medidos divididos por 8 y multiplicados por la eficiencia del medio: alrededor del 85% con la computadora enchufada al router. Con 300 Mbps medidos, la velocidad efectiva ronda los 31,9 MB/s, así que un archivo de 8 GB (8.000 MB) tarda cerca de 4 minutos y 11 segundos.',
+      a: 'Segundos = tamaño en bytes × 8 ÷ (Mbps × 1.000.000). Con 100 Mbps y 1 GB decimal (1.000.000.000 bytes), el mínimo teórico es 80 segundos y la conversión da 12,5 MB/s. Con 300 Mbps efectivos sostenidos y 8 GB decimales, la estimación es 213,33 segundos (unos 3 minutos y 34 segundos). No se descuenta otra eficiencia fija sobre la velocidad efectiva ingresada. El servidor, el Wi-Fi y otros equipos pueden hacer variar el tiempo.',
     },
     {
       q: '¿Cuántos MB/s son 100 Mbps?',
@@ -319,7 +319,7 @@ export const hub: HubData = {
     '/calculadora-tiempo-descarga-archivo-internet',
   ],
 
-  lastReviewed: '2026-09-30',
+  lastReviewed: '2026-10-03',
   audience: 'global',
 };
 

@@ -1,0 +1,63 @@
+---
+import { calculateDownload } from '../../lib/download-time';
+const initial = calculateDownload(100, 1, 'GB')!;
+---
+<section id="tiempo-descarga" class="download-calculator" aria-labelledby="download-title">
+  <h2 id="download-title">Calculadora de tiempo de descarga: Mbps a MB/s</h2>
+  <p>Ingresá la velocidad y el tamaño del archivo. El ejemplo inicial usa 100 Mbps y 1 GB; no es una medición de tu conexión.</p>
+  <div class="download-fields">
+    <label for="download-speed">Velocidad en Mbps<input id="download-speed" type="number" min="0.001" step="any" value="100" inputmode="decimal" aria-describedby="download-limits" /></label>
+    <label for="download-size">Tamaño del archivo<input id="download-size" type="number" min="0.001" step="any" value="1" inputmode="decimal" /></label>
+    <label for="download-unit">Unidad del archivo<select id="download-unit"><option value="MB">MB — decimal</option><option value="GB" selected>GB — decimal</option><option value="MiB">MiB — binario</option><option value="GiB">GiB — binario</option></select></label>
+    <label for="download-mode">Origen de la velocidad<select id="download-mode"><option value="plan">Velocidad del plan: mínimo teórico</option><option value="effective">Velocidad efectiva que mediste: estimación</option></select></label>
+  </div>
+  <div class="download-result" aria-live="polite" aria-atomic="true">
+    <p class="download-error" hidden>Ingresá una velocidad y un tamaño mayores que cero, con valores finitos.</p>
+    <div class="download-values">
+      <p><span class="download-kind">Tiempo mínimo teórico</span><strong class="download-time">{initial.seconds} segundos (1 min 20 s)</strong></p>
+      <p>Conversión de velocidad: <strong class="download-rate">12,5 MB/s</strong></p>
+      <p class="download-formula">1 GB = 1.000.000.000 bytes. Segundos = bytes × 8 ÷ (100 × 1.000.000).</p>
+    </div>
+  </div>
+  <p id="download-limits" class="download-note">El plan da un límite teórico. Con una velocidad efectiva ingresada, la estimación supone que se mantiene durante toda la descarga. Wi‑Fi, servidor, retransmisiones y otros equipos pueden cambiar el tiempo; no aplicamos un porcentaje de pérdida inventado ni hacemos un test de velocidad.</p>
+  <p class="download-note">1 MB = 1.000.000 bytes; 1 GB = 1.000 MB. 1 MiB = 1.048.576 bytes; 1 GiB = 1.024 MiB. Fuente: <a href="https://physics.nist.gov/cuu/Units/binary.html" rel="noopener noreferrer">NIST: unidades decimales y binarias</a>.</p>
+  <noscript>El ejemplo de 100 Mbps y 1 GB está calculado arriba. Activá JavaScript para cambiar los valores.</noscript>
+</section>
+<script>
+  import { calculateDownload } from '../../lib/download-time';
+  const root = document.querySelector<HTMLElement>('.download-calculator');
+  if (root) {
+    const speed = root.querySelector<HTMLInputElement>('#download-speed')!;
+    const size = root.querySelector<HTMLInputElement>('#download-size')!;
+    const unit = root.querySelector<HTMLSelectElement>('#download-unit')!;
+    const mode = root.querySelector<HTMLSelectElement>('#download-mode')!;
+    const number = (value: number) => value > 0 && value < .000001
+      ? value.toLocaleString('es', { notation: 'scientific', maximumFractionDigits: 3 })
+      : value.toLocaleString('es', { maximumFractionDigits: value > 0 && value < .01 ? 6 : 2 });
+    const duration = (seconds: number) => {
+      if (seconds < 60) return `${number(seconds)} segundos`;
+      const total = Math.ceil(seconds), hours = Math.floor(total / 3600), minutes = Math.floor(total % 3600 / 60), rest = total % 60;
+      return `${number(seconds)} segundos (${hours ? `${hours} h ` : ''}${minutes} min ${rest} s)`;
+    };
+    function render() {
+      const result = calculateDownload(Number(speed.value), Number(size.value), unit.value);
+      root!.querySelector<HTMLElement>('.download-error')!.hidden = !!result;
+      root!.querySelector<HTMLElement>('.download-values')!.hidden = !result;
+      if (!result) return;
+      root!.querySelector('.download-kind')!.textContent = mode.value === 'effective' ? 'Tiempo estimado con la velocidad ingresada' : 'Tiempo mínimo teórico';
+      root!.querySelector('.download-time')!.textContent = duration(result.seconds);
+      root!.querySelector('.download-rate')!.textContent = `${number(result.megabytesPerSecond)} MB/s`;
+      root!.querySelector('.download-formula')!.textContent = `${number(Number(size.value))} ${unit.value} = ${number(result.bytes)} bytes. Segundos = bytes × 8 ÷ (${number(Number(speed.value))} × 1.000.000).`;
+    }
+    for (const input of [speed, size, unit, mode]) input.addEventListener('input', render);
+    render();
+  }
+</script>
+<style>
+  .download-calculator{background:#fff;border:1px solid #d7e1df;border-radius:22px;padding:clamp(18px,3vw,30px);margin:24px 0;min-width:0;color:#182a32;font:16px/1.6 Inter,system-ui}
+  h2{font-size:clamp(1.4rem,3vw,2rem);line-height:1.2;margin:0 0 16px;color:#174b7a}.download-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:22px 0}
+  label{font-weight:750;display:grid;gap:8px;min-width:0}input,select{width:100%;min-width:0;border:1px solid #65747c;border-radius:10px;padding:12px;background:#fff;color:#182a32;font:inherit}
+  input:focus-visible,select:focus-visible{outline:3px solid #174b7a;outline-offset:2px}.download-result{border-radius:14px;background:#e3f1eb;padding:18px;overflow-wrap:anywhere}.download-result p{margin:8px 0}.download-kind,.download-time{display:block}.download-time{font-size:clamp(1.2rem,3vw,1.6rem)}
+  .download-note,.download-formula{font-size:.9rem;color:#52657b}.download-error{color:#842c24;font-weight:750}a{color:#174b7a;text-underline-offset:3px}[hidden]{display:none!important}
+  @media(max-width:650px){.download-fields{grid-template-columns:1fr}}
+</style>
