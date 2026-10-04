@@ -26,7 +26,7 @@ export const hub: HubData = {
   slug: 'es/familia/tener-un-hijo',
   title: 'Tener un hijo en España: permiso, guardería, deducciones y vuelta al cole',
   description:
-    'Calcula lo que cuesta cada etapa de un hijo en España y lo que recuperas: permiso por nacimiento, deducción por maternidad, cheque guardería, beca comedor y vuelta al cole.',
+    'Planifica los gastos por etapas de un hijo en España y consulta la guía de beca comedor: requisitos, renta y convocatorias oficiales de Madrid y Comunitat Valenciana.',
   silo: 'Familia',
   siloHref: '/es/familia',
 
@@ -90,16 +90,16 @@ export const hub: HubData = {
           'A partir de infantil el gasto se concentra en septiembre: material, libros, ropa y comedor.',
         yes: [
           'Material escolar, libros, uniforme y actividades extraescolares',
-          'Comedor escolar, con beca según los umbrales de renta de tu comunidad',
+          'Comedor escolar: consulta los requisitos de la convocatoria de tu territorio y curso',
           'Ayudas de libros de texto, casi siempre autonómicas o municipales',
-          'La beca de comedor puede cubrir el 100%, el 75% o el 50% según el tramo de renta',
+          'Una estimación de gastos no acredita el derecho a una beca de comedor',
         ],
         warn: [
           DISCLAIMER_FISCAL,
-          'Los umbrales de renta de la beca de comedor los fija cada comunidad autónoma y varían mucho entre territorios',
-          'Los plazos de solicitud suelen abrirse en primavera, meses antes del curso: perderlos deja sin ayuda todo el año',
+          'La renta computable, los miembros de la unidad familiar y las modalidades de ayuda dependen de cada convocatoria',
+          'Comprueba el plazo ordinario y las posibles excepciones en la convocatoria oficial',
         ],
-        plazo: 'las convocatorias de comedor y libros suelen resolverse antes del inicio del curso.',
+        plazo: 'consulta el calendario oficial de tu convocatoria de comedor o libros.',
       },
     ],
   },
@@ -128,22 +128,6 @@ export const hub: HubData = {
       min: 0,
       max: 6,
       step: 1,
-    },
-    {
-      id: 'rentaFamiliar',
-      label: 'Renta familiar anual',
-      prefix: '€',
-      value: '30.000',
-      thousands: true,
-      help: 'Se usa para estimar el tramo de la beca de comedor.',
-    },
-    {
-      id: 'umbralComedor',
-      label: 'Umbral de renta de la beca de comedor en tu comunidad',
-      prefix: '€',
-      value: '11.000',
-      thousands: true,
-      help: 'Lo fija cada comunidad autónoma. Consúltalo en tu convocatoria.',
     },
     {
       id: 'multiple',
@@ -197,8 +181,8 @@ export const hub: HubData = {
       a: 'Depende muchísimo del centro y de si hay uniforme o libros incluidos, pero el grueso son material escolar, libros de texto, mochila y ropa, concentrado todo en septiembre. Casi todas las comunidades y muchos ayuntamientos convocan ayudas de material o de libros con plazos que se abren antes del verano.',
     },
     {
-      q: '¿Cómo funcionan los tramos de la beca de comedor?',
-      a: 'Se compara la renta familiar con un umbral que fija cada comunidad y que sube con el número de miembros de la familia. Por debajo de algo más de la mitad del umbral suele cubrirse el 100%; después hay tramos del 75% y del 50%; y superando el umbral no hay beca. Familias numerosas, monoparentales o con discapacidad reconocida tienen umbrales mejorados.',
+      q: '¿Cómo se comprueban los requisitos de la beca de comedor?',
+      a: 'Las condiciones dependen del territorio, el curso, el centro educativo y la situación familiar. No existe un porcentaje de ayuda único que pueda calcularse para toda España a partir de los ingresos mensuales. Comprueba el ejercicio de renta, los miembros computables y los requisitos de tu convocatoria. Una estimación no acredita el derecho a la beca.',
     },
     {
       q: '¿Cuánto se paga de pensión de alimentos tras un divorcio?',
@@ -210,7 +194,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Las ayudas por hijo son estatales o autonómicas?',
-      a: 'Las dos cosas, y se acumulan. La deducción por maternidad y el incremento por guardería son estatales; encima, casi todas las comunidades tienen deducciones autonómicas por nacimiento, por guardería o por familia numerosa, y los ayuntamientos suman ayudas de material y comedor. Este cálculo sólo recoge las estatales.',
+      a: 'Las dos cosas, y se acumulan. La deducción por maternidad y el incremento por guardería son estatales; encima, casi todas las comunidades tienen deducciones autonómicas por nacimiento, por guardería o por familia numerosa, y los ayuntamientos suman ayudas de material y comedor. El presupuesto usa los importes de ayudas que introduces; no determina la concesión de prestaciones. La guía de comedor enlaza convocatorias autonómicas.',
     },
   ],
 
@@ -251,7 +235,7 @@ export const hub: HubData = {
     '/calculadora-pension-alimenticia-divorcio-espana-tabla',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-10-04',
   audience: 'global',
   locale: 'es',
 };
@@ -271,24 +255,6 @@ export const DEDUCCIONES = {
   maternidadTopeAnualPorHijo: 1200,
   guarderiaTopeAnualPorHijo: 1000,
 };
-
-/**
- * Tramos de la beca de comedor sobre el ratio renta/umbral.
- * Espejo de beca-comedor-escolar-espana-renta-umbrales.ts.
- */
-export const BECA_COMEDOR = {
-  tramos: [
-    [0.55, 1],
-    [0.8, 0.75],
-    [1, 0.5],
-    [Infinity, 0],
-  ] as Array<[number, number]>,
-  /** Coste anual de referencia del comedor escolar, editable por el usuario. */
-  costeAnualReferencia: 1000,
-};
-
-/** Coste de referencia de la vuelta al cole por hijo (material, libros y ropa). */
-export const VUELTA_AL_COLE_POR_HIJO = 400;
 
 /**
  * Tabla orientadora del CGPJ: por tramo de ingresos del progenitor no custodio,

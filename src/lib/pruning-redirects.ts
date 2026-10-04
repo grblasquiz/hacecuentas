@@ -4992,7 +4992,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/es/calculadora-autonomo-cuota-2026-espana-rendimiento-neto': '/es/impuestos/irpf-nomina',
   '/es/calculadora-baja-laboral-incapacidad-temporal-espana-cuantia': '/es/trabajo/no-puedo-trabajar',
   '/es/calculadora-bebidas-por-invitado-evento-espana': '/es/vida/comida-cuentas-y-tiempo-con-amigos',
-  '/es/calculadora-beca-comedor-escolar-espana-renta-umbrales': '/es/familia/ayudas-por-renta',
+  '/es/calculadora-beca-comedor-escolar-espana-renta-umbrales': '/es/familia/tener-un-hijo',
   '/es/calculadora-beca-erasmus-mensualidad-pais-destino-2026': '/es/educacion/cuanto-cuesta-estudiar',
   '/es/calculadora-becas-mec-2026-espana-renta-familiar-rendimiento': '/es/educacion/cuanto-cuesta-estudiar',
   '/es/calculadora-bomba-calor-aerotermia-espana-coste-instalacion': '/es/vivienda/reforma-y-eficiencia',
