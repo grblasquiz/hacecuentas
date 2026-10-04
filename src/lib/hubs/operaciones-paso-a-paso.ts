@@ -25,7 +25,7 @@ export const hub: HubData = {
     { q: '¿Cómo veo los acarreos de una multiplicación?', a: 'Debajo de cada producto parcial se detalla la cifra multiplicada, el acarreo recibido, la cifra que se escribe y el acarreo que pasa a la izquierda. Los parciales se alinean por posición antes de sumarlos.' },
     { q: '¿Acepta coma y punto decimal?', a: 'Sí. 1,2 y 1.2 representan el mismo número. No uses separadores de miles: para mil cinco escribí 1005. No admite notación científica ni signos negativos. Los resultados usan coma decimal.' },
     { q: '¿Por qué 1,2 × 0,03 da 0,036?', a: 'El tablero trabaja con 12 × 3 = 36 y devuelve tres posiciones decimales: una del primer número y dos del segundo. El cálculo usa enteros exactos, de modo que el resultado no muestra un residuo de coma flotante.' },
-    { q: '¿Puedo copiar o imprimir el procedimiento?', a: 'Sí. Copiar incluye resultado, tablero, pasos y comprobación. Imprimir abre la opción de impresión del navegador. Si el portapapeles no está disponible, la herramienta ofrece el texto seleccionable para copiar a mano.' },
+    { q: '¿Puedo copiar o imprimir el procedimiento?', a: 'Sí. Copiar incluye resultado, tablero, pasos y comprobación. Imprimir abre la opción de impresión del navegador. Al cambiar los números o la precisión, volvé a mostrar el procedimiento: la copia y la impresión se habilitan con el resultado actualizado. Si el portapapeles no está disponible, la herramienta ofrece el texto seleccionable para copiar a mano.' },
   ],
   sources: [
     { name: 'División de números enteros', publisher: 'OpenStax · Prealgebra 2e', url: 'https://openstax.org/books/prealgebra-2e/pages/1-5-divide-whole-numbers' },
