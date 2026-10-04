@@ -240,7 +240,7 @@ export const hub: HubData = {
     '/calculadora-tamano-archivo-conversor',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-10-04',
   audience: 'global',
 };
 
