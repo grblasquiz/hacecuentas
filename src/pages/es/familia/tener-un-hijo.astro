@@ -9,12 +9,11 @@ import Layout from '../../../layouts/Layout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import BecaComedorGuide from '../../../components/hub/BecaComedorGuide.astro';
 import {
   hub,
   PERMISO,
   DEDUCCIONES,
-  BECA_COMEDOR,
-  VUELTA_AL_COLE_POR_HIJO,
   TABLA_CGPJ,
 } from '../../../lib/hubs/es/tener-un-hijo';
 
@@ -55,6 +54,7 @@ const schema = {
 >
   <Header />
   <DecisionHub data={hub} />
+  <BecaComedorGuide />
   <Footer />
 </Layout>
 
@@ -63,13 +63,13 @@ const schema = {
   define:vars={{
     PERM: PERMISO,
     DED: DEDUCCIONES,
-    BECA: BECA_COMEDOR,
-    COLE: VUELTA_AL_COLE_POR_HIJO,
     CGPJ: TABLA_CGPJ,
   }}
 >
   (function () {
     const H = window.HC_HUB;
+    // El mockup aprobado tiene su propio presupuesto; el hub clásico es opcional.
+    if (!H) return;
     const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
 
     H.onCompute(function (v, kase) {
@@ -79,9 +79,13 @@ const schema = {
       const mesesAlta = Math.max(0, Math.min(12, Math.round(v.mesesAlta || 0)));
       const guarderia = Math.max(0, v.guarderia || 0);
       const escolares = Math.max(0, Math.round(v.hijosEscolares || 0));
-      const renta = Math.max(0, v.rentaFamiliar || 0);
-      const umbral = Math.max(1, v.umbralComedor || 11000);
       const multiple = Math.max(1, Math.round(v.multiple || 1));
+
+      if (id === 'escolar') {
+        return { total: 'Consulta la convocatoria',
+          sub: 'Los requisitos y las cuantías de comedor dependen del territorio y del curso. La guía de beca comedor enlaza las fuentes oficiales.',
+          rows: [], chart: [], format: 'unit', unit: '', decimals: 0 };
+      }
 
       const rows = [];
       let gasto = 0;
@@ -95,20 +99,6 @@ const schema = {
       // ── Deducciones ───────────────────────────────────────────────
       const deduccionMaternidad = Math.min(hijos * mesesAlta * DED.maternidadMensualPorHijo, hijos * DED.maternidadTopeAnualPorHijo);
       const incrementoGuarderia = Math.min(guarderia, hijos * DED.guarderiaTopeAnualPorHijo);
-
-      // ── Beca de comedor ───────────────────────────────────────────
-      const ratio = renta / umbral;
-      let pctBeca = 0;
-      for (const par of BECA.tramos) {
-        const limite = par[0] == null ? Infinity : par[0];
-        if (ratio <= limite) {
-          pctBeca = par[1];
-          break;
-        }
-      }
-      const costeComedor = escolares * BECA.costeAnualReferencia;
-      const importeBeca = costeComedor * pctBeca;
-      const vueltaAlCole = escolares * COLE;
 
       if (id === 'nacimiento') {
         rows.push({
@@ -166,40 +156,6 @@ const schema = {
           eur(ayuda) +
           ' entre deducción por maternidad e incremento por custodia: el gasto neto queda en ' +
           eur(Math.max(0, gasto - ayuda));
-      } else {
-        gasto = vueltaAlCole + costeComedor;
-        ayuda = importeBeca;
-        rows.push({ k: 'Vuelta al cole', ref: escolares + ' hijo(s) × material, libros y ropa', v: vueltaAlCole });
-        rows.push({ k: 'Comedor escolar del curso', ref: escolares + ' hijo(s), coste de referencia', v: costeComedor });
-        rows.push({ k: 'Renta familiar', ref: 'La que declaras', v: renta });
-        rows.push({ k: 'Umbral de tu comunidad', ref: 'Lo fija cada convocatoria', v: umbral });
-        rows.push({
-          k: 'Tramo de beca que te corresponde',
-          ref: 'Renta ÷ umbral = ' + ratio.toFixed(2).replace('.', ','),
-          v: pctBeca * 100,
-          format: 'unit',
-          unit: '%',
-          decimals: 0,
-        });
-        rows.push({ k: 'Beca de comedor estimada', ref: 'Sobre el coste del comedor', v: importeBeca, extra: true });
-        rows.push({ k: 'Gasto neto del curso', ref: 'Vuelta al cole y comedor menos beca', v: Math.max(0, gasto - ayuda), extra: true });
-        sub =
-          pctBeca > 0
-            ? 'Con una renta de ' +
-              eur(renta) +
-              ' frente al umbral de ' +
-              eur(umbral) +
-              ' entrarías en el tramo del ' +
-              Math.round(pctBeca * 100) +
-              '%: la beca cubriría ' +
-              eur(importeBeca) +
-              ' del comedor'
-            : 'Con una renta de ' +
-              eur(renta) +
-              ' superas el umbral de ' +
-              eur(umbral) +
-              ': no habría beca de comedor, y el curso te costaría ' +
-              eur(gasto);
       }
 
       // Pensión de alimentos: absorbida sólo por URL, resuelta con una fila.
