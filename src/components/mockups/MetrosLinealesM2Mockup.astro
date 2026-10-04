@@ -66,15 +66,16 @@ const COMPARA = [
       </div>
       <div class="inputs">
         <div class="field">
-          <label><span id="ml-qty-lbl">Metros lineales</span><small id="ml-qty-hint">largo</small></label>
-          <div class="input"><input id="ml-qty" type="number" min="0" step="0.1" value={D.qty} /><span id="ml-qty-unit">ml</span></div>
+          <label for="ml-qty"><span id="ml-qty-lbl">Metros lineales</span><small id="ml-qty-hint">largo</small></label>
+          <div class="input"><input id="ml-qty" type="text" inputmode="decimal" required aria-describedby="ml-error" value={D.qty} /><span id="ml-qty-unit">ml</span></div>
         </div>
         <div class="field">
-          <label>Ancho útil <small>no nominal</small></label>
-          <div class="input"><input id="ml-width" type="number" min="0.01" max="5" step="0.01" value={D.width} /><span>m</span></div>
-          <p class="help">Descontá encastres o traslapes.</p>
+          <label for="ml-width">Ancho útil <small>no nominal</small></label>
+          <div class="input"><input id="ml-width" type="text" inputmode="decimal" required aria-describedby="ml-width-help ml-error" value={D.width} /><span>m</span></div>
+          <p class="help" id="ml-width-help">Descontá encastres o traslapes. Usá coma o punto decimal, sin separador de miles.</p>
         </div>
       </div>
+      <p id="ml-error" class="mlerror" role="status" hidden></p>
       <div class="waste">
         <div class="waste-head"><span>Margen por cortes</span><span id="ml-waste-txt">{D.waste}%</span></div>
         <input id="ml-waste" type="range" min="0" max="20" step="5" value={D.waste} />
@@ -156,7 +157,7 @@ const COMPARA = [
 
   <footer class="sources">
     <div><b>Fuentes y metodología</b><br /><a href="https://www.nist.gov/pml/special-publication-811" target="_blank" rel="noopener">NIST SP 811</a> · <a href="https://www.bipm.org/en/measurement-units" target="_blank" rel="noopener">BIPM</a> · Sistema Internacional de Unidades</div>
-    <div>Revisado: julio de 2026 · Cálculo privado</div>
+    <div>Revisado: {calc.lastReviewed} · Cálculo privado</div>
   </footer>
 </main>
 
@@ -214,6 +215,7 @@ const COMPARA = [
   .mlm .buy strong{font:800 29px Manrope,system-ui,sans-serif;display:block;color:var(--blue);margin-top:4px}
   .mlm .equation{border-top:1px solid #3e696c;padding-top:17px;color:#bcd2d1;font-size:14px}
   .mlm .equation b{color:#fff}
+  .mlm .mlerror{color:#a12b23;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
   .mlm .insight{display:grid;grid-template-columns:.85fr 1.15fr;gap:22px;margin-top:22px}
   .mlm .why,.mlm .compare{background:#fff;border:1px solid var(--line);border-radius:24px;padding:30px}
   .mlm .why h2,.mlm .compare h2{font-size:28px}
@@ -284,11 +286,36 @@ const COMPARA = [
     var qty = document.getElementById('ml-qty'), width = document.getElementById('ml-width'), waste = document.getElementById('ml-waste');
     var n = function (v, d) { return v.toLocaleString('es-AR', { maximumFractionDigits: d === undefined ? 1 : d }); };
 
+    function decimal(value) {
+      var text = String(value).trim();
+      if (!/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:e[+-]?\d+)?$/i.test(text)) return NaN;
+      return Number(text.replace(',', '.'));
+    }
+
     function render() {
-      var q = Number(qty.value) || 0, w = Number(width.value) || 1, p = Number(waste.value);
-      var nombre = NAMES[String(w)] || 'material';
+      var q = decimal(qty.value), w = decimal(width.value), p = Number(waste.value);
+      var qtyOk = Number.isFinite(q) && q >= 0;
+      var widthOk = Number.isFinite(w) && w > 0;
+      var resultOk = qtyOk && widthOk && Number.isFinite((dir === 'toArea' ? q * w : q / w) * (1 + p / 100));
+      var error = document.getElementById('ml-error');
+      qty.setAttribute('aria-invalid', String(!qtyOk));
+      width.setAttribute('aria-invalid', String(!widthOk));
+      qty.setCustomValidity(qtyOk ? '' : 'Ingresá una cantidad válida, igual o mayor que cero.');
+      width.setCustomValidity(widthOk ? '' : 'Ingresá un ancho útil válido, mayor que cero.');
+      error.hidden = qtyOk && widthOk && resultOk;
+      error.textContent = !widthOk ? 'Ingresá un ancho útil válido, mayor que cero.' : !qtyOk ? 'Ingresá una cantidad válida, igual o mayor que cero.' : !resultOk ? 'Reducí los valores: el resultado es demasiado grande para calcularlo.' : '';
       document.getElementById('ml-waste-txt').textContent = p + '%';
       document.getElementById('ml-buy-lbl').textContent = 'Para comprar con ' + p + '% extra';
+      if (!qtyOk || !widthOk || !resultOk) {
+        document.getElementById('ml-area').textContent = '—';
+        document.getElementById('ml-buy').textContent = '—';
+        document.getElementById('ml-answer').textContent = error.textContent;
+        document.getElementById('ml-eq').textContent = 'Completá los datos para calcular.';
+        document.getElementById('ml-mw').textContent = '—';
+        document.getElementById('ml-ml').textContent = '—';
+        return;
+      }
+      var nombre = NAMES[String(w)] || 'material';
       if (dir === 'toArea') {
         var a = q * w, b = a * (1 + p / 100);
         document.getElementById('ml-area').innerHTML = n(a, 2) + ' <small>m²</small>';
