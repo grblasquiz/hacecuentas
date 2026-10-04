@@ -48,7 +48,13 @@ const initial = divideSteps('1005', '5', 6);
   if (root) {
     const get = <T extends HTMLElement>(id: string) => root.querySelector<T>('#' + id)!;
     const operation=get<HTMLSelectElement>('operation'), first=get<HTMLInputElement>('first-number'), second=get<HTMLInputElement>('second-number'), precision=get<HTMLSelectElement>('division-precision'), status=get('arithmetic-status');
+    const copy=get<HTMLButtonElement>('copy-arithmetic'), print=get<HTMLButtonElement>('print-arithmetic');
     let copyText = '';
+    const invalidate = (message='Cambiaste los datos. Volvé a mostrar el procedimiento para actualizar el resultado.') => {
+      copyText=''; get<HTMLTextAreaElement>('arithmetic-copy-text').value='';
+      get('copy-fallback').hidden=true; get('arithmetic-result').hidden=true;
+      copy.disabled=true; print.disabled=true; status.textContent=message;
+    };
     const labels = () => { const division=operation.value==='divide'; get('first-label').textContent=division?'Dividendo':'Primer factor'; get('second-label').textContent=division?'Divisor':'Segundo factor'; get('precision-control').hidden=!division; };
     const render = () => {
       try {
@@ -63,14 +69,16 @@ const initial = divideSteps('1005', '5', 6);
         const lines=divisionResult ? divisionResult.steps.map(s=>`${s.decimal?'Agregá un cero decimal':'Bajá '+s.digit}: queda ${s.partial}. Escribí ${s.quotientDigit}; restá ${s.product}; queda ${s.remainder}.`) : multiplicationResult!.partials.map(p=>`Cifra ${p.digit}, posición ${p.shift+1} desde la derecha: producto parcial ${p.value}. ${p.carries.join(' ')}`);
         const list=get('arithmetic-steps'); list.replaceChildren(...lines.map(line=>{ const li=document.createElement('li'); li.textContent=line; return li; }));
         copyText=[result.summary,result.board,...lines,'Comprobación: '+result.check].join('\n'); get<HTMLTextAreaElement>('arithmetic-copy-text').value=copyText;
-        get('copy-fallback').hidden=true; get('arithmetic-result').hidden=false; status.textContent='Procedimiento actualizado y comprobado.';
-      } catch(error) { get('arithmetic-result').hidden=true; copyText=''; status.textContent=error instanceof Error?error.message:'Revisá los números.'; }
+        get('copy-fallback').hidden=true; get('arithmetic-result').hidden=false; copy.disabled=false; print.disabled=false; status.textContent='Procedimiento actualizado y comprobado.';
+      } catch(error) { invalidate(error instanceof Error?error.message:'Revisá los números.'); }
     };
+    [first,second].forEach(input=>input.addEventListener('input',()=>invalidate()));
+    precision.addEventListener('change',()=>invalidate());
     get<HTMLFormElement>('arithmetic-form').addEventListener('submit',event=>{event.preventDefault();labels();render();});
     operation.addEventListener('change',()=>{labels();render();});
     root.querySelectorAll<HTMLButtonElement>('[data-example]').forEach(button=>button.addEventListener('click',()=>{ const [a,b,mode]=button.dataset.example!.split('|'); first.value=a;second.value=b;operation.value=mode;precision.value='6';labels();render(); }));
-    get('copy-arithmetic').addEventListener('click',async()=>{ if(!copyText)return; try { await navigator.clipboard.writeText(copyText);status.textContent='Procedimiento copiado.'; } catch { get('copy-fallback').hidden=false;get<HTMLTextAreaElement>('arithmetic-copy-text').focus();get<HTMLTextAreaElement>('arithmetic-copy-text').select();status.textContent='Copiá el texto seleccionado.'; } });
-    get('print-arithmetic').addEventListener('click',()=>window.print());
+    copy.addEventListener('click',async()=>{ const text=copyText; if(!text)return; try { await navigator.clipboard.writeText(text);if(copyText===text)status.textContent='Procedimiento copiado.'; } catch { if(copyText!==text)return; get('copy-fallback').hidden=false;get<HTMLTextAreaElement>('arithmetic-copy-text').focus();get<HTMLTextAreaElement>('arithmetic-copy-text').select();status.textContent='Copiá el texto seleccionado.'; } });
+    print.addEventListener('click',()=>{if(copyText)window.print();});
     labels();render();
   }
 </script>
