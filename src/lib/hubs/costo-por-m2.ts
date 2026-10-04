@@ -136,7 +136,7 @@ export const hub: HubData = {
   lede:
     'Poné los metros, elegí terminación y zona, o cargá una cotización local. Vas a obtener un rango orientativo con supuestos visibles, no un precio cerrado.',
   stamps: [
-    'Actualizado 07-08-2026',
+    'Experiencia revisada 03-10-2026',
     `Referencia editorial estándar US$${USD_M2_ESTANDAR}/m²`,
     `Pesos calculados al ${FX.label} $${FX.value.toLocaleString('es-AR')} (${FX.date})`,
     '7 calculadoras adentro',
@@ -188,13 +188,13 @@ export const hub: HubData = {
   answer: {
     title: 'La cuenta corta: metros computables × costo del m² de tu categoría y tu zona.',
     copy:
-      'Los semicubiertos entran a la mitad, la zona corrige el m² por logística y clima, y a eso se le suma tu mitad de la medianera si la hay.',
+      'Los semicubiertos usan el porcentaje que cargues: 50% es sólo el valor inicial editable. El costo por m² sale de la categoría y zona, o de tu cotización local. Se suman otros costos presupuestados y después se aplica la contingencia sobre ese subtotal.',
     yes: [
       'Materiales: alrededor de la mitad del costo total de la obra',
       'Mano de obra: gremios, contratistas y cargas sociales del personal de obra',
       'Honorarios profesionales: proyecto, dirección técnica y visado del colegio (CPIC / CPAU / colegios provinciales)',
       'Permisos, derechos de construcción, agrimensura y contingencias',
-      'Tu mitad de la medianera, si levantás muro sobre el eje divisorio',
+      'Otros costos que cargues: la medianera no se calcula automáticamente ni se presume un reparto con el vecino',
     ],
     warn: [
       'El terreno NO está incluido: en CABA y GBA norte suele valer tanto o más que la obra',
@@ -296,6 +296,6 @@ export const hub: HubData = {
     '/calculadora-proyectos-hogar',
   ],
 
-  lastReviewed: '2026-08-16',
+  lastReviewed: '2026-10-03',
   audience: 'AR',
 };
