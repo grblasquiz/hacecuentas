@@ -1,0 +1,79 @@
+---
+import { divideSteps } from '../../lib/tools/arithmetic-steps';
+import { hub } from '../../lib/hubs/operaciones-paso-a-paso';
+import HubEditorialSupport from './HubEditorialSupport.astro';
+const initial = divideSteps('1005', '5', 6);
+---
+<article class="arithmetic-tool" id="arithmetic-tool">
+  <nav aria-label="Migas de pan"><a href="/">Inicio</a> / <a href="/matematica">Matemática</a> / Operaciones paso a paso</nav>
+  <header><p class="eyebrow">{hub.eyebrow}</p><h1>{hub.h1}</h1><p class="lead">{hub.lede}</p></header>
+  <div class="workspace">
+    <form id="arithmetic-form" class="panel">
+      <h2>Armá tu cuenta</h2>
+      <label for="operation">Operación</label><select id="operation"><option value="divide">División larga</option><option value="multiply">Multiplicación en columnas</option></select>
+      <label for="first-number" id="first-label">Dividendo</label><input id="first-number" inputmode="decimal" type="text" value="1005" maxlength="14" required aria-describedby="arithmetic-limits" />
+      <label for="second-number" id="second-label">Divisor</label><input id="second-number" inputmode="decimal" type="text" value="5" maxlength="14" required aria-describedby="arithmetic-limits" />
+      <div id="precision-control"><label for="division-precision">Máximo de decimales del cociente</label><select id="division-precision">{[0,2,4,6,8,12].map(n=><option value={n} selected={n===6}>{n}</option>)}</select></div>
+      <p id="arithmetic-limits">Hasta 12 cifras en total y 6 decimales por número. Solo números no negativos. Usá coma o punto decimal, sin separadores de miles. La división se trunca: no redondea.</p>
+      <button type="submit" class="primary">Mostrar procedimiento</button>
+      <p id="arithmetic-status" role="status" aria-live="polite"></p>
+      <fieldset><legend>Probá un ejemplo</legend><div class="examples">
+        <button type="button" data-example="1005|5|divide">1005 ÷ 5</button><button type="button" data-example="7|12|divide">7 ÷ 12</button><button type="button" data-example="12,5|0,25|divide">12,5 ÷ 0,25</button><button type="button" data-example="1,2|0,03|multiply">1,2 × 0,03</button>
+      </div></fieldset>
+      <noscript><p>El ejemplo de 1005 ÷ 5 está disponible abajo. Para cambiar los números, activá JavaScript.</p></noscript>
+    </form>
+    <section class="panel result" id="arithmetic-result" aria-labelledby="result-heading">
+      <p class="eyebrow">Resultado comprobable</p><h2 id="result-heading">1005 ÷ 5 = <span id="arithmetic-value">{initial.quotient}</span></h2>
+      <p id="arithmetic-context">Exacto. Resto entero: 0. Resto después de los decimales: 0.</p>
+      <p id="arithmetic-normalization">Trabajamos con 1005 ÷ 5. El tablero incluye los ceros necesarios para alinear cada cifra.</p>
+      <figure><figcaption>Tablero en columnas. La lista de pasos explica la misma cuenta en texto.</figcaption><pre id="arithmetic-board" tabindex="0" aria-label="Procedimiento alineado">{initial.board}</pre></figure>
+      <h3>Pasos, cifra por cifra</h3><ol id="arithmetic-steps">{initial.steps.map(s=><li>Bajá {s.digit}: queda {s.partial}. Escribí {s.quotientDigit}; restá {s.product}; queda {s.remainder}.</li>)}</ol>
+      <h3>Comprobación</h3><p id="arithmetic-check" class="check">{initial.check}</p>
+      <div class="actions"><button id="copy-arithmetic" type="button">Copiar procedimiento</button><button id="print-arithmetic" type="button">Imprimir</button></div>
+      <div id="copy-fallback" hidden><label for="arithmetic-copy-text">Seleccioná y copiá el texto</label><textarea id="arithmetic-copy-text" readonly rows="6"></textarea></div>
+    </section>
+  </div>
+  <section class="method"><h2>Cómo se obtiene y comprueba el resultado</h2>
+    <p>En una división larga avanzás de izquierda a derecha: tomás una cifra, elegís cuánto entra el divisor, multiplicás, restás y bajás la siguiente. Si no entra, esa posición vale cero. Para seguir con decimales se agregan ceros al resto. El límite elegido detiene el procedimiento aunque todavía quede resto.</p>
+    <p>En una multiplicación trabajás de derecha a izquierda. Cada cifra del segundo número genera un producto parcial, desplazado según su posición. El detalle muestra los acarreos. Con decimales, primero se operan las cifras enteras y se restituye la cantidad total de posiciones decimales.</p>
+    <p>Esta implementación conserva las entradas como cadenas decimales y hace las cuentas con enteros escalados. Comprueba la división mediante <strong>cociente × divisor + resto = dividendo</strong>, usando los números originales. En multiplicación, verifica que la suma de los parciales coincida con el producto entero antes de ubicar la coma.</p>
+    <h3>Ejemplos para revisar tu cuenta</h3><ul><li>1005 ÷ 5 = 201: aparece un cero entre el 2 y el 1.</li><li>7 ÷ 12 = 0,583333 a seis decimales; el resto es 0,000004.</li><li>12,5 ÷ 0,25 = 50, exacto.</li><li>1,2 × 0,03 = 0,036, exacto.</li></ul>
+    <p>¿Tenés otra pregunta? Usá la <a href="/calculadora">calculadora online para expresiones completas</a>, la <a href="/matematica/fracciones">calculadora de fracciones</a> o las <a href="/matematica/porcentajes">operaciones con porcentajes</a>.</p>
+  </section>
+</article>
+<HubEditorialSupport data={hub} />
+<script>
+  import { divideSteps, multiplySteps } from '../../lib/tools/arithmetic-steps';
+  const root = document.querySelector<HTMLElement>('#arithmetic-tool');
+  if (root) {
+    const get = <T extends HTMLElement>(id: string) => root.querySelector<T>('#' + id)!;
+    const operation=get<HTMLSelectElement>('operation'), first=get<HTMLInputElement>('first-number'), second=get<HTMLInputElement>('second-number'), precision=get<HTMLSelectElement>('division-precision'), status=get('arithmetic-status');
+    let copyText = '';
+    const labels = () => { const division=operation.value==='divide'; get('first-label').textContent=division?'Dividendo':'Primer factor'; get('second-label').textContent=division?'Divisor':'Segundo factor'; get('precision-control').hidden=!division; };
+    const render = () => {
+      try {
+        const division=operation.value==='divide', result=division?divideSteps(first.value,second.value,Number(precision.value)):multiplySteps(first.value,second.value);
+        if (!result.verified) throw new Error('No se pudo comprobar la cuenta. Revisá los números.');
+        const divisionResult=division?result as ReturnType<typeof divideSteps>:null, multiplicationResult=!division?result as ReturnType<typeof multiplySteps>:null;
+        const value=divisionResult?.quotient ?? multiplicationResult!.result;
+        get('result-heading').textContent=`${first.value} ${division?'÷':'×'} ${second.value} = ${value}`;
+        get('arithmetic-context').textContent=divisionResult ? `${divisionResult.exact?'Exacto.':'Truncado; todavía queda resto.'} Resto entero: ${divisionResult.integerRemainder}. Resto después de los decimales: ${divisionResult.residual}.` : `Producto exacto. ${multiplicationResult!.scale} posiciones decimales antes de quitar ceros finales.`;
+        get('arithmetic-normalization').textContent=divisionResult ? `Trabajamos con ${divisionResult.normalizedDividend} ÷ ${divisionResult.normalizedDivisor}, multiplicando ambos números originales por 10 elevado a ${divisionResult.scale}. El tablero conserva ceros de alineación.` : 'El tablero muestra los factores sin coma. Los productos parciales incluyen su desplazamiento por posición; al final se coloca la coma.';
+        get('arithmetic-board').textContent=result.board; get('arithmetic-check').textContent=result.check;
+        const lines=divisionResult ? divisionResult.steps.map(s=>`${s.decimal?'Agregá un cero decimal':'Bajá '+s.digit}: queda ${s.partial}. Escribí ${s.quotientDigit}; restá ${s.product}; queda ${s.remainder}.`) : multiplicationResult!.partials.map(p=>`Cifra ${p.digit}, posición ${p.shift+1} desde la derecha: producto parcial ${p.value}. ${p.carries.join(' ')}`);
+        const list=get('arithmetic-steps'); list.replaceChildren(...lines.map(line=>{ const li=document.createElement('li'); li.textContent=line; return li; }));
+        copyText=[result.summary,result.board,...lines,'Comprobación: '+result.check].join('\n'); get<HTMLTextAreaElement>('arithmetic-copy-text').value=copyText;
+        get('copy-fallback').hidden=true; get('arithmetic-result').hidden=false; status.textContent='Procedimiento actualizado y comprobado.';
+      } catch(error) { get('arithmetic-result').hidden=true; copyText=''; status.textContent=error instanceof Error?error.message:'Revisá los números.'; }
+    };
+    get<HTMLFormElement>('arithmetic-form').addEventListener('submit',event=>{event.preventDefault();labels();render();});
+    operation.addEventListener('change',()=>{labels();render();});
+    root.querySelectorAll<HTMLButtonElement>('[data-example]').forEach(button=>button.addEventListener('click',()=>{ const [a,b,mode]=button.dataset.example!.split('|'); first.value=a;second.value=b;operation.value=mode;precision.value='6';labels();render(); }));
+    get('copy-arithmetic').addEventListener('click',async()=>{ if(!copyText)return; try { await navigator.clipboard.writeText(copyText);status.textContent='Procedimiento copiado.'; } catch { get('copy-fallback').hidden=false;get<HTMLTextAreaElement>('arithmetic-copy-text').focus();get<HTMLTextAreaElement>('arithmetic-copy-text').select();status.textContent='Copiá el texto seleccionado.'; } });
+    get('print-arithmetic').addEventListener('click',()=>window.print());
+    labels();render();
+  }
+</script>
+<style>
+  .arithmetic-tool{max-width:1120px;margin:auto;padding:32px 20px 48px;color:#172c45;font-family:Inter,system-ui,sans-serif}.arithmetic-tool *{box-sizing:border-box}.arithmetic-tool nav{font-size:.875rem;line-height:1.7}.arithmetic-tool a{color:#235b96;text-decoration:underline}.arithmetic-tool header{max-width:800px;margin:32px 0}.eyebrow{color:#285b86;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em}h1{font-size:clamp(2rem,5vw,3.5rem);line-height:1.1;margin:12px 0}.lead{font-size:1.12rem;line-height:1.7}.workspace{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:24px;align-items:start}.panel{min-width:0;padding:24px;border:1px solid #cad7e3;border-radius:18px;background:#fff;box-shadow:0 12px 32px #172c4509}h2{font-size:1.5rem;line-height:1.3;margin:0 0 20px;overflow-wrap:anywhere}h3{margin:24px 0 12px;font-size:1.1rem}label{display:block;font-weight:700;margin:18px 0 7px}input,select,textarea{width:100%;min-height:48px;font:inherit;padding:12px;border:1px solid #8295a8;border-radius:8px;background:#fff;color:#172c45}button{min-height:44px;font:inherit;font-weight:700;padding:10px 14px;border:1px solid #8295a8;border-radius:9px;cursor:pointer;background:#f5f8fb;color:#173f66}button:hover{background:#e9f0f7}.primary{width:100%;background:#174b7a;color:white;border-color:#174b7a}.primary:hover{background:#10395f}p,li{line-height:1.7}#arithmetic-limits{font-size:.875rem}#arithmetic-status{font-weight:700;overflow-wrap:anywhere}fieldset{border:0;padding:0;margin:24px 0 0}legend{font-weight:700;margin-bottom:12px}.examples,.actions{display:flex;flex-wrap:wrap;gap:8px}figure{margin:20px 0}figcaption{font-size:.875rem;line-height:1.6}pre{max-width:100%;overflow:auto;background:#edf3f8;border-radius:10px;padding:16px;font:1rem/1.65 ui-monospace,monospace;white-space:pre}.check{background:#edf6ef;border-left:4px solid #37694a;padding:12px;overflow-wrap:anywhere}.result li+li{margin-top:12px}.method{max-width:820px;margin:40px 0 0}.method h2{margin-top:24px}:is(button,input,select,textarea,pre,a):focus-visible{outline:3px solid #d4861d;outline-offset:3px}[hidden]{display:none!important}@media(max-width:740px){.workspace{grid-template-columns:1fr}.arithmetic-tool{padding:24px 12px}.panel{padding:18px}.actions{flex-direction:column}}@media print{.arithmetic-tool form,.arithmetic-tool nav,.actions,#copy-fallback{display:none!important}.workspace{display:block}.panel{border:0;box-shadow:none}pre{white-space:pre-wrap;overflow:visible}.arithmetic-tool{padding:0}.result{break-inside:avoid}}
+</style>

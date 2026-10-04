@@ -312,6 +312,6 @@ export const hub: HubData = {
     '/redondeo-numeros-decimales-decenas-centenas',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-10-04',
   audience: 'global',
 };
