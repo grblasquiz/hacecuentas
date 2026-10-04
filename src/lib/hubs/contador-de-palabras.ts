@@ -178,7 +178,7 @@ export const hub: HubData = {
     '/calculadora-legibilidad-texto-flesch',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-10-04',
   audience: 'global',
 };
 
