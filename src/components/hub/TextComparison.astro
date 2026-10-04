@@ -47,12 +47,12 @@ const names = { same:'Sin cambios', removed:'Eliminada', added:'Agregada' };
   if(root){
     const get=<T extends HTMLElement>(id:string)=>root.querySelector<T>('#'+id)!;
     const mode=get<HTMLSelectElement>('comparison-mode'),a=get<HTMLTextAreaElement>('comparison-a'),b=get<HTMLTextAreaElement>('comparison-b'),delimiter=get<HTMLSelectElement>('list-delimiter'),kind=get<HTMLSelectElement>('list-result-kind'),status=get('comparison-status');
-    const copy=get<HTMLButtonElement>('copy-comparison'),download=get<HTMLButtonElement>('download-comparison');let exportText='';
+    const copy=get<HTMLButtonElement>('copy-comparison'),download=get<HTMLButtonElement>('download-comparison');let exportText='',revision=0;
     const counts=()=>{get('a-count').textContent=`${a.value.length} caracteres`;get('b-count').textContent=`${b.value.length} caracteres`;};
     const controls=()=>{get('delimiter-control').hidden=mode.value==='text';get('input-b-control').hidden=mode.value==='dedupe';kind.hidden=mode.value==='dedupe';root.querySelector<HTMLLabelElement>('label[for="list-result-kind"]')!.hidden=mode.value==='dedupe';counts();};
-    const invalidate=()=>{counts();copy.disabled=true;download.disabled=true;status.textContent='Entrada modificada: compará para actualizar el resultado.';};
+    const invalidate=()=>{counts();revision++;exportText='';copy.disabled=true;download.disabled=true;get('comparison-result').hidden=true;get('comparison-copy-fallback').hidden=true;get<HTMLTextAreaElement>('comparison-copy-text').value='';get<HTMLTextAreaElement>('list-result-text').value='';status.textContent='Entrada modificada: compará para actualizar el resultado.';};
     const render=()=>{
-      controls(); const options={trim:get<HTMLInputElement>('trim-edges').checked,ignoreCase:get<HTMLInputElement>('ignore-case').checked};
+      invalidate();controls(); const options={trim:get<HTMLInputElement>('trim-edges').checked,ignoreCase:get<HTMLInputElement>('ignore-case').checked};
       try{
         get('diff-output').hidden=mode.value!=='text';get('list-output').hidden=mode.value==='text';
         if(mode.value==='text'){
@@ -80,8 +80,8 @@ const names = { same:'Sin cambios', removed:'Eliminada', added:'Agregada' };
     const example=(lists:boolean)=>{a.value=lists?'pera\npera\nuva':'Plan A\nEntrega viernes\nRevisar';b.value=lists?'uva\nkiwi\nuva':'Plan A\nEntrega lunes\nRevisar\nEnviar';mode.value=lists?'lists':'text';delimiter.value='lines';get<HTMLInputElement>('trim-edges').checked=false;get<HTMLInputElement>('ignore-case').checked=false;kind.value='onlyA';render()};
     get('example-text').addEventListener('click',()=>example(false));get('example-lists').addEventListener('click',()=>example(true));
     get('clear-comparison').addEventListener('click',()=>{a.value='';b.value='';render();a.focus()});
-    copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(exportText);status.textContent='Resultado copiado.'}catch{get('comparison-copy-fallback').hidden=false;get<HTMLTextAreaElement>('comparison-copy-text').focus();get<HTMLTextAreaElement>('comparison-copy-text').select();status.textContent='Copiá el texto seleccionado.'}});
-    download.addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([exportText],{type:'text/plain;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='comparacion-hacecuentas.txt';link.click();window.setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent='Archivo TXT preparado.'});render();
+    copy.addEventListener('click',async()=>{if(copy.disabled)return;const currentRevision=revision,text=exportText;try{await navigator.clipboard.writeText(text);if(currentRevision===revision)status.textContent='Resultado copiado.'}catch{if(currentRevision!==revision)return;get('comparison-copy-fallback').hidden=false;get<HTMLTextAreaElement>('comparison-copy-text').focus();get<HTMLTextAreaElement>('comparison-copy-text').select();status.textContent='Copiá el texto seleccionado.'}});
+    download.addEventListener('click',()=>{if(download.disabled)return;const url=URL.createObjectURL(new Blob([exportText],{type:'text/plain;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='comparacion-hacecuentas.txt';link.click();window.setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent='Archivo TXT preparado.'});render();
   }
 </script>
 <style>

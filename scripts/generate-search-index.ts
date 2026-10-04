@@ -29,6 +29,7 @@ interface Entry {
   i: string;          // icon
   a?: string;         // audience (AR, ES, MX, CO, CL, BO, PE, global...) — necesario para
                       // el ranking +30/-20 por país en el modal del Header.
+  k?: string;         // términos de búsqueda opcionales; nunca crean otra entrada
 }
 
 const files = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
@@ -81,6 +82,7 @@ try {
         c: String(tool.category || 'otros'),
         i: String(tool.icon || '🧮'),
         a: audience,
+        ...(Array.isArray(tool.searchTerms) ? { k: tool.searchTerms.filter((term: unknown) => typeof term === 'string' && term.trim()).join(' ') } : {}),
       });
     }
   }
