@@ -1,10 +1,12 @@
 /** Gate de integridad para contenido derivado de snapshots vivos. */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { syncIpcContent } from '../src/lib/ipc-content.ts';
 
 const root = process.cwd();
 const calc = JSON.parse(readFileSync(join(root, 'src/content/calcs/inflacion-ipc.json'), 'utf8'));
 const live = JSON.parse(readFileSync(join(root, 'src/data/live/inflacion.json'), 'utf8'));
+const base = JSON.parse(readFileSync(join(root, 'src/data/ipc-indec-serie.json'), 'utf8'));
 const rows = (live.last_12_months ?? []).filter((row: any) => /^\d{4}-\d{2}/.test(String(row.fecha)));
 const latest = rows.at(-1);
 if (!latest) throw new Error('[derived-integrity] IPC sin snapshot mensual');
@@ -28,6 +30,10 @@ if (!serialized.includes(`${expectedYtd}%`)) failures.push(`falta acumulado comp
 const table = (calc.referenceTables ?? []).find((item: any) => String(item.title).startsWith('IPC mes a mes'));
 if (!table || table.rows?.length !== yearRows.length) failures.push(`tabla mensual tiene ${table?.rows?.length ?? 0} filas; snapshot tiene ${yearRows.length}`);
 if (calc.dataUpdate?.updateType === 'auto-live' && !calc.dataUpdate?.liveSource) failures.push('auto-live sin liveSource');
+const expected = syncIpcContent(calc, base, live);
+for (const field of ['title', 'answerSnippet', 'keyTakeaway', 'referenceTables', 'faq', 'explanation', 'example', 'fields']) {
+  if (JSON.stringify(calc[field]) !== JSON.stringify(expected[field])) failures.push(`contenido IPC desactualizado: ${field}`);
+}
 
 if (failures.length) {
   console.error('[derived-integrity] ❌ ' + failures.join('; '));

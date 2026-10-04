@@ -15,6 +15,7 @@ import '../../styles/calc-batch-mockup.css';
 import CalcMockupSeo from './CalcMockupSeo.astro';
 import ipcSerieData from '../../data/ipc-indec-serie.json';
 import inflacionLive from '../../data/live/inflacion.json';
+import { IPC_CALENDAR_URL } from '../../lib/ipc-content';
 
 interface Props { calc: any; related?: any[]; }
 const { calc, related = [] } = Astro.props;
@@ -186,7 +187,7 @@ const OPCIONES = IPC_KEYS.map((k) => ({ v: k, l: `${cap(labelMes(k))} (+${pct(IP
     <div class="cards">
       <article class="mini"><i>🏠</i><h3>Alquileres</h3><p>Tras el DNU 70/2023, que derogó la Ley 27.551, el índice es libre: lo más común es IPC trimestral. Usá el último IPC publicado, no el del mes en curso.</p></article>
       <article class="mini"><i>🧮</i><h3>IPC, CER y UVA</h3><p>El CER prorratea diariamente el IPC del mes anterior y la UVA es CER × 14,05 (base abril 2016). Con desfasaje chico, los tres siguen la misma inflación.</p></article>
-      <article class="mini"><i>🗓️</i><h3>Cuándo sale el dato</h3><p>El INDEC publica cada IPC según su calendario anticipado. El IPC de julio de 2026 sale el 13 de agosto. Último dato disponible acá: {labelMes(LAST_KEY)} (+{pct(IPC_SERIE[LAST_KEY], 1)}). <a href="/inflacion-argentina">Ver IPC mes a mes</a>.</p></article>
+      <article class="mini"><i>🗓️</i><h3>Cuándo sale el dato</h3><p>El INDEC publica cada IPC según su <a href={IPC_CALENDAR_URL} target="_blank" rel="noopener noreferrer">calendario anticipado de difusión</a>. Consultá allí la fecha de cada informe. Último dato disponible acá: {labelMes(LAST_KEY)} (+{pct(IPC_SERIE[LAST_KEY], 1)}). <a href="/inflacion-argentina">Ver IPC mes a mes</a>.</p></article>
     </div>
   </section>
 
@@ -212,6 +213,11 @@ const OPCIONES = IPC_KEYS.map((k) => ({ v: k, l: `${cap(labelMes(k))} (+${pct(IP
   .hcm.ipc .melt-col span{font-size:11px;color:#e7d3d9;margin-top:6px}
   .hcm.ipc .melt-cap{font-size:12px;color:#e0c9d1;margin:14px 0 0;text-align:center}
   .hcm.ipc .progress{background:#ffffff2e}
+  .hcm.ipc .result .big,.hcm.ipc .equation{overflow-wrap:anywhere}
+  @media(max-width:480px){
+    .hcm.ipc .result .big{font-size:clamp(28px,9vw,40px)}
+    .hcm.ipc .result .grid2{grid-template-columns:minmax(0,1fr)}
+  }
   @media(max-width:760px){.hcm.ipc .melt-bars{height:150px;gap:5px}.hcm.ipc .melt-col em{font-size:10px}}
 </style>
 
