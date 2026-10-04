@@ -439,7 +439,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuántas tablas de machimbre necesito?',
-      a: `Los m² se pasan a metros lineales dividiendo por el ancho útil de la tabla: con tablas de 10 cm, cada metro cuadrado son 10 metros lineales. Después se divide por ${nAr(TABLA_MACHIMBRE_M, 0)} m, que es el largo de tabla que se vende, y se redondea para arriba. Ojo con un detalle que sorprende a todo el mundo: el ancho de catálogo incluye la lengüeta, y el ancho realmente visible una vez colocado es menor. Usá el ancho útil de la ficha técnica o te van a faltar tablas.`,
+      a: `Los m² se pasan a metros lineales dividiendo por el ancho útil de la tabla: con tablas de 10 cm, cada metro cuadrado son 10 metros lineales. Después se divide por ${nAr(TABLA_MACHIMBRE_M, 0)} m, que es el largo de tabla que se vende, y se redondea para arriba. Ojo con un detalle que sorprende a todo el mundo: el ancho de catálogo incluye la lengüeta, y el ancho realmente visible una vez colocado es menor. Usá el ancho útil de la ficha técnica o te van a faltar tablas. Podés comprobar largo y superficie con el <a href="/calculadora-conversor-metros-lineales-a-metros-cuadrados">conversor de metros lineales a m² por ancho útil</a>.`,
     },
     {
       q: '¿Cuánta resina lleva el porcelanato líquido?',
@@ -498,6 +498,6 @@ export const hub: HubData = {
     '/calculadora-juntas-pastina-rejuntado-ceramicos-kg',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-10-04',
   audience: 'AR',
 };

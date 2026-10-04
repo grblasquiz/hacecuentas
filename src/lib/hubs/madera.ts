@@ -278,6 +278,10 @@ export const hub: HubData = {
       a: 'Un pie tabla es el volumen de una tabla de un pie por un pie por una pulgada de espesor, es decir 2,36 litros. Para pasar pies tabla a metros cúbicos se multiplica por 0,00236; para el camino inverso, se divide. Es la unidad con la que se vende la madera aserrada, mientras que las placas se venden por unidad y por metro cuadrado.',
     },
     {
+      q: '¿Cómo paso de metros lineales de tabla a metros cuadrados?',
+      a: 'Multiplicá el largo total por el ancho útil en metros. Para obtener el largo a partir de una superficie, dividí los m² por ese ancho. Probalo en el <a href="/calculadora-conversor-metros-lineales-a-metros-cuadrados">conversor de metros lineales a metros cuadrados por ancho útil</a>. En un deck, además, hay que considerar la separación entre tablas y los apoyos: esa parte se calcula en la opción de deck de esta página.',
+    },
+    {
       q: '¿Conviene hacer el fondo del mismo espesor que el mueble?',
       a: 'Casi nunca. El fondo no soporta carga, sólo escuadra el mueble, y en una biblioteca alta puede ser la pieza más grande de todo el despiece. Resolverlo con una placa de 3 mm de fibrofácil o un hardboard ranurado baja el costo y saca varios kilos de encima, sin perder rigidez.',
     },
@@ -323,7 +327,7 @@ export const hub: HubData = {
     '/calculadora-estantes-madera-soporte-peso',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-10-04',
   audience: 'AR',
 };
 
