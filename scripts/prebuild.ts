@@ -3,7 +3,8 @@
  *
  * Dependencias reales:
  *   validate:data   → gate (falla rápido si hay datos inválidos)
- *   related, og, sitemap, stamp-sw → independientes entre sí
+ *   sitemap → inicializa tsx antes de los demás procesos que lo usan
+ *   related, og, stamp-sw → independientes entre sí
  *   og-manifest     → lee public/og/, necesita `og` terminado
  *
  * Serial equivalente (npm run prebuild anterior):
@@ -14,7 +15,7 @@
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 
-type Task = { name: string; cmd: string; args: string[] };
+type Task = { name: string; cmd: string; args: string[]; required?: boolean };
 
 const NODE = 'node';
 const FLAGS = ['--experimental-strip-types'];
@@ -49,6 +50,7 @@ function pyTask(name: string, script: string): Task {
  * marcaban era deuda anterior, no el cambio que se estaba subiendo.
  *
  * Para que vuelvan a bloquear: HC_GATES=block npm run deploy
+ * Las tareas required de generación abortan siempre para no publicar artefactos viejos.
  */
 const GATES_BLOQUEAN = process.env.HC_GATES === 'block';
 const fallidos: string[] = [];
@@ -78,7 +80,7 @@ function run(t: Task): Promise<void> {
       if (code === 0) {
         console.log(`${prefix} ✓ ${secs}s`);
         resolve();
-      } else if (GATES_BLOQUEAN) {
+      } else if (GATES_BLOQUEAN || t.required) {
         reject(new Error(`${t.name} falló con código ${code} (${secs}s)`));
       } else {
         // Gates en modo aviso (decisión de Martin, 2026-07-27): frenaban cada
@@ -146,10 +148,15 @@ async function main() {
     run(mjsTask('nfl-data', 'fetch-nfl-data')),
   ]);
 
+  // npx tsx concurrentes pueden competir por instalar el mismo cache y fallar
+  // con ENOTEMPTY. Generamos primero el sitemap y dejamos tsx listo para los
+  // demás procesos. Un fallo aquí no puede publicar el sitemap anterior.
+  console.log('[prebuild] fase 2a: sitemap obligatorio (tsx serial)');
+  await run({ ...tsxTask('sitemap', 'generate-sitemap'), required: true });
+
   const phase2Tasks: Task[] = [
     tsxTask('hub-research', 'generate-hub-citable-research'),
     task('og', 'generate-og-images'),
-    tsxTask('sitemap', 'generate-sitemap'),
     task('search-index', 'generate-search-index'),
     // Índice slim {slug, clusterKey} de los 14 locales para hreflang recíproco.
     // Reemplaza los import.meta.glob eager y excluye URLs no distribuibles.
