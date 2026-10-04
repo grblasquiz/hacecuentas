@@ -689,10 +689,12 @@ const MOBILE_CATEGORIES: Array<{ href: string; label: string }> = [
             const title = norm(c.h || '');
             const slug = norm(c.s || '');
             const desc = norm(c.d || '');
+            const keywords = norm(c.k || '');
             let score = 0;
             if (title.startsWith(query)) score += 100;
             else if (title.includes(query)) score += 50;
             if (slug.includes(query) || desc.includes(query)) score += 10;
+            if (keywords.includes(query)) score += 50;
             if (score === 0 && useFuzzy && tokens.length) {
               // Sin substring directo: aceptar si CADA token matchea ~fuzzy
               // contra alguna palabra de título o slug (slug con '-' → espacios).
@@ -759,7 +761,7 @@ const MOBILE_CATEGORIES: Array<{ href: string; label: string }> = [
         await ensureCalcs();
       }
       if (calcsFailed) { renderError(); return; }
-      renderResults('');
+      renderResults(input.value);
     };
     const closeModal = () => {
       modal.hidden = true;
