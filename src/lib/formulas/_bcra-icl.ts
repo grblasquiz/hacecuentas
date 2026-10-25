@@ -1,10 +1,10 @@
 // Histórico del Índice para Contratos de Locación (ICL) del BCRA.
 // Fuente: api.bcra.gob.ar/estadisticas/v4.0/Monetarias/40 (base 30.6.20=1).
 // Actualizado en build. Para refrescar: npm run bcra:update-icl
-// Última fecha: 2026-10-24, valor: 37.05
-// Total: 2307 días hábiles desde 2020-07-01.
+// Última fecha: 2026-10-25, valor: 37.07
+// Total: 2308 días hábiles desde 2020-07-01.
 
-export const ICL_LAST_UPDATED = '2026-10-24';
+export const ICL_LAST_UPDATED = '2026-10-25';
 
 // Arrays paralelos ordenados por fecha ascendente (búsqueda binaria).
 export const ICL_FECHAS: ReadonlyArray<string> = [
@@ -2315,6 +2315,7 @@ export const ICL_FECHAS: ReadonlyArray<string> = [
   '2026-10-22',
   '2026-10-23',
   '2026-10-24',
+  '2026-10-25',
 ];
 
 export const ICL_VALORES: ReadonlyArray<number> = [
@@ -4625,4 +4626,5 @@ export const ICL_VALORES: ReadonlyArray<number> = [
   37,
   37.02,
   37.05,
+  37.07,
 ];
