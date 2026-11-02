@@ -3,6 +3,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import { MEXICO_2026 } from '../../lib/data/mexico-2026';
 import '../../styles/calc-flagship.css';
 
 // Página-dato enlazable (autoridad) México: UMA 2026, cuotas IMSS Modalidad 40 y
@@ -158,6 +159,16 @@ const schema = {
     </section>
 
     <section class="cf-section" id="umas-a-pesos">
+      <h2 class="cf-section__title">Calculadora de UMA a pesos mexicanos 2026</h2>
+      <p class="cf-section__lead">Convertí cualquier cantidad con el valor diario, mensual o anual publicado por el INEGI. Elegí la unidad que indica tu documento.</p>
+      <form class="uma-converter" id="uma-converter" data-values={JSON.stringify(MEXICO_2026.uma)}>
+        <label for="uma-quantity">Cantidad de UMA<input id="uma-quantity" name="quantity" type="number" inputmode="decimal" min="0" max="1000000000" step="any" value="100" required /></label>
+        <label for="uma-basis">Tipo de UMA<select id="uma-basis" name="basis"><option value="diaria">Diaria · $117.31</option><option value="mensual">Mensual · $3,566.22</option><option value="anual">Anual · $42,794.64</option></select></label>
+        <button type="submit" class="cf-primary">Convertir a pesos</button>
+        <p class="uma-converter-result" aria-live="polite" aria-atomic="true"><output id="uma-result" for="uma-quantity uma-basis">100 UMA diarias = $11,731.00 MXN</output></p>
+        <p>Valores vigentes desde el 1 de febrero de 2026. Para enero corresponde la UMA 2025. La conversión no determina por sí sola una multa, una cuota del IMSS ni un impuesto.</p>
+        <noscript><p>La calculadora requiere JavaScript. La tabla de múltiplos de abajo está disponible sin activarlo.</p></noscript>
+      </form>
       <h2 class="cf-section__title">Tabla de UMA a pesos 2026: 10, 25, 30 y 100 unidades</h2>
       <p class="cf-section__lead">Primero identificá si el documento usa UMA <strong>diarias o mensuales</strong>. La cuenta es cantidad de UMA × valor de la unidad; una multa expresada en 100 UMA diarias no se multiplica por el valor mensual.</p>
       <div class="cf-tablewrap"><table class="cf-table">
@@ -328,7 +339,37 @@ const schema = {
   <Footer slot="footer" />
 </Layout>
 
+<script>
+  const form = document.querySelector<HTMLFormElement>('#uma-converter');
+  if (form) {
+    const quantity = form.querySelector<HTMLInputElement>('#uma-quantity')!;
+    const basis = form.querySelector<HTMLSelectElement>('#uma-basis')!;
+    const result = form.querySelector<HTMLOutputElement>('#uma-result')!;
+    const values: Record<string, number> = JSON.parse(form.dataset.values!);
+    const labels: Record<string, string> = { diaria: 'diarias', mensual: 'mensuales', anual: 'anuales' };
+    const currency = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    function convert() {
+      const amount = quantity.valueAsNumber;
+      if (!quantity.validity.valid || !Number.isFinite(amount) || amount < 0) {
+        result.value = 'Ingresá una cantidad válida de UMA, igual o mayor que cero.';
+        return;
+      }
+      result.value = `${amount.toLocaleString('es-MX', { maximumFractionDigits: 8 })} UMA ${labels[basis.value]} = ${currency.format(amount * values[basis.value])} MXN`;
+    }
+    form.addEventListener('submit', (event) => { event.preventDefault(); convert(); });
+    quantity.addEventListener('input', convert);
+    basis.addEventListener('change', convert);
+  }
+</script>
+
 <style>
+  .uma-converter { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.25rem 0 2rem; }
+  .uma-converter label { display: flex; flex-direction: column; gap: .4rem; font-weight: 600; }
+  .uma-converter input, .uma-converter select { min-width: 0; width: 100%; padding: .8rem; border: 1px solid var(--border); border-radius: .4rem; background: var(--bg); color: var(--text); font: inherit; }
+  .uma-converter button { justify-self: start; }
+  .uma-converter p { grid-column: 1 / -1; margin: 0; }
+  .uma-converter-result { font-size: 1.35rem; font-weight: 700; }
+  @media (max-width: 520px) { .uma-converter { grid-template-columns: 1fr; } }
   /* Bloques propios de esta página (el resto viene de calc-flagship.css) */
   .smc-impact { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
   .smc-impact .cf-cmp__head { color: var(--accent-strong); }

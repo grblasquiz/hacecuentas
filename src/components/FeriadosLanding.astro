@@ -17,8 +17,9 @@ interface Props {
   title?: string;
   description?: string;
   anio?: number;
+  extraFaq?: { q: string; a: string }[];
 }
-const { data, related = [], title: titleOverride, description: descriptionOverride, anio = 2026 } = Astro.props as Props;
+const { data, related = [], title: titleOverride, description: descriptionOverride, anio = 2026, extraFaq = [] } = Astro.props as Props;
 const anioSig = anio + 1;
 const { pais, gentilicio, audience, slug, totalLabel, dataAsOf, marco, notaTipo, fuentes, feriados } = data;
 
@@ -85,6 +86,7 @@ const title = titleOverride ?? `Calendario ${pais} ${anio}: feriados y días fes
 const description = descriptionOverride ?? `Calendario ${pais} ${anio}: los ${total} feriados y días festivos con la fecha exacta, el día de la semana y todos los fines de semana largos y puentes. Mirá cuál es el próximo. Datos oficiales verificados.`;
 
 const faq = [
+  ...extraFaq,
   { q: `¿Cuántos feriados hay en ${pais} en ${anio}?`, a: `En ${anio} hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de arriba.` },
   { q: `¿Cuándo es el próximo feriado en ${pais}?`, a: proximo ? `El próximo feriado en ${pais} es el ${fmtLarga(proximo.fecha)} (${proximo.dia}): ${proximo.nombre}${diasHasta !== null && diasHasta > 1 ? `, faltan ${diasHasta} días` : ''}. Quedan ${quedanEnAnio} feriado${quedanEnAnio === 1 ? '' : 's'} en lo que resta de ${anio}. La tabla marca el próximo automáticamente según la fecha de hoy.` : `Ya pasaron todos los feriados nacionales de ${anio} en ${pais}. Usá el calendario para planificar tus días libres del próximo año.` },
   { q: `¿Cuántos fines de semana largos hay en ${anio}?`, a: `En ${anio} hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo por sí solos.${proxFindeLargo ? ` El próximo es ${proxFindeLargo.dia} ${fmtLarga(proxFindeLargo.fecha)} (${proxFindeLargo.nombre}).` : ''}` },
