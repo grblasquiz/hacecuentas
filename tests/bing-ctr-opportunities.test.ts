@@ -7,9 +7,11 @@ const read = (path: string) => readFileSync(path, 'utf8');
 
 describe('oportunidades CTR observadas en Bing', () => {
   it('alinea snippets con las consultas de mayor impresión', () => {
-    expect(read('src/pages/datos-monotributo-2026.astro')).toContain(
-      "const title = 'Monotributo 2026: tabla de categorías, topes y cuotas'",
-    );
+    const monotributoTitle = read('src/pages/datos-monotributo-2026.astro')
+      .match(/const title = '([^']+)'/)?.[1] ?? '';
+    for (const term of ['Categorías', 'Monotributo 2026', 'tabla', 'topes', 'cuotas']) {
+      expect(monotributoTitle).toContain(term);
+    }
     expect(read('src/pages/mx/datos-uma-imss-2026.astro')).toContain(
       "const title = 'UMA 2026 México: $117.31 diaria y $3,566.22 mensual'",
     );

@@ -1,5 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import { compactSeoDescription, SEO_DESC_MAX_LENGTH } from '../src/lib/seo-description';
+import { seoDescriptionFor, SEO_DESCRIPTION_OVERRIDES } from '../src/lib/seo-description-overrides';
+
+describe('descripciones específicas por página', () => {
+  it('conserva la descripción dinámica de movilidad cuando cambia el período', () => {
+    for (const month of ['septiembre', 'noviembre']) {
+      const current = `Aumento de jubilaciones de ${month}: dato del período publicado y fuente de referencia.`;
+      expect(seoDescriptionFor('/aumento-jubilaciones', current)).toBe(current);
+    }
+  });
+
+  it('no reemplaza el contenido de páginas nuevas con texto de otra página', () => {
+    const own = 'Descripción de una herramienta nueva, con su función y sus límites.';
+    expect(seoDescriptionFor('/herramienta-nueva', own)).toBe(own);
+  });
+
+  it('no reintroduce frases cortadas ni relleno del antiguo crawl', () => {
+    for (const description of Object.values(SEO_DESCRIPTION_OVERRIDES)) {
+      expect(description).not.toMatch(/…|Encontrá herramientas, ejemplos|Incluye explicación, ejemplo resuelto|con datos, herramientas y fuentes para/);
+    }
+  });
+
+  it('mantiene el idioma de las descripciones inglesas y portuguesas', () => {
+    for (const [path, description] of Object.entries(SEO_DESCRIPTION_OVERRIDES)) {
+      if (path.startsWith('/en/') || path.startsWith('/pt/')) {
+        expect(description).not.toMatch(/Encontrá|Consultá|herramientas|fuentes|para resolver/);
+      }
+    }
+  });
+});
 
 describe('compactSeoDescription', () => {
   it('deja intactas las descriptions que ya entran', () => {
