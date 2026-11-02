@@ -61,17 +61,22 @@ jobs:
       - name: Refresh NFL schedule
         run: node scripts/fetch-nfl-data.mjs
 
+      - name: Sync and validate IPC text against the refreshed series
+        run: |
+          node --experimental-strip-types scripts/sync-ipc-derived-content.ts
+          node --experimental-strip-types scripts/check-derived-data-consistency.ts
+
       - name: Commit if changed
         id: commit
         run: |
           # Verifica cambios en datos live (src/data/live/) Y en datasets públicos (public/datasets/)
-          if git diff --quiet src/data/live/ public/datasets/ src/lib/formulas/_bcra-icl.ts; then
+          if git diff --quiet src/data/live/ public/datasets/ src/lib/formulas/_bcra-icl.ts src/content/calcs/inflacion-ipc.json; then
             echo "No changes — skipping commit"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/live/ public/datasets/ src/lib/formulas/_bcra-icl.ts
+          git add src/data/live/ public/datasets/ src/lib/formulas/_bcra-icl.ts src/content/calcs/inflacion-ipc.json
           git commit -m "chore(data-live): refresh datos + datasets BCRA/INDEC/Dolar $(date -u +%Y-%m-%d)"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"

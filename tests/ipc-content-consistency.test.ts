@@ -23,8 +23,10 @@ describe('IPC: contenido coherente con la serie y el intervalo del simulador', (
   it('calcula todas las filas históricas con los mismos factores de la fórmula', () => {
     const result = syncIpcContent(calc, base, live);
     const rows = [...result.explanation.matchAll(/\| Enero 2020 – (.*?) \| (.*?)% \| (.*?) \| (.*?) \|/g)];
-    expect(rows).toHaveLength(7);
-    const ends = ['2020-12', '2021-12', '2022-12', '2023-12', '2024-12', '2025-12', '2026-08'];
+    const latest = Object.keys(series).sort().at(-1)!;
+    const ends = Array.from({ length: Number(latest.slice(0, 4)) - 2020 }, (_, i) => `${2020 + i}-12`);
+    ends.push(latest);
+    expect(rows).toHaveLength(ends.length);
     ends.forEach((end, index) => {
       const f = ipcContentFactor(series, '2020-01', end);
       expect(rows[index][2]).toBe(((f - 1) * 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
