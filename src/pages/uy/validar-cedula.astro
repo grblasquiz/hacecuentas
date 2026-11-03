@@ -16,7 +16,7 @@ const description =
 const faqs = [
   {
     q: '¿Cómo validar una cédula uruguaya?',
-    a: 'Escribí la cédula completa (con o sin puntos y guión) y tocá <strong>Validar</strong>. La herramienta calcula el <strong>dígito verificador</strong> (el número después del guión) con el algoritmo oficial y te dice al instante si la cédula está bien formada. Todo corre en tu navegador; el número no se envía a ningún servidor.',
+    a: 'Elegí <strong>Validar cédula completa</strong>, escribí la cédula con su verificador (con o sin puntos y guión) y tocá <strong>Validar</strong>. La herramienta calcula el <strong>dígito verificador</strong> (el número después del guión) con el algoritmo oficial y te dice al instante si la cédula está bien formada. Todo corre en tu navegador; el número no se envía a ningún servidor.',
   },
   {
     q: '¿Cómo se calcula el dígito verificador de la cédula?',
@@ -44,7 +44,7 @@ const faqs = [
   },
   {
     q: '¿Puedo calcular el dígito si solo tengo los primeros números?',
-    a: 'Sí: escribí los 6 o 7 dígitos sin el verificador y la herramienta te muestra qué dígito corresponde. Útil para completar formularios que piden la cédula con el dígito separado.',
+    a: 'Sí: elegí <strong>Calcular dígito faltante</strong> y escribí los 6 o 7 dígitos sin el verificador. La herramienta te muestra qué dígito corresponde. Útil para completar formularios que piden la cédula con el dígito separado.',
   },
   {
     q: '¿Es gratis?',
@@ -53,9 +53,9 @@ const faqs = [
 ];
 
 const howToSteps = [
-  { name: 'Escribí la cédula', text: 'Ingresá el número con o sin puntos y guión (ej: 1.234.567-2). Si no incluís el dígito, te lo calculamos.' },
+  { name: 'Elegí qué querés hacer', text: 'Validá una cédula completa con o sin puntos y guión (ej: 1.234.567-2 o 12345672), o elegí calcular el dígito faltante con los 6 o 7 números de base.' },
   { name: 'Tocá Validar', text: 'La herramienta verifica el dígito verificador con el algoritmo oficial (módulo 10).' },
-  { name: 'Usala en formularios', text: 'Si el dígito cierra, el número está bien formado y no va a rebotar en sistemas.' },
+  { name: 'Usala en formularios', text: 'Si el dígito coincide, el número cumple el chequeo matemático. Esto no confirma su existencia, titularidad ni aceptación en un trámite.' },
 ];
 
 const related = [
@@ -124,10 +124,16 @@ const schemaHowTo = {
     </div>
 
     <div id="idv" class="idv-card" data-kind="ci-uy">
-      <label class="idv-label" for="idvInput">Escribí la cédula (con o sin dígito verificador)</label>
+      <label class="idv-label" for="idvMode">¿Qué querés hacer?</label>
+      <select id="idvMode" class="idv-mode">
+        <option value="validate">Validar cédula completa</option>
+        <option value="calculate">Calcular dígito faltante</option>
+      </select>
+      <p id="idvHelp" class="idv-note">Ingresá los 7 u 8 dígitos de la cédula completa, incluido el verificador. Podés omitir puntos y guion: 12345672.</p>
+      <label class="idv-label" for="idvInput">Número de cédula</label>
       <div class="idv-row">
         <input id="idvInput" class="idv-input" type="text" autocomplete="off"
-          placeholder="1.234.567-2" maxlength="11" aria-describedby="idvResult" />
+          placeholder="1.234.567-2" maxlength="20" inputmode="numeric" aria-describedby="idvHelp idvResult" />
         <button id="idvValidate" type="button" class="idv-btn">Validar</button>
       </div>
       <div id="idvResult" class="idv-result" role="status" aria-live="polite" hidden></div>
@@ -180,6 +186,8 @@ const schemaHowTo = {
   .idv-answer p { margin: 0; line-height: 1.6; }
   .idv-card { border: 1px solid var(--border, #e2e8f0); border-radius: 16px; padding: 20px; background: var(--surface, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
   #idv .idv-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 8px; color: var(--text-2, #475569); }
+  #idv .idv-mode { width: 100%; padding: 12px; margin-bottom: 4px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); font: inherit; }
+  #idv .idv-note { margin-bottom: 14px; }
   #idv .idv-row { display: flex; gap: 10px; flex-wrap: wrap; }
   #idv .idv-input { flex: 1 1 220px; padding: 13px 14px; font-size: 1.15rem; letter-spacing: 1px; border: 1px solid var(--border, #cbd5e1); border-radius: 10px; background: var(--surface, #fff); color: var(--text, #0f172a); }
   #idv .idv-input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
@@ -211,6 +219,8 @@ const schemaHowTo = {
       root.dataset.ready = '1';
 
       var input = document.getElementById('idvInput');
+      var mode = document.getElementById('idvMode');
+      var help = document.getElementById('idvHelp');
       var validateBtn = document.getElementById('idvValidate');
       var resultBox = document.getElementById('idvResult');
 
@@ -231,10 +241,13 @@ const schemaHowTo = {
         var raw = (input.value || '').trim();
         var d = onlyDigits(raw);
         resultBox.hidden = false;
-        var tieneDv = raw.indexOf('-') !== -1;
-        if (tieneDv ? (d.length < 7 || d.length > 8) : (d.length < 6 || d.length > 7)) {
+        var tieneDv = mode.value === 'validate';
+        var formatoValido = tieneDv ? /^[\d.\s]+(?:-\d)?$/.test(raw) : /^[\d.\s]+$/.test(raw);
+        if (!formatoValido || (tieneDv ? (d.length < 7 || d.length > 8) : (d.length < 6 || d.length > 7))) {
           resultBox.className = 'idv-result bad';
-          resultBox.innerHTML = '✗ La cédula tiene 6 o 7 dígitos más el verificador (ej: 1.234.567-2).';
+          resultBox.innerHTML = tieneDv
+            ? '✗ Ingresá la cédula completa: 7 u 8 dígitos incluido el verificador (ej: 1.234.567-2 o 12345672). Si te falta el dígito, elegí Calcular dígito faltante.'
+            : '✗ Ingresá solo los 6 o 7 dígitos de base, sin el verificador ni guion.';
           return;
         }
         if (tieneDv) {
@@ -258,6 +271,15 @@ const schemaHowTo = {
         }
       }
 
+      mode.addEventListener('change', function () {
+        var calcular = mode.value === 'calculate';
+        validateBtn.textContent = calcular ? 'Calcular dígito' : 'Validar';
+        input.placeholder = calcular ? '1.234.567' : '1.234.567-2';
+        help.textContent = calcular
+          ? 'Ingresá los 6 o 7 dígitos de base, sin el verificador ni guion. Ejemplo: 1234567.'
+          : 'Ingresá los 7 u 8 dígitos de la cédula completa, incluido el verificador. Podés omitir puntos y guion: 12345672.';
+        resultBox.hidden = true;
+      });
       input.addEventListener('keydown', function (e) { if (e.key === 'Enter') showResult(); });
       input.addEventListener('input', function () { if (!resultBox.hidden) showResult(); });
       validateBtn.addEventListener('click', showResult);
