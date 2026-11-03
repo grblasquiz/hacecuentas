@@ -9,6 +9,7 @@
 // leen via `import { env } from "cloudflare:workers"` — módulo virtual
 // que Cloudflare provee en runtime del Worker.
 import { env as cfEnv } from 'cloudflare:workers';
+import { consumeVitalsLimit } from './vitals-rate-limit';
 
 /**
  * Env tipado con los bindings de wrangler.jsonc.
@@ -269,10 +270,26 @@ export async function enforceRateLimit(
   limit: number,
   windowSec: number,
 ): Promise<Response | null> {
-  const kv = getEnv().SESSION;
-  if (!kv) return null; // sin binding (astro dev) → fail-open
+  const env = getEnv();
   const key = `rl:${bucket}:${hashIP(getClientIP(request))}`;
   const now = Date.now();
+  // Vitals already uses D1 for every sample. Keep the same 300/hour protection
+  // without spending the shared 1,000/day KV write allowance. Other APIs unchanged.
+  if (bucket === 'vitals' && env.DB) {
+    try {
+      const retryAfter = await consumeVitalsLimit(env.DB, key, now, limit, windowSec,
+        env.SESSION ? () => env.SESSION!.get(key) : undefined);
+      if (retryAfter === null) return null;
+      return json(
+        { error: 'Demasiadas solicitudes. Esperá un momento e intentá de nuevo.' },
+        { status: 429, headers: { 'retry-after': String(retryAfter) } },
+      );
+    } catch {
+      console.error('vitals D1 rate-limit unavailable; using existing KV fallback');
+    }
+  }
+  const kv = env.SESSION;
+  if (!kv) return null; // sin binding (astro dev) → fail-open
   try {
     let count = 0;
     let resetAt = now + windowSec * 1000;

@@ -19,3 +19,13 @@ Auditoría 2026-05-31: la idea de "sacar `db/` de git porque es derivado" es **i
 - **Frescura/validez** de los datos: se chequea con `npm run validate:sanity` (valores + drift) y `npm run validate:freshness` (antigüedad), no removiéndolos de git.
 - **Churn de `sitemap-state.json` en `git status`**: es esperado y deseado — es estado que persiste entre builds. No es ruido a "limpiar".
 - Si alguna vez ves en logs de CI `[sitemap] ⚠ sin db/sitemap-state.json`, **algo borró el state file**: restauralo de git antes de deployar o el sitemap se infla.
+
+## Vitals: reducir la cuota compartida de KV
+
+Aplicar `db/vitals-rate-limits.sql` a `hacecuentas-forms` antes de desplegar.
+El contador de `/api/vitals` usa D1 con la misma ventana de 300 solicitudes/hora.
+Importa una vez el contador KV activo y conserva el fallback KV si D1 falla.
+No cambia el muestreo, GA4, las métricas guardadas ni otros límites de APIs.
+La limpieza indexada elimina como máximo 32 contadores vencidos al iniciar una
+ventana nueva; no toca sesiones, métricas históricas ni publicaciones de Noma.
+Para revertir basta revertir el código; conservar la tabla y el namespace KV.
