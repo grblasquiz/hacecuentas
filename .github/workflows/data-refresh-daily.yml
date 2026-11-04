@@ -32,8 +32,19 @@ jobs:
       - name: Install Python data dependencies
         run: python3 -m pip install xlrd==2.0.2
 
-      - name: Fetch all sources
-        run: node scripts/data-sources/fetch-all.mjs
+      - name: Fetch sources independently (retain failed snapshots)
+        run: |
+          node scripts/data-sources/fetch-all.mjs --allow-partial --report=/tmp/data-source-refresh.json
+          python3 - <<'PYREPORT'
+          import json, os
+          report = json.load(open('/tmp/data-source-refresh.json'))
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+              out.write(f"## Data sources: {report['status']}\n\n")
+              out.write(f"Refreshed: {report['successCount']}; retained after failure: {report['failedCount']}.\n\n")
+              for row in report['results']:
+                  if row['retainedPrevious']:
+                      out.write(f"- {row['script']}: failed; previous data and timestamp retained.\n")
+          PYREPORT
 
       # Gate de sanidad: compara los valores recién fetcheados (working tree)
       # contra el último commiteado (HEAD) + bounds absolutos + 2ª fuente.

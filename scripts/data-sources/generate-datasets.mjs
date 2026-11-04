@@ -85,14 +85,15 @@ async function fetchDolarHistorico(casa) {
 
 async function fetchBCRAHistory(id, limit = 3000) {
   // BCRA v4 API: limit max ~3000 por request
-  const url = `https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/${id}?limit=${limit}`;
+  const cutoff = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
+  const url = `https://api.bcra.gob.ar/estadisticas/v4.0/Monetarias/${id}?limit=${limit}&hasta=${cutoff}`;
   const res = await fetch(url, { headers: { "User-Agent": "hacecuentas-datasets/1.0" } });
   if (!res.ok) {
     console.warn(`  BCRA id=${id} status=${res.status}`);
     return [];
   }
   const data = await res.json();
-  return data.results?.[0]?.detalle || [];
+  return (data.results?.[0]?.detalle || []).filter((row) => typeof row.fecha === "string" && /^\d{4}-\d{2}-\d{2}$/.test(row.fecha) && row.fecha <= cutoff);
 }
 
 // ────────────────────────────────────────────────────────────────────

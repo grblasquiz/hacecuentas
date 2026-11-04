@@ -25,11 +25,16 @@ const VARS = {
 
 async function fetchVar(id) {
   // BCRA v4 response: results[0].detalle is array of {fecha, valor} sorted desc.
-  const url = `${BASE}/${id}?limit=1`;
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const url = `${BASE}/${id}?limit=1&hasta=${today}`;
   const res = await fetch(url, { headers: { "User-Agent": "hacecuentas-data-refresh/1.0" } });
   if (!res.ok) throw new Error(`BCRA id=${id} status=${res.status}`);
   const data = await res.json();
-  return data.results?.[0]?.detalle?.[0] ?? null;
+  const row = data.results?.[0]?.detalle?.[0];
+  if (!row?.fecha || row.fecha > today || !Number.isFinite(Number(row.valor))) {
+    throw new Error(`BCRA id=${id}: missing, invalid or future observation`);
+  }
+  return row;
 }
 
 async function main() {
@@ -42,6 +47,7 @@ async function main() {
     },
   };
 
+  const failed = [];
   for (const [key, { id, label }] of Object.entries(VARS)) {
     try {
       const v = await fetchVar(id);
@@ -52,10 +58,12 @@ async function main() {
         console.warn(`[bcra] ${key} → no data`);
       }
     } catch (e) {
+      failed.push(key);
       console.error(`[bcra] ${key} → ${e.message}`);
     }
   }
 
+  if (failed.length) throw new Error(`Incomplete BCRA snapshot (${failed.join(", ")}); previous snapshot preserved`);
   await fs.mkdir(path.dirname(OUT), { recursive: true });
   await fs.writeFile(OUT, JSON.stringify(out, null, 2) + "\n");
   console.log(`[bcra] wrote ${OUT}`);
