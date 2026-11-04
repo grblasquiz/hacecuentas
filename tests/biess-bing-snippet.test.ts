@@ -11,8 +11,8 @@ describe('snippet Bing de préstamos quirografarios BIESS', () => {
   });
 
   it('publica la tasa oficial para afiliados y distingue otros perfiles', () => {
-    expect(calc.answerSnippet).toContain('12,84%');
-    expect(calc.intro).toContain('Jubilados y pensionistas tienen una tabla distinta');
-    expect(calc.sources.some((source: { url: string }) => source.url.includes('TARIFARIO_febrero-2026'))).toBe(true);
+    expect(calc.answerSnippet).toContain('11%');
+    expect(calc.fields.find((field: {id: string}) => field.id === 'perfil').options).toHaveLength(2);
+    expect(calc.sources.some((source: { url: string }) => source.url.includes('TARIFARIO_octubre-2026'))).toBe(true);
   });
 });

@@ -11,9 +11,9 @@ describe('páginas prioritarias de Bing', () => {
     expect(tasaBiessPorPlazo(6)).toBe(0.065);
     expect(tasaBiessPorPlazo(9)).toBe(0.075);
     expect(tasaBiessPorPlazo(12)).toBe(0.085);
-    expect(tasaBiessPorPlazo(13)).toBe(0.1284);
-    expect(tasaBiessPorPlazo(36)).toBe(0.1284);
-    expect(tasaBiessPorPlazo(48)).toBe(0.1284);
+    expect(tasaBiessPorPlazo(13)).toBe(0.11);
+    expect(tasaBiessPorPlazo(36)).toBe(0.11);
+    expect(tasaBiessPorPlazo(48)).toBe(0.11);
     expect(tasaBiessPorPlazo(60)).toBe(0.1299);
 
     const result = computeIess({ sueldoMensual: 1_200, montoSolicitado: 50_000, plazoMeses: 60 });
@@ -22,8 +22,8 @@ describe('páginas prioritarias de Bing', () => {
     expect(result.detalle).toContain('12.99%');
 
     const result36 = computeIess({ sueldoMensual: 1_200, montoSolicitado: 10_000, plazoMeses: 36 });
-    expect(result36.cuotaMensual).toContain('336,17');
-    expect(result36.detalle).toContain('12.84%');
+    expect(result36.cuotaMensual).toContain('327,39');
+    expect(result36.detalle).toContain('11.00%');
   });
 
   it('reproduce el caso control del algoritmo de retenciones AEAT 2026', () => {
@@ -80,5 +80,23 @@ describe('páginas prioritarias de Bing', () => {
     expect(TOPES.K).toBe(126_610_838.75);
     expect(CUOTA_SERVICIOS.K).toBe(1_614_446.04);
     expect(CUOTA_BIENES.K).toBe(702_103.24);
+  });
+});
+
+describe('tarifario BIESS octubre 2026 — préstamos nuevos', () => {
+  it.each([[1,.065],[6,.065],[7,.075],[9,.075],[10,.085],[12,.085],[13,.11],[24,.11],[25,.11],[36,.11],[37,.11],[48,.11]])('aplica el tramo oficial a %i meses para ambos perfiles', (months, rate) => {
+    expect(tasaBiessPorPlazo(months, 'afiliado')).toBe(rate);
+    expect(tasaBiessPorPlazo(months, 'jubilado')).toBe(rate);
+  });
+  it('distingue el límite de 49 meses por perfil y respeta una tasa de precalificación', () => {
+    for (const plazoMeses of [49,60]) {
+      const inputs={sueldoMensual:1200,montoSolicitado:10000,plazoMeses};
+      const active=computeIess({...inputs,perfil:'afiliado'});
+      const pensioner=computeIess({...inputs,perfil:'jubilado'});
+      expect(active.detalle).toContain('12.99%');
+      expect(pensioner.detalle).toContain('12.84%');
+      expect(pensioner.cuotaMensual).not.toEqual(active.cuotaMensual);
+      expect(computeIess({...inputs,perfil:'jubilado',tasaAnual:.1}).detalle).toContain('10.00%');
+    }
   });
 });
