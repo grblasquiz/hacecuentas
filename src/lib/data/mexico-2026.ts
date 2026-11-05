@@ -419,8 +419,8 @@ export function tasaCeavPatron2026(sbcDiario: number): number {
   return imss.patron.ceavTabla2026[imss.patron.ceavTabla2026.length - 1].tasa;
 }
 
-/** Salario diario integrado mínimo legal (factor de integración) según años de antigüedad cumplidos. */
-export function factorIntegracion(aniosAntiguedad: number): number {
+/** Vacaciones mínimas LFT, art. 76, por años de servicio cumplidos. */
+export function diasVacacionesLFT(aniosAntiguedad: number): number {
   const { lft } = MEXICO_2026;
   const anios = Math.max(1, Math.floor(Number.isFinite(aniosAntiguedad) ? aniosAntiguedad : 1));
   let diasVacaciones: number;
@@ -430,7 +430,13 @@ export function factorIntegracion(aniosAntiguedad: number): number {
     // 6-10: 22, 11-15: 24, 16-20: 26…
     diasVacaciones = 20 + lft.vacacionesIncrementoQuinquenal * Math.ceil((anios - 5) / 5);
   }
-  const factor = (365 + lft.aguinaldoDiasMinimo + diasVacaciones * lft.primaVacacional) / 365;
+  return diasVacaciones;
+}
+
+/** Salario diario integrado mínimo legal (factor de integración) según años de antigüedad cumplidos. */
+export function factorIntegracion(aniosAntiguedad: number): number {
+  const { lft } = MEXICO_2026;
+  const factor = (365 + lft.aguinaldoDiasMinimo + diasVacacionesLFT(aniosAntiguedad) * lft.primaVacacional) / 365;
   return Math.round(factor * 10000) / 10000;
 }
 

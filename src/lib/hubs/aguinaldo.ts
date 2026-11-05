@@ -12,7 +12,7 @@ export const hub: HubData = {
   h1: '¿Cuánto cobro de aguinaldo?',
   lede:
     'El SAC es la mitad de tu mejor remuneración del semestre, proporcional a los meses que trabajaste. Partimos del caso más común —empleado en relación de dependencia— y lo ajustás con tus datos.',
-  stamps: ['Actualizado 27-07-2026', 'LCT art. 121-123 · Ley 27.073', '6 calculadoras adentro'],
+  stamps: ['Revisado 05-11-2026', 'LCT art. 121-123 · Ley 27.073', '6 calculadoras adentro'],
 
   resultLabel: 'Aguinaldo estimado (neto)',
 
@@ -35,12 +35,12 @@ export const hub: HubData = {
           'Los conceptos NO remunerativos (viáticos sin comprobante, sumas fijas de acta) no engrosan la base del SAC',
           'Si cobrás quincenal, la base sigue siendo el mejor MES devengado, no el promedio de quincenas',
         ],
-        plazo: 'la 1ª cuota vence el 30 de junio y la 2ª el 18 de diciembre, con 4 días hábiles de gracia.',
+        plazo: 'para el régimen general LCT, la 1ª cuota vence el 30 de junio y la 2ª el 18 de diciembre (art. 122).' ,
       },
       {
         id: 'casas-particulares',
         label: 'Soy empleada de casas particulares',
-        hint: 'Ley 26.844 art. 39',
+        hint: 'Ley 26.844 arts. 26 a 28',
         answer: 'Rige el mismo SAC: medio mejor sueldo del semestre, aun con jornada parcial.',
         yes: [
           'Misma fórmula que la LCT: medio mejor sueldo del semestre, proporcional a los meses',
@@ -136,7 +136,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuándo se cobra el aguinaldo?',
-      a: 'La ley 27.073 fijó dos fechas: la primera cuota hasta el 30 de junio y la segunda hasta el 18 de diciembre. El empleador tiene además 4 días hábiles de gracia para depositarlo.',
+      a: 'Para el régimen general LCT, la Ley 27.073 fija el 30 de junio y el 18 de diciembre. La fecha no se extiende aquí automáticamente hasta el 24/12. Casas particulares y jubilaciones tienen reglas propias; consultá tu caso.',
     },
     {
       q: '¿Qué descuentos tiene el aguinaldo?',
@@ -148,7 +148,7 @@ export const hub: HubData = {
     },
     {
       q: '¿La empleada de casas particulares cobra aguinaldo?',
-      a: 'Sí, el art. 39 de la ley 26.844 le da el mismo derecho que la LCT: medio mejor sueldo del semestre. Corresponde también con jornada parcial, por hora o por día, calculado en proporción a lo devengado, y lo paga cada empleador por separado.',
+      a: 'Sí, los artículos 26 a 28 de la ley 26.844 le da el mismo derecho que la LCT: medio mejor sueldo del semestre. Corresponde también con jornada parcial, por hora o por día, calculado en proporción a lo devengado, y lo paga cada empleador por separado.',
     },
     {
       q: 'Cobro quincenal, ¿cómo se calcula mi aguinaldo?',
@@ -177,12 +177,12 @@ export const hub: HubData = {
     },
     {
       name: 'Ley 27.073 — fechas de pago del SAC: 30 de junio y 18 de diciembre',
-      url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/240000-244999/240560/norma.htm',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/ley-27073-241014/texto',
       publisher: 'InfoLeg',
       date: '2014',
     },
     {
-      name: 'Ley 26.844, art. 39 — Régimen Especial de Personal de Casas Particulares',
+      name: 'Ley 26.844, arts. 26 a 28 — Régimen Especial de Personal de Casas Particulares',
       url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/210000-214999/210489/norma.htm',
       publisher: 'InfoLeg',
     },
@@ -207,7 +207,7 @@ export const hub: HubData = {
     '/calculadora-aguinaldo-jubilados-anses-diciembre-2026',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-11-05',
   audience: 'AR',
 };
 
@@ -229,7 +229,7 @@ export const CASE_MATH: Record<
     aportes: 0,
     bono: false,
     baseLabel: 'Mejor sueldo mensual del semestre',
-    norma: 'Ley 26.844 art. 39',
+    norma: 'Ley 26.844 arts. 26 a 28',
     notaSinAportes: 'sin retención del 17%: los aportes son de importe fijo',
   },
   'medio-semestre': { aportes: 0.17, bono: false, baseLabel: 'Mejor remuneración del semestre', norma: 'Art. 123' },

@@ -8,9 +8,11 @@
  * El factor multiplica el salario diario para obtener el Salario Base de Cotización (SBC)
  * con el que el patrón da de alta al trabajador en el IMSS. Constantes desde mexico-2026.ts.
  */
-import { MEXICO_2026, fmtMXN } from '../data/mexico-2026.ts';
+import { MEXICO_2026, fmtMXN, diasVacacionesLFT } from '../data/mexico-2026.ts';
 
 export interface Inputs {
+  modoVacaciones?: 'manual' | 'antiguedad';
+  aniosServicio?: number | string;
   aguinaldoDias?: number;            // días de aguinaldo al año (mínimo legal 15, LFT Art. 87)
   vacacionesDias?: number;           // días de vacaciones (LFT Art. 76; 1er año = 12)
   primaVacacionalPct?: number;       // prima vacacional % (mínimo legal 25, LFT Art. 80)
@@ -27,10 +29,14 @@ function num(v: unknown, d: number): number {
 
 export function compute(i: Inputs): Outputs {
   const { lft, uma, imss } = MEXICO_2026;
+  const porAntiguedad = i.modoVacaciones === 'antiguedad';
+  if (i.modoVacaciones && !['manual', 'antiguedad'].includes(i.modoVacaciones)) throw new Error('Elige cómo calcular las vacaciones');
+  const anios = i.aniosServicio === undefined || i.aniosServicio === null || i.aniosServicio === '' ? 1 : Number(i.aniosServicio);
+  if (porAntiguedad && (!Number.isInteger(anios) || anios < 1)) throw new Error('Ingresa años de servicio completos: 1 o más');
 
   // Mínimos de ley como piso (no se puede integrar por debajo de la LFT).
   const aguinaldoDias = Math.max(lft.aguinaldoDiasMinimo, num(i.aguinaldoDias, lft.aguinaldoDiasMinimo));
-  const vacacionesDias = Math.max(lft.vacacionesPorAnio[0], num(i.vacacionesDias, lft.vacacionesPorAnio[0]));
+  const vacacionesDias = porAntiguedad ? diasVacacionesLFT(anios) : Math.max(lft.vacacionesPorAnio[0], num(i.vacacionesDias, lft.vacacionesPorAnio[0]));
   const primaPct = Math.max(lft.primaVacacional * 100, num(i.primaVacacionalPct, lft.primaVacacional * 100));
   const prima = primaPct / 100;
 
@@ -62,7 +68,7 @@ export function compute(i: Inputs): Outputs {
     text: tieneSalario
       ? (topado
           ? `Tu factor de integración es **${factor.toFixed(4)}**: tu SDI sería **${fmtMXN(sbcSinTope)}**/día, pero supera el tope legal de **25 UMA** (${fmtMXN(topeSbcDiario)}/día), así que el IMSS te registra con un SBC de **${fmtMXN(sbc)}**/día (${fmtMXN(sbcMensual)}/mes).`
-          : `Con ${aguinaldoDias} días de aguinaldo, ${vacacionesDias} días de vacaciones y ${primaPct}% de prima, tu factor es **${factor.toFixed(4)}**. Tu salario diario de ${fmtMXN(salarioDiario)} integra a un **SBC de ${fmtMXN(sbc)}**/día (${fmtMXN(sbcMensual)}/mes): la base de tus cuotas IMSS, INFONAVIT e indemnizaciones.`)
+          : `Con ${aguinaldoDias} días de aguinaldo, ${vacacionesDias} días de vacaciones y ${primaPct}% de prima, tu factor es **${factor.toFixed(4)}**. Tu salario diario de ${fmtMXN(salarioDiario)} integra a un **SBC de ${fmtMXN(sbc)}**/día (${fmtMXN(sbcMensual)}/mes): una estimación con estas prestaciones fijas para cuotas IMSS e INFONAVIT.`)
       : `${esMinimoLey ? 'Con las prestaciones mínimas de ley (15 días de aguinaldo, 12 de vacaciones y 25% de prima), tu' : 'Tu'} factor de integración es **${factor.toFixed(4)}**: tu salario integrado es **${pctIntegracion}%** mayor que tu salario diario. Multiplicá tu salario diario por ${factor.toFixed(4)} para obtener tu SBC.`,
     tone: topado ? 'warn' : 'good',
     icon: '📊',
@@ -94,11 +100,12 @@ export function compute(i: Inputs): Outputs {
       };
 
   return {
+    vacacionesAplicadas: `${vacacionesDias} días${porAntiguedad ? ` · ${anios} ${anios === 1 ? 'año' : 'años'} de servicio` : ' · captura manual'}`,
     factor: factor.toFixed(4),
     integracionPct: `+${pctIntegracion}%`,
     sbc: tieneSalario ? (topado ? `${fmtMXN(sbc)} por día (topado a 25 UMA)` : `${fmtMXN(sbc)} por día`) : '—',
     sbcMensual: tieneSalario ? fmtMXN(sbcMensual) : '—',
-    detalle: `Factor = 1 + ${aguinaldoDias}/365 + (${vacacionesDias} × ${primaPct}%)/365 = 1 + ${compAguinaldo.toFixed(4)} + ${compPrimaVac.toFixed(4)} = **${factor.toFixed(4)}**.${tieneSalario ? ` SBC = ${fmtMXN(salarioDiario)} × ${factor.toFixed(4)} = ${fmtMXN(sbcSinTope)}/día${topado ? `, topado al máximo legal de ${fmtMXN(topeSbcDiario)}/día (25 UMA).` : '.'}` : ''}`,
+    detalle: `${porAntiguedad ? `LFT: ${anios} ${anios === 1 ? 'año' : 'años'} de servicio → ${vacacionesDias} días de vacaciones. ` : ''}Factor = 1 + ${aguinaldoDias}/365 + (${vacacionesDias} × ${primaPct}%)/365 = 1 + ${compAguinaldo.toFixed(4)} + ${compPrimaVac.toFixed(4)} = **${factor.toFixed(4)}**.${tieneSalario ? ` SBC = ${fmtMXN(salarioDiario)} × ${factor.toFixed(4)} = ${fmtMXN(sbcSinTope)}/día${topado ? `, topado al máximo legal de ${fmtMXN(topeSbcDiario)}/día (25 UMA).` : '.'}` : ''}`,
     _insight,
     _chart,
   };
