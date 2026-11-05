@@ -171,7 +171,15 @@ export async function runCompute(
 
   let result: any;
   try {
-    result = fn(inputs);
+    let prepared: Record<string, any> = inputs;
+    if (entry.f === 'trm-dolar-hoy-pesos-colombianos') {
+      const { prepareTrmInputs } = await import('./trm-live');
+      prepared = await prepareTrmInputs(inputs, async () => {
+        const { readFxLive } = await import('./fx-live');
+        return readFxLive('colombia');
+      });
+    }
+    result = fn(prepared);
   } catch (err: any) {
     // Log a Cloudflare Workers Observability (logs nativos del Worker) para
     // tener visibilidad de fórmulas que rompen en prod sin pagar Sentry.

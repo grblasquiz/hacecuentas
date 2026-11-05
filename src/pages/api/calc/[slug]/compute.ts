@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { runCompute, buildMeta } from '../../../../lib/calc-compute';
+import { TRM_COMPUTE_CACHE } from '../../../../lib/trm-live';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LIVE COMPUTE API — GET/POST /api/calc/{slug}/compute
@@ -56,7 +57,7 @@ async function respond(slug: string, provided: Record<string, unknown>, lang?: s
     },
     200,
     // Determinístico por inputs → cache largo en edge (mismo URL = misma respuesta).
-    { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800' },
+    { 'Cache-Control': r.formulaId === 'trm-dolar-hoy-pesos-colombianos' ? TRM_COMPUTE_CACHE : 'public, max-age=86400, stale-while-revalidate=604800' },
   );
 }
 

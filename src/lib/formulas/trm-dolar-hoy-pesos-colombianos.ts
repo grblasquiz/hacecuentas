@@ -10,6 +10,9 @@ export interface Inputs {
   monto: number;
   direccion: 'usd_a_cop' | 'cop_a_usd';
   trm?: number;
+  __trmValue?: number;
+  __trmDate?: string;
+  __trmLookup?: string;
 }
 export interface Outputs { [k: string]: any; _insight?: any; }
 
@@ -21,12 +24,13 @@ export function compute(i: Inputs): Outputs {
   const monto = Number(i.monto);
   if (!Number.isFinite(monto) || monto <= 0) throw new Error('Ingresa el monto a convertir');
 
-  const trmLive = Number((coLive as any)?.trm?.valor) || 0;
+  const trmLive = Number(i.__trmValue) || Number((coLive as any)?.trm?.valor) || 0;
   const trmUsuario = Number(i.trm) || 0;
   const trm = trmUsuario > 0 ? trmUsuario : trmLive;
   if (trm <= 0) throw new Error('Ingresa la TRM del día (COP por USD)');
 
-  const vigencia = trmUsuario > 0 ? null : ((coLive as any)?.trm?.vigenciaDesde?.slice(0, 10) ?? null);
+  const vigencia = trmUsuario > 0 ? null : (i.__trmDate ?? (coLive as any)?.trm?.vigenciaDesde?.slice(0, 10) ?? null);
+  const respaldo = trmUsuario <= 0 && i.__trmLookup === 'snapshot' ? ' · dato guardado; actualización en vivo no disponible' : '';
   const esOficial = trmUsuario === 0 || Math.abs(trmUsuario - trmLive) < 0.005;
 
   const aCop = i.direccion !== 'cop_a_usd';
@@ -45,7 +49,7 @@ export function compute(i: Inputs): Outputs {
 
   return {
     resultado: aCop ? fmtCOP(resultado) : fmtUSD(resultado),
-    trm_usada: fmtTRM(trm) + ' por USD' + (vigencia ? ` (vigente ${vigencia})` : ''),
+    trm_usada: fmtTRM(trm) + ' por USD' + (vigencia ? ` (vigente ${vigencia})` : '') + respaldo,
     equivalencia_inversa: aCop ? `${fmtCOP(1000000)} ≈ ${fmtUSD(1000000 / trm)}` : `${fmtUSD(100)} ≈ ${fmtCOP(100 * trm)}`,
     detalle,
     _insight,

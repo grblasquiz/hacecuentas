@@ -5929,6 +5929,10 @@ const formatFreshnessDate = (iso: string): string => {
           }
           _formulaLoaded = true;
           (inputs as any).__lang = CALC_LANG;
+          if (formulaId === 'trm-dolar-hoy-pesos-colombianos') {
+            const { prepareTrmInputs } = await import('../lib/trm-live');
+            Object.assign(inputs, await prepareTrmInputs(inputs));
+          }
           // #20 Quitar skeleton justo antes de pintar el resultado real
           hideSkeleton();
           const output = formula(inputs);
