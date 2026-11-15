@@ -300,7 +300,7 @@ const schema = {
           const data = await response.json();
           fullIndex = (data.calculators || [])
             .filter((item) => item.locale === 'es' && (item.audience === 'AR' || item.audience === 'global'))
-            .map((item) => ({ href: new URL(item.url).pathname, label: item.h1 || item.title, group: item.category || 'Calculadoras' }));
+            .map((item) => ({ href: new URL(item.url).pathname, label: item.h1 || item.title, keywords: item.title || '', group: item.category || 'Calculadoras' }));
         } catch { fullIndex = []; }
         status.textContent = '';
         return fullIndex;
@@ -322,7 +322,7 @@ const schema = {
         const terms = query.split(/\s+/);
         const items = [...new Map([...searchItems, ...remoteItems].map((item) => [item.href, item])).values()];
         const matches = items.filter((item) => {
-          const text = normalize(item.label + ' ' + item.group);
+          const text = normalize([item.label, item.group, item.keywords].filter(Boolean).join(' '));
           return terms.every((term) => text.includes(term));
         }).slice(0, 6);
         results.innerHTML = matches.length

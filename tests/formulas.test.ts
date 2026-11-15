@@ -8,7 +8,7 @@
  * Correr: npm test
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // --- Salud ---
 import { imc } from '../src/lib/formulas/imc';
@@ -332,9 +332,14 @@ describe('proximoCumpleanos (bug UTC)', () => {
 
 describe('embarazo (Naegele)', () => {
   it('FUM 15 enero 2026: FPP debe caer en octubre 2026 (+280 días)', () => {
-    const r: any = embarazo({ fum: '2026-01-15' });
-    // fpp en formato ISO 2026-10-XX (octubre)
-    expect(r.fpp).toMatch(/^2026-10-\d{2}$/);
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-01T12:00:00Z'));
+    try {
+      const r: any = embarazo({ fum: '2026-01-15' });
+      expect(r.fpp).toMatch(/^2026-10-\d{2}$/);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

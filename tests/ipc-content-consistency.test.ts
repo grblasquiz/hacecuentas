@@ -60,17 +60,18 @@ describe('IPC: contenido coherente con la serie y el intervalo del simulador', (
 
   it('un mes nuevo y el cambio de año actualizan tabla, preguntas y respuestas', () => {
     // Tasas exclusivamente sintéticas para comprobar sincronización, no datos publicados.
-    const synthetic = { ...live, last_12_months: [...live.last_12_months,
+    const historical = { ...base, serie: base.serie.filter(row => row.mes <= '2026-08') };
+    const synthetic = { ...live, last_12_months: [...live.last_12_months.filter(row => row.fecha.slice(0, 7) <= '2026-08'),
       { fecha: '2026-09-30', valor: 1 }, { fecha: '2026-10-31', valor: 1 },
       { fecha: '2026-11-30', valor: 1 }, { fecha: '2026-12-31', valor: 1 }, { fecha: '2027-01-31', valor: 2 }] };
-    const result = syncIpcContent(calc, base, synthetic);
+    const result = syncIpcContent(calc, historical, synthetic);
     expect(result.title).toBe('IPC enero 2027: calculadora de inflación INDEC');
     expect(result.referenceTables.find((t: any) => t.title.startsWith('IPC mes a mes'))?.rows).toEqual([['Enero', '2,0%', '2,0%']]);
     expect(answer(result, 'Cuál fue el IPC mensual de 2027')).toContain('enero +2,0%');
     expect(answer(result, 'Cuándo publica')).toContain('enero 2027');
     expect(result.explanation).toContain('Enero 2027');
-    expect(syncIpcContent(result, base, synthetic)).toEqual(result);
-    const september = syncIpcContent(calc, base, { ...live, last_12_months: synthetic.last_12_months.slice(0, -4) });
+    expect(syncIpcContent(result, historical, synthetic)).toEqual(result);
+    const september = syncIpcContent(calc, historical, { ...live, last_12_months: synthetic.last_12_months.filter(row => row.fecha.slice(0, 7) <= '2026-09') });
     expect(september.title).toContain('septiembre 2026');
     expect(answer(september, 'Cómo comparo $100')).toContain('septiembre 2026');
   });
