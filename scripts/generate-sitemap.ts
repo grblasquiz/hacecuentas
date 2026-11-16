@@ -1626,20 +1626,15 @@ if (iibbActividades.length > 0 && provincias.length > 0) {
     if (!dates.length) throw new Error('IIBB: no hay fecha verificable de contenido');
     return clampToToday(dates[dates.length - 1]);
   };
-  const sharedIibbSources = [
-    'src/content/argentina/provincias.json',
-    'src/content/iibb/actividades.json',
-  ];
+  // Sólo fuentes que se muestran: el hub usa su componente sin props de datos;
+  // las guías no renderizan los JSON legados de actividades/ingresos-brutos.
   const iibbIndexLastmod = latestIibbContentMod([
-    ...sharedIibbSources,
     'src/pages/iibb/index.astro',
     'src/components/generated/IibbHubExperience.astro',
-    'src/components/hub/HubCitableStats.astro',
   ]);
   const iibbProvinceLastmod = latestIibbContentMod([
-    ...sharedIibbSources,
+    'src/content/argentina/provincias.json',
     'src/pages/iibb/[provincia]/index.astro',
-    'src/content/argentina/ingresos-brutos.json',
     'src/lib/seo/iibb-sources.json',
   ]);
   // index
