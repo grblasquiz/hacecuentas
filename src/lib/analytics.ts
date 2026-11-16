@@ -78,6 +78,9 @@ export const HC_EVENTS = [
   'hc_push_unsubscribe',
   // Datos abiertos: click en una descarga first-party CSV/JSON bajo /datos/.
   'hc_dataset_download',
+  // Public resource sharing: open intent is not a sent message or incoming visit.
+  'hc_resource_share_open',
+  'hc_resource_copy',
   'hc_api_playground_run',
 ] as const;
 

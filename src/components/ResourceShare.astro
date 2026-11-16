@@ -1,0 +1,78 @@
+---
+import { SHARE_RESOURCES, resourceShare, type ResourceKey } from '../lib/resource-share';
+interface Props { resource: ResourceKey; }
+const { resource } = Astro.props;
+const info = SHARE_RESOURCES[resource];
+const copy = resourceShare(resource, 'copy');
+const whatsapp = resourceShare(resource, 'whatsapp');
+---
+<aside class="resource-share" data-resource-share data-source={info.path} aria-label={info.heading}>
+  <h2>{info.heading}</h2>
+  <p>{info.note}</p>
+  <div class="resource-share-actions">
+    <a href={whatsapp.whatsapp} target="_blank" rel="noopener noreferrer" data-resource-whatsapp>Compartir por WhatsApp <span class="sr-only">(abre una ventana nueva)</span></a>
+    <button type="button" data-resource-copy hidden>Copiar resumen y enlace</button>
+  </div>
+  <p role="status" aria-live="polite" data-resource-status></p>
+  <details data-resource-fallback>
+    <summary>Ver el texto para compartir</summary>
+    <textarea readonly aria-label="Resumen público y enlace para compartir" rows="6">{copy.text}</textarea>
+  </details>
+</aside>
+<script>
+  import { copyResourceText } from '../lib/resource-share';
+  function initResourceShares() {
+    document.querySelectorAll<HTMLElement>('[data-resource-share]').forEach((card) => {
+      if (card.dataset.ready) return;
+      card.dataset.ready = '1';
+      const button = card.querySelector<HTMLButtonElement>('[data-resource-copy]')!;
+      const text = card.querySelector<HTMLTextAreaElement>('textarea')!;
+      const status = card.querySelector<HTMLElement>('[data-resource-status]')!;
+      const fallback = card.querySelector<HTMLDetailsElement>('[data-resource-fallback]')!;
+      function track(event: string, interaction: string) {
+        try {
+          const prefs = JSON.parse(localStorage.getItem('hc-consent-v2') || 'null');
+          if (prefs?.analytics === false) return;
+        } catch { /* Existing gtag consent defaults still apply. */ }
+        const w = window as Window & { hcTrack?: (event: string, params: Record<string, string>) => void };
+        w.hcTrack?.(event, { source_page: card.dataset.source!, interaction_type: interaction });
+      }
+      button.hidden = false;
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        const copied = await copyResourceText(text.value, navigator.clipboard);
+        button.disabled = false;
+        if (copied) {
+          status.textContent = 'Resumen y enlace copiados.';
+          track('hc_resource_copy', 'copy_success');
+        } else {
+          fallback.open = true;
+          text.focus(); text.select();
+          status.textContent = 'No se pudo copiar automáticamente. Selecciona y copia el texto de abajo.';
+        }
+      });
+      card.querySelector('[data-resource-whatsapp]')!.addEventListener('click', () => {
+        track('hc_resource_share_open', 'whatsapp_open');
+      });
+    });
+  }
+  initResourceShares();
+  document.addEventListener('astro:page-load', initResourceShares);
+</script>
+<style>
+  .resource-share { box-sizing:border-box; width:100%; max-width:1100px; margin:24px auto; padding:20px; border:1px solid #bbd7ef; border-radius:16px; background:#f0f7ff; color:#172b46; }
+  .resource-share h2 { margin:0 0 8px; font-size:1.15rem; line-height:1.4; color:#172b46; }
+  .resource-share p { margin:0 0 12px; line-height:1.5; color:#334155; }
+  .resource-share-actions { display:flex; flex-wrap:wrap; gap:10px; }
+  .resource-share-actions a,.resource-share-actions button { display:inline-flex; justify-content:center; align-items:center; min-height:44px; padding:10px 14px; box-sizing:border-box; border:1px solid #185fa5; border-radius:10px; background:#fff; color:#174c80; font:inherit; font-weight:700; text-decoration:none; cursor:pointer; }
+  .resource-share-actions a { background:#174c80; color:#fff; }
+  .resource-share :focus-visible { outline:3px solid #e99716; outline-offset:3px; }
+  .resource-share [hidden] { display:none; }
+  .resource-share [role=status]:empty { display:none; }
+  .resource-share [role=status]:not(:empty) { margin-top:12px; }
+  .resource-share details { margin-top:12px; }
+  .resource-share summary { cursor:pointer; text-decoration:underline; }
+  .resource-share textarea { box-sizing:border-box; width:100%; margin-top:12px; padding:10px; resize:vertical; font:inherit; line-height:1.5; color:#172b46; background:#fff; border:1px solid #6b829a; border-radius:8px; }
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+  @media(max-width:600px) { .resource-share-actions>* { width:100%; } .resource-share { padding:16px; } }
+</style>
