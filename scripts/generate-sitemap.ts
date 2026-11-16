@@ -1464,7 +1464,11 @@ const decisionHubUrls: Url[] = (() => {
     if (!slug || !slug.includes('/')) continue;
     const reviewed = src.match(/^\s*lastReviewed:\s*'([^']+)'/m)?.[1];
     const siloHref = src.match(/^\s*siloHref:\s*'([^']+)'/m)?.[1];
-    const lastmod = clampToToday(reviewed || buildDate);
+    // UI/UR cambian por datos oficiales sin simular una revisión editorial.
+    const dataDate = slug === 'uy/finanzas/unidades-y-valores'
+      ? pickIfValid(JSON.parse(readFileSync(join(ROOT, 'db/uruguay-units.json'), 'utf8')).ui?.date)
+      : null;
+    const lastmod = clampToToday([reviewed, dataDate].filter(Boolean).sort().at(-1) || buildDate);
     urls.push({ loc: `${site}/${slug}`, priority: '0.9', changefreq: 'weekly', lastmod });
     if (siloHref) {
       const prev = silos.get(siloHref);

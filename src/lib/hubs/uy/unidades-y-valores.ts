@@ -56,7 +56,7 @@ export const hub: HubData = {
           `Unidad Indexada: se ajusta a diario por el índice de precios al consumo. Valor fechado ${unitUyu(UI.valor)}`,
           `Unidad Reajustable: se ajusta una vez por mes por el Índice Medio de Salarios. Valor fechado ${uyu(UR.valor)}`,
           `BPC: la fija el Poder Ejecutivo por decreto cada enero y queda quieta todo el año. Valor fechado ${uyu(BPC)}`,
-          `Dólar: referencia interbancaria del BCU (${uyu(USD.interbancario)}) y pizarra del banco, que es lo que efectivamente pagás`,
+          `Dólar: snapshot histórico del ${USD.fecha} (${unitUyu(USD.interbancario)}), editable; verificá la cotización actual en BCU o en tu banco`,
         ],
         warn: [
           DISCLAIMER_FINANCE,
@@ -197,7 +197,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué dólar tengo que usar: el interbancario o el de la pizarra?',
-      a: `Depende de para qué. El interbancario del BCU (${uyu(USD.interbancario)}) es la referencia oficial y es el que se usa para contabilidad, contratos y comparaciones. La pizarra del banco es lo que efectivamente vas a pagar o cobrar: la compra (${uyu(USD.brouCompra)}) es a lo que el banco te compra tus dólares y la venta (${uyu(USD.brouVenta)}) a lo que te los vende. La diferencia entre ambas es el spread, y sale de tu bolsillo.`,
+      a: `El valor predeterminado de dólares es una referencia histórica del ${USD.fecha} (${unitUyu(USD.interbancario)}), no una cotización actual ni una oferta del banco. Verificá el valor aplicable a tu operación en BCU o en tu entidad e ingresalo en el campo editable. Compra es lo que te paga el banco y venta lo que te cobra; la calculadora no ofrece pizarras bancarias en vivo.`,
     },
     {
       q: '¿Cómo se actualiza un monto por inflación?',
