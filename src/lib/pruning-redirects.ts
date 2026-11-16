@@ -5115,6 +5115,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/feriados-argentina-2026': '/fechas/feriados',
   '/fertilizer-dose': '/en/garden/planting-and-spacing',
   '/fertilizer-quantity-per-m2': '/en/garden/watering-and-feeding',
+  '/finanzas': '/finanzas-personales',
   '/food-cost-per-serving': '/en/cooking/baking-ratios-and-conversions',
   '/fraccion-impropia-numero-mixto': '/matematica/fracciones',
   '/frecuencia-periodo': '/salud/frecuencia-cardiaca',

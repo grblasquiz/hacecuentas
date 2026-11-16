@@ -1619,12 +1619,35 @@ try {
 } catch {}
 
 if (iibbActividades.length > 0 && provincias.length > 0) {
+  // Fechas del contenido real, nunca del build: el cron no revisa estas páginas.
+  const latestIibbContentMod = (paths: string[]) => {
+    const dates = paths.map(path => getLastMod(join(ROOT, path), ''))
+      .filter(date => DATE_RX.test(date)).sort();
+    if (!dates.length) throw new Error('IIBB: no hay fecha verificable de contenido');
+    return clampToToday(dates[dates.length - 1]);
+  };
+  const sharedIibbSources = [
+    'src/content/argentina/provincias.json',
+    'src/content/iibb/actividades.json',
+  ];
+  const iibbIndexLastmod = latestIibbContentMod([
+    ...sharedIibbSources,
+    'src/pages/iibb/index.astro',
+    'src/components/generated/IibbHubExperience.astro',
+    'src/components/hub/HubCitableStats.astro',
+  ]);
+  const iibbProvinceLastmod = latestIibbContentMod([
+    ...sharedIibbSources,
+    'src/pages/iibb/[provincia]/index.astro',
+    'src/content/argentina/ingresos-brutos.json',
+    'src/lib/seo/iibb-sources.json',
+  ]);
   // index
   iibbUrls.push({
     loc: `${site}/iibb`,
     priority: '0.85',
     changefreq: 'monthly',
-    lastmod: buildDate,
+    lastmod: iibbIndexLastmod,
   });
   // hub por provincia
   for (const p of provincias) {
@@ -1632,7 +1655,7 @@ if (iibbActividades.length > 0 && provincias.length > 0) {
       loc: `${site}/iibb/${p.slug}`,
       priority: '0.75',
       changefreq: 'monthly',
-      lastmod: buildDate,
+      lastmod: iibbProvinceLastmod,
     });
   }
   sitemaps.push({ name: 'sitemap-iibb.xml', urls: iibbUrls });
