@@ -19,21 +19,23 @@ export const USD = URUGUAY_2026.usd;
 
 const uyu = (n: number) => '$U ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round(n * 100) / 100);
 
+const unitUyu = (n: number) => '$U ' + n.toLocaleString('es-UY', {minimumFractionDigits:4,maximumFractionDigits:4});
+
 export const hub: HubData = {
   slug: 'uy/finanzas/unidades-y-valores',
-  title: 'UI, UR, BPC y dólar en Uruguay: cuánto valen hoy en pesos',
+  title: 'UI a pesos uruguayos, UR y BPC: valores y fechas',
   description:
-    'Convertí Unidad Indexada, Unidad Reajustable, BPC y dólares a pesos uruguayos con el valor vigente, actualizá un monto por inflación y calculá el reajuste anual del alquiler tomando el menor entre IPC y UR.',
+    'Convertí Unidad Indexada, Unidad Reajustable, BPC y dólares a pesos uruguayos con el valor fechado, actualizá un monto por inflación y calculá el reajuste anual del alquiler tomando el menor entre IPC y UR.',
   silo: 'Finanzas',
   siloHref: '/uy/finanzas',
   locale: 'uy',
 
   eyebrow: 'Uruguay · INE · BCU · DGI',
-  h1: '¿Cuánto vale hoy en pesos? UI, UR, BPC, dólar y tu alquiler',
+  h1: 'UI, UR, BPC y dólar: convertí con valores fechados',
   lede:
     'Uruguay escribe medio contrato en unidades que no son pesos. La UI sigue los precios y se mueve todos los días; la UR sigue los salarios y cambia una vez por mes; la BPC queda fija todo el año y ordena impuestos y prestaciones. Entender cuál te aplica y cuánto vale hoy es la diferencia entre firmar bien y firmar de más.',
   stamps: [
-    `1 UI = ${uyu(UI.valor)}`,
+    `1 UI = ${unitUyu(UI.valor)}`,
     `1 UR = ${uyu(UR.valor)}`,
     `1 BPC = ${uyu(BPC)} · 6 calculadoras adentro`,
   ],
@@ -48,12 +50,12 @@ export const hub: HubData = {
       {
         id: 'a-pesos',
         label: 'Tengo un monto en UI, UR, BPC o dólares y quiero pesos',
-        hint: 'Conversión directa al valor vigente',
-        answer: 'Se multiplica la cantidad por el valor vigente de la unidad que elijas.',
+        hint: 'Conversión directa al valor fechado',
+        answer: 'Se multiplica la cantidad por el valor fechado de la unidad que elijas.',
         yes: [
-          `Unidad Indexada: se ajusta a diario por el índice de precios al consumo. Valor vigente ${uyu(UI.valor)}`,
-          `Unidad Reajustable: se ajusta una vez por mes por el Índice Medio de Salarios. Valor vigente ${uyu(UR.valor)}`,
-          `BPC: la fija el Poder Ejecutivo por decreto cada enero y queda quieta todo el año. Valor vigente ${uyu(BPC)}`,
+          `Unidad Indexada: se ajusta a diario por el índice de precios al consumo. Valor fechado ${unitUyu(UI.valor)}`,
+          `Unidad Reajustable: se ajusta una vez por mes por el Índice Medio de Salarios. Valor fechado ${uyu(UR.valor)}`,
+          `BPC: la fija el Poder Ejecutivo por decreto cada enero y queda quieta todo el año. Valor fechado ${uyu(BPC)}`,
           `Dólar: referencia interbancaria del BCU (${uyu(USD.interbancario)}) y pizarra del banco, que es lo que efectivamente pagás`,
         ],
         warn: [
@@ -68,7 +70,7 @@ export const hub: HubData = {
         id: 'a-unidad',
         label: 'Tengo pesos y quiero saber cuántas UI, UR o BPC son',
         hint: 'Conversión inversa',
-        answer: 'Se divide el monto en pesos por el valor vigente de la unidad.',
+        answer: 'Se divide el monto en pesos por el valor fechado de la unidad.',
         yes: [
           'Sirve para leer un contrato en UI, un tope de prestación en BPC o una multa expresada en UR',
           'También para saber cuántos sueldos mínimos o cuántas BPC representa un monto',
@@ -174,12 +176,12 @@ export const hub: HubData = {
   },
   breakdownTitle: 'El detalle de la conversión',
   breakdownIntro:
-    'Cada línea muestra el valor vigente de la unidad, su fecha y el resultado de la operación.',
+    'Cada línea muestra el valor fechado de la unidad, su fecha y el resultado de la operación.',
 
   faq: [
     {
       q: '¿Qué es la Unidad Indexada y para qué se usa?',
-      a: `Es una unidad de cuenta que se ajusta a diario siguiendo el índice de precios al consumo, de modo que un monto expresado en UI mantiene su poder de compra. Se usa en alquileres, créditos hipotecarios, ahorro indexado y algunos tributos. El valor vigente que aplica esta cuenta es de ${uyu(UI.valor)} por unidad, con fecha ${UI.fecha}, publicado por ${UI.fuente}.`,
+      a: `Es una unidad de cuenta que se ajusta a diario siguiendo el índice de precios al consumo, de modo que un monto expresado en UI mantiene su poder de compra. Se usa en alquileres, créditos hipotecarios, ahorro indexado y algunos tributos. El valor fechado que aplica esta cuenta es de ${unitUyu(UI.valor)} por unidad, con fecha ${UI.fecha}, publicado por ${UI.fuente}.`,
     },
     {
       q: '¿Qué diferencia hay entre la UI y la UR?',
@@ -187,7 +189,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué es la BPC y por qué está fija todo el año?',
-      a: `La Base de Prestaciones y Contribuciones es la unidad con la que se escriben franjas de impuestos, mínimos no imponibles, topes de prestaciones y multas. La fija el Poder Ejecutivo por decreto cada enero y queda quieta hasta el enero siguiente, justamente para que todos los topes se actualicen de una sola vez y no haya que reformar cada norma. El valor vigente es ${uyu(BPC)}.`,
+      a: `La Base de Prestaciones y Contribuciones es la unidad con la que se escriben franjas de impuestos, mínimos no imponibles, topes de prestaciones y multas. La fija el Poder Ejecutivo por decreto cada enero y queda quieta hasta el enero siguiente, justamente para que todos los topes se actualicen de una sola vez y no haya que reformar cada norma. El valor fechado es ${uyu(BPC)}.`,
     },
     {
       q: '¿Por qué mi sueldo se mide en pesos pero mis impuestos en BPC?',
@@ -215,7 +217,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Dónde consulto el valor oficial del día?',
-      a: 'La UI y la UR las publica el Instituto Nacional de Estadística, y la DGI difunde la tabla diaria de UI. La cotización de referencia del dólar la publica el Banco Central. La BPC surge del decreto anual del Poder Ejecutivo. Los valores que usa esta cuenta están fechados en el detalle: si la operación es grande, verificá el valor del día en la fuente.',
+      a: 'La UI y la UR las publica el Instituto Nacional de Estadística, y la DGI difunde la tabla diaria de UI. La cotización de referencia del dólar la publica el Banco Central. La referencia del dólar incluida aquí es un snapshot histórico fechado, no una cotización en vivo; verificá el valor actual en BCU o ingresalo manualmente. La BPC surge del decreto anual del Poder Ejecutivo. Los valores que usa esta cuenta están fechados en el detalle: si la operación es grande, verificá el valor del día en la fuente.',
     },
     {
       q: '¿Cuánto vale un sueldo de hace diez años en plata de hoy?',
@@ -260,5 +262,5 @@ export const hub: HubData = {
     '/uy/calculadora-ajuste-alquiler-uruguay',
   ],
 
-  lastReviewed: '2026-07-28',
+  lastReviewed: '2026-11-16',
 };

@@ -1,3 +1,4 @@
+import unitSnapshot from '../../../db/uruguay-units.json';
 /**
  * Datos fiscales y laborales de URUGUAY 2026 — tabla maestra única.
  * Fuentes: DGI, BPS, MTSS, INE, BCU. Verificado 2026-06-22.
@@ -182,9 +183,9 @@ export const URUGUAY_2026 = {
   // Se usa para alquileres, créditos hipotecarios, ahorro indexado y algunos tributos.
   // Valor oficial DGI al 22-jun-2026 = $6,5888 (jun-2026 abrió en $6,5583 y cerró cerca de $6,6011).
   unidadIndexada: {
-    valor: 6.6371,             // $U por 1 UI (INE tabla diaria, 31-ago-2026)
-    fecha: '2026-08-31',
-    fuente: 'INE/DGI',
+    valor: unitSnapshot.ui.value, // DGI: fecha efectiva de la serie diaria
+    fecha: unitSnapshot.ui.date,
+    fuente: 'DGI/INE',
   },
 
   // ── Unidad Reajustable (UR) ──
@@ -196,9 +197,9 @@ export const URUGUAY_2026 = {
   // rurales, créditos del BHU/ANV y algunas multas/sanciones.
   // Valor DGI/INE de junio-2026 = $1.922,68 (rige durante julio-2026).
   unidadReajustable: {
-    valor: 1923.44,            // $U por 1 UR (INE/DGI, julio-2026; rige agosto-2026)
-    fecha: '2026-07',
-    mesValor: 'julio 2026 (rige en agosto 2026)',
+    valor: unitSnapshot.ur.value, // UR del mes previo, aplicable desde validFrom
+    fecha: unitSnapshot.ur.month,
+    mesValor: `${unitSnapshot.ur.month} (rige desde ${unitSnapshot.ur.validFrom})`,
     fuente: 'INE/DGI',
   },
 

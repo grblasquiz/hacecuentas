@@ -10,6 +10,7 @@
  *      en su dataUpdate (auto-api, auto-scrape, auto-llm).
  */
 
+import { fetchUruguayUnits } from './fetchers/uruguay-units.ts';
 import type { Frequency } from './utils/freshness.ts';
 import { fetchDolar } from './fetchers/dolar.ts';
 import { fetchBcra } from './fetchers/bcra.ts';
@@ -46,6 +47,7 @@ export interface FetcherEntry {
 }
 
 export const REGISTRY: FetcherEntry[] = [
+  { name: 'uruguay-units', slugs: ['uy/finanzas/unidades-y-valores'], frequency: 'daily', path: 'deterministic', run: fetchUruguayUnits },
   {
     name: 'dolar',
     path: 'deterministic',
