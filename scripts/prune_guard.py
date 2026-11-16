@@ -360,7 +360,7 @@ def _audit_list(guard: PruneGuard) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--self-test", action="store_true", help="Asegura es/mx/co/cl 100% protegidos (exit 1 si no)")
+    ap.add_argument("--self-test", action="store_true", help="Asegura es/mx/co/cl 100%% protegidos (exit 1 si no)")
     ap.add_argument("--report", action="store_true", help="Resumen de protección por locale")
     ap.add_argument("--audit-list", action="store_true", help="Falla si gone-410.ts contiene URLs protegidas (falsos-410)")
     ap.add_argument("--check", nargs="+", metavar="PATH", help="Chequear URLs puntuales")
