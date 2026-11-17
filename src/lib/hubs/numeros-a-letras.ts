@@ -31,7 +31,7 @@ export const hub: HubData = {
   h1: 'Conversor de números a letras',
   lede:
     'Escribí lo que tengas —un número, un texto en letras o un romano— y elegí a qué lo querés pasar. La rama por defecto es la que casi todos buscan: cómo se escribe un importe en un cheque o un pagaré, con los centavos incluidos.',
-  stamps: ['Actualizado 07-08-2026', 'Reglas de la RAE · escala larga', '4 conversores adentro'],
+  stamps: ['Revisado 17-11-2026', 'Reglas de la RAE · escala larga', '4 conversores adentro'],
 
   resultLabel: 'Cómo se escribe',
 
@@ -272,7 +272,7 @@ export const hub: HubData = {
     '/conversor-letras-a-numero',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-11-17',
   audience: 'global',
 };
 

@@ -147,7 +147,7 @@ export const REGISTRY: FetcherEntry[] = [
   {
     name: 'jubilacion-anses',
     path: 'deterministic',
-    slugs: ['jubilacion/cuanto-voy-a-cobrar', 'simulador-jubilacion-anses'],
+    slugs: ['jubilacion/cuanto-voy-a-cobrar', 'simulador-jubilacion-anses', 'jubilacion/cuando-me-jubilo', 'jubilacion/pensiones'],
     // Verificar al cambiar el mes; no esperar hasta el cron del día16.
     frequency: 'daily',
     run: fetchJubilacionAnses,

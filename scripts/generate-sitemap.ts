@@ -327,7 +327,7 @@ function getPageLastMod(pagePath: string, fallback: string): string {
     }
   }
 
-  if (['simulador-jubilacion-anses','jubilacion/cuanto-voy-a-cobrar'].includes(slug)) {
+  if (['simulador-jubilacion-anses','jubilacion/cuanto-voy-a-cobrar','jubilacion/cuando-me-jubilo','jubilacion/pensiones'].includes(slug)) {
     candidates.add(join(ROOT,'src/data/live/anses.json'));
   }
   let best = '';
@@ -1470,7 +1470,7 @@ const decisionHubUrls: Url[] = (() => {
     // UI/UR cambian por datos oficiales sin simular una revisión editorial.
     const dataDate = slug === 'uy/finanzas/unidades-y-valores'
       ? pickIfValid(JSON.parse(readFileSync(join(ROOT, 'db/uruguay-units.json'), 'utf8')).ui?.date)
-      : slug === 'jubilacion/cuanto-voy-a-cobrar'
+      : ['jubilacion/cuanto-voy-a-cobrar','jubilacion/cuando-me-jubilo','jubilacion/pensiones'].includes(slug)
         ? pickIfValid(JSON.parse(readFileSync(join(ROOT,'src/data/live/anses.json'),'utf8')).lastReviewed)
         : null;
     const lastmod = clampToToday([reviewed, dataDate].filter(Boolean).sort().at(-1) || buildDate);

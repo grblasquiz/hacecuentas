@@ -1,0 +1,27 @@
+---
+import type { HubData } from '../../lib/hubs/types';
+import { ANSES_VIGENTE as current } from '../../lib/data/anses-vigente';
+interface Props { data: HubData }
+const { data } = Astro.props;
+const money = (n:number) => n.toLocaleString('es-AR',{style:'currency',currency:'ARS'});
+---
+<div class="prevision">
+  <div class="crumb"><a href="/jubilacion">Jubilación</a> / {data.h1}</div>
+  <header><p class="eyebrow">{data.eyebrow}</p><h1>{data.h1}</h1><p class="lede">{data.lede}</p><p class="stamp">Revisión de requisitos: 17/11/2026 · Importes: {current.periodo}</p></header>
+  <slot />
+  <section aria-labelledby="reference"><h2 id="reference">Referencias mensuales oficiales</h2><p>Período: <strong>{current.periodo}</strong>. Importes brutos sin bono, aguinaldo ni descuentos. No confirman el derecho a una prestación.</p>
+    <div class="table-wrap"><table><thead><tr><th>Referencia</th><th>Importe sin bono</th></tr></thead><tbody>
+      <tr><td>Haber mínimo jubilatorio</td><td>{money(current.haberMinimo)}</td></tr>
+      <tr><td>PUAM — 80% del mínimo</td><td>{money(current.puam)}</td></tr>
+      <tr><td>PNC por invalidez — referencia 70%</td><td>{money(Math.round(current.haberMinimo*.7*100)/100)}</td></tr>
+      <tr><td>PNC madres de 7 o más hijos — referencia 100%</td><td>{money(current.haberMinimo)}</td></tr>
+    </tbody></table></div>
+    <p><a href={current.fuenteUrl}>{current.fuente}</a> · <a href="https://www.argentina.gob.ar/trabajo/seguridadsocial/imss">Informe oficial de Seguridad Social</a></p>
+  </section>
+  <nav class="related" aria-label="Herramientas previsionales"><a href="/jubilacion/cuando-me-jubilo">Cuándo me jubilo →</a><a href="/jubilacion/pensiones">Pensiones y reparto →</a><a href="/jubilacion/cuanto-voy-a-cobrar">Cuánto voy a cobrar →</a></nav>
+  <section><h2>Preguntas frecuentes</h2>{data.faq.map(f=><details><summary>{f.q}</summary><p>{f.a}</p></details>)}</section>
+  <section><h2>Fuentes y alcance</h2><p>{data.fineprint} El cálculo se realiza en tu navegador. No ingreses CUIL, claves ni documentación personal.</p><ul>{data.sources.map(s=><li><a href={s.url}>{s.name}</a></li>)}</ul></section>
+</div>
+<style is:global>
+.prevision{max-width:1120px;margin:auto;padding:32px 24px 64px;color:#183b39}.prevision .crumb{font-size:14px;margin-bottom:36px}.prevision header{max-width:850px;margin-bottom:32px}.prevision h1{font-size:clamp(32px,5vw,54px);line-height:1.12;letter-spacing:-1.4px;margin:12px 0 22px}.prevision .eyebrow{font-weight:750;text-transform:uppercase;letter-spacing:2px;font-size:12px;color:#42715f}.prevision .lede{font-size:20px;line-height:1.6}.prevision .stamp{font-size:13px;color:#5f706a}.prevision section{padding:28px 0}.prevision .calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.prevision .card{background:#f2f7f3;border:1px solid #ceddd2;border-radius:20px;padding:26px}.prevision .result{background:#163f36;color:#fff;min-height:240px}.prevision h2{font-size:26px;line-height:1.3;margin:0 0 18px}.prevision h3{font-size:20px}.prevision p,.prevision li{line-height:1.7}.prevision label{display:block;font-weight:650;margin:15px 0 7px}.prevision input:not([type=checkbox]),.prevision select{display:block;width:100%;min-height:46px;background:white;color:#173a32;border:1px solid #97aea1;border-radius:9px;padding:10px;font-size:17px;box-sizing:border-box}.prevision input[type=checkbox]{width:19px;height:19px;vertical-align:middle;margin-right:8px}.prevision button{background:#164e3d;color:white;border:0;border-radius:10px;padding:14px 20px;font-weight:750;font-size:16px;cursor:pointer;margin-top:18px;min-height:48px}.prevision .result output{display:block;font-size:30px;line-height:1.4;font-weight:750;margin:22px 0;overflow-wrap:anywhere}.prevision .error{color:#a02a24;font-weight:650}.prevision table{width:100%;border-collapse:collapse}.prevision th,.prevision td{text-align:left;padding:15px;border-bottom:1px solid #d4e2d9}.prevision td:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}.prevision .table-wrap{overflow:auto}.prevision details{border-bottom:1px solid #d4e2d9;padding:18px 0}.prevision summary{font-weight:750;cursor:pointer;line-height:1.5}.prevision a{color:#23664f;text-decoration:underline;text-underline-offset:3px}.prevision .related{display:flex;flex-wrap:wrap;gap:20px;background:#f2f7f3;border-radius:12px;padding:22px}.prevision .result p{color:#e4f3e8}.prevision .mini{font-size:14px}.prevision .mode{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}.prevision .mode button{background:white;color:#164e3d;border:1px solid #164e3d;margin:0}.prevision .mode button[aria-pressed=true]{background:#164e3d;color:white}@media(max-width:720px){.prevision{padding:24px 16px 44px}.prevision .calc-grid{grid-template-columns:1fr}.prevision .card{padding:21px}.prevision .lede{font-size:18px}.prevision td,.prevision th{padding:12px 8px}.prevision .related{display:grid;gap:16px}}
+</style>
