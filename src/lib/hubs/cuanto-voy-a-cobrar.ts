@@ -1,87 +1,16 @@
 import type { HubData } from './types';
-import { jubilacionMinima } from '../formulas/jubilacion-minima';
-import { jubilacionAnsesMontoMinimoMaxima2026 } from '../formulas/jubilacion-anses-monto-minimo-maxima-2026';
-import {
-  INFLACION_SERIE_MENSUAL,
-  INFLACION_SERIE_HASTA,
-  INFLACION_AS_OF,
-} from '../data/inflacion-serie-ar';
-
-/**
- * Hub de decisión — "¿Cuánto voy a cobrar de jubilación?"
- *
- * Arquetipo: RAMIFICADO (`cases`). Cuatro ramas: régimen general ANSES
- * (default), docente, cuánto necesito ahorrar para complementarla, y haber
- * mínimo con bono.
- *
- * CRÍTICO — de dónde salen los números que ANSES mueve todos los meses:
- *
- *  · HABER MÍNIMO y BONO: NO están escritos acá. Se leen llamando a la fórmula
- *    real `src/lib/formulas/jubilacion-minima.ts`, que es la fuente única del
- *    repo para el mínimo y el refuerzo. Cuando se actualice esa constante, este
- *    hub cambia solo.
- *  · HABER MEDIO y HABER MÁXIMO: se leen de
- *    `src/lib/formulas/jubilacion-anses-monto-minimo-maxima-2026.ts` (devuelve
- *    strings formateados, así que se parsean).
- *  · MOVILIDAD MENSUAL: desde el DNU 274/2024 el haber se ajusta cada mes por el
- *    IPC del INDEC publicado con dos meses de rezago. Así que el coeficiente NO
- *    se hardcodea: sale de la serie viva `src/data/live/inflacion.json` a través
- *    de `src/lib/data/inflacion-serie-ar.ts`, la misma que refresca el cron de
- *    datos. Si el IPC de este mes cambia, el hub lo refleja sin tocar código.
- *  · PBU: el monto de la Prestación Básica Universal (Ley 24.241 art. 20) no
- *    tiene fuente propia en el repo. Se DERIVA del haber mínimo con la relación
- *    que las resoluciones de movilidad de ANSES vienen sosteniendo desde 2022
- *    (la PBU se ajusta con el mismo coeficiente que el mínimo, así que el
- *    cociente es estable en torno al 45%: mar-2024 $60.500 sobre $134.445;
- *    dic-2022 $22.594 sobre $50.125). Al derivarla del mínimo vivo, tampoco
- *    queda vieja: se mueve con él.
- */
-
-/** Haber mínimo y bono vigentes, leídos de la fórmula real (no hardcodeados). */
-const _minima = jubilacionMinima({ tieneBono: 'si' });
-export const HABER_MINIMO = Math.round(_minima.haberMinimo);
-export const BONO_REFUERZO = Math.round(_minima.bonoExtra);
-
-/** Parseo de los montos formateados que devuelve la fórmula de mínima/máxima. */
-function montoDe(tipo: string): number {
-  const out = jubilacionAnsesMontoMinimoMaxima2026({ tipo });
-  return Number(String(out.haberMensual).replace(/[^\d]/g, '')) || 0;
-}
-export const HABER_MEDIO = montoDe('media');
-export const HABER_MAXIMO = montoDe('maxima');
-
-/**
- * Movilidad mensual vigente = IPC del INDEC con dos meses de rezago
- * (DNU 274/2024). Sale de la serie viva; si faltara el dato, queda en 0 y el
- * copy lo dice, antes que inventar un porcentaje.
- */
-const _ultimo = INFLACION_SERIE_MENSUAL[INFLACION_SERIE_MENSUAL.length - 1];
+import { ANSES_VIGENTE } from '../data/anses-vigente';
+/** Importes oficiales con centavos: no parsear moneda formateada ni estimar PBU. */
+export const HABER_MINIMO = ANSES_VIGENTE.haberMinimo;
+export const HABER_MAXIMO = ANSES_VIGENTE.haberMaximo;
+export const BONO_REFUERZO = ANSES_VIGENTE.bonoMaximo;
+export const PBU = ANSES_VIGENTE.pbu;
 export const MOVILIDAD = {
-  /** Variación mensual aplicable, en %. */
-  pct: _ultimo ? Number(_ultimo.valor) : 0,
-  /** Mes del IPC usado, clave "YYYY-MM". */
-  mesIpc: INFLACION_SERIE_HASTA || '',
-  /** Fecha del dato para el sello de frescura. */
-  asOf: INFLACION_AS_OF,
-  /** Etiqueta legible del mes del IPC. */
-  label: (() => {
-    const k = INFLACION_SERIE_HASTA;
-    if (!k) return 'sin dato';
-    const meses = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-    ];
-    const [y, m] = k.split('-').map(Number);
-    return `${meses[(m || 1) - 1]} ${y}`;
-  })(),
+ pct: ANSES_VIGENTE.movilidadPct,
+ mesIpc: ANSES_VIGENTE.mesIpc,
+ asOf: ANSES_VIGENTE.vigenteDesde,
+ label: new Intl.DateTimeFormat('es-AR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(ANSES_VIGENTE.mesIpc+'-01T00:00:00Z')),
 };
-
-/**
- * PBU derivada del haber mínimo vivo. Ver comentario de cabecera: la relación
- * PBU/mínimo se mantiene porque ambas se ajustan con la misma movilidad.
- */
-export const PBU_SOBRE_MINIMO = 0.45;
-export const PBU = Math.round(HABER_MINIMO * PBU_SOBRE_MINIMO);
 
 /** Coeficiente anual de PC y PAP: 1,5% por año de servicios (Ley 24.241 arts. 24 y 30). */
 export const COEF_ANUAL = 0.015;
@@ -117,7 +46,7 @@ const fmtArs = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
 
 export const hub: HubData = {
   slug: 'jubilacion/cuanto-voy-a-cobrar',
-  title: '¿Cuánto voy a cobrar de jubilación? Calculadora ANSES 2026',
+  title: `¿Cuánto voy a cobrar de jubilación? Calculadora ANSES ${ANSES_VIGENTE.mes.slice(0,4)}`,
   description:
     'Estimá tu haber jubilatorio con la Ley 24.241: PBU, prestación compensatoria, PAP y bono, con el haber mínimo y la movilidad mensual vigentes. Régimen general, docente, haber mínimo y cuánto ahorrar para complementarla.',
   silo: 'Jubilación',
@@ -128,7 +57,7 @@ export const hub: HubData = {
   lede:
     'Tu haber no es un número mágico: es la suma de tres partes que casi nadie sabe leer en el recibo. Poné tus años de aportes y el promedio de tus sueldos y te mostramos cómo se arma, con el mínimo y la movilidad vigentes.',
   stamps: [
-    'Actualizado 27-07-2026',
+    `Referencias: ${ANSES_VIGENTE.periodo}`,
     'Ley 24.241 · DNU 274/2024',
     `Haber mínimo ${fmtArs(HABER_MINIMO)} + bono ${fmtArs(BONO_REFUERZO)}`,
     `Movilidad ${MOVILIDAD.pct.toLocaleString('es-AR')}% (IPC ${MOVILIDAD.label})`,
@@ -216,12 +145,12 @@ export const hub: HubData = {
         ],
         warn: [
           'El bono es no remunerativo, no genera aguinaldo y no se incorpora al haber: si un mes no lo decretan, no se cobra',
-          'Si tu haber supera el mínimo aunque sea por poco, podés perder el bono completo y terminar cobrando menos que quien está en la mínima',
+          'Si tu haber supera la mínima, el refuerzo es proporcional hasta el umbral del mes; la suma de otras prestaciones también cuenta',
           'La PUAM equivale al 80% del haber mínimo y no genera pensión derivada para el cónyuge',
           'Las jubilaciones por moratoria cobran el mínimo, pero con el descuento de las cuotas del plan de pago',
         ],
         plazo:
-          `el próximo ajuste se aplica con el IPC de ${MOVILIDAD.label}, que da ${MOVILIDAD.pct.toLocaleString('es-AR')}% (DNU 274/2024).`,
+          `el ajuste de referencia se aplica con el IPC de ${MOVILIDAD.label}, que da ${MOVILIDAD.pct.toLocaleString('es-AR')}% (DNU 274/2024).`,
       },
     ],
   },
@@ -314,7 +243,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Puedo perder el bono si mi haber sube un poco?',
-      a: `Sí, y es la trampa más injusta del sistema. El bono se paga a quienes no superan el haber mínimo, así que alguien que cobra apenas un peso más que ${fmtArs(HABER_MINIMO)} puede quedar afuera del refuerzo completo de ${fmtArs(BONO_REFUERZO)} y terminar con menos plata en mano que quien cobra la mínima. En los decretos recientes suele haber un tramo proporcional, pero conviene verificar el texto del mes.`,
+      a: `Para ${ANSES_VIGENTE.periodo}, el bono completo de ${fmtArs(BONO_REFUERZO)} corresponde hasta la mínima de ${fmtArs(HABER_MINIMO)}, sujeto a los requisitos. Por encima de ese piso, el refuerzo es proporcional hasta que la suma de prestaciones y bono alcance ${fmtArs(HABER_MINIMO + BONO_REFUERZO)}. Por eso no desaparece entero por superar el mínimo en un peso. El cálculo de esta página supone una única prestación elegible; la suma de otras prestaciones puede cambiarlo.`,
     },
     {
       q: '¿La jubilación tiene aguinaldo?',
@@ -326,7 +255,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuál es la jubilación máxima que se puede cobrar?',
-      a: `El haber máximo del régimen general está hoy en <b>${fmtArs(HABER_MAXIMO)}</b> por mes, y el haber medio del sistema ronda los ${fmtArs(HABER_MEDIO)}. El tope existe porque las remuneraciones tienen una base imponible máxima para aportar: por encima de ese sueldo no se aporta más y, por lo tanto, tampoco se acumula más haber.`,
+      a: `El haber máximo del régimen general está hoy en <b>${fmtArs(HABER_MAXIMO)}</b> por mes, según la resolución del mes de ${ANSES_VIGENTE.periodo}. El tope existe porque las remuneraciones tienen una base imponible máxima para aportar: por encima de ese sueldo no se aporta más y, por lo tanto, tampoco se acumula más haber.`,
     },
   ],
 
@@ -350,8 +279,8 @@ export const hub: HubData = {
       date: '2021',
     },
     {
-      name: 'Haberes, movilidad y bonos vigentes — resoluciones de ANSES',
-      url: 'https://www.anses.gob.ar/normativa/resoluciones',
+      name: `${ANSES_VIGENTE.fuente} — ${ANSES_VIGENTE.periodo}`,
+      url: ANSES_VIGENTE.fuenteUrl,
       publisher: 'ANSES',
       date: 'actualización mensual',
     },
@@ -382,6 +311,6 @@ export const hub: HubData = {
     '/calculadora-proyeccion-ahorro-jubilacion',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: ANSES_VIGENTE.lastReviewed,
   audience: 'AR',
 };

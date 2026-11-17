@@ -1,174 +1,59 @@
-/**
- * Jubilación mínima ANSES (monthly) — DETERMINÍSTICO por movilidad DNU 274/2024.
- *
- * La movilidad post-marzo-2024 es 100% mecánica: el haber del mes m se ajusta
- * por el IPC de dos meses antes (m-2), que INDEC publica a mitad de mes. O sea:
- *
- *   haber_mínimo(m) = haber_mínimo(m-1) × (1 + IPC(m-2)/100)
- *
- * Anclamos con el valor oficial de AGOSTO 2026: $419.775,93 (haber mínimo puro,
- * +1,89% por IPC de junio), establecido por la Resolución ANSES 232/2026.
- * Desde el ancla se encadena hacia adelante (o atrás) con
- * la serie IPC de api.argentinadatos.com (misma fuente que el fetcher `ipc`).
- *
- * LLM: solo cross-check opcional. Si hay ANTHROPIC_API_KEY se le pregunta a
- * Claude el valor vigente y se loguea la discrepancia (>0,5% = WARN); el valor
- * que se escribe SIEMPRE es el determinístico. Sin key, corre igual.
- *
- * Patchea `src/lib/formulas/jubilacion-minima.ts` (HABER_MINIMO + BONO_EXTRA).
- */
-
+/** ANSES mensual: IMSS + resolución oficial con centavos. Sin IPC proyectado ni LLM. */
+import { readFileSync, writeFileSync, renameSync } from 'node:fs';
 import { join } from 'node:path';
-import { askClaudeStructured } from '../utils/ask-claude.ts';
-import { reportMode, reportWarn, hasLlmAccess } from '../utils/run-status.ts';
-import { replaceNumericConst } from '../patchers/ts-constant.ts';
-import { touchLastUpdated } from '../patchers/data-update-date.ts';
-import { createLogger } from '../utils/logger.ts';
-
-const log = createLogger('jubilacion-anses');
-const FILE = join(process.cwd(), 'src/lib/formulas/jubilacion-minima.ts');
-
-// ── Ancla oficial (verificar/actualizar cuando haya un valor confirmado nuevo) ──
-// Agosto 2026: haber mínimo $419.775,93 (+1,89% = IPC jun-2026), Res. 232/2026.
-const ANCLA = { periodo: '2026-08', haber: 419775.93 };
-const BONO_EXTRA = 70000;
-
-interface InflacionItem {
-  fecha: string; // YYYY-MM-DD
-  valor: number; // % mensual
+import { reportMode, reportWarn } from '../utils/run-status.ts';
+const IMSS = 'https://www.argentina.gob.ar/trabajo/seguridadsocial/imss';
+const MONTHS = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+export function officialText(html: string): string {
+ return html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi,' ').replace(/<[^>]*>/g,' ')
+ .replace(/&nbsp;|&#160;|\u00a0/gi,' ').replace(/&amp;/g,'&').replace(/&#(\d+);/g,(_,n)=>String.fromCodePoint(Number(n))).replace(/\s+/g,' ').trim();
 }
-
-/** '2026-08' + n meses */
-function addMonths(periodo: string, n: number): string {
-  const [y, m] = periodo.split('-').map(Number);
-  const d = new Date(Date.UTC(y, m - 1 + n, 1));
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+const amount = (s: string) => Number(s.replace(/\./g,'').replace(',','.'));
+export function identifyAnsesSource(html: string, day: string) {
+ const text=officialText(html), publication=text.match(/Publicación\s+([a-záéíóú]+)\s*\/\s*(\d{4})/i);
+ if(!publication) throw new Error('IMSS sin período de publicación');
+ const month=MONTHS.indexOf(publication[1].toLowerCase())+1;
+ const period=publication[2]+'-'+String(month).padStart(2,'0');
+ if(!month || period!==day.slice(0,7)) throw new Error('IMSS no corresponde al mes solicitado: '+period);
+ const anchors=[...html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
+ const anchor=anchors.find(a=>/Resolución\s+ANSES\s+\d+\/\d{4}/i.test(officialText(a[2])));
+ if(!anchor)throw new Error('IMSS sin enlace a resolución ANSES');
+ const source=new URL(anchor[1].replace(/&amp;/g,'&'),IMSS);
+ if(source.protocol!=='https:'||source.hostname!=='www.boletinoficial.gob.ar')throw new Error('Origen no oficial de resolución');
+ return {period,month,year:publication[2],url:source.href,name:officialText(anchor[2])};
 }
-
-/**
- * Haber mínimo del período pedido, encadenando IPC desde el ancla.
- * Devuelve null si falta algún IPC intermedio (aún no publicado).
- */
-function haberPara(periodo: string, ipcByMes: Map<string, number>): number | null {
-  let haber = ANCLA.haber;
-  let cursor = ANCLA.periodo;
-  // hacia adelante: haber(m) = haber(m-1) × (1 + IPC(m-2))
-  while (cursor < periodo) {
-    const next = addMonths(cursor, 1);
-    const ipc = ipcByMes.get(addMonths(next, -2));
-    if (ipc === undefined) return null;
-    haber = haber * (1 + ipc / 100);
-    cursor = next;
-  }
-  // hacia atrás (por si el ancla queda en el futuro respecto del mes vigente)
-  while (cursor > periodo) {
-    const ipc = ipcByMes.get(addMonths(cursor, -2));
-    if (ipc === undefined) return null;
-    haber = haber / (1 + ipc / 100);
-    cursor = addMonths(cursor, -1);
-  }
-  return Math.round(haber * 100) / 100;
+export function parseAnsesOfficial(imss: string, resolution: string, day: string) {
+ const source=identifyAnsesSource(imss,day), text=officialText(resolution);
+ const sections=[...text.matchAll(/ART[ÍI]CULO\s+([1-8])\s*[°º]?\s*\.\s*[-–]/gi)];
+ function article(n:number){const i=sections.findIndex(m=>Number(m[1])===n);if(i<0)throw new Error('Falta artículo '+n);return text.slice(sections[i].index,sections[i+1]?.index??text.length);}
+ function values(n:number){return [...article(n).matchAll(/\$\s*([\d.]+,\d{2})/g)].map(m=>amount(m[1]));}
+ if(!new RegExp('mes de '+MONTHS[source.month-1]+' de '+source.year,'i').test(article(1)))throw new Error('Vigencia de resolución no coincide con IMSS');
+ const min=values(1),max=values(2),bases=values(3),pbu=values(4),puam=values(5);
+ if(min.length!==1||max.length!==1||bases.length!==2||pbu.length!==1||puam.length!==1)throw new Error('Importes oficiales incompletos/ambiguos');
+ function row(label:RegExp){const rows=[...imss.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>officialText(m[1]));const found=rows.find(r=>label.test(r));const m=found?.match(/\$\s*([\d.]+(?:,\d{2})?)/);if(!m)throw new Error('Fila IMSS faltante');return amount(m[1]);}
+ const imssMin=row(/^Haber mínimo SIPA\s+\$/i),imssMax=row(/^Haber máximo SIPA\s+\$/i),imssPbu=row(/^Prestación Básica Universal/i),imssPuam=row(/^Pensión Universal para el Adulto Mayor/i),bonus=row(/^Bono extrao?r?dinario previsional/i);
+ const ceiling=officialText(imss).match(/cantidad necesaria hasta alcanzar la suma de\s*\$\s*([\d.]+,\d{2})/i);
+ if(!ceiling||Math.abs(amount(ceiling[1])-(min[0]+bonus))>.02)throw new Error('Regla proporcional del bono no verificada');
+ if(Math.abs(min[0]+bonus-row(/^Haber mínimo SIPA con bono/i))>.51)throw new Error('IMSS total con bono inconsistente');
+ if([min[0],max[0],pbu[0],puam[0]].some((v,i)=>Math.abs(v-[imssMin,imssMax,imssPbu,imssPuam][i])>.51))throw new Error('Resolución e IMSS discrepan');
+ if(min[0]<1000||max[0]<=min[0]||pbu[0]<=0||pbu[0]>=min[0]||Math.abs(puam[0]-min[0]*.8)>.02||bonus<0||bonus>min[0])throw new Error('Relaciones previsionales inválidas');
+ const pct=text.match(/resultando.{0,220}?\(([\d.,]+)\s*%\)/i);if(!pct)throw new Error('Movilidad oficial no encontrada');
+ const movilidadPct=amount(pct[1]);if(movilidadPct<0||movilidadPct>30)throw new Error('Movilidad fuera de rango');
+ const ipc=new Date(Date.UTC(Number(source.year),source.month-3,1)).toISOString().slice(0,7);
+ return {periodo:MONTHS[source.month-1]+' '+source.year,mes:source.period,vigenteDesde:source.period+'-01',haberMinimo:min[0],haberMaximo:max[0],puam:puam[0],pbu:pbu[0],baseImponibleMinima:bases[0],baseImponibleMaxima:bases[1],movilidadPct,mesIpc:ipc,bonoMaximo:bonus,fuente:source.name,fuenteUrl:source.url,bonoFuenteUrl:IMSS,lastReviewed:day};
 }
-
-async function crossCheckLLM(mesLegible: string, haberDeterministico: number): Promise<void> {
-  const result = await askClaudeStructured<{ haberMinimo: number; fuenteUrl: string }>({
-    task:
-      `Buscá en anses.gob.ar o notas oficiales recientes el HABER JUBILATORIO MÍNIMO puro (sin bonos) vigente en Argentina en ${mesLegible}. ` +
-      `Devolvé haberMinimo (número en pesos) y fuenteUrl.`,
-    schema: {
-      type: 'object',
-      required: ['haberMinimo', 'fuenteUrl'],
-      properties: {
-        haberMinimo: { type: 'number', minimum: 100000, maximum: 5000000 },
-        fuenteUrl: { type: 'string' },
-      },
-    },
-  });
-  if (!result) {
-    log.info('cross-check LLM no disponible — sigo con el valor determinístico');
-    return;
-  }
-  const delta = Math.abs(result.haberMinimo - haberDeterministico) / haberDeterministico;
-  if (delta > 0.005) {
-    reportWarn(
-      'jubilacion-anses',
-      `cross-check LLM discrepa ${(delta * 100).toFixed(2)}%: determinístico $${haberDeterministico} vs LLM $${result.haberMinimo} (${result.fuenteUrl}) — se usa el determinístico; revisar ancla`,
-    );
-  } else {
-    log.success(`cross-check LLM OK (delta ${(delta * 100).toFixed(2)}%, fuente ${result.fuenteUrl})`);
-  }
-}
-
-export async function fetchJubilacionAnses({ dry = false }: { dry?: boolean }): Promise<boolean> {
-  const today = new Date();
-  const periodo = today.toISOString().slice(0, 7); // mes vigente
-  const mesLegible = today.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
-  log.info(`calculando haber mínimo ${mesLegible} por movilidad DNU 274/2024 (ancla ${ANCLA.periodo} = $${ANCLA.haber})`);
-
-  // Serie IPC (misma fuente que el fetcher `ipc`)
-  let ipcByMes: Map<string, number>;
-  try {
-    const res = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
-    if (!res.ok) throw new Error(`argentinadatos respondió ${res.status}`);
-    const data: InflacionItem[] = await res.json();
-    ipcByMes = new Map(data.map((d) => [d.fecha.slice(0, 7), d.valor]));
-  } catch (err) {
-    reportWarn('jubilacion-anses', `no pude traer la serie IPC (${(err as Error).message}) — sin update este run`);
-    reportMode('jubilacion-anses', 'pending');
-    return false;
-  }
-
-  let haber = haberPara(periodo, ipcByMes);
-  let periodoEfectivo = periodo;
-  if (haber === null) {
-    // IPC(m-2) todavía no publicado para el mes pedido: usar el último mes computable.
-    for (let back = 1; back <= 3 && haber === null; back++) {
-      periodoEfectivo = addMonths(periodo, -back);
-      haber = haberPara(periodoEfectivo, ipcByMes);
-    }
-  }
-  if (haber === null) {
-    reportWarn('jubilacion-anses', 'no pude computar el haber: faltan IPC intermedios entre el ancla y el mes vigente');
-    reportMode('jubilacion-anses', 'pending');
-    return false;
-  }
-
-  reportMode('jubilacion-anses', 'deterministic');
-  log.info(`haber mínimo ${periodoEfectivo}: $${haber.toLocaleString('es-AR')} · bono: $${BONO_EXTRA.toLocaleString('es-AR')}`);
-
-  // Cross-check LLM opcional (nunca bloquea ni cambia el valor escrito)
-  if (hasLlmAccess()) {
-    try {
-      await crossCheckLLM(mesLegible, haber);
-    } catch (err) {
-      log.warn(`cross-check LLM falló: ${(err as Error).message}`);
-    }
-  } else {
-    log.info('sin ANTHROPIC_API_KEY ni CLI claude — cross-check LLM omitido (no hace falta: camino determinístico)');
-  }
-
-  if (dry) {
-    log.info(`would patch HABER_MINIMO = ${haber}`);
-    log.info(`would patch BONO_EXTRA = ${BONO_EXTRA}`);
-    return true;
-  }
-
-  let anyChanged = false;
-  const hRes = replaceNumericConst(FILE, 'HABER_MINIMO', haber);
-  if (hRes.changed) {
-    log.success(`HABER_MINIMO: ${hRes.oldValue} → ${haber}`);
-    anyChanged = true;
-  }
-  const bRes = replaceNumericConst(FILE, 'BONO_EXTRA', BONO_EXTRA);
-  if (bRes.changed) {
-    log.success(`BONO_EXTRA: ${bRes.oldValue} → ${BONO_EXTRA}`);
-    anyChanged = true;
-  }
-
-  if (anyChanged) {
-    touchLastUpdated('calculadora-jubilacion-minima-anses', today.toISOString().slice(0, 10));
-    return true;
-  }
-  log.skip('sin cambios');
-  return false;
+export async function fetchJubilacionAnses({dry=false,asOf,snapshotPath}:{dry?:boolean;asOf?:string;snapshotPath?:string}={}) {
+ const day=asOf??new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ try {
+  const read=async(url:string)=>{const r=await fetch(url,{signal:AbortSignal.timeout(20000)});if(!r.ok)throw new Error('HTTP '+r.status);return r.text();};
+  const imss=await read(IMSS),source=identifyAnsesSource(imss,day),norm=await read(source.url),next=parseAnsesOfficial(imss,norm,day);
+  const path=snapshotPath??join(process.cwd(),'src/data/live/anses.json'),previous=JSON.parse(readFileSync(path,'utf8'));
+  if(previous.mes>next.mes)throw new Error('No se permite retroceder el snapshot');
+  reportMode('jubilacion-anses','deterministic');
+  const same=Object.keys(next).filter(k=>k!=='lastReviewed').every(k=>previous[k]===next[k as keyof typeof next]);
+  if(same)return false;
+  if(!dry){writeFileSync(path+'.tmp',JSON.stringify(next,null,2)+'\n');renameSync(path+'.tmp',path);}
+  console.log('[jubilacion-anses] '+(dry?'would update ':'updated ')+next.mes+' desde '+next.fuente);
+  return true;
+ }catch(e){reportMode('jubilacion-anses','pending');reportWarn('jubilacion-anses',(e as Error).message+'; snapshot oficial preservado');return false;}
 }
