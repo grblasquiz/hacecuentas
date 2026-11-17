@@ -7,17 +7,17 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import PriorityDecisionCta from '../components/PriorityDecisionCta.astro';
 import '../styles/calc-flagship.css';
-import { ANSES_2026 } from '../lib/data/anses-2026';
+import { ANSES_NOVIEMBRE_2026 as ANSES_REFERENCIA } from '../lib/data/anses-2026-11';
 
 // Valores de referencia 2026 de esta página (fuente única para SSR y para el
-// script del cliente, que los lee por data-* del root). Son los mismos que ya
-// usaba el simulador: NO se inventan datos previsionales.
-const JUB_MIN = ANSES_2026.haberMinimo;
-const BONO = 70_000;          // refuerzo extraordinario, no integra el haber
-const JUB_MAX = ANSES_2026.haberMaximo;
-const PBU = ANSES_2026.pbu;
+// script del cliente, que los lee por data-* del root). Snapshot oficial de noviembre; los históricos de otros meses
+// conservan su dataset anterior. No se proyectan valores futuros.
+const JUB_MIN = ANSES_REFERENCIA.haberMinimo;
+const BONO = ANSES_REFERENCIA.bonoMaximo;          // refuerzo extraordinario, no integra el haber
+const JUB_MAX = ANSES_REFERENCIA.haberMaximo;
+const PBU = ANSES_REFERENCIA.pbu;
 const PUAM_PCT = 0.80;        // PUAM = 80% de la mínima
-const PUAM = JUB_MIN * PUAM_PCT;
+const PUAM = ANSES_REFERENCIA.puam;
 const PISO = JUB_MIN;
 const TASA_ANUAL = 0.015;     // 1,5% por año de aportes (fórmula simplificada)
 const APORTES_REQ = 30;       // régimen general
@@ -56,9 +56,9 @@ const escenarios = [20, 25, 30, 35, 40].map((a) => ({
 }));
 
 const title = 'Simulador jubilación ANSES 2026: edad, aportes y haber';
-const description = 'Calculá cuándo podrías jubilarte, cuántos aportes te faltan y un haber orientativo. Valores ANSES vigentes y escenarios de jubilación o PUAM.';
+const description = 'Calculá cuándo podrías jubilarte, cuántos aportes te faltan y un haber orientativo. Referencias oficiales de noviembre de 2026, PBU y PUAM.';
 
-const lastReviewed = '2026-08-16';
+const lastReviewed = ANSES_REFERENCIA.lastReviewed;
 
 const schemaApp = {
   '@type': 'WebApplication',
@@ -88,12 +88,13 @@ const schemaBreadcrumb = {
 };
 
 const faq = [
+  { q: '¿Cuánto es la jubilación mínima en noviembre de 2026?', a: 'El haber mínimo de noviembre es $444.158,46, sin bono. El máximo es $2.988.765,82 y la PUAM $355.326,77, según la Resolución ANSES 304/2026. El bono extraordinario del mes es de hasta $70.000, sujeto a las condiciones y suma de prestaciones. El simulador no lo suma al haber estimado.' },
   { q: '¿Cuántos años de aportes necesito para jubilarme?', a: 'En el régimen general se requieren <strong>30 años de aportes</strong>. Los regímenes diferenciales y especiales tienen requisitos propios y no se calculan con este simulador.' },
   { q: '¿Qué edad necesito?', a: '<strong>60 años mujer, 65 años hombre</strong>. Con la reforma jubilatoria se igualó en varios países hispanos. En AR sigue esa diferencia por género.' },
   { q: '¿Cómo se calcula el haber jubilatorio?', a: 'ANSES suma la Prestación Básica Universal (PBU), la Prestación Compensatoria por aportes anteriores a julio de 1994 y la Prestación Adicional por Permanencia por aportes posteriores. PC y PAP consideran remuneraciones actualizadas; esta herramienta solo ofrece una aproximación.' },
   { q: '¿Qué es la PUAM?', a: 'La Pensión Universal para el Adulto Mayor es una prestación para personas de 65 años o más que no cobran ni tienen derecho a jubilación o pensión. Equivale al 80% del haber mínimo y exige, entre otras condiciones, residencia y evaluación socioeconómica.' },
   { q: '¿Puedo jubilarme antes de los 60/65?', a: 'Jubilación por invalidez, régimen especial (docente, minero, policial), retiro voluntario en empresa privada. Cada caso tiene requisitos específicos.' },
-  { q: '¿Cuánto actualiza la jubilación?', a: 'Por <strong>movilidad IPC mensual</strong> desde 2024 (antes por fórmula semestral). Se actualiza en boletín oficial. Bonos adicionales se suman según contexto.' },
+  { q: '¿Cuánto actualiza la jubilación?', a: 'Por <strong>movilidad IPC mensual</strong> desde 2024. Se actualiza en boletín oficial. Bonos adicionales se suman según contexto.' },
   { q: '¿Si trabajo en negro cuenta?', a: 'Un período sin aportes no aparece automáticamente en la historia laboral. Podés reunir pruebas y pedir reconocimiento de servicios; cualquier plan de regularización depende de que esté vigente y de que cumplas sus condiciones.' },
   { q: '¿Qué es el RIPTE?', a: 'Remuneraciones Imponibles Promedio de los Trabajadores Estables. Se usa para actualizar el valor de los aportes viejos al momento de jubilación.' },
   { q: '¿Puedo jubilarme y seguir trabajando?', a: 'Sí, en el régimen general. Pero los aportes que sigás haciendo <strong>no aumentan tu jubilación</strong>. En ciertos regímenes especiales hay incompatibilidad.' },
@@ -119,7 +120,7 @@ const schema = {
 
   <div class="cf-page sj" data-domain="life"
     data-jub-min={JUB_MIN} data-bono={BONO} data-jub-max={JUB_MAX}
-    data-pbu={PBU} data-puam-pct={PUAM_PCT} data-tasa={TASA_ANUAL}>
+    data-pbu={PBU} data-puam={PUAM} data-puam-pct={PUAM_PCT} data-tasa={TASA_ANUAL}>
     <nav class="cf-crumb" aria-label="Breadcrumb">
       <ol>
         <li><a href="/">Inicio</a></li>
@@ -134,9 +135,9 @@ const schema = {
       <div class="cf-hero__main">
         <p class="cf-kicker"><span aria-hidden="true">👴</span> ANSES · Régimen previsional 2026</p>
         <h1 class="cf-h1">Simulador de <span class="cf-yr">jubilación ANSES</span></h1>
-        <p class="cf-sub">Estimá cuándo podrías jubilarte, qué aportes te faltarían y un escenario orientativo de haber con valores ANSES vigentes.</p>
+        <p class="cf-sub">Estimá cuándo podrías jubilarte, qué aportes te faltarían y un escenario orientativo de haber con las referencias oficiales de {ANSES_REFERENCIA.periodo}.</p>
         <ul class="cf-pills">
-          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Referencias: {ANSES_REFERENCIA.periodo}</li>
           <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
           <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
         </ul>
@@ -274,7 +275,7 @@ const schema = {
           <span class="cf-minicard__ico" aria-hidden="true">⬇️</span>
           <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Haber mínimo</p>
           <div class="cf-minicard__big">{fmtArs(JUB_MIN)}</div>
-          <p class="cf-minicard__desc" style="margin-top:0.3rem">Agosto 2026. El bono extraordinario se muestra aparte.</p>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">Noviembre 2026. El bono extraordinario se muestra aparte.</p>
         </div>
         <div class="cf-minicard">
           <span class="cf-minicard__ico" aria-hidden="true">📊</span>
@@ -286,7 +287,7 @@ const schema = {
           <span class="cf-minicard__ico" aria-hidden="true">⬆️</span>
           <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Jubilación máxima</p>
           <div class="cf-minicard__big">{fmtArs(JUB_MAX)}</div>
-          <p class="cf-minicard__desc" style="margin-top:0.3rem">Tope oficial de agosto 2026.</p>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">Tope oficial de noviembre 2026.</p>
         </div>
         <div class="cf-minicard">
           <span class="cf-minicard__ico" aria-hidden="true">🛟</span>
@@ -295,6 +296,14 @@ const schema = {
           <p class="cf-minicard__desc" style="margin-top:0.3rem">80% de la mínima, a los 65, sujeto a residencia, incompatibilidades y demás requisitos.</p>
         </div>
       </div>
+    </section>
+
+    <section class="cf-section" id="montos-anses-noviembre-2026" aria-labelledby="anses-montos-title">
+      <h2 class="cf-section__title" id="anses-montos-title">¿Cuánto es la jubilación mínima en noviembre de 2026?</h2>
+      <p class="cf-section__lead">El haber mínimo es <strong>{fmtArs(JUB_MIN)}</strong> y el máximo <strong>{fmtArs(JUB_MAX)}</strong>, según la <a href={ANSES_REFERENCIA.fuenteUrl}>Resolución ANSES 304/2026</a>. Son referencias de ese mes, no un pronóstico de lo que cobrarás al jubilarte.</p>
+      <p>Para noviembre, el <a href={ANSES_REFERENCIA.bonoFuenteUrl}>bono extraordinario es de hasta {fmtArs(BONO)}</a>. Con un único haber mínimo y derecho al bono completo, el total antes de descuentos es <strong>{fmtArs(JUB_MIN + BONO)}</strong>. Si la suma de prestaciones supera la mínima, el bono puede ser proporcional hasta ese total. El simulador muestra el haber <strong>sin sumar el bono</strong>.</p>
+      <p>La PUAM del mes es <strong>{fmtArs(PUAM)}</strong>. Verificá el recibo y tus condiciones en Mi ANSES; no todas las prestaciones reciben el bono completo.</p>
+      <a class="cf-primary" href="#sj-regimen">Probar mi edad, aportes y régimen ↑</a>
     </section>
 
     <!-- Cómo leer el resultado -->
@@ -414,7 +423,7 @@ const schema = {
           <p class="cf-side-eyebrow">Referencia principal</p>
           <p class="sj-src__title">Requisito del régimen general</p>
           <div class="sj-hl__big" style="margin-top:0.2rem">30 años</div>
-          <p class="cf-side-desc">De aportes, más 60 años de edad (mujer) o 65 (hombre). Sin los 30 años quedan la moratoria vigente o la PUAM a los 65.</p>
+          <p class="cf-side-desc">De aportes, más 60 años de edad (mujer) o 65 (hombre). Si no llegás a 30 años, verificá si existe una vía de regularización aplicable a tu caso o si cumplís los requisitos de la PUAM a los 65.</p>
           <div class="sj-chips">
             <span class="sj-tag">Ley 24.241</span>
             <span class="sj-tag">60 / 65 años</span>
@@ -432,10 +441,10 @@ const schema = {
       <div class="cf-prose">
       <p>La <strong>fórmula de cálculo jubilatorio</strong> del régimen general (ANSES) considera:</p>
       <ul>
-        <li><strong>PBU</strong> (Prestación Básica Universal): componente fijo de <strong>{fmtArs(PBU)}</strong> en agosto de 2026.</li>
+        <li><strong>PBU</strong> (Prestación Básica Universal): componente fijo de <strong>{fmtArs(PBU)}</strong> en noviembre de 2026.</li>
         <li><strong>PC</strong> (Prestación Compensatoria): 1,5% × años aportados antes de julio de 1994 × promedio de remuneraciones computables actualizadas.</li>
         <li><strong>PAP</strong> (Prestación Adicional por Permanencia): 1,5% × años aportados desde julio de 1994 × promedio de remuneraciones computables actualizadas.</li>
-        <li><strong>Haber máximo</strong>: <strong>{fmtArs(JUB_MAX)}</strong> en agosto de 2026.</li>
+        <li><strong>Haber máximo</strong>: <strong>{fmtArs(JUB_MAX)}</strong> en noviembre de 2026.</li>
         <li><strong>Haber mínimo</strong>: <strong>{fmtArs(JUB_MIN)}</strong>. El bono extraordinario no forma parte del haber.</li>
       </ul>
       <h3>Fórmula simplificada vs cálculo real de ANSES</h3>
@@ -454,16 +463,16 @@ const schema = {
       <ol>
         <li><strong>Porcentaje acumulado:</strong> 1,5% × 30 años = <strong>45%</strong> del sueldo.</li>
         <li><strong>Componente proporcional:</strong> 45% × $1.500.000 = <strong>$675.000</strong>.</li>
-        <li><strong>Estimación con PBU:</strong> $675.000 + {fmtArs(PBU)} = <strong>{fmtArs(675_000 + PBU)}</strong>, dentro de los límites de agosto 2026.</li>
+        <li><strong>Estimación con PBU:</strong> $675.000 + {fmtArs(PBU)} = <strong>{fmtArs(675_000 + PBU)}</strong>, dentro de los límites de noviembre 2026.</li>
       </ol>
       <p>Haber estimado ≈ {fmtArs(675_000 + PBU)}. La PBU hace que la tasa final no sea simplemente 45%.</p>
-      <p><strong>Ejemplo 2 — Sueldo alto que toca el tope máximo.</strong> Datos de ejemplo: 35 años de aportes · sueldo actualizado $5.000.000.</p>
+      <p><strong>Ejemplo 2 — Sueldo alto que toca el tope máximo.</strong> Datos de ejemplo: 35 años de aportes · sueldo actualizado $6.000.000.</p>
       <ol>
         <li><strong>Porcentaje acumulado:</strong> 1,5% × 35 años = <strong>52,5%</strong> del sueldo.</li>
-        <li><strong>Componente proporcional:</strong> 52,5% × $5.000.000 = <strong>$2.625.000</strong>.</li>
+        <li><strong>Componente proporcional:</strong> 52,5% × $6.000.000 = <strong>$3.150.000</strong>.</li>
         <li><strong>Con PBU y tope:</strong> la suma supera {fmtArs(JUB_MAX)}, así que se limita al máximo oficial.</li>
       </ol>
-      <p>Haber estimado = {fmtArs(JUB_MAX)} (tope de agosto de 2026). Por eso las remuneraciones altas encuentran un techo previsional.</p>
+      <p>Haber estimado = {fmtArs(JUB_MAX)} (tope de noviembre de 2026). Por eso las remuneraciones altas encuentran un techo previsional.</p>
       <p>Recordá que ANSES no usa tu sueldo actual: considera remuneraciones computables actualizadas y suma PBU + PC + PAP. Estos ejemplos explican la mecánica; no anticipan tu haber exacto.</p>
       </div>
     </section>
@@ -491,11 +500,11 @@ const schema = {
           <h2 class="sj-card__title" style="color:var(--text)">Números que podés defender</h2>
           <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
           <p class="cf-side-desc" style="margin-top:0.7rem">
-            Metodología: PBU + (1,5% × hasta 35 años de aportes × remuneración de referencia), con mínimo y máximo oficiales de agosto 2026.
+            Metodología: PBU + (1,5% × hasta 35 años de aportes × remuneración de referencia), con mínimo y máximo oficiales de noviembre 2026.
             Los valores de referencia se actualizan por movilidad mensual (IPC).
           </p>
           <p class="sj-review-line">
-            Última revisión editorial: <time datetime={lastReviewed}>16 de agosto de 2026</time> · Valores oficiales de agosto según Resolución ANSES 232/2026 · Editor responsable: <a href="/autores/martin-rodriguez">Martín Rodríguez</a>.
+            Última revisión editorial: <time datetime={lastReviewed}>17 de noviembre de 2026</time> · Valores oficiales de noviembre según Resolución ANSES 304/2026 · Editor responsable: <a href="/autores/martin-rodriguez">Martín Rodríguez</a>.
           </p>
         </div>
         <div class="cf-side-card cf-side-card--dark">
@@ -511,15 +520,15 @@ const schema = {
               <span>Sistema Integrado Previsional Argentino: PBU, PC, PAP y topes (texto actualizado, InfoLeg).</span>
             </div>
             <div class="sj-src__item">
-              <strong><a href="https://www.boletinoficial.gob.ar/detalleAviso/primera/345155/20260730" rel="noopener">Resolución ANSES 232/2026</a></strong>
-              <span>Haberes mínimo y máximo, PBU y PUAM vigentes desde agosto de 2026.</span>
+              <strong><a href="https://www.argentina.gob.ar/normativa/nacional/resolucion-304-2026-431696/texto" rel="noopener">Resolución ANSES 304/2026</a></strong>
+              <span>Haberes mínimo y máximo, PBU y PUAM vigentes desde noviembre de 2026.</span>
             </div>
             <div class="sj-src__item">
               <strong>Movilidad jubilatoria mensual por IPC</strong>
               <span>DNU 274/2024 — los valores de referencia se revisan con cada actualización.</span>
             </div>
           </div>
-          <p class="sj-src__foot">● Información revisada el 16 de agosto de 2026 · valores ANSES vigentes para agosto</p>
+          <p class="sj-src__foot">● Información revisada el 17 de noviembre de 2026 · referencias ANSES de noviembre</p>
         </div>
       </div>
     </div>
@@ -582,7 +591,7 @@ const schema = {
     const PUAM_PCT = Number(root.getAttribute('data-puam-pct'));
     const TASA = Number(root.getAttribute('data-tasa'));
     const PISO = JUB_MIN;
-    const PUAM = JUB_MIN * PUAM_PCT;
+    const PUAM = Number(root.getAttribute('data-puam'));
 
     const $ = (id) => document.getElementById(id);
     const fmtArs = (n) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(n));
@@ -657,9 +666,13 @@ const schema = {
       $('sj-aportes-status').textContent = r.regimen === 'puam'
         ? 'PUAM · sin requisito'
         : r.cumpleAportes ? 'Cumple (' + r.aportesReq + ' req.)' : 'Faltan ' + (r.aportesReq - r.aportesAlJubilar) + ' años';
+      const antesDeTopes = PBU + r.sueldoJub * TASA * r.aportesComputados;
+      const ajuste = antesDeTopes < JUB_MIN ? ' · Se aplica el piso mínimo: ' + fmtArs(JUB_MIN)
+        : antesDeTopes > JUB_MAX ? ' · Se aplica el tope máximo: ' + fmtArs(JUB_MAX) : '';
       $('sj-formula').textContent = r.regimen === 'puam'
         ? fmtArs(JUB_MIN) + ' × 80% = ' + fmtArs(PUAM)
-        : fmtArs(PBU) + ' + (' + fmtArs(r.sueldoJub) + ' × 1,5% × ' + r.aportesComputados + ') = ' + (tieneHaber ? fmtArs(r.haber) : '—');
+        : !tieneHaber ? 'No cumple los aportes requeridos; no se estima un haber.'
+        : fmtArs(PBU) + ' + (' + fmtArs(r.sueldoJub) + ' × 1,5% × ' + r.aportesComputados + ') = ' + fmtArs(antesDeTopes) + ajuste;
 
       $('sj-deco-val').textContent = tieneHaber ? fmtArs(r.haber) : '—';
       $('sj-deco-tasa').textContent = tieneHaber ? dec(r.tasaReemplazo, 1) + '%' : '—';
@@ -696,7 +709,7 @@ const schema = {
         fIco.textContent = '⚠️';
         fT.textContent = 'No cumplirías los requisitos sin ajustes';
         fX.textContent = 'Al cumplir ' + r.edadJub + ' años solo tendrías ' + r.aportesAlJubilar + ' años de aportes y necesitás ' +
-          r.aportesReq + '. Opciones: aportar más años (empleo formal o monotributo con SIPA), moratoria vigente si ANSES la habilita, o esperar a los 65 y acceder a la PUAM.';
+          r.aportesReq + '. Opciones: aportar más años (empleo formal o monotributo con SIPA), una regularización si ANSES la habilita, o evaluar la PUAM a los 65 si reunís sus requisitos.';
         fEl.className = 'cf-callout cf-callout--warn sj-feasible';
       }
 
