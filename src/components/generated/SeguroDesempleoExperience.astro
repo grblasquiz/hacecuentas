@@ -1,18 +1,146 @@
 ---
 import HubCitableStats from '../hub/HubCitableStats.astro';
 interface Props { data?: any }
+import { calcularDesempleoGeneral } from '../../lib/data/desempleo-general';
+import { DESEMPLEO_PISO, DESEMPLEO_TECHO } from '../../lib/data/smvm-ar-2026';
+
 const { data } = Astro.props;
+const ars = (value: number) => '$' + Math.round(value).toLocaleString('es-AR');
+const ejemplo = calcularDesempleoGeneral(700_000, 30);
 ---
-<div class="mockup-seguro-desempleo" set:html={`<section class="hero"><div class="wrap crumb"><b>Trabajo</b> &nbsp;/&nbsp; Seguro de desempleo</div><div class="wrap grid"><div class="copy"><div class="eyebrow">Cuando el trabajo se corta</div><h1>Sabé cuánto cobrarías y por cuánto tiempo.</h1><p>Estimá la prestación de ANSES según tu mejor sueldo y aportes. También contempla construcción y embargo salarial.</p><div class="chips"><span>✓ Elegibilidad visible</span><span>◷ Duración por aportes</span><span>▤ Pasos para tramitar</span></div><div class="art"><div class="brief"></div><div class="calendar">DURACIÓN ESTIMADA<b id="art-months">8 meses</b></div><div class="resultcard"><small>CUOTA MENSUAL</small><strong id="art-value">$363.000</strong><span id="art-status">Alcanzás los aportes mínimos</span></div></div></div><form class="calc" onsubmit="return false"><div class="calc-head"><div><h2>Revisá tu caso</h2><p class="muted">Elegí el régimen y cargá tus datos.</p></div><span class="tag">Valores julio 2026</span></div><div class="label">¿Qué necesitás calcular?</div><div class="cases"><button type="button" class="case active" data-mode="general"><i>▣</i>Prestación ANSES</button><button type="button" class="case" data-mode="uocra"><i>⌂</i>Construcción</button><button type="button" class="case" data-mode="embargo"><i>%</i>Embargo de sueldo</button></div><div class="label">Tus datos</div><div class="fields"><div class="field wide" data-for="benefit"><label>Mejor remuneración neta de los últimos 6 meses</label><div class="money"><b>$</b><input id="salary" value="700000"></div></div><div class="field" data-for="benefit"><label>Meses aportados en los últimos 3 años</label><input id="months" value="30"></div><div class="field" data-for="benefit"><label>Cuotas ya cobradas</label><input id="paid" value="1"></div><div class="field hide" data-for="embargo"><label>Sueldo neto mensual</label><div class="money"><b>$</b><input id="net-salary" value="900000"></div></div><div class="field hide" data-for="embargo"><label>Tipo de deuda</label><select id="debt"><option value="common">Deuda común</option><option value="food">Cuota alimentaria</option></select></div></div><section class="result"><div class="result-top"><div><small id="result-label">CUOTA MENSUAL ESTIMADA</small><div class="value" id="result">$363.000</div></div><div class="verdict"><small>Tu situación</small><b id="verdict">Te corresponde</b></div></div><div class="stats"><span id="s1l">DURACIÓN TOTAL<b id="s1">8 meses</b></span><span id="s2l">TE QUEDAN<b id="s2">7 cuotas</b></span><span id="s3l">TOTAL COMPLETO<b id="s3">$2.904.000</b></span></div><button class="go" id="update" type="button">Actualizar estimación</button></section></form></div></section>
-<section class="section"><div class="wrap"><div class="center"><div class="eyebrow">Tu prestación en el tiempo</div><h2 id="timeline-title">Cuotas cobradas y pendientes</h2><p id="timeline-copy">La duración depende de los meses aportados dentro de los últimos tres años.</p></div><div class="timeline"><div class="months" id="month-grid"></div><div class="timeline-note"><span>Amarillo: ya cobrado</span><b id="timeline-result">Te quedan 7 de 8 cuotas</b><span>Verde: pendiente</span></div></div></div></section><section class="break"><div class="wrap cards"><article class="card"><h3 id="detail-title">Cómo se forma la prestación</h3><div class="line"><span id="d1l">Mejor remuneración</span><b id="d1">$700.000</b></div><div class="line"><span id="d2l">75% de la remuneración</span><b id="d2">$525.000</b></div><div class="line"><span id="d3l">Piso vigente</span><b id="d3">$181.500</b></div><div class="line"><span id="d4l">Techo vigente</span><b id="d4">$363.000</b></div><div class="line total"><strong id="d5l">Cuota mensual</strong><b id="d5">$363.000</b></div></article><article class="card"><h3>Qué hacer ahora</h3><div class="step"><i>1</i><div><b>Reuní la documentación</b><span>DNI y telegrama o constancia de finalización laboral.</span></div></div><div class="step"><i>2</i><div><b>Iniciá el trámite</b><span>Desde Atención Virtual o en una oficina de ANSES.</span></div></div><div class="step"><i>3</i><div><b>Revisá tu fecha</b><span>Consultá calendario y medio de cobro en mi ANSES.</span></div></div><div class="warning" id="warning">⚠️ Si renunciaste voluntariamente, el régimen general normalmente no corresponde.</div></article></div></section><section class="darksection"><div class="wrap"><div class="rules"><div class="rule"><i>◷</i><h3>No demores el trámite</h3><p>La solicitud tiene plazo. Iniciarla tarde puede descontar días de prestación.</p></div><div class="rule"><i>＋</i><h3>Mantenés otras coberturas</h3><p>Durante la prestación continúan obra social y asignaciones familiares cuando corresponden.</p></div><div class="rule"><i>⌂</i><h3>Construcción es distinto</h3><p>El fondo de cese laboral se suma al régimen específico y tiene reglas propias.</p></div></div></div></section>`} />
-<script is:inline>
-(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-seguro-desempleo')?document.currentScript.previousElementSibling:document.querySelector('.mockup-seguro-desempleo');
+<div class="mockup-seguro-desempleo" set:html={`<section class="hero"><div class="wrap crumb"><b>Trabajo</b> &nbsp;/&nbsp; Seguro de desempleo</div><div class="wrap grid"><div class="copy"><div class="eyebrow">Cuando el trabajo se corta</div><h1>Sabé cuánto cobrarías y por cuánto tiempo.</h1><p>Estimá la prestación de ANSES según tu mejor sueldo y aportes. También contempla construcción y embargo salarial.</p><div class="chips"><span>✓ Elegibilidad visible</span><span>◷ Duración por aportes</span><span>▤ Pasos para tramitar</span></div><div class="art"><div class="brief"></div><div class="calendar">DURACIÓN ESTIMADA<b id="art-months">8 meses</b></div><div class="resultcard"><small>CUOTA MENSUAL</small><strong id="art-value">${ars(ejemplo.inicial)}</strong><span id="art-status">Alcanzás los aportes mínimos</span></div></div></div><form class="calc" onsubmit="return false"><div class="calc-head"><div><h2>Revisá tu caso</h2><p class="muted">Elegí el régimen y cargá tus datos.</p></div><span class="tag">Valores julio 2026</span></div><div class="label">¿Qué necesitás calcular?</div><div class="cases"><button type="button" class="case active" data-mode="general"><i>▣</i>Prestación ANSES</button><button type="button" class="case" data-mode="uocra"><i>⌂</i>Construcción</button><button type="button" class="case" data-mode="embargo"><i>%</i>Embargo de sueldo</button></div><div class="label">Tus datos</div><div class="fields"><div class="field wide" data-for="salary"><label for="salary">Mejor remuneración neta de los últimos 6 meses</label><div class="money"><b>$</b><input id="salary" value="700000"></div></div><div class="field" data-for="benefit"><label for="months" id="months-label">Meses aportados en los últimos 3 años</label><input id="months" value="30"></div><div class="field" data-for="benefit"><label>Cuotas ya cobradas</label><input id="paid" value="1"></div><div class="field hide" data-for="embargo"><label for="gross-salary">Sueldo bruto mensual en dinero</label><div class="money"><b>$</b><input id="gross-salary" value="900000"></div></div><div class="field hide" data-for="embargo"><label>Tipo de deuda</label><select id="debt"><option value="common">Deuda común</option><option value="food">Cuota alimentaria</option></select></div></div><section class="result"><div class="result-top"><div><small id="result-label">CUOTA INICIAL ESTIMADA</small><div class="value" id="result">${ars(ejemplo.inicial)}</div></div><div class="verdict"><small>Tu situación</small><b id="verdict">Alcanzás el mínimo de aportes</b></div></div><div class="stats"><span id="s1l">DURACIÓN TOTAL<b id="s1">8 meses</b></span><span id="s2l">TE QUEDAN<b id="s2">7 cuotas</b></span><span id="s3l">TOTAL COMPLETO<b id="s3">${ars(ejemplo.total)}</b></span></div><button class="go" id="update" type="button">Actualizar estimación</button></section></form></div></section>
+<section class="section"><div class="wrap"><div class="center"><div class="eyebrow">Tu prestación en el tiempo</div><h2 id="timeline-title">Cuotas cobradas y pendientes</h2><p id="timeline-copy">La duración depende de los meses aportados dentro de los últimos tres años.</p></div><div class="timeline"><div class="months" id="month-grid"></div><div class="timeline-note"><span>Amarillo: ya cobrado</span><b id="timeline-result">Te quedan 7 de 8 cuotas</b><span>Verde: pendiente</span></div></div></div></section><section class="break"><div class="wrap cards"><article class="card"><h3 id="detail-title">Cómo se forma la prestación</h3><div class="line"><span id="d1l">Mejor remuneración</span><b id="d1">$700.000</b></div><div class="line"><span id="d2l">75% de la remuneración</span><b id="d2">$525.000</b></div><div class="line"><span id="d3l">Piso vigente</span><b id="d3">${ars(DESEMPLEO_PISO)}</b></div><div class="line"><span id="d4l">Techo vigente</span><b id="d4">${ars(DESEMPLEO_TECHO)}</b></div><div class="line total"><strong id="d5l">Cuota inicial</strong><b id="d5">${ars(ejemplo.inicial)}</b></div></article><article class="card"><h3>Qué hacer ahora</h3><div class="step"><i>1</i><div><b>Reuní la documentación</b><span>DNI y telegrama o constancia de finalización laboral.</span></div></div><div class="step"><i>2</i><div><b>Iniciá el trámite</b><span>Desde Atención Virtual o en una oficina de ANSES.</span></div></div><div class="step"><i>3</i><div><b>Revisá tu fecha</b><span>Consultá calendario y medio de cobro en mi ANSES.</span></div></div><div class="warning" id="warning">⚠️ Si renunciaste voluntariamente, el régimen general normalmente no corresponde.</div></article></div></section><section class="darksection"><div class="wrap"><div class="rules"><div class="rule"><i>◷</i><h3>No demores el trámite</h3><p>La solicitud tiene plazo. Iniciarla tarde puede descontar días de prestación.</p></div><div class="rule"><i>＋</i><h3>Mantenés otras coberturas</h3><p>Durante la prestación continúan obra social y asignaciones familiares cuando corresponden.</p></div><div class="rule"><i>⌂</i><h3>Construcción es distinto</h3><p>El fondo de cese laboral se suma al régimen específico y tiene reglas propias.</p></div></div></div></section>`} />
+<script>
+import { calcularDesempleoGeneral } from '../../lib/data/desempleo-general';
+import { DESEMPLEO_PISO, DESEMPLEO_TECHO, SMVM_MENSUAL, SMVM_FECHA } from '../../lib/data/smvm-ar-2026';
 
-const $=s=>root.querySelector(s),$$=s=>root.querySelectorAll(s),n=id=>Math.max(0,Number($(id).value)||0),ars=x=>"$"+Math.round(x).toLocaleString("es-AR");let mode="general",FLOOR=181500,CEIL=363000,SMVM=372400;function duration(m){return m>=36?12:m>=24?8:m>=12?4:m>=6?2:0}function grid(total,paid){$("#month-grid").innerHTML=Array.from({length:12},(_,i)=>`<span class="month ${i>=total?"off":i<paid?"paid":"left"}">${i+1}</span>`).join("")}
-function calc(){if(mode==="embargo"){let net=n("#net-salary"),food=$("#debt").value==="food",emb=food?net*.33:net<=SMVM?0:(net-SMVM)*(net<=SMVM*2?.1:.2),left=net-emb,pct=net?emb/net*100:0;$("#result-label").textContent="MÁXIMO EMBARGABLE POR MES";$("#result").textContent=ars(emb);$("#verdict").textContent=emb?"Hay parte embargable":"Sueldo protegido";$("#s1l").childNodes[0].nodeValue="TE QUEDA";$("#s1").textContent=ars(left);$("#s2l").childNodes[0].nodeValue="RETENCIÓN";$("#s2").textContent=pct.toFixed(1).replace(".",",")+"%";$("#s3l").childNodes[0].nodeValue="MÍNIMO PROTEGIDO";$("#s3").textContent=food?"No aplica":ars(SMVM);$("#art-value").textContent=ars(emb);$("#art-months").textContent=pct.toFixed(1)+"% del neto";$("#art-status").textContent=food?"Cuota alimentaria":"Deuda común";$("#detail-title").textContent="Cómo se calcula el embargo";[["Sueldo neto",ars(net)],["Mínimo inembargable",food?"No aplica":ars(SMVM)],["Parte embargable",ars(emb)],["Te queda",ars(left)],["Máximo mensual",ars(emb)]].forEach((x,i)=>{$("#d"+(i+1)+"l").textContent=x[0];$("#d"+(i+1)).textContent=x[1]});$("#timeline-title").textContent="Parte protegida y parte embargable";$("#timeline-result").textContent=`Te queda ${ars(left)} por mes`;grid(Math.max(1,Math.round(pct/10)),0);$("#warning").textContent="⚠️ Las cuotas alimentarias tienen un régimen especial y el porcentaje final lo fija el juez.";return}let salary=n("#salary"),months=Math.min(36,n("#months")),paid=n("#paid"),dur=duration(months);if(mode==="uocra")dur=Math.min(8,dur);paid=Math.min(paid,dur);let quota=dur?Math.min(CEIL,Math.max(FLOOR,salary*.75)):0,left=Math.max(0,dur-paid),total=quota*dur,fund=mode==="uocra"?salary*(Math.min(12,months)*.12+Math.max(0,months-12)*.08):0;$("#result-label").textContent="CUOTA MENSUAL ESTIMADA";$("#result").textContent=ars(quota);$("#verdict").textContent=dur?"Te corresponde":"No alcanzás 6 meses";$("#s1l").childNodes[0].nodeValue="DURACIÓN TOTAL";$("#s1").textContent=dur+" meses";$("#s2l").childNodes[0].nodeValue="TE QUEDAN";$("#s2").textContent=left+" cuotas";$("#s3l").childNodes[0].nodeValue=mode==="uocra"?"FONDO + PRESTACIÓN":"TOTAL COMPLETO";$("#s3").textContent=ars(total+fund);$("#art-value").textContent=ars(quota);$("#art-months").textContent=dur+" meses";$("#art-status").textContent=dur?"Alcanzás los aportes mínimos":"No llegás al mínimo";$("#detail-title").textContent=mode==="uocra"?"Prestación y fondo de cese":"Cómo se forma la prestación";[["Mejor remuneración",ars(salary)],["75% de la remuneración",ars(salary*.75)],["Piso vigente",ars(FLOOR)],["Techo vigente",ars(CEIL)],["Cuota mensual",ars(quota)]].forEach((x,i)=>{$("#d"+(i+1)+"l").textContent=x[0];$("#d"+(i+1)).textContent=x[1]});$("#timeline-title").textContent="Cuotas cobradas y pendientes";$("#timeline-result").textContent=`Te quedan ${left} de ${dur} cuotas`;$("#warning").textContent=dur?"⚠️ Si renunciaste voluntariamente, el régimen general normalmente no corresponde.":"⚠️ Con menos de 6 meses de aportes en los últimos 3 años no se genera esta prestación.";grid(dur,paid)}
-function setMode(m){mode=m;$$(".case").forEach(x=>x.classList.toggle("active",x.dataset.mode===m));$$("[data-for=benefit]").forEach(x=>x.classList.toggle("hide",m==="embargo"));$$("[data-for=embargo]").forEach(x=>x.classList.toggle("hide",m!=="embargo"));calc()}$$(".case").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));$$("input,select").forEach(i=>i.oninput=calc);$("#update").onclick=e=>{calc();e.currentTarget.textContent="✓ Estimación actualizada";setTimeout(()=>e.currentTarget.textContent="Actualizar estimación",1200)};calc();
+const root = document.querySelector('.mockup-seguro-desempleo');
+if (root) {
+  const element = (id: string) => root.querySelector<HTMLElement>(`#${id}`)!;
+  const value = (id: string) => (element(id) as HTMLInputElement | HTMLSelectElement).value;
+  const number = (id: string) => Math.max(0, Number(value(id)) || 0);
+  const text = (id: string, copy: string) => { element(id).textContent = copy; };
+  const ars = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+  const dash = '—';
+  let mode = 'general';
 
-})();
+  function summary(rows: [string, string][]) {
+    rows.forEach(([label, result], i) => {
+      element(`s${i + 1}l`).firstChild!.nodeValue = label;
+      text(`s${i + 1}`, result);
+    });
+  }
+
+  function detail(rows: [string, string][]) {
+    rows.forEach(([label, result], i) => {
+      text(`d${i + 1}l`, label);
+      text(`d${i + 1}`, result);
+    });
+  }
+
+  function grid(total: number, paid: number) {
+    element('month-grid').innerHTML = Array.from({ length: 12 }, (_, i) =>
+      `<span class="month ${i >= total ? 'off' : i < paid ? 'paid' : 'left'}">${i + 1}</span>`
+    ).join('');
+  }
+
+  function calc() {
+    if (mode === 'embargo') {
+      const bruto = number('gross-salary');
+      const alimentos = value('debt') === 'food';
+      const excedente = Math.max(0, bruto - SMVM_MENSUAL);
+      const retencion = excedente * (bruto > 2 * SMVM_MENSUAL ? 0.2 : 0.1);
+      const monto = alimentos ? dash : ars(retencion);
+      const tasa = bruto > 0 ? (100 * retencion / bruto).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '%' : '0%';
+      text('result-label', 'MÁXIMO EMBARGABLE POR MES');
+      text('result', monto);
+      text('verdict', alimentos ? 'Monto fijado judicialmente' : retencion > 0 ? 'Hay parte embargable' : 'Sueldo protegido');
+      summary([
+        ['BRUTO DESPUÉS DEL EMBARGO', alimentos ? dash : ars(bruto - retencion)],
+        ['RETENCIÓN SOBRE EL BRUTO', alimentos ? dash : tasa],
+        ['MÍNIMO PROTEGIDO', alimentos ? 'Régimen especial' : ars(SMVM_MENSUAL)],
+      ]);
+      text('art-value', monto);
+      text('art-months', alimentos ? dash : tasa + ' del bruto');
+      text('art-status', alimentos ? 'Cuota alimentaria' : 'Deuda común');
+      text('detail-title', 'Cómo se calcula el embargo');
+      detail([
+        ['Sueldo bruto en dinero', ars(bruto)],
+        ['Mínimo inembargable', alimentos ? 'Régimen especial' : ars(SMVM_MENSUAL)],
+        ['Excedente sobre el mínimo', alimentos ? dash : ars(excedente)],
+        ['Bruto después del embargo', alimentos ? dash : ars(bruto - retencion)],
+        ['Máximo mensual', monto],
+      ]);
+      text('timeline-title', 'Límite del embargo');
+      text('timeline-copy', 'Para deudas comunes, el Decreto 484/87 toma la remuneración bruta en dinero.');
+      text('timeline-result', alimentos ? 'El monto lo fija el juzgado' : 'Máximo mensual: ' + monto);
+      grid(0, 0);
+      text('warning', 'En alimentos y litis expensas, la justicia fija el importe de modo que permita la subsistencia del alimentante.');
+      return;
+    }
+
+    const construccion = mode === 'uocra';
+    const aportes = Math.min(construccion ? 24 : 36, Math.floor(number('months')));
+    const sueldo = number('salary');
+    const general = calcularDesempleoGeneral(sueldo, aportes);
+    const duracion = construccion ? aportes >= 18 ? 8 : aportes >= 12 ? 4 : aportes >= 8 ? 3 : 0 : general.duracion;
+    const pagas = Math.min(duracion, Math.floor(number('paid')));
+    const pendientes = duracion - pagas;
+    const monto = construccion ? dash : ars(general.inicial);
+    const verdict = duracion ? 'Alcanzás el mínimo de aportes' : construccion ? 'Se requieren 8 meses' : 'Se requieren 6 meses';
+
+    text('result-label', construccion ? 'DURACIÓN ESTIMADA' : 'CUOTA INICIAL ESTIMADA');
+    text('result', construccion ? duracion + ' cuotas' : monto);
+    text('verdict', verdict);
+    summary([
+      ['DURACIÓN TOTAL', duracion + ' meses'],
+      ['TE QUEDAN', pendientes + ' cuotas'],
+      ['TOTAL ESTIMADO', construccion ? dash : ars(general.total)],
+    ]);
+    text('art-value', construccion ? duracion + ' cuotas' : monto);
+    text('art-months', duracion + ' meses');
+    text('art-status', verdict);
+    text('detail-title', construccion ? 'Prestación de la construcción' : 'Cómo se forma la prestación');
+    detail(construccion ? [
+      ['Período para contar aportes', 'Últimos 2 años'],
+      ['Aportes mínimos', '8 meses'],
+      ['Piso vigente', ars(DESEMPLEO_PISO)],
+      ['Techo vigente', ars(DESEMPLEO_TECHO)],
+      ['Duración estimada', duracion + ' cuotas'],
+    ] : [
+      ['Mejor remuneración neta', ars(sueldo)],
+      ['75% de la remuneración', ars(general.base)],
+      ['Piso vigente', ars(DESEMPLEO_PISO)],
+      ['Techo vigente', ars(DESEMPLEO_TECHO)],
+      ['Cuota inicial', monto],
+    ]);
+    text('timeline-title', 'Cuotas cobradas y pendientes');
+    text('timeline-copy', construccion ? 'La Ley 25.371 cuenta los aportes de los últimos dos años.' : 'La Ley 24.013 cuenta los aportes de los últimos tres años.');
+    text('timeline-result', `Te quedan ${pendientes} de ${duracion} cuotas`);
+    text('warning', construccion
+      ? 'Consultá la liquidación de la prestación en ANSES y el saldo del fondo de cese en tu cuenta. Son conceptos distintos.'
+      : `Estimación para trabajadores permanentes, con topes de ${SMVM_FECHA}. Las cuotas 5 a 8 bajan al 85% y las 9 a 12 al 70% de la cuota inicial, sujetas al piso y techo. La prórroga por edad se tramita por separado.`);
+    grid(duracion, pagas);
+  }
+
+  const tabs = root.querySelectorAll<HTMLButtonElement>('.case');
+  tabs.forEach((button) => button.addEventListener('click', () => {
+    mode = button.dataset.mode!;
+    tabs.forEach((tab) => tab.classList.toggle('active', tab === button));
+    root.querySelectorAll('[data-for=benefit]').forEach((field) => field.classList.toggle('hide', mode === 'embargo'));
+    root.querySelectorAll('[data-for=salary]').forEach((field) => field.classList.toggle('hide', mode !== 'general'));
+    root.querySelectorAll('[data-for=embargo]').forEach((field) => field.classList.toggle('hide', mode !== 'embargo'));
+    text('months-label', mode === 'uocra' ? 'Meses aportados en los últimos 2 años' : 'Meses aportados en los últimos 3 años');
+    calc();
+  }));
+  root.querySelectorAll('input, select').forEach((field) => field.addEventListener('input', calc));
+  element('update').addEventListener('click', () => {
+    calc();
+    text('update', '✓ Estimación actualizada');
+    setTimeout(() => text('update', 'Actualizar estimación'), 1200);
+  });
+  calc();
+}
 </script>
 <style is:global>
 

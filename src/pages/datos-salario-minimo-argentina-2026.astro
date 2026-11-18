@@ -9,74 +9,60 @@ import {
   SMVM_HORA,
   SMVM_FECHA,
   SMVM_RESOLUCION,
+  SMVM_VIGENTE,
+  SMVM_CRONOGRAMA,
+  SMVM_COBERTURA,
+  SMVM_NORMAS,
+  SMVM_ULTIMA_REVISION,
+  DESEMPLEO_ANSES_URL,
+  smvmMesLegible,
   DESEMPLEO_PISO,
   DESEMPLEO_TECHO,
 } from '../lib/data/smvm-ar-2026';
 
-// Página-dato enlazable (autoridad) Argentina: SMVM 2026 — valor vigente, valor
-// hora, cronograma mes a mes de la Res. 9/2025 y topes de desempleo. Patrón
-// calcado de /co/datos-salario-minimo-colombia-2026 (la mejor página del sitio
-// en Bing). Los valores vigentes se importan de src/lib/data/smvm-ar-2026.ts
-// (fuente única, la patchea el fetcher scripts/update-data/fetchers/smvm.ts),
-// así el hero y el title se actualizan solos con cada resolución nueva.
-
-const ULTIMA_REVISION = '2026-08-16';
 const PAGE_URL = 'https://hacecuentas.com/datos-salario-minimo-argentina-2026';
-
 const fmt = (n: number) => '$' + n.toLocaleString('es-AR');
-
-// Cronograma oficial Res. 9/2025 CNEPySMVyM (BO 03-12-2025) — espejo del
-// CRONOGRAMA determinístico de scripts/update-data/fetchers/smvm.ts.
-// ⚠️ Al salir una resolución nueva: agregar los tramos acá Y en el fetcher.
-const CRONOGRAMA = [
-  { periodo: 'Noviembre 2025', mensual: 328_400, hora: 1_642 },
-  { periodo: 'Diciembre 2025', mensual: 334_800, hora: 1_674 },
-  { periodo: 'Enero 2026', mensual: 341_000, hora: 1_705 },
-  { periodo: 'Febrero 2026', mensual: 346_800, hora: 1_734 },
-  { periodo: 'Marzo 2026', mensual: 352_400, hora: 1_762 },
-  { periodo: 'Abril 2026', mensual: 357_800, hora: 1_789 },
-  { periodo: 'Mayo 2026', mensual: 363_000, hora: 1_815 },
-  { periodo: 'Junio 2026', mensual: 367_800, hora: 1_839 },
-  { periodo: 'Julio 2026', mensual: 372_400, hora: 1_862 },
-  { periodo: 'Agosto 2026', mensual: 376_600, hora: 1_883 },
-];
-
-// Filas con variación % vs mes anterior (aritmética sobre el cronograma, sin inventar).
-const cronogramaRows = CRONOGRAMA.map((t, i) => ({
-  ...t,
-  esVigente: t.mensual === SMVM_MENSUAL,
-  var: i === 0 ? null : ((t.mensual / CRONOGRAMA[i - 1].mensual - 1) * 100).toFixed(1).replace('.', ','),
+const revisado = new Intl.DateTimeFormat('es-AR', { dateStyle: 'long', timeZone: 'UTC' })
+  .format(new Date(SMVM_ULTIMA_REVISION));
+const cronogramaRows = SMVM_CRONOGRAMA.map((tramo, i) => ({
+  ...tramo,
+  mes: smvmMesLegible(tramo.periodo),
+  esVigente: tramo.periodo === SMVM_VIGENTE.periodo,
+  esFuturo: tramo.periodo > SMVM_VIGENTE.periodo,
+  variacion: i === 0 ? null : ((tramo.mensual / SMVM_CRONOGRAMA[i - 1].mensual - 1) * 100).toFixed(1).replace('.', ','),
 }));
-
-// Derivados determinísticos del valor vigente (relación oficial: hora = mensual/200).
-const SMVM_DIA = SMVM_HORA * 8; // jornalizado, jornada de 8 h
+const SMVM_DIA = SMVM_HORA * 8;
 const SMVM_QUINCENA = SMVM_MENSUAL / 2;
-const primero2026 = CRONOGRAMA[2]; // enero 2026
-const aumento2026 = ((SMVM_MENSUAL / primero2026.mensual - 1) * 100).toFixed(1).replace('.', ',');
-const aumentoCronograma = ((SMVM_MENSUAL / CRONOGRAMA[0].mensual - 1) * 100).toFixed(1).replace('.', ',');
+const primero2026 = SMVM_CRONOGRAMA.find((tramo) => tramo.periodo === '2026-01')!;
+const ultimo2026 = SMVM_CRONOGRAMA.find((tramo) => tramo.periodo === '2026-12')!;
+const cierre2026 = SMVM_VIGENTE.periodo <= ultimo2026.periodo ? SMVM_VIGENTE : ultimo2026;
+const aumento2026 = ((cierre2026.mensual / primero2026.mensual - 1) * 100).toFixed(1).replace('.', ',');
+const aumentoCronograma = ((SMVM_MENSUAL / SMVM_CRONOGRAMA[0].mensual - 1) * 100).toFixed(1).replace('.', ',');
+const desempleo = 'En el régimen general, la cuota inicial es el 75% de la mejor remuneración mensual neta, normal y habitual de los seis meses anteriores al cese. El piso y el techo mensuales son el 50% y el 100% del SMVM vigente, según el artículo 2 de la Resolución 4/2026.';
 
 const valores = [
   { c: 'SMVM mensual (jornada completa)', v: fmt(SMVM_MENSUAL), n: `${SMVM_RESOLUCION} · vigente desde ${SMVM_FECHA}` },
-  { c: 'SMVM por hora (jornalizados)', v: fmt(SMVM_HORA), n: 'Relación oficial: mensual ÷ 200 h' },
+  { c: 'SMVM por hora (jornalizados)', v: fmt(SMVM_HORA), n: 'Valor publicado para trabajadores jornalizados' },
   { c: 'SMVM por día (jornada de 8 h)', v: fmt(SMVM_DIA), n: 'Valor hora × 8' },
   { c: 'SMVM por quincena', v: fmt(SMVM_QUINCENA), n: 'Mensual ÷ 2' },
-  { c: 'Piso del seguro de desempleo', v: fmt(DESEMPLEO_PISO), n: 'ANSES · lo ajusta con ~1 mes de rezago vs el SMVM' },
-  { c: 'Techo del seguro de desempleo', v: fmt(DESEMPLEO_TECHO), n: 'ANSES · Ley 24.013' },
+  { c: 'Piso del seguro de desempleo', v: fmt(DESEMPLEO_PISO), n: '50% del SMVM vigente · art. 2' },
+  { c: 'Techo del seguro de desempleo', v: fmt(DESEMPLEO_TECHO), n: '100% del SMVM vigente · art. 2' },
 ];
 
-const title = `Salario mínimo Argentina 2026: SMVM ${fmt(SMVM_MENSUAL)} mes a mes`;
-const description = `El salario mínimo en Argentina 2026 es de ${fmt(SMVM_MENSUAL)} por mes y ${fmt(SMVM_HORA)} por hora (SMVM, vigente ${SMVM_FECHA}). Cronograma mes a mes de la Res. 9/2025.`;
+const anioVigente = SMVM_VIGENTE.periodo.slice(0, 4);
+const title = `Salario mínimo Argentina ${anioVigente}: SMVM ${fmt(SMVM_MENSUAL)} mes a mes`;
+const description = `El salario mínimo vigente en Argentina es de ${fmt(SMVM_MENSUAL)} por mes y ${fmt(SMVM_HORA)} por hora (SMVM, vigente ${SMVM_FECHA}). Cronograma oficial hasta abril de 2027 y topes por desempleo.`;
 
 const faq: Array<{ q: string; a: string; link?: { href: string; text: string } }> = [
-  { q: '¿Cuánto es el salario mínimo en Argentina 2026?', a: `El Salario Mínimo, Vital y Móvil (SMVM) vigente es de ${fmt(SMVM_MENSUAL)} por mes desde ${SMVM_FECHA}, para trabajadores mensualizados de jornada completa. Lo fijó la ${SMVM_RESOLUCION}, que estableció un cronograma de aumentos mensuales entre noviembre de 2025 y agosto de 2026.` },
-  { q: '¿Cuánto es el SMVM hoy?', a: `El SMVM hoy es de ${fmt(SMVM_MENSUAL)} mensuales (${fmt(SMVM_HORA)} por hora para jornalizados), el último tramo del cronograma de la ${SMVM_RESOLUCION}, vigente desde ${SMVM_FECHA}. Es un valor bruto y de jornada completa: si trabajás menos horas, corresponde el proporcional.` },
-  { q: '¿Cuánto es el salario mínimo por hora en 2026?', a: `El valor hora del SMVM es ${fmt(SMVM_HORA)} desde ${SMVM_FECHA}. Sale de la relación oficial de las resoluciones del Consejo del Salario: el valor mensual dividido 200 horas (8 horas diarias por 25 días). Es el mínimo por hora para trabajadores jornalizados.` },
+  { q: '¿Cuánto es el salario mínimo vigente en Argentina?', a: `El Salario Mínimo, Vital y Móvil (SMVM) vigente es de ${fmt(SMVM_MENSUAL)} por mes desde ${SMVM_FECHA}, para trabajadores mensualizados de jornada completa. Lo fijó la ${SMVM_RESOLUCION}.` },
+  { q: '¿Cuánto es el SMVM hoy?', a: `El SMVM hoy es de ${fmt(SMVM_MENSUAL)} mensuales (${fmt(SMVM_HORA)} por hora para jornalizados), vigente desde ${SMVM_FECHA} según la ${SMVM_RESOLUCION}. Es un valor bruto y de jornada completa: si trabajás menos horas, corresponde el proporcional.` },
+  { q: '¿Cuánto es el salario mínimo por hora?', a: `El valor hora del SMVM es ${fmt(SMVM_HORA)} desde ${SMVM_FECHA}. Es el importe que fija la resolución para trabajadores jornalizados.` },
   { q: '¿Cuánto cobra por día un trabajador jornalizado?', a: `Con el valor hora de ${fmt(SMVM_HORA)}, una jornada completa de 8 horas no puede pagarse por debajo de ${fmt(SMVM_DIA)} por día. Para jornadas más cortas se aplica el proporcional por hora.` },
-  { q: '¿Quién fija el salario mínimo y dónde se publica?', a: 'Lo fija el Consejo Nacional del Empleo, la Productividad y el Salario Mínimo, Vital y Móvil (CNEPySMVyM), un órgano tripartito con representación del Estado, los sindicatos y los empleadores. Sus resoluciones se publican en el Boletín Oficial. El cronograma 2026 salió con la Resolución 9/2025 (BO 03-12-2025).' },
-  { q: '¿Cuánto aumentó el salario mínimo en 2026?', a: `Entre enero 2026 (${fmt(primero2026.mensual)}) y ${SMVM_FECHA} (${fmt(SMVM_MENSUAL)}) el SMVM acumuló una suba del ${aumento2026}%. Si se toma el cronograma completo de la Res. 9/2025, desde noviembre 2025 (${fmt(CRONOGRAMA[0].mensual)}) el aumento acumulado es del ${aumentoCronograma}%, en tramos mensuales de entre 1,2% y 2%.`, link: { href: '/trabajo/sueldo-vs-inflacion', text: 'Compará tu sueldo contra la inflación' } },
-  { q: '¿Qué pasa con el salario mínimo después de agosto 2026?', a: 'El cronograma de la Resolución 9/2025 termina en agosto de 2026: es el último valor oficial publicado. El monto de los meses siguientes lo tiene que definir una nueva resolución del Consejo del Salario; cuando se publique en el Boletín Oficial, esta página se actualiza con los tramos nuevos.' },
+  { q: '¿Quién fija el salario mínimo y dónde se publica?', a: 'Lo fija el Consejo Nacional del Empleo, la Productividad y el Salario Mínimo, Vital y Móvil (CNEPySMVyM), un órgano tripartito con representación del Estado, los sindicatos y los empleadores. Sus resoluciones se publican en el Boletín Oficial. La Resolución 9/2025 fijó los tramos hasta agosto de 2026. La Resolución 4/2026 fijó los tramos de septiembre de 2026 a abril de 2027.' },
+  { q: '¿Cuánto aumentó el salario mínimo en 2026?', a: `Entre enero 2026 (${fmt(primero2026.mensual)}) y ${smvmMesLegible(cierre2026.periodo)} (${fmt(cierre2026.mensual)}) el SMVM acumuló una suba nominal del ${aumento2026}%.`, link: { href: '/trabajo/sueldo-vs-inflacion', text: 'Compará tu sueldo contra la inflación' } },
+  { q: '¿Qué pasa con el salario mínimo después de agosto 2026?', a: 'La Resolución 4/2026 fijó ocho tramos mensuales desde septiembre de 2026. El último tramo publicado comienza en abril de 2027 con $437.000 mensuales y $2.185 por hora.' },
   { q: '¿El salario mínimo es en bruto o en mano?', a: 'Es un valor bruto y remunerativo: sobre el SMVM se aplican los descuentos de ley (jubilación, PAMI y obra social) como en cualquier sueldo registrado, así que el neto en mano es menor.', link: { href: '/trabajo/sueldo-bruto-y-neto', text: 'Calculá cuánto queda en mano' } },
-  { q: '¿Para qué se usa el SMVM además del sueldo?', a: `El SMVM es la referencia de varios cálculos: el seguro de desempleo de ANSES se paga entre un piso de ${fmt(DESEMPLEO_PISO)} y un techo de ${fmt(DESEMPLEO_TECHO)} (topes que ANSES ajusta con alrededor de un mes de rezago respecto del SMVM vigente), y también se usa como umbral en programas, becas y en la inembargabilidad parcial del sueldo.`, link: { href: '/trabajo/seguro-de-desempleo', text: 'Calculá tu seguro de desempleo' } },
+  { q: '¿Para qué se usa el SMVM además del sueldo?', a: `El SMVM fija los límites de la prestación general por desempleo. Para ${SMVM_FECHA}, el piso es de ${fmt(DESEMPLEO_PISO)} y el techo de ${fmt(DESEMPLEO_TECHO)}. También sirve como referencia para determinar la parte inembargable del sueldo.`, link: { href: '/trabajo/seguro-de-desempleo', text: 'Calculá tu seguro de desempleo' } },
   { q: '¿Salario mínimo y SMVM son lo mismo?', a: 'Sí. SMVM es la sigla de Salario Mínimo, Vital y Móvil, el nombre legal del salario mínimo argentino (art. 116 de la Ley 20.744 y Ley 24.013). Cuando una norma dice "un SMVM" se refiere al valor mensual vigente al momento del cálculo.' },
   { q: '¿El salario mínimo de un convenio puede ser distinto?', a: 'El básico de convenio de la mayoría de las actividades registradas está por encima del SMVM: el mínimo legal es un piso absoluto, no el sueldo habitual de cada actividad. Si tu convenio fija un básico mayor, rige el del convenio.', link: { href: '/trabajo/sueldos-por-convenio', text: 'Mirá los sueldos por convenio' } },
   { q: '¿Puedo usar estos datos en mi web, nota o trabajo?', a: 'Sí. Los datos se publican bajo licencia CC-BY 4.0: podés reproducirlos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar" y la descarga en JSON y CSV.' },
@@ -85,9 +71,9 @@ const faq: Array<{ q: string; a: string; link?: { href: string; text: string } }
 const datasetSchema = {
   '@type': 'Dataset', '@id': `${PAGE_URL}#dataset`,
   name: 'Salario mínimo (SMVM) Argentina 2026',
-  description: 'Salario Mínimo, Vital y Móvil de Argentina: valor mensual y por hora vigente, cronograma mes a mes de la Resolución 9/2025 y topes del seguro de desempleo.',
+  description: 'Salario Mínimo, Vital y Móvil de Argentina: valor mensual y por hora vigente, cronogramas de las resoluciones 9/2025 y 4/2026 y topes del seguro de desempleo.',
   url: PAGE_URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
-  inLanguage: 'es-AR', dateModified: ULTIMA_REVISION, temporalCoverage: '2025-11/2026-08',
+  inLanguage: 'es-AR', dateModified: SMVM_ULTIMA_REVISION, temporalCoverage: SMVM_COBERTURA,
   spatialCoverage: { '@type': 'Place', name: 'Argentina' },
   creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
   keywords: ['salario mínimo Argentina 2026', 'SMVM', 'salario mínimo vital y móvil', 'salario mínimo por hora', 'Consejo del Salario', 'Argentina'],
@@ -101,7 +87,7 @@ const datasetSchema = {
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
-    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-AR', dateModified: ULTIMA_REVISION, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
+    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-AR', dateModified: SMVM_ULTIMA_REVISION, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
     datasetSchema,
     { '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Trabajo', item: 'https://hacecuentas.com/trabajo' },
@@ -128,12 +114,12 @@ const schema = {
 
     <header class="cf-hero">
       <div class="cf-hero__main">
-        <p class="cf-kicker"><span aria-hidden="true">🇦🇷</span> Argentina · Datos 2026</p>
-        <h1 class="cf-h1">Salario mínimo Argentina 2026: {fmt(SMVM_MENSUAL)} (SMVM)</h1>
+        <p class="cf-kicker"><span aria-hidden="true">🇦🇷</span> Argentina · Datos {anioVigente}</p>
+        <h1 class="cf-h1">Salario mínimo Argentina {anioVigente}: {fmt(SMVM_MENSUAL)} (SMVM)</h1>
         <p class="cf-sub">El Salario Mínimo, Vital y Móvil es de <strong>{fmt(SMVM_MENSUAL)} por mes</strong> y <strong>{fmt(SMVM_HORA)} por hora</strong>, vigente desde {SMVM_FECHA} según la {SMVM_RESOLUCION}.</p>
         <ul class="cf-pills">
           <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos oficiales verificados</li>
-          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Revisado el 16 de agosto de 2026</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Revisado el {revisado}</li>
           <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Uso libre con atribución</li>
         </ul>
       </div>
@@ -143,7 +129,7 @@ const schema = {
           <div class="cf-deco-card__value">{fmt(SMVM_MENSUAL)}</div>
           <div class="cf-deco-card__note">ARS · vigente desde {SMVM_FECHA}</div>
         </div>
-        <div class="cf-deco-sub"><strong>Valor por hora</strong> <span class="cf-deco-chip">{fmt(SMVM_HORA)} · mensual ÷ 200</span></div>
+        <div class="cf-deco-sub"><strong>Valor por hora</strong> <span class="cf-deco-chip">{fmt(SMVM_HORA)} · jornalizados</span></div>
       </div>
     </header>
 
@@ -157,12 +143,12 @@ const schema = {
       <div class="cf-stat cf-stat--accent"><div class="cf-stat__label">SMVM mensual</div><div class="cf-stat__value">{fmt(SMVM_MENSUAL)}</div><div class="cf-stat__sub">jornada completa</div></div>
       <div class="cf-stat"><div class="cf-stat__label">Por hora</div><div class="cf-stat__value">{fmt(SMVM_HORA)}</div><div class="cf-stat__sub">jornalizados</div></div>
       <div class="cf-stat"><div class="cf-stat__label">Por día (8 h)</div><div class="cf-stat__value">{fmt(SMVM_DIA)}</div><div class="cf-stat__sub">valor hora × 8</div></div>
-      <div class="cf-stat"><div class="cf-stat__label">Aumento 2026</div><div class="cf-stat__value">+{aumento2026}%</div><div class="cf-stat__sub">enero → {SMVM_FECHA}</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">Aumento 2026</div><div class="cf-stat__value">+{aumento2026}%</div><div class="cf-stat__sub">enero → {smvmMesLegible(cierre2026.periodo)}</div></div>
     </div>
 
     <aside class="sma-legal" aria-label="Estado normativo del salario mínimo 2026">
       <strong>Hasta dónde llega el cronograma oficial</strong>
-      <p>La <b>{SMVM_RESOLUCION}</b> fijó aumentos mensuales desde noviembre 2025 <b>hasta agosto 2026</b> ({fmt(SMVM_MENSUAL)}), que es el último valor publicado. El monto de los meses siguientes saldrá de una nueva resolución del Consejo del Salario; cuando se publique en el Boletín Oficial, esta página se actualiza.</p>
+      <p>La Resolución 9/2025 cubre de noviembre de 2025 a agosto de 2026. La <a href={SMVM_NORMAS['4/2026'].url}>Resolución 4/2026</a> fija los tramos de septiembre de 2026 a abril de 2027. Los importes programados rigen desde el inicio del mes indicado.</p>
     </aside>
 
     <!-- Del mes a la hora -->
@@ -173,31 +159,32 @@ const schema = {
         <div class="cf-minicard cf-stat--accent" style="border-top-color:var(--accent)"><p class="cf-minicard__title">Mes</p><div class="cf-minicard__big">{fmt(SMVM_MENSUAL)}</div><p class="cf-minicard__sub">Jornada completa</p></div>
         <div class="cf-minicard"><p class="cf-minicard__title">Quincena</p><div class="cf-minicard__big">{fmt(SMVM_QUINCENA)}</div><p class="cf-minicard__sub">Mensual ÷ 2</p></div>
         <div class="cf-minicard"><p class="cf-minicard__title">Día</p><div class="cf-minicard__big">{fmt(SMVM_DIA)}</div><p class="cf-minicard__sub">Jornada de 8 h</p></div>
-        <div class="cf-minicard"><p class="cf-minicard__title">Hora</p><div class="cf-minicard__big">{fmt(SMVM_HORA)}</div><p class="cf-minicard__sub">Mensual ÷ 200</p></div>
+        <div class="cf-minicard"><p class="cf-minicard__title">Hora</p><div class="cf-minicard__big">{fmt(SMVM_HORA)}</div><p class="cf-minicard__sub">Jornalizados</p></div>
       </div>
       <p class="sma-nota">El SMVM es un valor <strong>bruto</strong>: sobre él se aplican los descuentos de ley de cualquier sueldo registrado. <a href="/trabajo/sueldo-bruto-y-neto">Calculá cuánto queda en mano</a>.</p>
     </section>
 
     <!-- Cronograma mes a mes -->
     <section class="cf-section">
-      <p class="cf-eyebrow">Cronograma oficial · {SMVM_RESOLUCION}</p>
+      <p class="cf-eyebrow">Cronograma oficial · Resoluciones 9/2025 y 4/2026</p>
       <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">El SMVM mes a mes</h2>
       <div class="cf-tablewrap">
         <table class="cf-table">
-          <thead><tr><th>Mes</th><th>SMVM mensual</th><th>Valor hora</th><th>Variación</th></tr></thead>
+          <thead><tr><th>Mes</th><th>SMVM mensual</th><th>Valor hora</th><th>Variación</th><th>Resolución</th></tr></thead>
           <tbody>
             {cronogramaRows.map((r) => (
               <tr class:list={[{ 'sma-vigente': r.esVigente }]}>
-                <td class="cf-td-dot">{r.periodo}{r.esVigente && <span class="sma-badge">vigente</span>}</td>
+                <td class="cf-td-dot">{r.mes}{r.esVigente && <span class="sma-badge">vigente</span>}{r.esFuturo && <span class="sma-badge">programado</span>}</td>
                 <td class="cf-td-em">{fmt(r.mensual)}</td>
                 <td>{fmt(r.hora)}</td>
-                <td style="color:var(--text-subtle)">{r.var === null ? '—' : `+${r.var}%`}</td>
+                <td style="color:var(--text-subtle)">{r.variacion === null ? '—' : `+${r.variacion}%`}</td>
+                <td><a href={SMVM_NORMAS[r.norma].url}>{r.norma}</a></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p class="sma-nota">Acumulado del cronograma: <strong>+{aumentoCronograma}%</strong> entre noviembre 2025 y agosto 2026. ¿Tu sueldo siguió ese ritmo? <a href="/trabajo/sueldo-vs-inflacion">Comparalo contra la inflación</a>.</p>
+      <p class="sma-nota">Acumulado del cronograma: <strong>+{aumentoCronograma}%</strong> entre noviembre 2025 y {SMVM_FECHA}. ¿Tu sueldo siguió ese ritmo? <a href="/trabajo/sueldo-vs-inflacion">Comparalo contra la inflación</a>.</p>
     </section>
 
     <!-- Seguro de desempleo -->
@@ -206,7 +193,7 @@ const schema = {
         <div>
           <p class="cf-side-eyebrow">El SMVM como referencia</p>
           <h2 class="sma-desempleo__title">Seguro de desempleo: piso y techo</h2>
-          <p class="cf-side-desc" style="max-width:44ch">La prestación por desempleo de ANSES es el 75% del promedio de tus mejores 6 sueldos, acotada entre un piso y un techo que ANSES ajusta con alrededor de un mes de rezago respecto del SMVM.</p>
+          <p class="cf-side-desc" style="max-width:44ch">{desempleo}</p>
         </div>
         <div class="sma-desempleo__cmp">
           <div class="sma-d"><span class="sma-d__lbl">Piso</span><span class="sma-d__val">{fmt(DESEMPLEO_PISO)}</span><span class="sma-d__sub">mínimo mensual</span></div>
@@ -249,10 +236,12 @@ const schema = {
         <aside class="cf-side">
           <div class="cf-side-card cf-side-card--dark">
             <p class="cf-side-eyebrow">▤ Fuentes oficiales</p>
-            <a class="sma-src" href="https://www.boletinoficial.gob.ar/" target="_blank" rel="noopener"><strong>Boletín Oficial</strong><span>Resolución 9/2025 CNEPySMVyM (03-12-2025)</span></a>
+            {Object.values(SMVM_NORMAS).map((norma) => (
+              <a class="sma-src" href={norma.url} target="_blank" rel="noopener"><strong>{norma.nombre}</strong><span>Boletín Oficial · {norma.publicada}</span></a>
+            ))}
             <a class="sma-src" href="https://www.argentina.gob.ar/trabajo/consejodelsalario" target="_blank" rel="noopener"><strong>Consejo del Salario</strong><span>CNEPySMVyM · valores del SMVM</span></a>
-            <a class="sma-src" href="https://www.anses.gob.ar/prestacion-por-desempleo" target="_blank" rel="noopener"><strong>ANSES</strong><span>Prestación por desempleo · piso y techo</span></a>
-            <p class="cf-side-desc" style="margin-top:0.8rem"><span aria-hidden="true">✓</span> Última revisión: {new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</p>
+            <a class="sma-src" href={DESEMPLEO_ANSES_URL} target="_blank" rel="noopener"><strong>ANSES</strong><span>Prestación por desempleo · piso y techo</span></a>
+            <p class="cf-side-desc" style="margin-top:0.8rem"><span aria-hidden="true">✓</span> Última revisión: {revisado}</p>
           </div>
         </aside>
       </div>

@@ -1,5 +1,7 @@
 import type { HubData } from './types';
-import { DESEMPLEO_PISO, DESEMPLEO_TECHO, SMVM_MENSUAL } from '../data/smvm-ar-2026';
+import {
+  DESEMPLEO_ANSES_URL, DESEMPLEO_PISO, DESEMPLEO_TECHO, SMVM_MENSUAL, SMVM_FECHA, SMVM_NORMAS, SMVM_ULTIMA_REVISION,
+} from '../data/smvm-ar-2026';
 
 /**
  * Hub de decisión — "Me quedé sin trabajo: ¿qué me paga ANSES?"
@@ -12,8 +14,8 @@ import { DESEMPLEO_PISO, DESEMPLEO_TECHO, SMVM_MENSUAL } from '../data/smvm-ar-2
  * NOTAS DE CONTRATO:
  *  - El piso y el techo de la prestación NO se escriben acá: se importan de
  *    src/lib/data/smvm-ar-2026.ts (DESEMPLEO_PISO / DESEMPLEO_TECHO), que es la
- *    fuente única que también usan las fórmulas del repo. ANSES los mueve con
- *    ~1 mes de rezago respecto del SMVM: no reemplazar por SMVM_MENSUAL.
+ *    fuente única que también usan las fórmulas del repo. Rige el 50% y el 100%
+ *    del SMVM del período (art. 2 de la Resolución 4/2026).
  *  - Las filas de plata van sin `format` (default 'ars'); las de meses y
  *    porcentaje declaran `format: 'unit'` — sin eso el runtime las pinta en $.
  */
@@ -28,14 +30,14 @@ export const hub: HubData = {
   eyebrow: 'Guía y estimación laboral',
   h1: 'Me quedé sin trabajo: ¿qué me paga ANSES?',
   lede:
-    'La prestación por desempleo es el 75% de tu mejor remuneración de los últimos 6 meses, acotada entre un piso y un techo, y dura entre 2 y 12 meses según cuánto aportaste. Partimos del régimen general y lo ajustás a tu caso.',
+    'En el régimen general, la cuota inicial es el 75% de tu mejor remuneración neta de los últimos 6 meses, con un piso y un techo. La duración depende de tus aportes.',
   stamps: [
-    'Actualizado 27-07-2026',
+    `Topes de ${SMVM_FECHA}`,
     `Piso $${DESEMPLEO_PISO.toLocaleString('es-AR')} · techo $${DESEMPLEO_TECHO.toLocaleString('es-AR')} (ANSES)`,
     'Ley 24.013 · 3 calculadoras adentro',
   ],
 
-  resultLabel: 'Cuota mensual estimada',
+  resultLabel: 'Cuota inicial estimada',
 
   cases: {
     title: '¿Cuál es tu situación?',
@@ -45,9 +47,9 @@ export const hub: HubData = {
         id: 'prestacion',
         label: 'Prestación por desempleo (régimen general)',
         hint: 'El caso más común',
-        answer: 'Cobrás el 75% de tu mejor remuneración, entre el piso y el techo que fija ANSES.',
+        answer: 'La cuota inicial es el 75% de tu mejor remuneración neta, con un piso y un techo fijados por el Consejo del Salario.',
         yes: [
-          'Base: el 75% del promedio de las mejores remuneraciones netas de los últimos 6 meses',
+          'Base inicial: el 75% de la mejor remuneración mensual neta, normal y habitual de los últimos 6 meses antes del cese',
           `La cuota nunca baja del piso ($${DESEMPLEO_PISO.toLocaleString('es-AR')}) ni supera el techo ($${DESEMPLEO_TECHO.toLocaleString('es-AR')})`,
           'Duración: 2 meses con 6 a 11 meses de aportes, 4 con 12 a 23, 8 con 24 a 35 y 12 con 36 o más',
           'Mientras cobrás seguís sumando antigüedad previsional y mantenés la obra social',
@@ -65,19 +67,19 @@ export const hub: HubData = {
         id: 'uocra',
         label: 'Fondo de desempleo de la construcción (UOCRA)',
         hint: 'Ley 22.250 y Ley 25.371',
-        answer: 'Retirás tu fondo de cese laboral y además cobrás una prestación de hasta 8 meses.',
+        answer: 'El fondo de cese y la prestación por desempleo son distintos. La prestación tiene requisitos propios y puede durar hasta 8 meses.',
         yes: [
           'El fondo de cese laboral es tuyo: el empleador aporta 12% del sueldo el primer año y 8% desde el segundo (Ley 22.250)',
           'Se cobra siempre, cualquiera sea el motivo del cese, incluso si renunciás',
           'Además existe la prestación por desempleo específica de la construcción (Ley 25.371)',
-          'La cuota se calcula igual que en el régimen general: 75% de la mejor remuneración, con el mismo piso y techo',
+          'La Ley 25.371 prevé 3 cuotas con 8 a 11 meses de aportes, 4 con 12 a 17 y 8 con 18 a 24, dentro de los últimos dos años',
           'Se pide con la Libreta de Aportes al Fondo de Cese Laboral al día',
         ],
         warn: [
           'En la construcción no hay indemnización por antigüedad: el fondo de cese la reemplaza',
           'La prestación de la Ley 25.371 se topea en 8 meses, no llega a los 12 del régimen general',
           'Si el empleador no depositó los aportes, el fondo figura incompleto: se reclama con la libreta como prueba',
-          'El fondo acumulado que estimamos supone un sueldo estable: en la práctica cada depósito sigue al sueldo de ese mes',
+          'Consultá el saldo del fondo de cese en tu cuenta y el monto de la prestación en ANSES',
         ],
         plazo: 'el fondo se retira desde las 48 horas del cese; la prestación, dentro de los 90 días.',
       },
@@ -87,17 +89,17 @@ export const hub: HubData = {
         hint: 'Art. 120 LCT · Decreto 484/87',
         answer: 'Hasta un salario mínimo tu sueldo es inembargable; sobre el excedente van 10% o 20%.',
         yes: [
-          `El sueldo neto hasta 1 SMVM ($${SMVM_MENSUAL.toLocaleString('es-AR')}) es inembargable por deudas comunes (art. 120 LCT)`,
+          `El sueldo bruto en dinero hasta 1 SMVM ($${SMVM_MENSUAL.toLocaleString('es-AR')}) es inembargable por deudas comunes (art. 120 LCT)`,
           'Entre 1 y 2 SMVM se puede retener el 10% de lo que exceda el mínimo',
           'Por encima de 2 SMVM se puede retener el 20% del excedente',
-          'Por cuota alimentaria el tope es distinto: hasta el 33% del neto, y no rige el mínimo inembargable',
-          'El porcentaje se calcula sobre el sueldo NETO, después de aportes',
+          'La justicia fija la retención por alimentos o litis expensas según el caso',
+          'Para deudas comunes, la base de cálculo es la remuneración bruta en dinero',
         ],
         warn: [
           'El aguinaldo también se embarga con los mismos porcentajes',
           'Si te retienen más de lo que permite el decreto 484/87, se plantea ante el juzgado que ordenó el embargo',
           'La indemnización por despido tiene protección propia: no se embarga como sueldo común',
-          'El monto exacto por alimentos lo fija el juez según las necesidades del alimentado: el 33% es el tope, no la regla',
+          'En alimentos y litis expensas, el monto lo fija el juzgado de modo que permita la subsistencia del alimentante',
         ],
         plazo: 'el embargo se levanta cuando se cancela la deuda o el juzgado lo ordena.',
       },
@@ -109,11 +111,11 @@ export const hub: HubData = {
   fields: [
     {
       id: 'sueldo',
-      label: 'Mejor remuneración bruta de los últimos 6 meses',
+      label: 'Mejor remuneración mensual neta de los últimos 6 meses',
       prefix: '$',
       value: '900.000',
       thousands: true,
-      help: 'El mejor mes, no el promedio de todos.',
+      help: 'Usá el importe neto del mejor mes anterior al cese.',
     },
     {
       id: 'meses',
@@ -166,11 +168,11 @@ export const hub: HubData = {
   faq: [
     {
       q: '¿Cuánto se cobra de seguro de desempleo en 2026?',
-      a: `La cuota es el 75% del promedio de las mejores remuneraciones netas de los últimos 6 meses, pero nunca baja de $${DESEMPLEO_PISO.toLocaleString('es-AR')} ni supera $${DESEMPLEO_TECHO.toLocaleString('es-AR')}. Como el techo es bajo, la mayoría de los sueldos formales cobra directamente el máximo.`,
+      a: `La cuota inicial del régimen general es el 75% de la mejor remuneración mensual neta, normal y habitual de los seis meses anteriores al cese. En ${SMVM_FECHA}, el piso es $${DESEMPLEO_PISO.toLocaleString('es-AR')} y el techo $${DESEMPLEO_TECHO.toLocaleString('es-AR')}.`,
     },
     {
       q: '¿Cuántos meses dura la prestación por desempleo?',
-      a: 'Depende de tus aportes en los últimos 3 años: con 6 a 11 meses cobrás 2 cuotas, con 12 a 23 cobrás 4, con 24 a 35 cobrás 8 y con 36 meses o más llegás al máximo de 12 cuotas. Con menos de 6 meses de aportes no corresponde.',
+      a: 'Para trabajadores permanentes se cuentan los aportes de los últimos tres años: 6 a 11 meses dan 2 cuotas, 12 a 23 dan 4, 24 a 35 dan 8 y 36 dan 12. ANSES contempla una prórroga por edad desde los 45 años.',
     },
     {
       q: '¿Quién puede cobrar el seguro de desempleo de ANSES?',
@@ -194,11 +196,11 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuánto me pueden embargar del sueldo?',
-      a: `Por deudas comunes, el sueldo neto hasta 1 salario mínimo ($${SMVM_MENSUAL.toLocaleString('es-AR')}) es inembargable. Sobre lo que exceda ese piso se retiene el 10% si el sueldo está entre 1 y 2 salarios mínimos, y el 20% si lo supera. Así lo fija el decreto 484/87 junto con el art. 120 de la LCT.`,
+      a: `Por deudas comunes, la remuneración bruta en dinero hasta 1 salario mínimo ($${SMVM_MENSUAL.toLocaleString('es-AR')}) es inembargable. Sobre lo que exceda ese piso se retiene el 10% si el sueldo está entre 1 y 2 salarios mínimos, y el 20% si lo supera. Así lo fija el decreto 484/87 junto con el art. 120 de la LCT.`,
     },
     {
       q: '¿Y si el embargo es por cuota alimentaria?',
-      a: 'Ahí no rige el mínimo inembargable: el tope es de hasta el 33% del sueldo neto, y el juez fija el monto concreto según las necesidades del alimentado. Es la única deuda que puede llegar a ese porcentaje.',
+      a: 'Alimentos y litis expensas tienen un régimen especial. El juzgado fija el importe de modo que permita la subsistencia del alimentante (art. 4 del Decreto 484/87).',
     },
     {
       q: '¿Me pueden embargar el aguinaldo o la indemnización?',
@@ -218,14 +220,20 @@ export const hub: HubData = {
       date: 'texto actualizado',
     },
     {
-      name: 'Decreto 267/2006 — cuantía de la prestación por desempleo',
-      url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/110000-114999/114325/norma.htm',
+      name: 'Resolución 4/2026, artículo 2 — importe y límites de la prestación general',
+      url: SMVM_NORMAS['4/2026'].url,
+      publisher: 'Consejo del Salario',
+      date: SMVM_NORMAS['4/2026'].publicada,
+    },
+    {
+      name: 'Decreto 267/2006 — duración y prórroga de la prestación por desempleo',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/decreto-267-2006-114578/texto',
       publisher: 'InfoLeg',
       date: '2006',
     },
     {
       name: 'ANSES — Prestación por desempleo: requisitos, montos y trámite',
-      url: 'https://www.anses.gob.ar/prestacion-por-desempleo',
+      url: DESEMPLEO_ANSES_URL,
       publisher: 'ANSES',
     },
     {
@@ -235,7 +243,7 @@ export const hub: HubData = {
     },
     {
       name: 'Ley 25.371 — Sistema Integrado de Prestaciones por Desempleo para los trabajadores de la construcción',
-      url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/65000-69999/65596/norma.htm',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/norma-65583/texto',
       publisher: 'InfoLeg',
       date: '2000',
     },
@@ -247,7 +255,7 @@ export const hub: HubData = {
     },
     {
       name: 'Decreto 484/87 — porcentajes máximos de embargo sobre remuneraciones',
-      url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/20000-24999/24387/norma.htm',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/decreto-484-1987-77255/texto',
       publisher: 'InfoLeg',
       date: '1987',
     },
@@ -259,7 +267,7 @@ export const hub: HubData = {
     '/calculadora-embargo-sueldo-porcentaje-maximo',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: SMVM_ULTIMA_REVISION,
   audience: 'AR',
 };
 
@@ -268,7 +276,7 @@ export const hub: HubData = {
  * (src/lib/data/smvm-ar-2026.ts), igual que las fórmulas que este hub absorbe.
  */
 export const DESEMPLEO = {
-  /** 75% del promedio de las mejores 6 remuneraciones (Decreto 267/2006). */
+  /** 75% de la mejor remuneración mensual neta de los últimos 6 meses (Resolución 4/2026). */
   porcentaje: 0.75,
   piso: DESEMPLEO_PISO,
   techo: DESEMPLEO_TECHO,
@@ -286,12 +294,11 @@ export const DESEMPLEO = {
 /** Salario mínimo vigente: es el mínimo inembargable del art. 120 LCT. */
 export const SMVM = SMVM_MENSUAL;
 
-/** Embargo — Decreto 484/87 sobre el sueldo NETO. */
+/** Embargo — Decreto 484/87 sobre la remuneración bruta en dinero. */
 export const EMBARGO = {
   /** Hasta 1 SMVM: inembargable. */
   tramo1: 0.1, // entre 1 y 2 SMVM: 10% del excedente
   tramo2: 0.2, // más de 2 SMVM: 20% del excedente
-  alimentaria: 0.33, // tope por cuota alimentaria, sobre el neto total
 };
 
 /** Fondo de cese laboral de la construcción (Ley 22.250 art. 15). */

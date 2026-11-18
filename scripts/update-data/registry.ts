@@ -136,12 +136,10 @@ export const REGISTRY: FetcherEntry[] = [
   },
   {
     name: 'smvm',
-    path: 'hybrid',
-    // El SMVM argentino se reajusta CASI TODOS LOS MESES (cronograma del Consejo
-    // del Salario, alta inflación). Estaba en 'biannual' → quedaba viejo hasta 6
-    // meses (ej. jul-2026 $372.400 → ago-2026 $376.600 no se capturaba). monthly.
-    slugs: ['salario-minimo-vital-movil-argentina'],
-    frequency: 'monthly',
+    path: 'deterministic',
+    slugs: ['datos-salario-minimo-argentina-2026', 'trabajo/sueldo-vs-inflacion', 'trabajo/seguro-de-desempleo'],
+    // La vigencia cambia el primer día de cada mes según el cronograma oficial.
+    frequency: 'daily',
     run: fetchSmvm,
   },
   {

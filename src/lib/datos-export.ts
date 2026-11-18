@@ -18,7 +18,11 @@ import {
 import { GANANCIAS_2026_CURRENT_PERIOD, GANANCIAS_2026_DEDUCCIONES, GANANCIAS_2026_META } from './data/ganancias-2026';
 import { sueldoAR, BASE_IMPONIBLE_MAXIMA_APORTES } from './formulas/sueldo-ar';
 import { aguinaldo } from './formulas/aguinaldo';
-import { salarioMinimo } from './formulas/salario-minimo';
+import {
+  DESEMPLEO_PISO, DESEMPLEO_TECHO, SMVM_COBERTURA, SMVM_CRONOGRAMA, SMVM_FECHA,
+  SMVM_FUENTE_URL, SMVM_HORA, SMVM_MENSUAL, SMVM_NORMAS, SMVM_RESOLUCION,
+  SMVM_ULTIMA_REVISION, SMVM_VIGENTE,
+} from './data/smvm-ar-2026';
 import { SALARIO_MINIMO as SM_BR } from './data/brasil-2026';
 import { PERU_2026 } from './data/peru-2026';
 import { ECUADOR_2026 } from './data/ecuador-2026';
@@ -237,11 +241,73 @@ export function buildAguinaldo(): DatosExport {
   };
 }
 
+// ── Argentina · Salario mínimo 2026 ──────────────────────────────────────────
+export function buildSalarioMinimoArgentina(): DatosExport {
+  const datasetPage = `${HOMEPAGE}/datos-salario-minimo-argentina-2026`;
+  const fuente = 'Resoluciones 9/2025 y 4/2026 CNEPySMVyM';
+  const periodo = SMVM_VIGENTE.periodo;
+  const horaDia = SMVM_HORA * 8;
+  const datosCronograma = SMVM_CRONOGRAMA.flatMap((tramo) => {
+    const norma = SMVM_NORMAS[tramo.norma].nombre;
+    return [
+      { concepto: 'SMVM mensual', periodo: tramo.periodo, valor: tramo.mensual, unidad: 'ARS/mes', fuente: norma },
+      { concepto: 'SMVM por hora (jornalizados)', periodo: tramo.periodo, valor: tramo.hora, unidad: 'ARS/hora', fuente: norma },
+    ];
+  });
+  return {
+    meta: {
+      name: 'Salario mínimo (SMVM) Argentina 2026',
+      description: 'Cronogramas oficiales de Argentina, SMVM por mes y hora y topes vigentes de la prestación general por desempleo.',
+      datasetPage,
+      source: fuente,
+      sourceUrl: SMVM_FUENTE_URL,
+      temporalCoverage: SMVM_COBERTURA,
+      lastReviewed: SMVM_ULTIMA_REVISION,
+      license: LICENSE,
+      attribution: `Hacé Cuentas — ${datasetPage}`,
+      homepage: HOMEPAGE,
+    },
+    columns: ['concepto', 'periodo', 'valor', 'unidad', 'fuente'],
+    data: [
+      ...datosCronograma,
+      { concepto: 'SMVM por dia (jornada 8 h)', periodo, valor: horaDia, unidad: 'ARS/dia', fuente: 'hora x 8' },
+      { concepto: 'Seguro de desempleo - piso', periodo, valor: DESEMPLEO_PISO, unidad: 'ARS/mes', fuente: `${SMVM_RESOLUCION}, art. 2` },
+      { concepto: 'Seguro de desempleo - techo', periodo, valor: DESEMPLEO_TECHO, unidad: 'ARS/mes', fuente: `${SMVM_RESOLUCION}, art. 2` },
+    ],
+    // Conservamos las claves que ya consumían las descargas JSON anteriores.
+    extra: {
+      nombre: 'Salario mínimo (SMVM) Argentina 2026',
+      fuente,
+      fuentes: Object.values(SMVM_NORMAS),
+      vigencia: SMVM_COBERTURA.replace('/', ' a '),
+      licencia: 'CC-BY-4.0',
+      publicado_por: `Hacé Cuentas — ${datasetPage}`,
+      moneda: 'ARS',
+      smvm_mensual_vigente: SMVM_MENSUAL,
+      smvm_hora_vigente: SMVM_HORA,
+      smvm_dia_8h_vigente: horaDia,
+      vigente_desde: periodo,
+      relacion_hora: 'Valor por hora publicado en cada resolución para trabajadores jornalizados.',
+      cronograma_res_9_2025: SMVM_CRONOGRAMA.filter((tramo) => tramo.norma === '9/2025')
+        .map(({ periodo, mensual, hora }) => ({ periodo, mensual, hora })),
+      cronograma_res_4_2026: SMVM_CRONOGRAMA.filter((tramo) => tramo.norma === '4/2026')
+        .map(({ periodo, mensual, hora }) => ({ periodo, mensual, hora })),
+      nota_cronograma: 'Cada tramo rige desde el primer día del mes indicado.',
+      seguro_desempleo: {
+        piso: DESEMPLEO_PISO,
+        techo: DESEMPLEO_TECHO,
+        periodo,
+        nota: 'Régimen general. Cuota inicial del 75% de la mejor remuneración mensual neta de los seis meses previos al cese. Límites del 50% y 100% del SMVM vigente.',
+      },
+    },
+    variableMeasured: ['SMVM mensual (ARS)', 'SMVM por hora (ARS)', 'Piso y techo de desempleo (ARS)'],
+  };
+}
+
 // ── LATAM · Salario mínimo 2026 ──────────────────────────────────────────────
 export function buildSalarioMinimoLatam(): DatosExport {
-  const ar = salarioMinimo({ horasSemana: 48 });
   const data = [
-    { pais: 'Argentina', iso: 'AR', instrumento: 'Salario Mínimo, Vital y Móvil (SMVM)', valor_mensual: round2(ar.smvmMensual), moneda: 'ARS', norma: 'Resolución 9/2025 CNEPySMVyM', vigencia: ar.fechaVigencia },
+    { pais: 'Argentina', iso: 'AR', instrumento: 'Salario Mínimo, Vital y Móvil (SMVM)', valor_mensual: SMVM_MENSUAL, moneda: 'ARS', norma: SMVM_RESOLUCION, vigencia: SMVM_FECHA },
     { pais: 'Brasil', iso: 'BR', instrumento: 'Salário mínimo nacional', valor_mensual: round2(SM_BR), moneda: 'BRL', norma: 'Decreto 12.797/2025', vigencia: '2026-01' },
     { pais: 'Perú', iso: 'PE', instrumento: 'Remuneración Mínima Vital (RMV)', valor_mensual: PERU_2026.rmv, moneda: 'PEN', norma: 'DS 006-2024-TR', vigencia: '2025-01 (mantenida 2026)' },
     { pais: 'Ecuador', iso: 'EC', instrumento: 'Salario Básico Unificado (SBU)', valor_mensual: ECUADOR_2026.sbu, moneda: 'USD', norma: 'Ministerio del Trabajo', vigencia: '2026-01' },
@@ -272,6 +338,7 @@ export const EXPORTS: Record<string, () => DatosExport> = {
   'ganancias-2026': buildGanancias,
   'topes-sipa-2026': buildTopesSipa,
   'aguinaldo-2026': buildAguinaldo,
+  'salario-minimo-argentina-2026': buildSalarioMinimoArgentina,
   'salario-minimo-latam-2026': buildSalarioMinimoLatam,
 };
 

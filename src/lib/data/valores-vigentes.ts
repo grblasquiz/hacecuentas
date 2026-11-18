@@ -16,6 +16,8 @@ import {
   SMVM_HORA,
   SMVM_FECHA,
   SMVM_RESOLUCION,
+  SMVM_FUENTE_URL,
+  SMVM_NORMAS,
   DESEMPLEO_PISO,
   DESEMPLEO_TECHO,
 } from './smvm-ar-2026';
@@ -79,7 +81,7 @@ export const VALORES: ValorVigente[] = [
     vigenciaDesde: SMVM_FECHA,
     norma: SMVM_RESOLUCION,
     fuente: 'Consejo Nacional del Empleo (CNEPySMVyM)',
-    fuenteUrl: 'https://www.argentina.gob.ar/trabajo/consejodelsalario',
+    fuenteUrl: SMVM_FUENTE_URL,
     calcHref: '/salario-minimo-vital-movil-argentina',
   },
   {
@@ -87,11 +89,11 @@ export const VALORES: ValorVigente[] = [
     seccion: 'Trabajo y sueldos',
     nombre: 'Salario mínimo por hora (jornalizados)',
     valor: SMVM_HORA,
-    detalle: 'Valor hora del SMVM (mensual ÷ 200: 8 h × 25 días).',
+    detalle: 'Valor por hora para trabajadores jornalizados según el tramo vigente.',
     vigenciaDesde: SMVM_FECHA,
     norma: SMVM_RESOLUCION,
     fuente: 'Consejo Nacional del Empleo (CNEPySMVyM)',
-    fuenteUrl: 'https://www.argentina.gob.ar/trabajo/consejodelsalario',
+    fuenteUrl: SMVM_FUENTE_URL,
   },
   {
     id: 'mni-ganancias',
@@ -191,10 +193,10 @@ export const VALORES: ValorVigente[] = [
     valor: null,
     valorTexto: `${fmtARS(DESEMPLEO_PISO)} a ${fmtARS(DESEMPLEO_TECHO)}`,
     detalle: 'La prestación inicial es el 75% de la mejor remuneración neta habitual de los últimos 6 meses, acotada entre 50% y 100% del SMVM vigente.',
-    vigenciaDesde: 'agosto 2026',
-    norma: 'Ley 24.013 · Decreto 267/2006',
+    vigenciaDesde: SMVM_FECHA,
+    norma: `${SMVM_RESOLUCION} · art. 2`,
     fuente: 'ANSES',
-    fuenteUrl: 'https://www.anses.gob.ar/prestacion-por-desempleo',
+    fuenteUrl: SMVM_FUENTE_URL,
     calcHref: '/calculadora-asignacion-desempleo-seguro-prestacion-anses',
   },
 ];
@@ -219,10 +221,10 @@ export const HISTORIAL: CambioHistorial[] = [
     titulo: 'Aumentó el Salario Mínimo, Vital y Móvil',
     queCambio: 'SMVM mensual, último tramo del cronograma de la Res 9/2025.',
     anterior: '$372.400 (julio 2026)',
-    nuevo: `${fmtARS(SMVM_MENSUAL)} (agosto 2026)`,
-    impacto: `Un trabajador jornalizado pasó a cobrar ${fmtARS(SMVM_HORA)} por hora. La prestación por desempleo quedó acotada entre ${fmtARS(DESEMPLEO_PISO)} y ${fmtARS(DESEMPLEO_TECHO)}.`,
+    nuevo: '$376.600 (agosto 2026)',
+    impacto: 'En agosto el valor por hora fue de $1.883. La prestación general por desempleo tuvo un piso de $188.300 y un techo de $376.600.',
     norma: 'Resolución 9/2025 CNEPySMVyM (cronograma nov-2025 a ago-2026, BO 03-12-2025)',
-    fuenteUrl: 'https://www.argentina.gob.ar/trabajo/consejodelsalario',
+    fuenteUrl: SMVM_NORMAS['9/2025'].url,
   },
   {
     fecha: '2026-08-01',
@@ -253,12 +255,6 @@ export const PROXIMOS: ProximoCambio[] = [
     titulo: 'Nueva escala de Ganancias (primer semestre 2027)',
     detalle:
       'ARCA publicará la actualización semestral por IPC de la escala del art. 94 y las deducciones del art. 30 (Ley 27.743).',
-  },
-  {
-    cuando: 'desde septiembre 2026',
-    titulo: 'Próximo cronograma del SMVM',
-    detalle:
-      'La Resolución 9/2025 terminó en agosto. El Consejo del Salario fue convocado el 28 de agosto; falta incorporar la nueva resolución cuando se publique.',
   },
 ];
 

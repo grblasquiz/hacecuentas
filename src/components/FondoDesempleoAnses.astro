@@ -2,30 +2,21 @@
 // Flagship redesign de la calc "fondo de desempleo ANSES" (mockup Martin).
 // Los números salen del motor real (src/lib/formulas/fondo-desempleo-anses-monto-tiempo.ts):
 // prestación = 75% de la mejor remuneración neta de los últimos 6 meses, acotada
-// entre el piso y el techo que fija ANSES por resolución (DESEMPLEO_PISO/TECHO,
+// entre el piso y el techo que fija el Consejo del Salario (DESEMPLEO_PISO/TECHO,
 // fuente única src/lib/data/smvm-ar-2026.ts). Duración = 2/4/8/12 cuotas según
 // meses aportados en los últimos 3 años. Domain "data" (esmeralda) por el mockup,
 // no por la categoría (finanzas→money). Header/footer = los globales del sitio.
 import '../styles/calc-flagship.css';
 import { md } from '../lib/markdown';
 import { DESEMPLEO_PISO, DESEMPLEO_TECHO } from '../lib/data/smvm-ar-2026';
+import { calcularDesempleoGeneral } from '../lib/data/desempleo-general';
 
 interface Props { calc: any; related?: any[]; }
 const { calc, related = [] } = Astro.props;
 
-// Réplica exacta de la lógica del motor (misma fuente de constantes).
 function prestacion(s: number, m: number) {
-  const montoBase = s * 0.75;
-  const monto = s > 0 ? Math.min(Math.max(montoBase, DESEMPLEO_PISO), DESEMPLEO_TECHO) : 0;
-  const dur = m < 12 ? 2 : m < 24 ? 4 : m < 36 ? 8 : 12;
-  return {
-    montoBase,
-    monto,
-    dur,
-    total: monto * dur,
-    topeMax: montoBase > DESEMPLEO_TECHO,
-    topeMin: s > 0 && montoBase < DESEMPLEO_PISO,
-  };
+  const { base: montoBase, inicial: monto, duracion: dur, total } = calcularDesempleoGeneral(s, m);
+  return { montoBase, monto, dur, total, topeMax: montoBase > DESEMPLEO_TECHO, topeMin: s > 0 && montoBase < DESEMPLEO_PISO };
 }
 
 const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
@@ -142,7 +133,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
 
   <div class="cf-quick">
     <span class="cf-quick__ico" aria-hidden="true">⚡</span>
-    <p class="cf-quick__txt" id="fd-quick"><strong>Respuesta rápida.</strong> Con un mejor sueldo neto de {fmt(INIT_S)} y {INIT_M} meses aportados cobrás <strong>{fmt(init.monto)} por mes durante {init.dur} meses</strong> (~{fmt(init.total)} en total).</p>
+    <p class="cf-quick__txt" id="fd-quick"><strong>Respuesta rápida.</strong> Con un mejor sueldo neto de {fmt(INIT_S)} y {INIT_M} meses aportados, la <strong>cuota inicial es de {fmt(init.monto)} durante una prestación de {init.dur} cuotas</strong> (~{fmt(init.total)} en total).</p>
     <span class="cf-formula">75% del sueldo, entre {fmt(DESEMPLEO_PISO)} y {fmt(DESEMPLEO_TECHO)}</span>
   </div>
 
@@ -189,7 +180,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="fd-hl">
         <p class="cf-side-eyebrow">Cómo leer el resultado</p>
         <p class="fd-hl__title">El 75% no siempre es lo que cobrás</p>
-        <p class="fd-hl__desc">La prestación arranca en el 75% de tu mejor sueldo neto, pero después se recorta contra el piso y el techo que ANSES fija por resolución. Con sueldos altos, el techo manda.</p>
+        <p class="fd-hl__desc">La prestación arranca en el 75% de tu mejor sueldo neto, pero después se recorta contra el piso y el techo que el Consejo del Salario fija por resolución. Con sueldos altos, el techo manda.</p>
         <div class="fd-hl__big" id="fd-hl-big">{fmt(init.monto)}</div>
         <p class="fd-hl__desc">Prestación mensual del caso cargado</p>
       </div>
@@ -241,7 +232,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
         <div class="cf-step__num">3</div>
         <p class="cf-step__title">Revisá el resultado</p>
         <p class="cf-step__desc">Los meses aportados definen la cantidad de cuotas: 2, 4, 8 o 12.</p>
-        <p class="fd-chip" id="fd-s3">{fmt(init.monto)} × {init.dur} = {fmt(init.total)}</p>
+        <p class="fd-chip" id="fd-s3">Total de {init.dur} cuotas: {fmt(init.total)}</p>
       </div>
     </div>
   </section>
@@ -335,7 +326,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
         <p class="cf-eyebrow">Fuentes y metodología</p>
         <h2 class="fd-card__title" style="color:var(--text)">Números que podés defender</h2>
         <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
-        <p class="cf-side-desc" style="margin-top:0.7rem">El piso y el techo los fija ANSES por resolución y rondan el 50% y el 100% del SMVM, pero se aplican con rezago: por eso no coinciden exactamente con el salario mínimo vigente.</p>
+        <p class="cf-side-desc" style="margin-top:0.7rem">El artículo 2 de la Resolución 4/2026 fija los límites en el 50% y el 100% del SMVM vigente. Las cuotas posteriores a la cuarta pueden reducirse, siempre dentro de esos límites.</p>
       </div>
       <div class="cf-side-card cf-side-card--dark">
         <p class="cf-side-eyebrow">Fuentes oficiales</p>
@@ -383,7 +374,9 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   </section>
 </div>
 
-<script is:inline>
+<script>
+  import { calcularDesempleoGeneral } from '../lib/data/desempleo-general';
+
   (function () {
     const root = document.querySelector('.fd');
     if (!root) return;
@@ -396,16 +389,9 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     function rawSueldo() { return Number((sueldoEl.value || '').replace(/\D/g, '')) || 0; }
     function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
 
-    // Réplica exacta del motor (fondo-desempleo-anses-monto-tiempo.ts).
-    function prestacion(s, m) {
-      const montoBase = s * 0.75;
-      const monto = s > 0 ? Math.min(Math.max(montoBase, PISO), TECHO) : 0;
-      const dur = m < 12 ? 2 : m < 24 ? 4 : m < 36 ? 8 : 12;
-      return {
-        montoBase, monto, dur, total: monto * dur,
-        topeMax: montoBase > TECHO,
-        topeMin: s > 0 && montoBase < PISO,
-      };
+    function prestacion(s: number, m: number) {
+      const { base: montoBase, inicial: monto, duracion: dur, total } = calcularDesempleoGeneral(s, m);
+      return { montoBase, monto, dur, total, topeMax: montoBase > TECHO, topeMin: s > 0 && montoBase < PISO };
     }
 
     const REF = [200000, 242000, 300000, 400000, 484000, 600000];
@@ -430,8 +416,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('fd-deco-dur').textContent = r.dur + ' cuotas';
 
       $('fd-quick').innerHTML = '<strong>Respuesta rápida.</strong> Con un mejor sueldo neto de ' + fmt(s) +
-        ' y ' + m + ' meses aportados cobrás <strong>' + fmt(r.monto) + ' por mes durante ' + r.dur +
-        ' meses</strong> (~' + fmt(r.total) + ' en total).';
+        ' y ' + m + ' meses aportados, la <strong>cuota inicial estimada es de ' + fmt(r.monto) + '</strong>. Duración: ' + r.dur + ' cuotas (~' + fmt(r.total) + ' en total).';
 
       $('fd-hl-big').textContent = fmt(r.monto);
       $('fd-b-sueldo').textContent = fmt(s);
@@ -445,7 +430,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
 
       $('fd-s1').textContent = fmt(s) + ' · ' + m + ' meses';
       $('fd-s2').textContent = fmt(s) + ' × 0,75 = ' + fmt(r.montoBase);
-      $('fd-s3').textContent = fmt(r.monto) + ' × ' + r.dur + ' = ' + fmt(r.total);
+      $('fd-s3').textContent = 'Total de ' + r.dur + ' cuotas: ' + fmt(r.total);
 
       $('fd-th-total').textContent = 'Total en ' + r.dur + ' cuotas';
       $('fd-tbody').innerHTML = REF.map(function (v) {
@@ -473,7 +458,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     function summary() {
       const s = rawSueldo(); const m = Number(mesesEl.value) || 0; const r = prestacion(s, m);
       return 'Fondo de desempleo ANSES con mejor sueldo neto ' + fmt(s) + ' y ' + m + ' meses aportados: ' +
-        fmt(r.monto) + '/mes durante ' + r.dur + ' meses (~' + fmt(r.total) + ' en total). — hacecuentas.com';
+        'cuota inicial ' + fmt(r.monto) + ', ' + r.dur + ' cuotas (~' + fmt(r.total) + ' en total). — hacecuentas.com';
     }
     function shareUrl() { return location.origin + location.pathname + '?sueldo=' + rawSueldo() + '&meses=' + (Number(mesesEl.value) || 0); }
     function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
