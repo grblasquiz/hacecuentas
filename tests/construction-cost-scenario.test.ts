@@ -7,15 +7,15 @@ import { M2, SHARES } from '../src/lib/hubs/costo-por-m2';
 const reference = { ars: 1552000, usd: 1000 };
 const source = readFileSync(new URL('../src/components/CostoM2Experience.astro', import.meta.url), 'utf8');
 const script = source.match(/<script>\s*import[^;]+;([\s\S]*?)<\/script>/)![1];
-function mount(input = defaults, costs = M2) {
+function mount(input = defaults, costs = M2, hash = '') {
   const values: Record<string, any> = {
     'm2-covered': input.covered, 'm2-semi': input.semi, 'm2-semi-factor': input.semiFactorPercent,
     'm2-custom': input.customUnitPrice, 'm2-contingency': input.contingencyPercent, 'm2-extra': input.extras, 'm2-zone': input.zone,
     'm2-reference-data': '',
   };
   const ids: Record<string, any> = {};
-  for (const id of [...Object.keys(values), 'm2-total', 'm2-unit', 'm2-area', 'm2-usd', 'm2-monthly', 'm2-plan-label', 'm2-verdict', 'm2-detail-total', 'm2-update']) {
-    ids[id] = { value: String(values[id] ?? ''), textContent: id === 'm2-reference-data' ? JSON.stringify({ COSTS: costs, defaults: input }) : '', innerHTML: '', listeners: {} as Record<string, () => void>, addEventListener(k: string, fn: () => void) { this.listeners[k] = fn; } };
+  for (const id of [...Object.keys(values), 'm2-total', 'm2-unit', 'm2-area', 'm2-usd', 'm2-monthly', 'm2-plan-label', 'm2-verdict', 'm2-detail-total', 'm2-update', 'm2-share', 'presupuesto']) {
+    ids[id] = { value: String(values[id] ?? ''), textContent: id === 'm2-reference-data' ? JSON.stringify({ COSTS: costs, defaults: input }) : '', innerHTML: '', scrollIntoView() {}, listeners: {} as Record<string, () => void>, addEventListener(k: string, fn: () => void) { this.listeners[k] = fn; } };
   }
   const createButtons = () => Object.keys(costs).map(cat => ({ dataset: { cat, catCard: cat }, classList: { toggle() {} }, listeners: {} as Record<string, () => void>, addEventListener(k: string, fn: () => void) { this.listeners[k] = fn; }, querySelector: () => ({ textContent: '' }) }));
   const buttons = createButtons(), cards = createButtons();
@@ -27,7 +27,7 @@ function mount(input = defaults, costs = M2) {
     querySelector: (s: string) => s === '.measure' ? measure : { scrollIntoView() {} },
     querySelectorAll: (s: string) => s === '[data-m2-share]' ? shares : s === '[data-cat]' ? buttons : s === '[data-cat-card]' ? cards : Object.keys(values).filter(k => k !== 'm2-reference-data').map(k => ids[k]),
   };
-  runInNewContext(script, { document, calculateConstructionScenario: calculate, constructionScenarioView: view, constructionMoney: money, window: { dataLayer: { push: (e: any) => events.push(e) } }, setTimeout() {} });
+  runInNewContext(script, { document, calculateConstructionScenario: calculate, constructionScenarioView: view, constructionMoney: money, location: { hash }, URLSearchParams, window: { addEventListener() {}, dataLayer: { push: (e: any) => events.push(e) } }, setTimeout() {} });
   return { ids, buttons, cards, shares, events, measure };
 }
 function assertServerClient(input = defaults, costs = M2) {
@@ -76,6 +76,12 @@ describe('construction initial SSR/client agreement without changing the existin
     for (const category of Object.keys(M2)) for (const zone of Object.keys(M2[category])) {
       assertServerClient({ ...defaults, category, zone, covered: 85.5, semi: 32, semiFactorPercent: 65, extras: 1750000, contingencyPercent: 17 });
     }
+  });
+  it('opens a shared budget with its original inputs and rejects unknown zones and categories', () => {
+    const ui = mount(defaults, M2, '#obra=1&category=__proto__&zone=missing&covered=80&semi=0&customUnitPrice=2000000&extras=5000000&contingencyPercent=20');
+    expect(ui.ids['m2-zone'].value).toBe(defaults.zone);
+    expect(ui.ids['m2-area'].textContent).toBe('80 m²');
+    expect(ui.ids['m2-total'].textContent).toBe('$198.000.000');
   });
   it('retains category/input handlers and the existing calculator-submit event payload', () => {
     const ui = assertServerClient();

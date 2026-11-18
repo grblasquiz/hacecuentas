@@ -23,8 +23,8 @@ const zones = [
           <div class="chips"><span>🏗️ Rango, no precio cerrado</span><span>💵 Conversión MEP</span><span>✓ Supuestos visibles</span></div>
           <div class="house-art"><div class="blueprint"><div class="gridlines"></div><div class="house"><div class="roof"></div><div class="door"></div><div class="window"></div></div><span class="measure">{initialView.measure}</span></div><span class="budget-tag">Casa estándar · GBA sur/oeste</span></div>
         </div>
-        <form class="calc">
-          <div class="calc-title"><div><h2>Calculá tu obra</h2><p>Empezamos con una casa estándar.</p></div><span class="tag">Valores actualizados</span></div>
+        <form class="calc" id="presupuesto">
+          <div class="calc-title"><div><h2>Calculá tu obra</h2><p>Empezamos con una casa estándar.</p></div><span class="tag">Referencia editable</span></div>
           <div class="section-label">¿Qué tipo de obra es?</div>
           <div class="types"><button type="button" class="type" data-cat="economica"><i>🏠</i>Económica</button><button type="button" class="type active" data-cat="estandar"><i>🏡</i>Estándar</button><button type="button" class="type" data-cat="media"><i>🏘️</i>Media alta</button><button type="button" class="type" data-cat="alta"><i>🏰</i>Alta</button><button type="button" class="type" data-cat="premium"><i>✨</i>Premium</button><button type="button" class="type" data-cat="ampliacion"><i>➕</i>Ampliación</button><button type="button" class="type" data-cat="reforma"><i>🔨</i>Reforma integral</button></div>
           <div class="section-label">Datos principales</div>
@@ -43,9 +43,28 @@ const zones = [
             <div class="stats"><span>Superficie computable<b id="m2-area">{initialView.area}</b></span><span>Referencia en dólares<b id="m2-usd">{initialView.usd}</b></span><span>Rango probable<b id="m2-monthly">{initialView.range}</b></span></div>
             <div class="verdict" id="m2-verdict" set:html={initialView.verdict}></div>
             <button class="go" id="m2-update" type="button">Actualizar presupuesto</button>
+            <button class="share" id="m2-share" type="button">Copiar enlace del presupuesto</button>
+            <p class="share-note">El enlace incluye los importes y las medidas que ingresaste. Si usás la referencia del sitio, se recalcula al abrirlo.</p>
+            <p class="share-note" id="m2-share-status" role="status"></p>
+            <input class="share-url" id="m2-share-url" aria-label="Enlace del presupuesto para copiar" type="url" readonly hidden>
           </section>
         </form>
       </div>
+    </section>
+    <section class="examples wrap" aria-labelledby="m2-examples">
+      <h2 id="m2-examples">¿Cuánto cuesta construir una casa de 60, 80 o 100 m²?</h2>
+      <p>Estos ejemplos toman una casa estándar en GBA sur/oeste, con toda la superficie cubierta, 10% de reserva y sin terreno. La referencia por m² es una estimación editorial.</p>
+      <ul>
+        {[60, 80, 100].map(covered => {
+          const scenario = { ...CONSTRUCTION_DEFAULTS, covered, semi: 0 };
+          const result = calculateConstructionScenario(scenario, M2[scenario.category][scenario.zone]);
+          return <li>
+            <strong>Casa de {covered} m²</strong>
+            <span>{constructionMoney(result.low)} a {constructionMoney(result.high)}</span>
+            <a href={`#obra=1&covered=${covered}&semi=0`}>Calcular con {covered} m²</a>
+          </li>;
+        })}
+      </ul>
     </section>
     <section class="detail wrap">
       <header class="center"><span>La obra, rubro por rubro</span><h2>Entendé en qué se va el presupuesto</h2><p>Una estimación llave en mano separada como la armaría un director de obra.</p></header>
@@ -73,12 +92,60 @@ const zones = [
 import { calculateConstructionScenario, constructionScenarioView, constructionMoney } from '../lib/construction-cost-scenario';
 (()=>{const $=id=>document.getElementById(id),money=constructionMoney,num=id=>Math.max(0,Number($(id).value)||0);
 const { COSTS, defaults } = JSON.parse($('m2-reference-data').textContent);let cat=defaults.category;
+const shareFields = {
+  covered: 'm2-covered', semi: 'm2-semi', semiFactorPercent: 'm2-semi-factor',
+  customUnitPrice: 'm2-custom', contingencyPercent: 'm2-contingency', extras: 'm2-extra',
+};
+function loadScenario() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  if (params.get('obra') !== '1') return false;
+  const category = params.get('category') ?? defaults.category;
+  cat = Object.hasOwn(COSTS, category) ? category : defaults.category;
+  const zone = params.get('zone') ?? defaults.zone;
+  $('m2-zone').value = Object.hasOwn(COSTS[cat], zone) ? zone : defaults.zone;
+  for (const [key, id] of Object.entries(shareFields)) {
+    const val = Number(params.get(key) ?? defaults[key]);
+    $(id).value = Number.isFinite(val) && val >= 0 ? String(val) : String(defaults[key]);
+  }
+  return true;
+}
+$('m2-share').addEventListener('click', async () => {
+  const params = new URLSearchParams({ obra: '1', category: cat, zone: $('m2-zone').value });
+  for (const [key, id] of Object.entries(shareFields)) {
+    params.set(key, String(num(id)));
+  }
+  const url = new URL(location.pathname, location.origin);
+  url.hash = params.toString();
+  const fallback = $('m2-share-url');
+  const status = $('m2-share-status');
+  try {
+    await navigator.clipboard.writeText(url.href);
+    fallback.hidden = true;
+    status.textContent = 'Enlace copiado.';
+  } catch {
+    fallback.value = url.href;
+    fallback.hidden = false;
+    fallback.focus();
+    fallback.select();
+    status.textContent = 'Copiá el enlace seleccionado.';
+  }
+});
 const calc=()=>{const zone=$('m2-zone').value,reference=COSTS[cat][zone];
 const result=calculateConstructionScenario({covered:$('m2-covered').value,semi:$('m2-semi').value,semiFactorPercent:$('m2-semi-factor').value,customUnitPrice:$('m2-custom').value,contingencyPercent:$('m2-contingency').value,extras:$('m2-extra').value},reference);
 const view=constructionScenarioView(result);
 $('m2-total').textContent=view.total;$('m2-unit').textContent=view.unit;$('m2-area').textContent=view.area;$('m2-usd').textContent=view.usd;$('m2-monthly').textContent=view.range;$('m2-plan-label').textContent=view.plan;
 const v=$('m2-verdict');if(v)v.innerHTML=view.verdict;$('m2-detail-total').textContent=view.total;document.querySelectorAll('[data-m2-share]').forEach(el=>el.textContent=money(result.work*Number(el.dataset.m2Share)));document.querySelector('.measure').textContent=view.measure;document.querySelectorAll('[data-cat]').forEach(b=>b.classList.toggle('active',b.dataset.cat===cat));document.querySelectorAll('[data-cat-card]').forEach(b=>{const on=b.dataset.catCard===cat;b.classList.toggle('selected',on);b.querySelector('em').textContent=on?'Seleccionada':'US$'+COSTS[b.dataset.catCard].gba_sur.usd.toLocaleString('es-AR')})};
-document.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click',()=>{cat=b.dataset.cat;calc()}));document.querySelectorAll('[data-cat-card]').forEach(b=>b.addEventListener('click',()=>{cat=b.dataset.catCard;calc();document.querySelector('.calc').scrollIntoView({behavior:'smooth',block:'center'})}));document.querySelectorAll('.calc input,.calc select').forEach(el=>el.addEventListener('input',calc));$('m2-update').addEventListener('click',()=>{calc();window.dataLayer?.push({event:'calculator_submit',calculator:'costo_m2_construccion',category:cat,uses_custom_price:num('m2-custom')>0});$('m2-update').textContent='Presupuesto actualizado ✓';setTimeout(()=>$('m2-update').textContent='Actualizar presupuesto',1500)});calc()})();
+document.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click',()=>{cat=b.dataset.cat;calc()}));document.querySelectorAll('[data-cat-card]').forEach(b=>b.addEventListener('click',()=>{cat=b.dataset.catCard;calc();document.querySelector('.calc').scrollIntoView({behavior:'smooth',block:'center'})}));document.querySelectorAll('.calc input,.calc select').forEach(el=>el.addEventListener('input',calc));$('m2-update').addEventListener('click',()=>{calc();window.dataLayer?.push({event:'calculator_submit',calculator:'costo_m2_construccion',category:cat,uses_custom_price:num('m2-custom')>0});$('m2-update').textContent='Presupuesto actualizado ✓';setTimeout(()=>$('m2-update').textContent='Actualizar presupuesto',1500)});
+function openScenario() {
+  if (loadScenario()) {
+    calc();
+    $('presupuesto').scrollIntoView({ block: 'start' });
+  }
+}
+window.addEventListener('hashchange', openScenario);
+calc();
+openScenario();
+})();
 </script>
 
 <style>
@@ -90,6 +157,14 @@ document.querySelectorAll('[data-cat]').forEach(b=>b.addEventListener('click',()
     .detail{padding:74px 0 67px}.center{text-align:center;max-width:720px;margin:0 auto 36px}.center span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#1770e6;font-weight:850}.center h2{font-size:36px;letter-spacing:-.04em;margin:10px 0}.center p{color:#687a8f;line-height:1.6}.detail-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:20px}.card{border:1px solid #dce5ee;border-radius:16px;padding:25px;box-shadow:0 10px 27px #1738580b}.card h3{font-size:18px;margin:0 0 19px}.row{display:grid;grid-template-columns:145px 1fr 110px;align-items:center;gap:14px;margin:16px 0}.row span{font-size:10px;font-weight:750}.bar{height:8px;background:#edf2f6;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;border-radius:99px;background:#2f7dea}.row:nth-child(2) .bar i{background:#f0a235}.row:nth-child(3) .bar i{background:#20a06b}.row:nth-child(4) .bar i{background:#906dd4}.row b{text-align:right;font-size:12px}.total{display:flex;justify-content:space-between;border-top:1px solid #e1e7ee;margin-top:20px;padding-top:17px}.total strong:last-child{color:#168158;font-size:19px}
     .plan{background:#f8fbfe}.timeline{display:grid;gap:13px}.phase{display:grid;grid-template-columns:33px 1fr auto;gap:11px;align-items:center}.phase i{font-style:normal;width:33px;height:33px;border-radius:10px;background:#eaf3ff;display:grid;place-items:center}.phase:nth-child(2) i{background:#fff2dc}.phase:nth-child(3) i{background:#eaf8f2}.phase:nth-child(4) i{background:#f2ecff}.phase span{font-size:10px;font-weight:800}.phase small{display:block;color:#74869a;font-size:8px;margin-top:3px}.phase b{font-size:11px}.notice{background:#fff7e8;border:1px solid #efd7a5;border-radius:12px;padding:14px;margin-top:16px;display:flex;gap:10px;color:#76541d;font-size:10px;line-height:1.55}.notice i{font-style:normal;font-size:18px}
     .catalog{background:#f5f8fc;padding:69px 0}.catalog-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:27px}.catalog-head h2{font-size:34px;letter-spacing:-.04em;margin:8px 0 0}.catalog-head>div>span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#1770e6;font-weight:850}.legend{font-size:9px;color:#64778d}.categories{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.category{appearance:none;text-align:left;color:#12223b;background:#fff;border:1px solid #dce5ee;border-radius:13px;padding:17px;min-height:132px;cursor:pointer}.category.selected{border:2px solid #2779ed;box-shadow:0 10px 26px #226dcc14}.category i{font-style:normal;font-size:21px}.category h3{font-size:12px;margin:10px 0 4px}.category p{font-size:8px;color:#77899c;line-height:1.5;margin:0}.cat-price{display:flex;justify-content:space-between;align-items:end;margin-top:13px}.cat-price b{font-size:14px}.cat-price em{font-style:normal;font-size:8px;color:#168158;background:#e9f8f1;padding:4px 6px;border-radius:99px}.selected .cat-price em{color:#1769db;background:#edf4ff}.support{display:grid;grid-template-columns:1.2fr .8fr;gap:40px;padding:70px 0}.support h2{font-size:24px}.support details{border-bottom:1px solid #dfe6ed;padding:14px 0}.support summary{font-size:12px;font-weight:750;cursor:pointer}.support p{font-size:11px;line-height:1.65;color:#687a8f}.support a{display:block;border:1px solid #dce5ee;border-radius:10px;padding:12px;margin:8px 0;color:#1769db;text-decoration:none;font-size:10px;font-weight:700}.support small{display:block;color:#78899c;margin-top:4px}
+    .share{width:100%;margin-top:8px;padding:10px;border:1px solid #a5bad0;border-radius:9px;background:transparent;color:#fff}
+    .share-note{font-size:12px;line-height:1.45;margin:8px 0 0;color:#d8e6f2}.share-note:empty{display:none}
+    .share-url{width:100%;margin-top:8px}
+    #presupuesto{scroll-margin-top:90px}
+    .examples{padding-top:48px}.examples p{line-height:1.6;color:#43526a}
+    .examples ul{list-style:none;margin:20px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
+    .examples li{padding:16px;border:1px solid #dce5ee;border-radius:12px;display:grid;gap:8px}
+    .examples a{color:#1769db;text-decoration:underline;width:fit-content}
     @media(max-width:800px){.links{display:none}.hero-grid,.detail-grid,.support{grid-template-columns:1fr}.copy{text-align:center}.copy h1{font-size:40px}.eyebrow,.chips{justify-content:center}.house-art{max-width:390px;margin-inline:auto}.categories{grid-template-columns:1fr 1fr}.catalog-head{display:block}.legend{margin-top:10px}.tools span:not(:last-child){display:none}}
     @media(max-width:600px){
       .calc{padding:22px 16px}.calc-title{flex-wrap:wrap;gap:10px}.types{grid-template-columns:repeat(2,minmax(0,1fr))}.type{min-width:0;overflow-wrap:anywhere}

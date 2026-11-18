@@ -127,7 +127,7 @@ export const hub: HubData = {
   slug: 'construccion/costo-por-m2',
   title: 'Costo del m² de construcción en Argentina 2026: calculadora',
   description:
-    'Estimá un rango de costo por m² para construir en Argentina según categoría y zona. Ajustá precio local, superficie computable, adicionales y contingencia.',
+    'Estimá cuánto cuesta construir en Argentina. Compará casas de 60, 80 y 100 m², ajustá terminación, zona y cotización local, y compartí tu presupuesto.',
   silo: 'Construcción',
   siloHref: '/construccion',
 
@@ -136,7 +136,7 @@ export const hub: HubData = {
   lede:
     'Poné los metros, elegí terminación y zona, o cargá una cotización local. Vas a obtener un rango orientativo con supuestos visibles, no un precio cerrado.',
   stamps: [
-    'Experiencia revisada 03-10-2026',
+    'Experiencia revisada 18-11-2026',
     `Referencia editorial estándar US$${USD_M2_ESTANDAR}/m²`,
     `Pesos calculados al ${FX.label} $${FX.value.toLocaleString('es-AR')} (${FX.date})`,
     '7 calculadoras adentro',
@@ -296,6 +296,6 @@ export const hub: HubData = {
     '/calculadora-proyectos-hogar',
   ],
 
-  lastReviewed: '2026-10-03',
+  lastReviewed: '2026-11-18',
   audience: 'AR',
 };
