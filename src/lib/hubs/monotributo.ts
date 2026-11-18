@@ -38,7 +38,7 @@ export const hub: HubData = {
   slug: 'impuestos/monotributo',
   title: '¿Qué categoría de monotributo me toca? — Escala y cuota 2026',
   description:
-    'Calculá tu categoría con la escala de ARCA desde agosto 2026: cuota, tope de facturación y comparación con responsable inscripto, autónomo y empleado.',
+    'Calculá categoría, cuota y margen con la escala ARCA desde agosto de 2026. Compará dos escenarios de facturación y revisá el alcance de los parámetros.',
   silo: 'Impuestos',
   siloHref: '/impuestos',
 
@@ -66,7 +66,7 @@ export const hub: HubData = {
         yes: [
           'Ingresos brutos facturados en los últimos 12 meses, sin descontar gastos',
           'Superficie afectada a la actividad y energía eléctrica consumida, si tenés local',
-          'Alquileres devengados por el local, cuando corresponde',
+          'Alcance del formulario: ingresos, superficie y energía; alquiler y precio unitario se revisan aparte',
           'La cuota incluye impuesto integrado, aporte jubilatorio al SIPA y obra social',
         ],
         warn: [
@@ -100,7 +100,7 @@ export const hub: HubData = {
         id: 'vs-ri',
         label: 'Monotributo vs responsable inscripto',
         hint: 'Cuál me conviene',
-        answer: 'El monotributo conviene mientras la cuota anual sea menor que IVA más Ganancias más Ingresos Brutos.',
+        answer: 'Comparar regímenes requiere revisar clientes, IVA, gastos, aportes e Ingresos Brutos; no hay un punto universal de conveniencia.',
         yes: [
           'Como monotributista pagás una cuota fija mensual y no liquidás IVA ni Ganancias',
           'Como responsable inscripto pagás IVA (21% del débito menos el crédito de tus gastos), Ganancias e Ingresos Brutos',
@@ -108,7 +108,7 @@ export const hub: HubData = {
           'El responsable inscripto puede facturar a empresas que exigen crédito fiscal, y eso a veces vale más que el ahorro impositivo',
         ],
         warn: [
-          'La estimación de responsable inscripto es gruesa: usa una alícuota media de Ganancias del 25% y un 3,5% de Ingresos Brutos',
+          'Este hub no calcula una liquidación de responsable inscripto ni un umbral de conveniencia fiscal.',
           'IVA no es un costo si tus clientes son responsables inscriptos: se traslada al precio',
           'Ingresos Brutos se paga en los dos regímenes; muchas provincias tienen régimen simplificado para monotributistas',
           'El pase a responsable inscripto obliga a contador, libros de IVA y declaraciones mensuales',
@@ -235,7 +235,7 @@ export const hub: HubData = {
   faq: [
     {
       q: '¿Cómo sé qué categoría de monotributo me corresponde?',
-      a: 'Sumá todo lo que facturaste en los últimos 12 meses corridos y buscá la categoría más baja cuyo tope anual cubra ese número. Si tenés local, calculá también la categoría que te dan la superficie afectada y la energía eléctrica consumida: te corresponde la más alta de las tres. Los ingresos son brutos, sin descontar gastos.',
+      a: 'Buscá la categoría que cubra los ingresos brutos reales de los últimos 12 meses y los demás parámetros que correspondan: superficie, energía y alquiler. Para bienes, revisá también el precio unitario máximo. Este formulario evalúa ingresos, superficie y energía: un resultado numérico no confirma la adhesión. La tabla rápida de datos permite revisar más parámetros.',
     },
     {
       q: '¿Cuándo hay que recategorizarse?',
@@ -247,11 +247,11 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué incluye la cuota mensual del monotributo?',
-      a: 'Tres componentes: el impuesto integrado (que reemplaza IVA y Ganancias), el aporte jubilatorio al SIPA y el aporte a obra social. En las categorías bajas el grueso es el aporte jubilatorio y la obra social; a partir de la categoría E el impuesto integrado pasa a ser el componente más pesado.',
+      a: 'La cuota general incluye impuesto integrado, aporte al SIPA y obra social individual. Algunas condiciones previsionales exceptúan componentes y los adherentes pueden sumar aportes. Consultá la composición correspondiente en ARCA; la tabla general no equivale a todas las credenciales de pago.',
     },
     {
       q: '¿Cuándo me conviene pasar a responsable inscripto?',
-      a: 'Cuando la carga de IVA, Ganancias e Ingresos Brutos como inscripto queda por debajo de la cuota anual del monotributo, algo que pasa sobre todo si tenés muchos gastos con factura A que generan crédito fiscal. También conviene si tus clientes son empresas que necesitan crédito fiscal y por eso te pagan menos siendo monotributista.',
+      a: 'La decisión depende de requisitos del régimen, clientes, posibilidad de trasladar IVA, crédito fiscal, gastos, aportes e Ingresos Brutos. Una comparación de cuotas no determina cuál régimen deja mayor ingreso neto. Revisá el encuadre completo con un profesional.',
     },
     {
       q: '¿Los servicios pueden llegar a la categoría K?',
@@ -345,6 +345,6 @@ export const hub: HubData = {
     '/calculadora-cuanto-tengo-que-facturar-para-ganar-x-neto',
   ],
 
-  lastReviewed: '2026-08-04',
+  lastReviewed: '2026-11-18',
   audience: 'AR',
 };
