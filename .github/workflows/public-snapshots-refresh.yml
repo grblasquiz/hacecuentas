@@ -27,9 +27,18 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Refresh official public snapshots
+      - name: Refresh fuel prices
+        id: fuel
+        timeout-minutes: 4
+        continue-on-error: true
+        run: python3 scripts/fetch-nafta-precios.py
+
+      - name: Report failed fuel refresh
+        if: steps.fuel.outcome == 'failure'
+        run: echo "::warning title=Combustibles::No se pudo actualizar el CSV oficial. Se conserva el relevamiento anterior."
+
+      - name: Refresh exchange rates and F1
         run: |
-          python3 scripts/fetch-nafta-precios.py
           node scripts/fetch-sunat-tipo-cambio.mjs
           node scripts/fetch-formula-1-2026.mjs
 
