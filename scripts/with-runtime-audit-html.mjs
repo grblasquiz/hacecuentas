@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { createTestHarness } from 'wrangler';
 
@@ -8,9 +8,17 @@ if (!command) throw new Error('Falta indicar el comando de auditoría.');
 
 const path = '/fechas/feriados';
 const file = `dist/client${path}.html`;
-const worker = createTestHarness({ workers: [{ configPath: 'dist/server/wrangler.json' }] });
+const config = JSON.parse(await readFile('dist/server/wrangler.json', 'utf8'));
+// Este GET no usa IA ni búsqueda vectorial. Conservamos los assets y el
+// runtime del deploy con un Worker local que no necesita bindings remotos.
+delete config.ai;
+delete config.vectorize;
+const configPath = `dist/server/wrangler-audit-${process.pid}.json`;
+await writeFile(configPath, JSON.stringify(config), { flag: 'wx' });
 let html;
+let worker;
 try {
+  worker = createTestHarness({ workers: [{ configPath }] });
   await worker.listen();
   const response = await worker.fetch(`https://hacecuentas.com${path}`);
   if (response.status !== 200 || !response.headers.get('cache-control')?.includes('no-store')) {
@@ -21,10 +29,14 @@ try {
     throw new Error(`[runtime-audit] ${path}: el Worker no devolvió el calendario`);
   }
 } catch (error) {
-  worker.debug();
+  worker?.debug();
   throw error;
 } finally {
-  await worker.close();
+  try {
+    await worker?.close();
+  } finally {
+    await rm(configPath);
+  }
 }
 
 // Las auditorías leen el árbol estático. El HTML obtenido del Worker se usa
