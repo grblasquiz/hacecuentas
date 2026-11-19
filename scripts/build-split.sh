@@ -29,6 +29,7 @@ restore_ssr() {
     [ "$(basename "$f")" = "middleware.ts" ] && continue
     mv "$f" "src/pages/$(basename "$f")" 2>/dev/null || true
   done
+  [ -d _split_bak/feriados ] && mv _split_bak/feriados src/pages/fechas/feriados 2>/dev/null || true
   [ -d _split_bak/embed ] && mv _split_bak/embed src/pages/embed 2>/dev/null || true
   [ -f _split_bak/middleware.ts ] && mv _split_bak/middleware.ts src/middleware.ts 2>/dev/null || true
   rmdir _split_bak 2>/dev/null || true
@@ -68,6 +69,7 @@ fi
 echo "[split] 3/5 STATIC build (Node prerender)..."
 mkdir -p _split_bak
 mv src/pages/api _split_bak/api
+mv src/pages/fechas/feriados _split_bak/feriados
 for p in "${SSR_PAGES[@]}"; do mv "src/pages/$p" "_split_bak/$p" 2>/dev/null || true; done
 mv src/middleware.ts _split_bak/middleware.ts
 trap restore_ssr EXIT

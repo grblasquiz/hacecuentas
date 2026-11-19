@@ -1,19 +1,259 @@
 ---
+import { MESES, META } from '../../lib/data/feriados-ar-2026';
+import {
+  CALENDARIO_COMPLETO, FIN, INICIO, calcularCalendario, diaSemana, diasHasta, fechaCorta,
+  hoyEnBuenosAires, intervaloValido, proximoFeriado, resultadoCalendario,
+} from '../../lib/feriados-calendario';
+
+const hoy = hoyEnBuenosAires();
+const desde = intervaloValido(hoy, FIN) ? hoy : '';
+const siguiente = proximoFeriado(hoy);
+const inicial = resultadoCalendario('next', desde, FIN, 'nacional', false, 1);
+const escapadas = desde ? calcularCalendario(desde, FIN, 'nacional', false, 1).findes : [];
+const faltan = siguiente ? diasHasta(hoy, siguiente.fecha) : 0;
+const tipos: Record<string, string> = {
+  nacional: 'Feriado nacional',
+  puente: 'Día no laborable turístico',
+  'no-laborable': 'Día no laborable',
+  bancario: 'Feriado bancario',
+};
 ---
-<div class="mockup-feriados-home" set:html={`<div class="hero"><div class="wrap"><div class="crumb">Fechas / Feriados nacionales</div><div class="heroGrid"><div><span class="eyebrow">Calendario argentino 2026</span><h1>El próximo descanso, a la vista.</h1><p class="lead">Consultá feriados, días no laborables y fines de semana largos. Descubrí cómo estirar una escapada usando la menor cantidad de vacaciones.</p><div class="trust"><span>✓ Traslados aplicados</span><span>✓ Calendario nacional</span><span>✓ Planificación de licencia</span></div><div class="miniCalendar"><div class="dateSheet"><b>AGOSTO</b><strong>17</strong><span>LUNES</span></div><div class="miniCopy"><strong>Próximo feriado</strong><span>Paso a la Inmortalidad del Gral. San Martín</span></div></div></div>
-<div class="planner"><div class="plannerHead"><div><h2>¿Qué querés saber?</h2><p>Elegí una vista del calendario.</p></div><span class="official">CALENDARIO OFICIAL</span></div><div class="views"><button class="view active" data-view="next">Próximo feriado</button><button class="view" data-view="business">Días hábiles</button><button class="view" data-view="long">Findes largos</button></div><div class="fields"><div class="field"><label>Contar desde</label><input id="from" type="date" value="2026-07-29"></div><div class="field"><label>Contar hasta</label><input id="to" type="date" value="2026-12-31"></div><div class="field"><label>¿Trabajás los sábados?</label><select id="saturday"><option value="0">No</option><option value="1">Sí</option></select></div><div class="field"><label>Días de licencia disponibles</label><input id="leave" type="number" min="0" max="30" value="1"></div></div><button class="primary" id="calculate">Actualizar calendario</button><div class="result"><small id="resultLabel">PRÓXIMO FERIADO NACIONAL</small><div class="answer"><div class="big" id="answer">17 de agosto</div><span class="badge" id="badge">En 19 días</span></div><p id="description">Paso a la Inmortalidad del General José de San Martín · cae lunes.</p><div class="stats"><div class="stat"><span>FERIADOS RESTANTES</span><b id="remaining">5</b></div><div class="stat"><span>DÍAS HÁBILES</span><b id="business">106</b></div><div class="stat"><span>FINES LARGOS</span><b id="longCount">3</b></div></div></div></div></div></div></div>
-<section><div class="wrap"><div class="sectionHead"><span class="eyebrow">Todo el año</span><h2>Calendario de feriados 2026</h2><p>Filtrá por tipo o mes. Los puentes y días no laborables se distinguen de los feriados nacionales.</p></div><div class="toolbar"><div class="filters"><button class="filter active" data-type="all">Todos</button><button class="filter" data-type="holiday">Feriados</button><button class="filter" data-type="bridge">No laborables</button><button class="filter" data-type="upcoming">Próximos</button></div><select class="monthSelect" id="month"><option value="all">Todos los meses</option><option value="7">Agosto</option><option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option></select></div><div class="holidays" id="holidayList"></div><div class="empty" id="empty">No hay fechas para ese filtro.</div></div></section>
-<section class="tint"><div class="wrap"><div class="sectionHead"><span class="eyebrow">Planificá una escapada</span><h2>Convertí un feriado en más descanso</h2><p>Verde: días libres. Amarillo: día de licencia sugerido.</p></div><div class="weekends"><article class="trip featured"><small>Sin pedir licencia</small><h3>Del 15 al 17 de agosto</h3><p>Tres días seguidos aprovechando el feriado del lunes.</p><div class="days"><i class="off">SÁB</i><i class="off">DOM</i><i class="off">LUN</i></div><button>Agregar al calendario</button></article><article class="trip"><small>Sin pedir licencia</small><h3>Del 10 al 12 de octubre</h3><p>Otro fin de semana de tres días con feriado el lunes.</p><div class="days"><i class="off">SÁB</i><i class="off">DOM</i><i class="off">LUN</i></div><button>Agregar al calendario</button></article><article class="trip"><small>Usando 1 día</small><h3>Del 5 al 8 de diciembre</h3><p>Pedí el lunes y conectá el fin de semana con el martes 8.</p><div class="days"><i class="off">SÁB</i><i class="off">DOM</i><i class="leave">LUN</i><i class="off">MAR</i></div><button>Usar esta idea</button></article></div></div></section>
-<section><div class="wrap"><div class="info"><article class="panel"><h3>Feriado nacional</h3><p>Rige el descanso dominical. Si trabajás, corresponde la remuneración del día más una cantidad igual: en términos generales, se paga doble.</p><div class="line">Los feriados trasladables ya aparecen en su fecha efectiva.</div></article><article class="panel dark"><h3>Día no laborable</h3><p>La decisión de trabajar queda, en general, a criterio del empleador y el pago no funciona igual que un feriado nacional. También puede variar según actividad.</p><div class="line">La herramienta usa calendario nacional; no suma asuetos provinciales o municipales.</div></article></div></div></section><button type="button" id="toast" hidden aria-hidden="true"></button>`} />
-<script is:inline>
-(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-feriados-home')?document.currentScript.previousElementSibling:document.querySelector('.mockup-feriados-home');if(!root)return;
+<div class="mockup-feriados-home">
+  <div class="hero">
+    <div class="wrap">
+      <div class="crumb">Fechas / Feriados nacionales</div>
+      <div class="heroGrid">
+        <div>
+          <span class="eyebrow">Calendario argentino {META.anio}</span>
+          <h1>¿Cuándo es el próximo feriado?</h1>
+          <p class="lead">Consultá los feriados nacionales, los días no laborables turísticos y los cierres bancarios. Calculá días hábiles y planificá fines de semana largos.</p>
+          {siguiente ? (
+            <div class="miniCalendar">
+              <time class="dateSheet" id="next-national-holiday" datetime={siguiente.fecha}>
+                <b>{MESES[siguiente.mes]}</b>
+                <strong>{Number(siguiente.fecha.slice(-2))}</strong>
+                <span>{diaSemana(siguiente.fecha)}</span>
+              </time>
+              <div class="miniCopy">
+                <strong>{faltan ? 'Próximo feriado nacional' : 'Hoy es feriado nacional'}</strong>
+                <span>{siguiente.nombre}</span>
+                {faltan > 0 && <span>Faltan {faltan} {faltan === 1 ? 'día' : 'días'}.</span>}
+              </div>
+            </div>
+          ) : (
+            <p class="lead">Ya pasaron los feriados nacionales de {META.anio}. Consultá el calendario de 2027 más abajo.</p>
+          )}
+        </div>
 
-const holidays=[{d:"2026-08-17",name:"Paso a la Inmortalidad del Gral. San Martín",type:"holiday"},{d:"2026-10-12",name:"Día del Respeto a la Diversidad Cultural",type:"holiday"},{d:"2026-11-20",name:"Día de la Soberanía Nacional",type:"holiday"},{d:"2026-12-08",name:"Inmaculada Concepción de María",type:"holiday"},{d:"2026-12-25",name:"Navidad",type:"holiday"}],$=s=>root.querySelector(s),$$=s=>[...root.querySelectorAll(s)],parse=v=>{const [y,m,d]=v.split("-").map(Number);return new Date(y,m-1,d,12)},fmt=d=>new Intl.DateTimeFormat("es-AR",{day:"numeric",month:"long"}).format(d);let view="next",type="all";
-function business(a,b,sat){let n=0,d=new Date(a);while(d<=b){if(d.getDay()!==0&&(sat||d.getDay()!==6)&&!holidays.some(h=>h.d===iso(d)))n++;d.setDate(d.getDate()+1)}return n}function iso(d){return d.toISOString().slice(0,10)}function update(){const from=parse($("#from").value),to=parse($("#to").value),next=holidays.find(h=>parse(h.d)>=from),remain=holidays.filter(h=>parse(h.d)>=from&&parse(h.d)<=to).length,biz=business(from,to,$("#saturday").value==="1");$("#remaining").textContent=remain;$("#business").textContent=biz;if(view==="business"){$("#resultLabel").textContent="DÍAS HÁBILES DEL PERÍODO";$("#answer").textContent=biz+" días";$("#badge").textContent="Hasta "+fmt(to);$("#description").textContent="Descontamos domingos, feriados nacionales y "+($("#saturday").value==="1"?"mantenemos":"descontamos")+" los sábados."}else if(view==="long"){$("#resultLabel").textContent="FINES DE SEMANA LARGOS";$("#answer").textContent="3 oportunidades";$("#badge").textContent=$("#leave").value+" día de licencia";$("#description").textContent="Agosto y octubre no requieren licencia; diciembre puede extenderse usando un lunes."}else if(next){const d=parse(next.d),days=Math.ceil((d-from)/864e5);$("#resultLabel").textContent="PRÓXIMO FERIADO NACIONAL";$("#answer").textContent=fmt(d);$("#badge").textContent="En "+days+" días";$("#description").textContent=next.name+" · cae "+new Intl.DateTimeFormat("es-AR",{weekday:"long"}).format(d)+"."}else{$("#answer").textContent="No quedan";$("#badge").textContent="En el período";$("#description").textContent="Probá ampliando las fechas."}}
-function render(){const month=$("#month").value;const rows=holidays.filter(h=>(type==="all"||type==="upcoming"||h.type===type)&&(month==="all"||parse(h.d).getMonth()==month)&&(type!=="upcoming"||parse(h.d)>=parse($("#from").value)));$("#holidayList").innerHTML=rows.map(h=>{const d=parse(h.d);return `<article class="holiday ${h.type}"><div class="date"><span>${new Intl.DateTimeFormat("es-AR",{month:"short"}).format(d)}</span><b>${d.getDate()}</b></div><div><h3>${h.name}</h3><p>${new Intl.DateTimeFormat("es-AR",{weekday:"long"}).format(d)} · alcance nacional</p></div><span class="kind">Feriado nacional</span></article>`}).join("");$("#empty").style.display=rows.length?"none":"block"}
-$$(".view").forEach(b=>b.onclick=()=>{view=b.dataset.view;$$(".view").forEach(x=>x.classList.toggle("active",x===b));update()});$$(".planner input,.planner select").forEach(x=>x.oninput=()=>{update();render()});$("#calculate").onclick=e=>{update();render();const t=e.currentTarget.textContent;e.currentTarget.textContent="✓ Calendario actualizado";setTimeout(()=>e.currentTarget.textContent=t,1100)};$$(".filter").forEach(b=>b.onclick=()=>{type=b.dataset.type;$$(".filter").forEach(x=>x.classList.toggle("active",x===b));render()});$("#month").oninput=render;function toast(t){$("#toast").textContent=t;$("#toast").classList.add("show");setTimeout(()=>$("#toast").classList.remove("show"),1500)}$$(".trip button").forEach(b=>b.onclick=()=>toast("✓ Plan guardado en el mockup"));update();render();
+        <div class="planner">
+          <div class="plannerHead"><div><h2>¿Qué querés saber?</h2><p>La fecha inicial es la de Buenos Aires.</p></div></div>
+          <div class="views" aria-label="Vista de la calculadora">
+            <button type="button" class="view active" data-view="next" aria-pressed="true">Próximo feriado</button>
+            <button type="button" class="view" data-view="business" aria-pressed="false">Días hábiles</button>
+            <button type="button" class="view" data-view="long" aria-pressed="false">Findes largos</button>
+          </div>
+          <form class="calendar-form">
+            <div class="fields">
+              <div class="field">
+                <label for="from">Contar desde</label>
+                <input id="from" type="date" value={desde} min={INICIO} max={FIN} required />
+              </div>
+              <div class="field">
+                <label for="to">Contar hasta</label>
+                <input id="to" type="date" value={FIN} min={INICIO} max={FIN} required />
+              </div>
+              <div class="field">
+                <label for="calendar">Calendario</label>
+                <select id="calendar" aria-describedby="calendar-help">
+                  <option value="nacional">Nacional · feriados</option>
+                  <option value="no-laborables">Nacional · también turísticos</option>
+                  <option value="bancario">Bancario · BCRA</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="saturday">¿Trabajás los sábados?</label>
+                <select id="saturday"><option value="0">No</option><option value="1">Sí</option></select>
+              </div>
+              <div class="field">
+                <label for="leave">Días de licencia por finde</label>
+                <input id="leave" type="number" min="0" max="30" value="1" />
+              </div>
+            </div>
+            <p id="calendar-help">Si tu empleador da los días no laborables turísticos, elegí «Nacional · también turísticos». El calendario bancario siempre excluye los sábados.</p>
+            <button class="primary" type="submit">Actualizar calendario</button>
+          </form>
+          <div class="result" aria-live="polite">
+            <small id="resultLabel">{inicial.titulo}</small>
+            <div class="answer">
+              <div class="big" id="answer">{inicial.texto}</div>
+              <span class="badge" id="badge" hidden={!inicial.badge}>{inicial.badge}</span>
+            </div>
+            <p id="description">{inicial.detalle}</p>
+            <div class="stats">
+              <div class="stat"><span>FERIADOS NACIONALES</span><b id="remaining">{inicial.feriados}</b></div>
+              <div class="stat"><span>DÍAS HÁBILES</span><b id="business">{inicial.habiles}</b></div>
+              <div class="stat"><span>FINES LARGOS</span><b id="longCount">{inicial.findes}</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-})();
+  <section>
+    <div class="wrap">
+      <div class="sectionHead">
+        <h2>Calendario de feriados {META.anio}</h2>
+        <p>Filtrá por tipo o mes. Las fechas trasladables figuran el día que se observan.</p>
+      </div>
+      <div class="toolbar">
+        <div class="filters" aria-label="Tipo de fecha">
+          <button type="button" class="filter active" data-type="all" aria-pressed="true">Todos</button>
+          <button type="button" class="filter" data-type="nacional" aria-pressed="false">Feriados nacionales</button>
+          <button type="button" class="filter" data-type="no-laborable" aria-pressed="false">No laborables</button>
+          <button type="button" class="filter" data-type="bancario" aria-pressed="false">Solo bancarios</button>
+          <button type="button" class="filter" data-type="upcoming" aria-pressed="false">Próximos</button>
+        </div>
+        <select class="monthSelect" id="month" aria-label="Mes del calendario">
+          <option value="all">Todos los meses</option>
+          {MESES.slice(1).map((mes, indice) => <option value={String(indice + 1).padStart(2, '0')}>{mes}</option>)}
+        </select>
+      </div>
+      <div class="holidays" id="holidayList">
+        {CALENDARIO_COMPLETO.map(({ fecha, nombre, grupo, trasladadoDe }) => (
+          <article class:list={['holiday', grupo === 'puente' && 'bridge']} data-date={fecha} data-group={grupo}>
+            <time class="date" datetime={fecha}>
+              <span>{MESES[Number(fecha.slice(5, 7))].slice(0, 3)}</span>
+              <b>{Number(fecha.slice(-2))}</b>
+            </time>
+            <div>
+              <h3>{nombre}</h3>
+              <p>{diaSemana(fecha)}{trasladadoDe && ` · trasladado del ${fechaCorta(trasladadoDe)}`}</p>
+            </div>
+            <span class="kind">{tipos[grupo]}</span>
+          </article>
+        ))}
+      </div>
+      <p class="empty" id="empty" hidden>No hay fechas para ese filtro.</p>
+    </div>
+  </section>
+
+  {escapadas.length > 0 && (
+    <section class="tint">
+      <div class="wrap">
+        <div class="sectionHead">
+          <h2>Próximos fines de semana largos</h2>
+          <p>Con sábados y domingos libres, hasta un día de licencia y los días turísticos laborables.</p>
+        </div>
+        <div class="weekends">
+          {escapadas.map((finde) => (
+            <article class="trip">
+              <small>{finde.licencias ? 'Con un día de licencia' : 'Sin pedir licencia'}</small>
+              <h3>Del {fechaCorta(finde.desde)} al {fechaCorta(finde.hasta)}</h3>
+              <p>{finde.dias} días seguidos de descanso.</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section>
+    <div class="wrap">
+      <div class="info">
+        <article class="panel">
+          <h3>Feriado nacional</h3>
+          <p>El lunes 23 de noviembre se observa el Día de la Soberanía Nacional, trasladado del viernes 20. El martes 8 de diciembre es feriado inamovible por la Inmaculada Concepción de María.</p>
+          <p><a href="https://www.argentina.gob.ar/normativa/nacional/ley-27399-281835/texto">Ley 27.399, artículos 1 y 6</a></p>
+        </article>
+        <article class="panel">
+          <h3>Día no laborable turístico</h3>
+          <p>El lunes 7 de diciembre es un día no laborable con fines turísticos. En general, el empleador decide si se trabaja.</p>
+          <p><a href="https://www.argentina.gob.ar/normativa/nacional/norma-421799/texto">Resolución JGM 164/2025</a></p>
+        </article>
+        <article class="panel">
+          <h3>Calendario bancario</h3>
+          <p>El BCRA incluye el 23 de noviembre y el 7 y 8 de diciembre entre las fechas de cierre. La herramienta cubre el calendario nacional y bancario de 2026 y excluye las fechas locales.</p>
+          <p><a href="https://www.bcra.gob.ar/consulta-feriados-bancarios-2026/">Feriados bancarios 2026 del BCRA</a></p>
+        </article>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  import { hoyEnBuenosAires, resultadoCalendario } from '../../lib/feriados-calendario';
+  import type { Calendario, Vista } from '../../lib/feriados-calendario';
+
+  const root = document.querySelector<HTMLElement>('.mockup-feriados-home');
+  if (root) {
+    const from = root.querySelector<HTMLInputElement>('#from')!;
+    const to = root.querySelector<HTMLInputElement>('#to')!;
+    const calendar = root.querySelector<HTMLSelectElement>('#calendar')!;
+    const saturday = root.querySelector<HTMLSelectElement>('#saturday')!;
+    const leave = root.querySelector<HTMLInputElement>('#leave')!;
+    const month = root.querySelector<HTMLSelectElement>('#month')!;
+    const empty = root.querySelector<HTMLElement>('#empty')!;
+    const rows = Array.from(root.querySelectorAll<HTMLElement>('#holidayList [data-date]'));
+    const views = root.querySelectorAll<HTMLButtonElement>('.view');
+    const filters = root.querySelectorAll<HTMLButtonElement>('.filter');
+    let view: Vista = 'next';
+    let filter = 'all';
+
+    function activate(buttons: NodeListOf<HTMLButtonElement>, active: HTMLButtonElement) {
+      buttons.forEach((button) => {
+        button.classList.toggle('active', button === active);
+        button.setAttribute('aria-pressed', String(button === active));
+      });
+    }
+
+    function update() {
+      saturday.disabled = calendar.value === 'bancario';
+      const result = resultadoCalendario(
+        view, from.value, to.value, calendar.value as Calendario, saturday.value === '1',
+        Math.max(0, Math.min(30, Math.floor(leave.valueAsNumber || 0))),
+      );
+      const fields = {
+        resultLabel: result.titulo, answer: result.texto, badge: result.badge,
+        description: result.detalle, remaining: result.feriados, business: result.habiles,
+        longCount: result.findes,
+      };
+      for (const [id, value] of Object.entries(fields)) {
+        root!.querySelector<HTMLElement>(`#${id}`)!.textContent = String(value);
+      }
+      root!.querySelector<HTMLElement>('#badge')!.hidden = !result.badge;
+    }
+
+    function renderCalendar() {
+      let count = 0;
+      const today = hoyEnBuenosAires();
+      for (const row of rows) {
+        const { date, group } = row.dataset;
+        const matchesType = filter === 'all' || filter === group ||
+          (filter === 'upcoming' && date! >= today) || (filter === 'no-laborable' && group === 'puente');
+        row.hidden = !matchesType || (month.value !== 'all' && date!.slice(5, 7) !== month.value);
+        if (!row.hidden) count++;
+      }
+      empty.hidden = count !== 0;
+    }
+
+    views.forEach((button) => button.addEventListener('click', () => {
+      view = button.dataset.view as Vista;
+      activate(views, button);
+      update();
+    }));
+    filters.forEach((button) => button.addEventListener('click', () => {
+      filter = button.dataset.type!;
+      activate(filters, button);
+      renderCalendar();
+    }));
+    root.querySelector('.calendar-form')!.addEventListener('input', update);
+    root.querySelector('.calendar-form')!.addEventListener('submit', (event) => {
+      event.preventDefault();
+      update();
+    });
+    month.addEventListener('change', renderCalendar);
+  }
 </script>
 <style is:global>
 
@@ -30,4 +270,12 @@ $$(".view").forEach(b=>b.onclick=()=>{view=b.dataset.view;$$(".view").forEach(x=
 .mockup-feriados-home :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td){color:inherit}
 .mockup-feriados-home input[type="number"]{-moz-appearance:textfield;appearance:textfield}
 .mockup-feriados-home input[type="number"]::-webkit-inner-spin-button,.mockup-feriados-home input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+
+.mockup-feriados-home [hidden]{display:none}
+.mockup-feriados-home .dateSheet b,
+.mockup-feriados-home .dateSheet span{text-transform:uppercase}
+.mockup-feriados-home .calendar-form p{font-size:13px;color:var(--muted);line-height:1.5}
+.mockup-feriados-home .field{min-width:0}
+.mockup-feriados-home .field select{max-width:100%}
+.mockup-feriados-home .info a{color:var(--navy);text-decoration:underline}
 </style>

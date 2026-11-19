@@ -7,18 +7,10 @@
 //
 // Mismo patrón que src/lib/data/brasil-2026.ts y monotributo-2026.ts.
 //
-// dataAsOf: 2026-06-07. Verificado contra el Boletín Oficial:
-//   - Ley 27.399 — Régimen de feriados nacionales y días no laborables.
-//   - Decreto 1584/2010 — feriados trasladables (regla del lunes).
-//   - Resolución 164/2025 (Min. Turismo) — 3 puentes turísticos: 23/3, 10/7, 7/12.
-//
-// Todas las FECHAS son las OBSERVADAS (con traslados ya aplicados). El campo
-// opcional `trasladadoDe` guarda la fecha original cuando hubo traslado.
-//
-// Nota sobre tipos: Carnaval (lun/mar) se modela como 'trasladable' para mantener
-// idéntico el output de las calcs ya desplegadas; legalmente es un feriado de
-// fecha móvil (atado a la Pascua) que NO sigue la regla del lunes. No cambia el
-// conteo de "feriados nacionales" (inamovibles + trasladables = 15).
+// Fechas observadas según la Ley 27.399, la Resolución JGM 164/2025
+// y el DNU 1103/2026. `trasladadoDe` conserva la fecha original.
+// Jueves Santo coincide con el feriado nacional del 2 de abril en 2026.
+// Carnaval conserva el tipo histórico que usan las calculadoras existentes.
 // ────────────────────────────────────────────────────────────────────────────
 
 export type TipoFeriado = 'inamovible' | 'trasladable' | 'no-laborable' | 'puente';
@@ -36,8 +28,7 @@ export interface Feriado {
 }
 
 /**
- * Calendario completo AR 2026: 15 feriados nacionales (inamovibles + trasladables)
- * + 3 puentes turísticos + 1 día no laborable = 19 entradas, en orden cronológico.
+ * Calendario nacional general de 2026, en orden cronológico.
  */
 export const FERIADOS_AR_2026: Feriado[] = [
   { fecha: '2026-01-01', nombre: 'Año Nuevo', tipo: 'inamovible', mes: 1 },
@@ -55,16 +46,17 @@ export const FERIADOS_AR_2026: Feriado[] = [
   { fecha: '2026-07-10', nombre: 'Día no laborable turístico (puente del 9 de julio)', tipo: 'puente', mes: 7 },
   { fecha: '2026-08-17', nombre: 'Paso a la Inmortalidad del Gral. José de San Martín', tipo: 'trasladable', mes: 8 },
   { fecha: '2026-10-12', nombre: 'Día del Respeto a la Diversidad Cultural', tipo: 'trasladable', mes: 10 },
+  { fecha: '2026-11-09', nombre: 'Feriado nacional por la visita del papa León XIV', tipo: 'inamovible', mes: 11 },
   { fecha: '2026-11-23', nombre: 'Día de la Soberanía Nacional', tipo: 'trasladable', mes: 11, trasladadoDe: '2026-11-20' },
   { fecha: '2026-12-07', nombre: 'Día no laborable turístico (puente del 8 de diciembre)', tipo: 'puente', mes: 12 },
-  { fecha: '2026-12-08', nombre: 'Inmaculada Concepción de María', tipo: 'no-laborable', mes: 12 },
+  { fecha: '2026-12-08', nombre: 'Inmaculada Concepción de María', tipo: 'inamovible', mes: 12 },
   { fecha: '2026-12-25', nombre: 'Navidad', tipo: 'inamovible', mes: 12 },
 ];
 
 export const META = {
   anio: 2026,
-  dataAsOf: '2026-06-07',
-  fuente: 'Boletín Oficial — Ley 27.399 + Decreto 1584/2010 + Resolución 164/2025',
+  dataAsOf: '2026-11-19',
+  fuente: 'Boletín Oficial — Ley 27.399 + Resolución JGM 164/2025 + DNU 1103/2026',
   fuenteUrl: 'https://www.argentina.gob.ar/feriados',
   /** Recordatorio: reverificar y regenerar para el año siguiente cada enero. */
   revisarEn: '2027-01',
@@ -104,8 +96,7 @@ export function tipoLabel(tipo: string): string {
 }
 
 /**
- * Feriados nacionales propiamente dichos: inamovibles + trasladables (15).
- * Excluye los puentes turísticos y el día no laborable (Inmaculada).
+ * Feriados nacionales, incluidas las fechas trasladadas y extraordinarias.
  */
 export function feriadosNacionales(): Feriado[] {
   return FERIADOS_AR_2026.filter(f => f.tipo === 'inamovible' || f.tipo === 'trasladable');
