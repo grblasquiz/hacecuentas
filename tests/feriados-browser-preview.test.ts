@@ -12,7 +12,9 @@ test('integración de feriados en Chromium', async () => {
   const day = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Argentina/Buenos_Aires',
     year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const next = day <= '2026-11-23' ? '2026-11-23' : day <= '2026-12-08' ? '2026-12-08' : '2026-12-25';
-  const server = spawn('./node_modules/.bin/astro', ['dev', '--host', '127.0.0.1', '--port', '4179']);
+  const server = spawn('./node_modules/.bin/astro', ['dev', '--host', '127.0.0.1', '--port', '4179'], {
+    env: { ...process.env, BUILD_SPLIT: 'static' },
+  });
   let logs = '';
   server.stderr.on('data', (data) => { logs += String(data); });
   server.stdout.on('data', (data) => { logs += String(data); });
