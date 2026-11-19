@@ -91,7 +91,7 @@ node scripts/audit-sitemap-coverage.mjs --check
 node scripts/audit-redirect-graph.mjs --check --build-dir=dist/client
 node scripts/generate-worker-wrapper.mjs
 node --experimental-strip-types scripts/audit-hreflang.ts
-node --experimental-strip-types scripts/verify-build-integrity.ts
+node scripts/with-runtime-audit-html.mjs node --experimental-strip-types scripts/verify-build-integrity.ts
 
 FINAL=$(find dist/client -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
 echo "[split] ✓ LISTO en $(( $(t) - T0 ))s · dist/client=$FINAL HTMLs · worker=$([ -f dist/server/wrapper.mjs ] && echo OK || echo FALTA) · reuse-worker=$REUSE"
