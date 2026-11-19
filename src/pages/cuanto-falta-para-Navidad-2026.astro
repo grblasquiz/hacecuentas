@@ -9,6 +9,14 @@ import Footer from '../components/Footer.astro';
 const title = 'Cuánto falta para Navidad 2026 — Contador en vivo 🎄 | Hacé Cuentas';
 const description = 'Contador en tiempo real para Navidad 2026: días, semanas, domingos, horas, minutos y segundos. ¿Cuánto falta para el 25 de diciembre? Cálculo automático, gratis.';
 
+const milestones = [
+  { key: 'thanksgiving', label: 'Thanksgiving (EE. UU.)', iso: '2026-11-26', date: 'Jueves 26 de noviembre de 2026' },
+  { key: 'nochebuena', label: 'Nochebuena', iso: '2026-12-24', date: 'Jueves 24 de diciembre de 2026' },
+  { key: 'navidad', label: 'Navidad', iso: '2026-12-25', date: 'Viernes 25 de diciembre de 2026' },
+  { key: 'yearnew', label: 'Año Nuevo', iso: '2027-01-01', date: 'Viernes 1 de enero de 2027' },
+  { key: 'reyes', label: 'Reyes', iso: '2027-01-06', date: 'Miércoles 6 de enero de 2027' },
+];
+
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -46,12 +54,12 @@ const schema = {
         {
           '@type': 'Question',
           name: '¿Qué día de la semana cae Navidad 2026?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Navidad 2026 (25 de diciembre) cae viernes. El 24 (Nochebuena) es jueves y el 31 (Año Nuevo) miércoles.' },
+          acceptedAnswer: { '@type': 'Answer', text: 'Navidad 2026 (25 de diciembre) cae viernes. Nochebuena es el jueves 24 de diciembre. Año Nuevo 2027 es el viernes 1 de enero.' },
         },
         {
           '@type': 'Question',
-          name: '¿Cuándo empieza a descontar el contador?',
-          acceptedAnswer: { '@type': 'Answer', text: 'El contador usa la hora actual de tu dispositivo. Se calcula en zona horaria de Argentina (UTC-3) por default, pero vos lo ves en tu hora local porque corre en tu browser.' },
+          name: '¿Qué zona horaria usa el contador?',
+          acceptedAnswer: { '@type': 'Answer', text: 'El contador llega a cero a las 00:00 del 25 de diciembre en Buenos Aires (UTC−3). La fecha objetivo es la misma si lo abrís desde otro país.' },
         },
       ],
     },
@@ -76,14 +84,14 @@ const schema = {
       <span class="big-emoji">🎄</span>
       <h1>Cuánto falta para Navidad 2026</h1>
 
-      <div class="countdown-big" data-countdown-big aria-live="polite">
+      <div class="countdown-big" data-countdown-big>
         <div class="cd-unit"><span class="cd-num" data-days>—</span><span class="cd-label">días</span></div>
         <div class="cd-unit"><span class="cd-num" data-hours>—</span><span class="cd-label">horas</span></div>
         <div class="cd-unit"><span class="cd-num" data-minutes>—</span><span class="cd-label">min</span></div>
         <div class="cd-unit"><span class="cd-num" data-seconds>—</span><span class="cd-label">seg</span></div>
       </div>
 
-      <p class="cd-target">hasta el <strong>viernes 25 de diciembre de 2026</strong></p>
+      <p class="cd-target">hasta las 00:00 del <strong>viernes 25 de diciembre de 2026</strong> en Buenos Aires (UTC−3)</p>
     </header>
 
     <section class="cd-stats">
@@ -92,7 +100,7 @@ const schema = {
         <span class="stat-value" data-weeks>—</span>
       </div>
       <div class="stat-card">
-        <span class="stat-label">Días hábiles (lun-vie)</span>
+        <span class="stat-label">Días de lunes a viernes</span>
         <span class="stat-value" data-business>—</span>
       </div>
       <div class="stat-card">
@@ -116,26 +124,11 @@ const schema = {
     <section class="cd-extras">
       <h2>Fechas clave de fin de año 2026</h2>
       <div class="dates-grid">
-        <div class="date-card">
-          <span class="date-emoji">🦃</span>
-          <div><strong>Thanksgiving (USA)</strong><span data-thanksgiving>—</span></div>
-        </div>
-        <div class="date-card">
-          <span class="date-emoji">🌟</span>
-          <div><strong>Nochebuena (24 dic)</strong><span data-nochebuena>—</span></div>
-        </div>
-        <div class="date-card">
-          <span class="date-emoji">🎅</span>
-          <div><strong>Navidad (25 dic)</strong><span data-navidad>—</span></div>
-        </div>
-        <div class="date-card">
-          <span class="date-emoji">🎆</span>
-          <div><strong>Año Nuevo 2027 (1 ene)</strong><span data-yearnew>—</span></div>
-        </div>
-        <div class="date-card">
-          <span class="date-emoji">👑</span>
-          <div><strong>Reyes (6 ene 2027)</strong><span data-reyes>—</span></div>
-        </div>
+        {milestones.map(({ key, label, iso, date }) => (
+          <div class="date-card">
+            <div><strong>{label}</strong><time datetime={iso}>{date}</time><span data-milestone={key}></span></div>
+          </div>
+        ))}
       </div>
     </section>
 
@@ -164,7 +157,7 @@ const schema = {
       </details>
       <details>
         <summary>¿Cuándo es el Aguinaldo de diciembre 2026?</summary>
-        <p>El segundo SAC (Aguinaldo de diciembre) se paga hasta el 18 de diciembre de 2026 (15 + 4 días hábiles de tolerancia). Calculalo exacto en <a href="/trabajo/aguinaldo">nuestra calculadora de aguinaldo</a>.</p>
+        <p>Para el régimen general de contrato de trabajo en Argentina, la segunda cuota vence el viernes 18 de diciembre de 2026, según el <a href="https://www.argentina.gob.ar/normativa/nacional/25552/actualizacion">artículo 122 de la Ley de Contrato de Trabajo</a>. Estimá el monto en la <a href="/trabajo/aguinaldo">calculadora de aguinaldo</a>.</p>
       </details>
       <details>
         <summary>¿Cuándo es Thanksgiving (USA) 2026?</summary>
@@ -172,7 +165,11 @@ const schema = {
       </details>
       <details>
         <summary>¿Cómo lo uso para el trabajo/colegio?</summary>
-        <p>Mirá los "días hábiles" — te dice cuántos lunes a viernes faltan hasta Navidad. Útil para planear licencias, proyectos o vacaciones de fin de año.</p>
+        <p>La tarjeta cuenta los lunes a viernes entre mañana y el 24 de diciembre. Incluye fechas que pueden ser feriadas. Para planificar días laborables, consultá el calendario de tu país.</p>
+      </details>
+      <details>
+        <summary>¿Qué zona horaria usa el contador?</summary>
+        <p>El contador llega a cero a las 00:00 del 25 de diciembre en Buenos Aires (UTC−3). La fecha objetivo es la misma si lo abrís desde otro país.</p>
       </details>
     </section>
 
@@ -180,7 +177,7 @@ const schema = {
       <h2>Otras calculadoras de fechas</h2>
       <div class="related-grid">
         <a href="/fechas/cuenta-regresiva" class="rel-card"><span>🎄</span><span>Cuántos domingos y semanas faltan para Navidad</span></a>
-        <a href="/calculadora-feriados-argentina-2026-calendario" class="rel-card"><span>📅</span><span>Feriados Argentina 2026</span></a>
+        <a href="/feriados-argentina-2027" class="rel-card"><span>📅</span><span>Feriados Argentina 2027</span></a>
         <a href="/trabajo/aguinaldo" class="rel-card"><span>💰</span><span>Aguinaldo SAC 2026</span></a>
         <a href="/calculadora-edad-exacta" class="rel-card"><span>🎂</span><span>Edad exacta en años/meses/días</span></a>
         <a href="/dias-entre-dos-fechas" class="rel-card"><span>📆</span><span>Días entre dos fechas</span></a>
@@ -193,86 +190,64 @@ const schema = {
   <Footer slot="footer" />
 </Layout>
 
-<script is:inline>
+<script is:inline define:vars={{ milestones }}>
   (function () {
     const TARGET = new Date('2026-12-25T00:00:00-03:00').getTime();
-    const DAYS_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-    const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-
-    function fmtFullDate(d) {
-      return `${DAYS_ES[d.getDay()]} ${d.getDate()} de ${MESES_ES[d.getMonth()]} de ${d.getFullYear()}`;
-    }
-
-    function countWeekdays(from, to, targetDays) {
-      let n = 0;
-      const d = new Date(from);
-      d.setHours(0, 0, 0, 0);
-      const end = new Date(to);
-      end.setHours(0, 0, 0, 0);
-      while (d <= end) {
-        if (targetDays.indexOf(d.getDay()) !== -1) n++;
-        d.setDate(d.getDate() + 1);
-      }
-      return n;
-    }
-
-    function diffDays(from, to) {
-      const a = new Date(from); a.setHours(0,0,0,0);
-      const b = new Date(to); b.setHours(0,0,0,0);
-      return Math.max(0, Math.round((b - a) / 86400000));
-    }
+    const DAY = 86400000;
+    const BUENOS_AIRES_OFFSET = 3 * 3600000;
+    const calendarDay = (time) => Math.floor((time - BUENOS_AIRES_OFFSET) / DAY);
+    const christmas = calendarDay(TARGET);
+    const output = (selector, value) => {
+      document.querySelector(selector).textContent = value;
+    };
+    let lastMinute;
+    let lastCalendarDay;
 
     function tick() {
-      const now = new Date();
-      const nowT = now.getTime();
-      const diff = Math.max(0, TARGET - nowT);
+      const now = Date.now();
+      const diff = Math.max(0, TARGET - now);
+      const days = Math.floor(diff / DAY);
+      const hours = Math.floor(diff / 3600000) % 24;
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor(diff / 1000);
 
-      const days = Math.floor(diff / 86400000);
-      const hours = Math.floor((diff % 86400000) / 3600000);
-      const minutes = Math.floor((diff % 3600000) / 60000);
-      const seconds = Math.floor((diff % 60000) / 1000);
+      output('[data-days]', String(days).padStart(2, '0'));
+      output('[data-hours]', String(hours).padStart(2, '0'));
+      output('[data-minutes]', String(minutes % 60).padStart(2, '0'));
+      output('[data-seconds]', String(seconds % 60).padStart(2, '0'));
+      output('[data-total-seconds]', seconds.toLocaleString('es-AR'));
 
-      document.querySelector('[data-days]').textContent = String(days).padStart(2, '0');
-      document.querySelector('[data-hours]').textContent = String(hours).padStart(2, '0');
-      document.querySelector('[data-minutes]').textContent = String(minutes).padStart(2, '0');
-      document.querySelector('[data-seconds]').textContent = String(seconds).padStart(2, '0');
+      if (minutes !== lastMinute) {
+        lastMinute = minutes;
+        output('[data-weeks]', `${Math.floor(days / 7)} sem · ${days % 7}d`);
+        output('[data-total-hours]', Math.floor(diff / 3600000).toLocaleString('es-AR'));
+      }
 
-      // Stats (update less often — cada 30s)
-      if (seconds % 30 === 0) {
-        const navidad = new Date('2026-12-25T00:00:00-03:00');
-        const weeksComplete = Math.floor(days / 7);
-        const extraDays = days % 7;
-        const businessDays = countWeekdays(now, navidad, [1, 2, 3, 4, 5]);
-        const saturdays = countWeekdays(now, navidad, [6]);
-        const sundays = countWeekdays(now, navidad, [0]);
-        const totalHours = Math.floor(diff / 3600000);
-        const totalSeconds = Math.floor(diff / 1000);
+      const today = calendarDay(now);
+      if (today === lastCalendarDay) return;
+      lastCalendarDay = today;
+      let weekdays = 0;
+      let saturdays = 0;
+      let sundays = 0;
+      const remainingDates = Math.max(0, christmas - today - 1);
+      const fullWeeks = Math.floor(remainingDates / 7);
+      weekdays += fullWeeks * 5;
+      saturdays += fullWeeks;
+      sundays += fullWeeks;
+      for (let day = today + 1 + fullWeeks * 7; day < christmas; day++) {
+        const weekday = new Date(day * DAY).getUTCDay();
+        if (weekday === 6) saturdays++;
+        else if (weekday === 0) sundays++;
+        else weekdays++;
+      }
+      output('[data-business]', String(weekdays));
+      output('[data-saturdays]', String(saturdays));
+      output('[data-sundays]', String(sundays));
 
-        document.querySelector('[data-weeks]').textContent = `${weeksComplete} sem · ${extraDays}d`;
-        document.querySelector('[data-business]').textContent = `${businessDays}`;
-        document.querySelector('[data-saturdays]').textContent = `${saturdays}`;
-        document.querySelector('[data-sundays]').textContent = `${sundays}`;
-        document.querySelector('[data-total-hours]').textContent = totalHours.toLocaleString('es-AR');
-        document.querySelector('[data-total-seconds]').textContent = totalSeconds.toLocaleString('es-AR');
-
-        // Fechas clave
-        const thanksgiving = new Date('2026-11-26T00:00:00-03:00');
-        const nochebuena = new Date('2026-12-24T00:00:00-03:00');
-        const navidadD = navidad;
-        const yearnew = new Date('2027-01-01T00:00:00-03:00');
-        const reyes = new Date('2027-01-06T00:00:00-03:00');
-
-        function labelDaysFrom(d) {
-          const n = diffDays(now, d);
-          if (n === 0) return '¡Es HOY!';
-          if (n === 1) return 'Mañana';
-          return `En ${n} días · ${fmtFullDate(d)}`;
-        }
-        document.querySelector('[data-thanksgiving]').textContent = labelDaysFrom(thanksgiving);
-        document.querySelector('[data-nochebuena]').textContent = labelDaysFrom(nochebuena);
-        document.querySelector('[data-navidad]').textContent = labelDaysFrom(navidadD);
-        document.querySelector('[data-yearnew]').textContent = labelDaysFrom(yearnew);
-        document.querySelector('[data-reyes]').textContent = labelDaysFrom(reyes);
+      for (const { key, iso } of milestones) {
+        const n = Date.parse(iso) / DAY - today;
+        const label = n < 0 ? 'Ya pasó' : n === 0 ? 'Hoy' : n === 1 ? 'Mañana' : `En ${n} días`;
+        output(`[data-milestone="${key}"]`, label);
       }
     }
 
@@ -376,7 +351,7 @@ const schema = {
   .date-card { display: flex; align-items: center; gap: .75rem; padding: .875rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
   .date-emoji { font-size: 1.5rem; }
   .date-card strong { display: block; font-size: .875rem; color: var(--text); }
-  .date-card span { font-size: .8125rem; color: var(--text-muted); }
+  .date-card time, .date-card span { display: block; font-size: .8125rem; color: var(--text-muted); }
 
   .cd-share { padding: 1.25rem; background: var(--bg-soft); border-radius: var(--radius); margin-bottom: 2rem; }
   .cd-share p { margin: 0 0 .75rem; font-weight: 600; }
