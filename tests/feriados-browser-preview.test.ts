@@ -34,12 +34,27 @@ test('integración de feriados en Chromium', async () => {
     const { chromium } = createRequire(join(temp, 'package.json'))('playwright');
     const browser = await chromium.launch({ channel: 'chrome', headless: true });
     try {
-      const page = await browser.newPage({ timezoneId: 'Asia/Tokyo' });
+      const issues: string[] = [];
+      const page = await browser.newPage({ timezoneId: 'Pacific/Honolulu' });
+      page.on('pageerror', (error) => issues.push(String(error)));
+      page.on('console', (message) => {
+        if (message.type() === 'error') issues.push(message.text());
+      });
+      page.on('response', (res) => {
+        if (!res.ok() && res.request().resourceType() === 'script') issues.push(res.status() + ' ' + res.url());
+      });
       await page.route(/^(?!http:\/\/127\.0\.0\.1:4179\/)/, (route) => route.abort());
       await page.goto(url, { waitUntil: 'domcontentloaded' });
       expect(await page.locator('#next-national-holiday').getAttribute('datetime')).toBe(next);
       expect(await page.locator('#from').inputValue()).toBe(day);
-      await page.getByRole('button', { name: 'Días hábiles', exact: true }).click();
+      const business = page.getByRole('button', { name: 'Días hábiles', exact: true });
+      await business.click();
+      try {
+        await page.waitForFunction(() => document.querySelector('[data-view=business]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
+      } catch {
+        const scripts = await page.locator('script[src]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('src')));
+        throw new Error(JSON.stringify({ issues, scripts: scripts.filter((src) => src?.includes('Astro') || src?.includes('Feriado') || src?.includes('vite')), logs: logs.slice(-3500) }));
+      }
       for (const [date, ...counts] of [
         ['2026-11-20', 1, 1, 1],
         ['2026-11-23', 0, 0, 0],
@@ -64,6 +79,8 @@ test('integración de feriados en Chromium', async () => {
       expect(await page.locator('[data-date="2026-12-08"]').isVisible()).toBe(false);
       await page.getByRole('button', { name: 'Solo bancarios', exact: true }).click();
       expect(await page.locator('[data-date="2026-11-10"]').isVisible()).toBe(true);
+      await page.locator('#month').selectOption('12');
+      expect(await page.locator('#empty').isVisible()).toBe(true);
     } finally {
       await browser.close();
     }
