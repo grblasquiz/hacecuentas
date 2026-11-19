@@ -11,8 +11,9 @@ const file = `dist/client${path}.html`;
 const worker = createTestHarness({ workers: [{ configPath: 'dist/server/wrangler.json' }] });
 let html;
 try {
+  await worker.listen();
   const response = await worker.fetch(`https://hacecuentas.com${path}`);
-  if (!response.ok || !response.headers.get('cache-control')?.includes('no-store')) {
+  if (response.status !== 200 || !response.headers.get('cache-control')?.includes('no-store')) {
     throw new Error(`[runtime-audit] ${path}: HTTP ${response.status} o caché inesperada`);
   }
   html = await response.text();
