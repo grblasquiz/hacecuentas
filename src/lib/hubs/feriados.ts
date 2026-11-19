@@ -1,41 +1,7 @@
 import type { HubData } from './types';
-import { FERIADOS_AR_2026, META } from '../data/feriados-ar-2026';
+import { FERIADOS_AR_2026, META, feriadosNacionales, puentes } from '../data/feriados-ar-2026';
 
-/**
- * Hub de decisión — "¿Cuándo es el próximo feriado?"
- * Arquetipo RAMIFICADO: próximo feriado (default), cuántos quedan en el año,
- * días hábiles que quedan y fines de semana largos.
- *
- * ─────────────────────────────────────────────────────────────────────────────
- * HUB QUE CADUCA — cómo se maneja
- *
- * La tabla `src/lib/data/feriados-ar-2026.ts` es la fuente única del repo y
- * cubre UN año calendario. Regla dura acá:
- *
- *  1. Ningún año literal en el copy ni en el cálculo. El año se deriva de la
- *     propia tabla (`ANIO_TABLA`, calculado en el compute a partir de la primera
- *     fecha) y la fecha de referencia sale de `new Date()` en el navegador.
- *  2. Si el usuario abre la página con una fecha fuera del año que cubre la
- *     tabla, el hub NO devuelve 0 ni inventa fechas: avisa en pantalla que el
- *     calendario cargado es el de otro año y que el decreto del año siguiente se
- *     publica entre septiembre y noviembre.
- *  3. No se duplica la tabla. Es el mismo import que usan
- *     `cuenta-regresiva.ts` y `dias-entre-fechas.ts`: cuando se cargue el año
- *     nuevo se cambia un solo archivo y los tres hubs se actualizan juntos.
- *
- * NO hay plata en este hub. El formato base del runtime es 'ars' y
- * `Object.assign` copia el default, así que TODAS las filas viajan con
- * `format: 'unit'` (o 'plain') y su unidad propia.
- *
- * Diferenciación: `/fechas/cuenta-regresiva` responde "cuánto falta para una
- * fecha" (el próximo feriado es una de sus cuatro ramas, en segundos) y
- * `/fechas/dias-entre-fechas` responde "cuántos días hay entre dos fechas
- * concretas". Este hub responde otra cosa: cuál es el feriado, cuántos quedan,
- * cuántos días hábiles te quedan por delante y qué fines de semana largos
- * vienen. La tabla es compartida; la pregunta no.
- * ─────────────────────────────────────────────────────────────────────────────
- */
-
+/** Datos editoriales de /fechas/feriados. El calendario observado se importa de la tabla compartida. */
 /** Se serializa al cliente para el compute(). El año se deriva de acá, no se escribe. */
 export const FERIADOS = FERIADOS_AR_2026.map((f) => ({
   fecha: f.fecha,
@@ -62,11 +28,11 @@ export const hub: HubData = {
   eyebrow: 'Calendario argentino',
   h1: '¿Cuándo es el próximo feriado?',
   lede:
-    'El calendario nacional completo con los traslados ya aplicados: cuál es el próximo día no laborable y cuánto falta, cuántos feriados quedan hasta fin de año, qué fines de semana largos vienen y cuántos días hábiles te quedan por delante una vez descontados sábados, domingos y feriados.',
+    'El calendario nacional completo con los traslados ya aplicados: cuál es el próximo feriado nacional, qué fines de semana largos vienen y cuántos días hábiles hay según el calendario nacional o bancario.',
   stamps: [
-    'Ley 27.399 · Decreto 1584/2010 · Resolución 164/2025',
+    'Ley 27.399 · Resolución JGM 164/2025 · Calendario del BCRA',
     'Feriados, puentes turísticos y días no laborables',
-    'El año sale de la tabla cargada, no del texto',
+    'Fecha de Buenos Aires',
   ],
 
   resultLabel: 'Faltan para el próximo feriado',
@@ -80,20 +46,19 @@ export const hub: HubData = {
         id: 'proximo',
         label: 'Cuál es el próximo feriado',
         hint: 'El caso más común',
-        answer: 'El próximo día no laborable del calendario nacional, con la fecha exacta y los días que faltan.',
+        answer: 'El próximo feriado nacional, con los traslados aplicados y los días que faltan según la fecha de Buenos Aires.',
         yes: [
           'Feriados inamovibles y trasladables, con el traslado ya aplicado',
-          'Puentes turísticos y el día no laborable del 8 de diciembre',
+          'Días no laborables turísticos y cierres bancarios identificados por separado',
           'El día de la semana en que cae y si arma fin de semana largo',
-          'El feriado siguiente al próximo, para planificar con más aire',
         ],
         warn: [
-          'La tabla cargada cubre un solo año calendario: si tu fecha queda fuera, la pantalla lo avisa en vez de mostrar un cero engañoso.',
-          'Sólo calendario nacional. Los feriados provinciales, municipales y las conmemoraciones de culto no están incluidos.',
-          'Los puentes turísticos son días no laborables, no feriados: el trabajo en esos días no siempre se paga doble.',
+          'La calculadora cubre 2026. La página también enlaza al calendario de 2027.',
+          'El calendario nacional general y el bancario excluyen feriados locales y conmemoraciones de culto.',
+          'El 7 de diciembre es un día no laborable turístico. En general, el empleador decide si se trabaja.',
         ],
         plazo:
-          'el calendario del año siguiente, incluidos los puentes turísticos, se publica por decreto y resolución entre septiembre y noviembre.',
+          'consultá el calendario del BCRA para vencimientos y trámites bancarios.',
       },
       {
         id: 'restan',
@@ -108,10 +73,10 @@ export const hub: HubData = {
         ],
         warn: [
           'Un feriado que cae sábado o domingo no suma día libre: se cuenta en el calendario pero no en el descanso.',
-          'Los días no laborables (como el 8 de diciembre) quedan a criterio del empleador en varias actividades: no son equivalentes a un feriado.',
+          'El 7 de diciembre es un día no laborable turístico. El 8 de diciembre es feriado inamovible.',
           'El conteo "oficial" de feriados nacionales no incluye los puentes turísticos, aunque en la práctica se sientan igual.',
         ],
-        plazo: 'los puentes turísticos se fijan por resolución del Ministerio de Turismo, normalmente con un año de anticipación.',
+        plazo: 'los días no laborables turísticos de 2026 se fijaron por resolución de la Jefatura de Gabinete de Ministros.',
       },
       {
         id: 'habiles',
@@ -145,7 +110,7 @@ export const hub: HubData = {
         ],
         warn: [
           'Un feriado martes o jueves no es fin de semana largo por sí solo: necesitás pedir el día puente.',
-          'Los puentes turísticos ya vienen decretados justamente para armar el fin de semana largo, así que no hace falta pedir licencia esos días.',
+          'Si tu empleador trabaja durante un día no laborable turístico, puede hacer falta pedir licencia.',
           'Turismo, gastronomía, salud y transporte trabajan los findes largos: en esas actividades el feriado se paga distinto, no se descansa.',
         ],
         plazo:
@@ -163,7 +128,7 @@ export const hub: HubData = {
       label: 'Contar desde',
       type: 'date',
       value: '',
-      help: 'Vacío = hoy, con la fecha de tu dispositivo.',
+      help: 'La fecha inicial es la de Buenos Aires.',
     },
     {
       id: 'hasta',
@@ -203,7 +168,7 @@ export const hub: HubData = {
     },
   ],
   fineprint:
-    'Todo se calcula en tu navegador con la fecha de tu dispositivo y el calendario nacional oficial cargado en el sitio. No se incluyen feriados provinciales, municipales ni ferias judiciales. Nada se envía a ningún servidor.',
+    'Las fechas que ingresás se calculan en tu navegador. Los calendarios nacional y bancario excluyen feriados provinciales, municipales y ferias judiciales.',
 
   chart: {
     type: 'progress',
@@ -218,11 +183,11 @@ export const hub: HubData = {
   faq: [
     {
       q: '¿Cuál es el próximo feriado en Argentina?',
-      a: 'Sale del calendario nacional vigente, con los traslados ya aplicados: la calculadora de arriba busca la primera fecha posterior a hoy entre feriados inamovibles, trasladables, puentes turísticos y días no laborables, y te dice cuántos días faltan y en qué día de la semana cae. El calendario cargado cubre un año completo; si tu fecha queda fuera de ese año, la pantalla lo avisa en lugar de mostrar un resultado inventado.',
+      a: 'La cabecera muestra el primer feriado nacional desde la fecha actual de Buenos Aires, con los traslados ya aplicados. Si hoy es feriado, muestra el del día. La calculadora busca el primero dentro del período elegido.',
     },
     {
       q: '¿Cuántos feriados tiene Argentina por año?',
-      a: 'Quince feriados nacionales: los inamovibles, que se conmemoran siempre en su fecha exacta, más los trasladables, que se corren al lunes para armar fin de semana largo. A eso se suman los puentes turísticos que fija cada año el Ministerio de Turismo por resolución y el día no laborable del 8 de diciembre, Inmaculada Concepción. Contando todo, el calendario llega a diecinueve días no laborables.',
+      a: `En ${META.anio} hay ${feriadosNacionales().length} feriados nacionales. El 8 de diciembre es inamovible. Además, la Jefatura de Gabinete fijó ${puentes().length} días no laborables turísticos.`,
     },
     {
       q: '¿Qué diferencia hay entre un feriado y un día no laborable?',
@@ -230,7 +195,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué es un feriado trasladable y cómo se corre?',
-      a: 'El Decreto 1584/2010 estableció que los feriados de fecha móvil que caen martes o miércoles se trasladan al lunes anterior, y los que caen jueves o viernes se trasladan al lunes siguiente. La idea es concentrar los descansos en fines de semana largos para el turismo interno. Los feriados inamovibles quedan afuera de esa regla: el 25 de mayo, el 9 de julio o el 25 de diciembre se conmemoran siempre en su fecha.',
+      a: 'El artículo 6 de la Ley 27.399 establece que los feriados de fecha móvil que caen martes o miércoles se trasladan al lunes anterior, y los que caen jueves o viernes se trasladan al lunes siguiente. La idea es concentrar los descansos en fines de semana largos para el turismo interno. Los feriados inamovibles quedan afuera de esa regla: el 25 de mayo, el 9 de julio o el 25 de diciembre se conmemoran siempre en su fecha.',
     },
     {
       q: '¿Cómo se cuentan los días hábiles?',
@@ -269,22 +234,32 @@ export const hub: HubData = {
   sources: [
     {
       name: 'Ley 27.399 — Régimen de feriados nacionales y días no laborables',
-      url: 'https://www.argentina.gob.ar/normativa/nacional/ley-27399-283707',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/ley-27399-281835/texto',
       publisher: 'Boletín Oficial de la República Argentina',
     },
     {
-      name: 'Decreto 1584/2010 — feriados trasladables',
-      url: 'https://www.argentina.gob.ar/normativa/nacional/decreto-1584-2010-174391',
+      name: 'Resolución JGM 164/2025 — Días no laborables turísticos',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/norma-421799/texto',
       publisher: 'Boletín Oficial de la República Argentina',
     },
     {
       name: 'Feriados y días no laborables — calendario oficial',
-      url: 'https://www.argentina.gob.ar/interior/feriados',
+      url: 'https://www.argentina.gob.ar/feriados',
       publisher: 'Ministerio del Interior',
     },
     {
+      name: 'DNU 1103/2026 — Feriado nacional extraordinario del 9 de noviembre',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/norma-430580/texto',
+      publisher: 'Boletín Oficial de la República Argentina',
+    },
+    {
+      name: 'Feriados bancarios 2026',
+      url: 'https://www.bcra.gob.ar/consulta-feriados-bancarios-2026/',
+      publisher: 'Banco Central de la República Argentina',
+    },
+    {
       name: 'Ley 20.744 de Contrato de Trabajo — arts. 165 a 171 (feriados y días no laborables)',
-      url: 'https://www.argentina.gob.ar/normativa/nacional/ley-20744-25552/texto',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/ley-20744-25552/actualizacion',
       publisher: 'Boletín Oficial de la República Argentina',
     },
   ],
@@ -297,6 +272,6 @@ export const hub: HubData = {
     '/calculadora-dias-habiles-restantes-2026',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: META.dataAsOf,
   audience: 'AR',
 };

@@ -55,8 +55,9 @@ def audit(root):
   candidates = [root / path / 'index.html', root / (path + '.html')]
   file = next((p for p in candidates if p.is_file()), None)
   if file is None:
-   source = Path('src/pages') / (path + '.astro')
-   if source.is_file() and re.search(r'export\s+const\s+prerender\s*=\s*false', source.read_text()):
+   pages = Path('src/pages')
+   sources = [pages / (path + '.astro'), pages / path / 'index.astro']
+   if any(source.is_file() and re.search(r'export\s+const\s+prerender\s*=\s*false', source.read_text()) for source in sources):
     deferred.append(url); continue
    failures.append(f'HTML missing: {url}'); continue
   p = Parser(); p.feed(file.read_text())
