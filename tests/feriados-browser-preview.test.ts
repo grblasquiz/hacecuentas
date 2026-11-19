@@ -1,6 +1,6 @@
 import { test, expect } from 'vitest';
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -91,3 +91,19 @@ test('integración de feriados en Chromium', async () => {
     rmSync(temp, { recursive: true, force: true });
   }
 }, 150_000);
+
+test('build y auditoría del HTML del Worker de producción', () => {
+  try {
+    execFileSync('npm', ['run', 'build'], {
+      timeout: 390000,
+      maxBuffer: 15 * 1024 * 1024,
+      env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1', WRANGLER_SEND_METRICS: 'false' },
+    });
+  } catch (error) {
+    const salida = String(error.stdout ?? '').split('\n').slice(-65).join('\n');
+    const diagnostico = String(error.stderr ?? '').split('\n').slice(-45).join('\n');
+    throw new Error(salida + '\n' + diagnostico);
+  }
+  expect(existsSync('dist/server/wrapper.mjs')).toBe(true);
+  expect(existsSync('dist/client/fechas/feriados.html')).toBe(false);
+}, 410000);
