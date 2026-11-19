@@ -6,18 +6,12 @@
  * mismo dato que muestra el portal tcS01Alias (la fuente declarada del calc),
  * pero parseable sin scraping frágil.
  *
- * Patchea:
- *  - src/lib/formulas/tipo-de-cambio-sunat-dolar-soles-peru.ts → default del
- *    input `tipoCambio` (`|| 3.404`) + comentario con la fecha.
- *  - src/content/calcs-pe/...sunat...json → fields.tipoCambio.default,
- *    dataUpdate.notes (valores referenciales) y dataUpdate.lastUpdated.
- *
- * El calc convierte con el TC que ingresa el usuario; esto solo mantiene fresco
- * el valor por defecto referencial (y saca al calc de la lista de stale).
+ * Actualiza el JSON de la calculadora, que también provee el valor de reserva
+ * de la fórmula.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { applySunatReference } from '../../sunat-reference.mjs';
 import { reportMode, reportWarn } from '../utils/run-status.ts';
 import { findCalcPath } from '../patchers/data-update-date.ts';
 import { createLogger } from '../utils/logger.ts';
@@ -25,21 +19,13 @@ import { createLogger } from '../utils/logger.ts';
 const log = createLogger('tc-sunat-pe');
 
 const SOURCE_URL = 'https://www.sunat.gob.pe/a/txt/tipoCambio.txt';
-const FORMULA_FILE = join(process.cwd(), 'src/lib/formulas/tipo-de-cambio-sunat-dolar-soles-peru.ts');
 const SLUG = 'calculadora-tipo-de-cambio-sunat-dolar-soles-peru';
 
-const MESES_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 interface TcSunat {
   fecha: string; // YYYY-MM-DD
-  fechaLegible: string; // '16-ago-2026'
   compra: number;
   venta: number;
-}
-
-/** `S/ 3,368` con coma decimal peruana… (es-PE usa punto, pero el copy del calc usa coma) */
-function fmtTc(n: number): string {
-  return n.toFixed(3).replace('.', ',');
 }
 
 async function fetchTc(): Promise<TcSunat | null> {
@@ -79,34 +65,7 @@ async function fetchTc(): Promise<TcSunat | null> {
     return null;
   }
 
-  const fechaLegible = `${dd}-${MESES_ES[Number(mm) - 1]}-${yyyy}`;
-  return { fecha, fechaLegible, compra, venta };
-}
-
-function patchFormula(tc: TcSunat, dry: boolean): boolean {
-  const src = readFileSync(FORMULA_FILE, 'utf8');
-  const re = /(\|\|\s*)(\d+(?:\.\d+)?)(;\s*\/\/ referencial \(venta SUNAT )([^)]*)(\))/;
-  const m = src.match(re);
-  if (!m) {
-    reportWarn('tc-sunat-pe', `no encontré el default \`|| <tc>; // referencial (venta SUNAT …)\` en ${FORMULA_FILE} — patch de fórmula omitido`);
-    return false;
-  }
-  const oldTc = Number(m[2]);
-  const delta = Math.abs(tc.venta - oldTc) / oldTc;
-  if (delta > 0.3) {
-    // Nunca aceptar un salto >30% sin revisión humana.
-    reportWarn('tc-sunat-pe', `TC nuevo ${tc.venta} difiere ${(delta * 100).toFixed(0)}% del anterior ${oldTc} — NO se patchea, revisar a mano`);
-    return false;
-  }
-  if (oldTc === tc.venta && m[4] === tc.fechaLegible) return false; // no-op
-  if (dry) {
-    log.info(`would patch formula default: ${oldTc} → ${tc.venta} (venta SUNAT ${tc.fechaLegible})`);
-    return true;
-  }
-  const next = src.replace(re, `$1${tc.venta}$3${tc.fechaLegible}$5`);
-  writeFileSync(FORMULA_FILE, next, 'utf8');
-  log.success(`formula default: ${oldTc} → ${tc.venta} (venta SUNAT ${tc.fechaLegible})`);
-  return true;
+  return { fecha, compra, venta };
 }
 
 function patchCalcJson(tc: TcSunat, dry: boolean): boolean {
@@ -116,29 +75,20 @@ function patchCalcJson(tc: TcSunat, dry: boolean): boolean {
     return false;
   }
   const calc = JSON.parse(readFileSync(path, 'utf8'));
-  const before = JSON.stringify([calc.fields, calc.dataUpdate]);
-
-  const field = (calc.fields || []).find((f: any) => f.id === 'tipoCambio');
-  if (field) field.default = tc.venta;
-
-  const today = new Date().toISOString().slice(0, 10);
-  if (calc.dataUpdate) {
-    calc.dataUpdate.updateType = 'auto-api'; // dejó de ser manual: lo mantiene este fetcher
-    calc.dataUpdate.notes =
-      `El tipo de cambio compra/venta lo publica SUNAT cada día hábil. La calculadora convierte con el TC que ingresa el usuario; ` +
-      `el valor por defecto (S/ ${fmtTc(tc.venta)}, TC venta SUNAT del ${tc.fechaLegible}; compra S/ ${fmtTc(tc.compra)}) es referencial.`;
-    if (JSON.stringify([calc.fields, calc.dataUpdate]) === before) return false; // valores idénticos → no tocar lastUpdated
-    calc.dataUpdate.lastUpdated = today;
-  } else if (JSON.stringify([calc.fields, calc.dataUpdate]) === before) {
-    return false;
-  }
-
+  const changed = applySunatReference(calc, {
+    purchase: tc.compra,
+    sale: tc.venta,
+    valueDate: tc.fecha,
+    source: 'SUNAT — Tipo de cambio',
+    sourceUrl: 'https://www.sunat.gob.pe/cl-at-ittipcam/tcS01Alias',
+  });
+  if (!changed) return false;
   if (dry) {
-    log.info(`would patch ${path}: default=${tc.venta}, notes (compra ${tc.compra} / venta ${tc.venta} del ${tc.fechaLegible}), lastUpdated=${today}`);
+    log.info(`would patch ${path}: default=${tc.venta}, compra=${tc.compra}, fecha=${tc.fecha}`);
     return true;
   }
   writeFileSync(path, JSON.stringify(calc, null, 2) + '\n', 'utf8');
-  log.success(`calc JSON: default=${tc.venta} · lastUpdated=${today}`);
+  log.success(`calc JSON: default=${tc.venta} · fecha=${tc.fecha}`);
   return true;
 }
 
@@ -151,8 +101,7 @@ export async function fetchTcSunatPe({ dry = false }: { dry?: boolean }): Promis
   reportMode('tc-sunat-pe', 'deterministic');
   log.info(`TC SUNAT ${tc.fecha}: compra S/ ${tc.compra} · venta S/ ${tc.venta}`);
 
-  const a = patchFormula(tc, dry);
-  const b = patchCalcJson(tc, dry);
-  if (!a && !b) log.skip('sin cambios (TC ya coincidía)');
-  return a || b;
+  const changed = patchCalcJson(tc, dry);
+  if (!changed) log.skip('sin cambios en la referencia publicada');
+  return changed;
 }

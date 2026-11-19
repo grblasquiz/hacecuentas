@@ -6,6 +6,7 @@
  * Fallback: serie SBS/BCRP (puede atrasar 1-3 días hábiles).
  */
 import { readFile, writeFile } from 'node:fs/promises';
+import { applySunatReference } from './sunat-reference.mjs';
 
 const FILE = new URL('../src/content/calcs-pe/calculadora-tipo-de-cambio-sunat-dolar-soles-peru.json', import.meta.url);
 const SUNAT_TXT = 'https://www.sunat.gob.pe/a/txt/tipoCambio.txt';
@@ -61,25 +62,15 @@ try {
   tc = await fromBcrp();
 }
 
-const { purchase, sale, valueDate, source, sourceUrl } = tc;
+const { purchase, sale, valueDate, source } = tc;
 if (!(purchase > 2 && purchase < 6 && sale >= purchase && sale < 6)) {
   throw new Error(`Tipo de cambio fuera de rango: compra=${purchase}, venta=${sale}`);
 }
 
 const calc = JSON.parse(await readFile(FILE, 'utf8'));
-const field = calc.fields?.find((f) => f.id === 'tipoCambio');
-if (!field) throw new Error('No existe fields.tipoCambio en el calc SUNAT');
-field.default = sale;
-calc.dataUpdate = {
-  frequency: 'daily',
-  lastUpdated: valueDate,
-  updateType: 'auto-api',
-  notes: `Valor referencial automático: venta S/ ${sale.toFixed(3)} y compra S/ ${purchase.toFixed(3)}, último día publicado ${valueDate}. Para declarar, usar el valor de la fecha exacta de la operación.`,
-  source,
-  sourceUrl,
-  currentPurchase: purchase,
-  currentSale: sale,
-  valueDate,
-};
-await writeFile(FILE, `${JSON.stringify(calc, null, 2)}\n`);
-console.log(`TC ${source === tc.source ? '' : ''}${valueDate} · compra S/ ${purchase.toFixed(3)} · venta S/ ${sale.toFixed(3)} · fuente: ${source}`);
+if (applySunatReference(calc, tc)) {
+  await writeFile(FILE, `${JSON.stringify(calc, null, 2)}\n`);
+  console.log(`TC ${valueDate} · compra S/ ${purchase.toFixed(3)} · venta S/ ${sale.toFixed(3)} · fuente: ${source}`);
+} else {
+  console.log('Sin cambios en la referencia publicada.');
+}
