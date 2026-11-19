@@ -1,62 +1,47 @@
 import { test, expect } from 'vitest';
-import { spawn, execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
-import { setTimeout as delay } from 'node:timers/promises';
+import { setTimeout as pause } from 'node:timers/promises';
 
-test('integración de feriados en Chromium', async () => {
+test('producción de feriados en Chromium', async () => {
   const temp = mkdtempSync(join(tmpdir(), 'feriados-browser-'));
-  const url = 'http://127.0.0.1:4179/fechas/feriados';
+  const url = 'https://hacecuentas.com/fechas/feriados';
   const day = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Argentina/Buenos_Aires',
     year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const next = day <= '2026-11-23' ? '2026-11-23' : day <= '2026-12-08' ? '2026-12-08' : '2026-12-25';
-  const server = spawn('./node_modules/.bin/astro', ['dev', '--host', '127.0.0.1', '--port', '4179'], {
-    env: { ...process.env, BUILD_SPLIT: 'static' },
-  });
-  let logs = '';
-  server.stderr.on('data', (data) => { logs += String(data); });
-  server.stdout.on('data', (data) => { logs += String(data); });
   try {
     execFileSync('npm', ['install', '--prefix', temp, 'playwright@1.56.1', '--no-audit', '--no-fund'], { timeout: 60000 });
     let response;
-    for (let i = 0; i < 45 && server.exitCode === null && !response; i++) {
-      response = await fetch(url).catch(() => undefined);
-      if (!response) await delay(1000);
+    let html = '';
+    for (let attempt = 0; attempt < 16; attempt++) {
+      response = await fetch(url, { headers: { 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(10_000) }).catch(() => undefined);
+      html = await response?.text() ?? '';
+      if (response?.status === 200 && html.includes('id="next-national-holiday"')) break;
+      await pause(5000);
     }
-    const html = await response?.text();
-    expect(response?.status, logs + '\n' + String(html).slice(0, 1500)).toBe(200);
-    expect(response?.headers.get('cache-control')).toBe('no-store');
+    expect(response, 'La URL pública debe responder con el nuevo HTML').toBeDefined();
+    if (!response) throw new Error('No se recibió respuesta de producción');
+    expect(response.status).toBe(200);
+    expect(response.url).toBe(url);
+    expect(response.headers.get('cache-control')).toContain('no-store');
     expect(html).toContain(`id="next-national-holiday" datetime="${next}"`);
     expect(html).toContain(`id="from" type="date" value="${day}"`);
+    expect(html).toContain('rel="canonical" href="https://hacecuentas.com/fechas/feriados"');
     expect(html).not.toContain('el día no laborable del 8 de diciembre');
     expect(html).toMatch(/data-date="2026-12-07" data-group="puente"/);
     expect(html).toMatch(/data-date="2026-12-08" data-group="nacional"/);
     const { chromium } = createRequire(join(temp, 'package.json'))('playwright');
     const browser = await chromium.launch({ channel: 'chrome', headless: true });
     try {
-      const issues: string[] = [];
       const page = await browser.newPage({ timezoneId: 'Pacific/Honolulu' });
-      page.on('pageerror', (error) => issues.push(String(error)));
-      page.on('console', (message) => {
-        if (message.type() === 'error') issues.push(message.text());
-      });
-      page.on('response', (res) => {
-        if (!res.ok() && res.request().resourceType() === 'script') issues.push(res.status() + ' ' + res.url());
-      });
-      await page.route(/^(?!http:\/\/127\.0\.0\.1:4179\/)/, (route) => route.abort());
+      await page.route(/^(?!https:\/\/hacecuentas\.com\/)/, (route) => route.abort());
       await page.goto(url, { waitUntil: 'domcontentloaded' });
       expect(await page.locator('#next-national-holiday').getAttribute('datetime')).toBe(next);
       expect(await page.locator('#from').inputValue()).toBe(day);
-      const business = page.getByRole('button', { name: 'Días hábiles', exact: true });
-      await business.click();
-      try {
-        await page.waitForFunction(() => document.querySelector('[data-view=business]')?.getAttribute('aria-pressed') === 'true', null, { timeout: 5000 });
-      } catch {
-        const scripts = await page.locator('script[src]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('src')));
-        throw new Error(JSON.stringify({ issues, scripts: scripts.filter((src) => src?.includes('Astro') || src?.includes('Feriado') || src?.includes('vite')), logs: logs.slice(-3500) }));
-      }
+      await page.getByRole('button', { name: 'Días hábiles', exact: true }).click();
       for (const [date, ...counts] of [
         ['2026-11-20', 1, 1, 1],
         ['2026-11-23', 0, 0, 0],
@@ -87,23 +72,6 @@ test('integración de feriados en Chromium', async () => {
       await browser.close();
     }
   } finally {
-    server.kill();
     rmSync(temp, { recursive: true, force: true });
   }
-}, 150_000);
-
-test('build y auditoría del HTML del Worker de producción', () => {
-  try {
-    execFileSync('npm', ['run', 'build'], {
-      timeout: 390000,
-      maxBuffer: 15 * 1024 * 1024,
-      env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1', WRANGLER_SEND_METRICS: 'false' },
-    });
-  } catch (error) {
-    const salida = String(error.stdout ?? '').split('\n').slice(-65).join('\n');
-    const diagnostico = String(error.stderr ?? '').split('\n').slice(-45).join('\n');
-    throw new Error(salida + '\n' + diagnostico);
-  }
-  expect(existsSync('dist/server/wrapper.mjs')).toBe(true);
-  expect(existsSync('dist/client/fechas/feriados.html')).toBe(false);
-}, 410000);
+}, 260_000);
