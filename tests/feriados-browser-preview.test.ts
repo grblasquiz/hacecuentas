@@ -12,7 +12,7 @@ test('integración de feriados en Chromium', async () => {
   const day = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Argentina/Buenos_Aires',
     year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const next = day <= '2026-11-23' ? '2026-11-23' : day <= '2026-12-08' ? '2026-12-08' : '2026-12-25';
-  const server = spawn('node', ['node_modules/astro/astro.js', 'dev', '--host', '127.0.0.1', '--port', '4179']);
+  const server = spawn('./node_modules/.bin/astro', ['dev', '--host', '127.0.0.1', '--port', '4179']);
   let logs = '';
   server.stderr.on('data', (data) => { logs += String(data); });
   server.stdout.on('data', (data) => { logs += String(data); });
@@ -24,7 +24,7 @@ test('integración de feriados en Chromium', async () => {
       if (!response) await delay(1000);
     }
     const html = await response?.text();
-    expect(response?.status, logs).toBe(200);
+    expect(response?.status, logs + '\n' + String(html).slice(0, 1500)).toBe(200);
     expect(response?.headers.get('cache-control')).toBe('no-store');
     expect(html).toContain(`id="next-national-holiday" datetime="${next}"`);
     expect(html).toContain(`id="from" type="date" value="${day}"`);
@@ -35,7 +35,8 @@ test('integración de feriados en Chromium', async () => {
     const browser = await chromium.launch({ channel: 'chrome', headless: true });
     try {
       const page = await browser.newPage({ timezoneId: 'Asia/Tokyo' });
-      await page.goto(url);
+      await page.route(/^(?!http:\/\/127\.0\.0\.1:4179\/)/, (route) => route.abort());
+      await page.goto(url, { waitUntil: 'domcontentloaded' });
       expect(await page.locator('#next-national-holiday').getAttribute('datetime')).toBe(next);
       expect(await page.locator('#from').inputValue()).toBe(day);
       await page.getByRole('button', { name: 'Días hábiles', exact: true }).click();

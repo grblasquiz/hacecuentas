@@ -68,11 +68,11 @@ fi
 
 echo "[split] 3/5 STATIC build (Node prerender)..."
 mkdir -p _split_bak
+trap restore_ssr EXIT
 mv src/pages/api _split_bak/api
 mv src/pages/fechas/feriados _split_bak/feriados
 for p in "${SSR_PAGES[@]}"; do mv "src/pages/$p" "_split_bak/$p" 2>/dev/null || true; done
 mv src/middleware.ts _split_bak/middleware.ts
-trap restore_ssr EXIT
 BUILD_SPLIT=static npx astro build >/tmp/split-static.log 2>&1 || { echo "STATIC build FALLÓ"; tail -25 /tmp/split-static.log; restore_ssr; trap - EXIT; exit 1; }
 restore_ssr; trap - EXIT
 ST=$(find dist-static -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
