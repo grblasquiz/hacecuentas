@@ -23,7 +23,7 @@ export const hub: HubData = {
   h1: 'Generaciones por edad y año de nacimiento',
   lede:
     'Poné tu año de nacimiento y te decimos de qué generación sos y qué edad cumplís en 2026. Abajo tenés la tabla completa de generaciones por año y edad.',
-  stamps: ['Actualizado 13-09-2026', 'Rangos Pew Research · McCrindle', '17 calculadoras adentro'],
+  stamps: ['Actualizado 20-11-2026', 'Rangos Pew Research · McCrindle', '17 calculadoras adentro'],
 
   resultLabel: 'Tu generación',
 
@@ -192,7 +192,7 @@ export const hub: HubData = {
     '/calculadora-nombre-elfo',
   ],
 
-  lastReviewed: '2026-09-13',
+  lastReviewed: '2026-11-20',
   audience: 'global',
 };
 
