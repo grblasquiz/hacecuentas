@@ -32,8 +32,8 @@ describe('regresiones de las cuatro páginas auditadas', () => {
     const component = read('src/components/generated/EscalaGananciasBlogExperience.astro');
     expect(component).toContain("GANANCIAS_2026");
     expect(component).toContain('aria-pressed="true"');
-    expect(component).toContain('aria-expanded="true"');
-    expect(component).toContain('href="/ganancias-cuarta-categoria"');
+    expect(component).toContain('aria-expanded="${index === 0}"');
+    expect(component).toContain('href="/impuestos/ganancias-cuarta-categoria"');
     expect(component).not.toContain('Abriendo calculadora');
   });
 
