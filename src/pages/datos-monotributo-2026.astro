@@ -24,8 +24,12 @@ import {
 // Patrón espejado de /datasets: schema Dataset + licencia CC-BY 4.0 + bloque "Cómo citar"
 // → cuando un medio o blog cita la tabla, atribuye con link = backlink editorial.
 
-const ULTIMA_REVISION = '2026-11-18';
-const ULTIMA_REVISION_LABEL = '18/11/2026';
+const ULTIMA_REVISION = '2026-11-22';
+const ULTIMA_REVISION_LABEL = '22/11/2026';
+const formatOfficialAmount = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+}).format;
 const VIGENCIA_LABEL = '1 de agosto de 2026';
 
 // Filas de la tabla maestra (computadas desde la fuente única).
@@ -76,11 +80,11 @@ const faq = [
   { q: '¿Qué pasa si un parámetro me ubica en una categoría más alta?', a: 'La categoría debe cubrir todos los parámetros que te resulten aplicables. No alcanza con mirar solo facturación: por ejemplo, un alquiler anual puede exigir un encuadre superior al que indicarían tus ingresos.' },
   {
     q: '¿Cuántas categorías de monotributo hay en 2026?',
-    a: `Hay 11 categorías, de la A a la K. La A es la más baja (tope de facturación de ${fmtARS(topeMin)} anuales) y la K la más alta (${fmtARS(topeMax)} anuales).`,
+    a: `Hay 11 categorías, de la A a la K. La A es la más baja (tope de facturación de ${formatOfficialAmount(topeMin)} anuales) y la K la más alta (${formatOfficialAmount(topeMax)} anuales).`,
   },
   {
     q: '¿Cuál es el tope de facturación más alto del monotributo 2026?',
-    a: `La categoría K, con ${fmtARS(topeMax)} de ingresos brutos anuales. Superado ese límite hay que pasar al Régimen General (responsable inscripto).`,
+    a: `La categoría K, con ${formatOfficialAmount(topeMax)} de ingresos brutos anuales. Superado ese límite hay que pasar al Régimen General (responsable inscripto).`,
   },
   {
     q: '¿Cuánto se paga de monotributo por mes en 2026?',
@@ -96,7 +100,7 @@ const faq = [
   },
   {
     q: '¿Qué pasa si me excedo del tope de facturación de mi categoría?',
-    a: `Depende de cuánto te excedas. Si tus ingresos de los últimos 12 meses superan el tope de tu categoría pero siguen por debajo del de la K (${fmtARS(topeMax)}), en la recategorización pasás a la categoría que corresponda. Si superás el tope máximo de la K, quedás excluido del monotributo y tenés que inscribirte en el Régimen General como responsable inscripto. Para ver hasta cuánto podés facturar sin salir del régimen, usá la calculadora de facturación máxima que enlazamos más abajo.`,
+    a: `Depende de cuánto te excedas. Si tus ingresos de los últimos 12 meses superan el tope de tu categoría pero siguen por debajo del de la K (${formatOfficialAmount(topeMax)}), en la recategorización pasás a la categoría que corresponda. Si superás el tope máximo de la K, quedás excluido del monotributo y tenés que inscribirte en el Régimen General como responsable inscripto. Para ver hasta cuánto podés facturar sin salir del régimen, usá la calculadora de facturación máxima que enlazamos más abajo.`,
   },
   {
     q: '¿Desde cuándo rigen estos valores?',
@@ -230,7 +234,7 @@ const schema = {
           <nav aria-label="Consultar monotributo" class="mo-jumps">
             <a href="#tabla-para-tu-web">Insertar tabla en mi web</a> · <a href="#tabla">Ver tabla A–K y cuotas</a> · <a href="#calcular-categoria">Calcular mi categoría</a> · <a href="#comparar-escalas">Comparar febrero y agosto</a>
           </nav>
-          <p>La categoría A permite facturar hasta <strong>{fmtARS(topeMin)} al año</strong> y su cuota general es <strong>{fmtARS(cuotaMin)} por mes</strong>. El promedio mensual es orientativo: la categoría se evalúa con los ingresos acumulados y los demás parámetros aplicables.</p>
+          <p>La categoría A permite facturar hasta <strong>{formatOfficialAmount(topeMin)} al año</strong> y su cuota general es <strong>{fmtARS(cuotaMin)} por mes</strong>. El promedio mensual es orientativo: la categoría se evalúa con los ingresos acumulados y los demás parámetros aplicables.</p>
           <ul class="cf-pills">
             <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Fuente oficial ARCA</li>
             <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Rigen desde 1/8/2026</li>
@@ -264,8 +268,8 @@ const schema = {
       </div>
 
       <p class="answer-snippet mo-answer">
-        Monotributo 2026: 11 categorías de la A (tope {fmtARS(topeMin)} anuales, cuota {fmtARS(cuotaMin)})
-        a la K (tope {fmtARS(topeMax)}, cuota {fmtARS(cuotaMaxServ)} servicios). Valores oficiales de ARCA
+        Monotributo 2026: 11 categorías de la A (tope {formatOfficialAmount(topeMin)} anuales, cuota {fmtARS(cuotaMin)})
+        a la K (tope {formatOfficialAmount(topeMax)}, cuota {fmtARS(cuotaMaxServ)} servicios). Valores oficiales de ARCA
         con aplicación desde el {VIGENCIA_LABEL}.
       </p>
 
@@ -282,7 +286,7 @@ const schema = {
         </div>
         <div class="cf-stat">
           <div class="cf-stat__label">Tope anual máximo</div>
-          <div class="cf-stat__value">{fmtARS(topeMax)}</div>
+          <div class="cf-stat__value">{formatOfficialAmount(topeMax)}</div>
           <div class="cf-stat__sub">Categoría K</div>
         </div>
         <div class="cf-stat">
@@ -301,7 +305,7 @@ const schema = {
         <form class="mo-quick__form" id="mono-quick-form">
           <label class="mo-field">
             <span id="mono-income-label">Total facturado en los últimos 12 meses</span>
-            <span class="mo-money"><b aria-hidden="true">$</b><input id="mono-income" name="ingresos" inputmode="decimal" autocomplete="off" aria-labelledby="mono-income-label" placeholder="Ej.: 20.000.000" required /></span>
+            <span class="mo-money"><b aria-hidden="true">$</b><input id="mono-income" name="ingresos" inputmode="decimal" autocomplete="off" aria-labelledby="mono-income-label" aria-describedby="mono-quick-help" placeholder="Ej.: 20.000.000,50" required /></span>
           </label>
           <label class="mo-field">
             <span>Período</span>
@@ -338,7 +342,7 @@ const schema = {
           <div><span class="mo-result__label">Promedio luego de la cuota</span><strong id="mono-result-after-fee">—</strong></div>
           <p class="mo-result__note" id="mono-result-note"></p>
         </div>
-        <p class="mo-quick__help">Para recategorizarte usá el total real de los últimos 12 meses. La proyección mensual es orientativa y puede fallar si tu facturación es estacional. La herramienta no reemplaza la verificación en ARCA.</p>
+        <p class="mo-quick__help" id="mono-quick-help">Podés pegar un importe con pesos y centavos, como 12.009.410,45. Para recategorizarte usá el total real de los últimos 12 meses. La proyección mensual es orientativa y puede fallar si tu facturación es estacional. La herramienta no reemplaza la verificación en ARCA.</p>
       </section>
 
       <PriorityDecisionCta
@@ -389,7 +393,7 @@ const schema = {
               {filas.map((f) => (
                 <tr>
                   <td><strong>{f.cat}</strong></td>
-                  <td>{fmtARS(f.topeAnual)}</td>
+                  <td>{formatOfficialAmount(f.topeAnual)}</td>
                   <td>{fmtARS(f.topeMensual)}</td>
                   <td class="cf-td-em">{fmtARS(f.cuotaServicios)}</td>
                   <td>{fmtARS(f.cuotaBienes)}</td>
@@ -438,7 +442,7 @@ const schema = {
           <div class="cf-minicard">
             <span class="cf-minicard__ico" aria-hidden="true">🏷️</span>
             <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Precio unitario</p>
-            <div class="cf-minicard__big">{fmtARS(PRECIO_UNITARIO_MAX_BIENES)}</div>
+            <div class="cf-minicard__big">{formatOfficialAmount(PRECIO_UNITARIO_MAX_BIENES)}</div>
             <p class="cf-minicard__desc" style="margin-top:0.3rem">Máximo por unidad para venta de cosas muebles.</p>
           </div>
           <div class="cf-minicard">
@@ -456,7 +460,7 @@ const schema = {
             <p class="cf-side-eyebrow">Categoría K</p>
             <p class="mo-hl__title">La misma facturación, dos cuotas muy distintas</p>
             <p class="mo-hl__desc">El tope anual es idéntico, pero el impuesto integrado cambia según el tipo de actividad.</p>
-            <div class="mo-hl__big">{fmtARS(topeMax)}</div>
+            <div class="mo-hl__big">{formatOfficialAmount(topeMax)}</div>
             <p class="mo-hl__desc">Tope anual ambas actividades</p>
           </div>
           <div class="cf-breakdown">
@@ -682,6 +686,8 @@ const schema = {
 
 <script>
   import { CATEGORIAS, TOPES, CUOTA_SERVICIOS, CUOTA_BIENES, PARAMS_FISICOS, PRECIO_UNITARIO_MAX_BIENES } from '../lib/data/monotributo-2026';
+  import { parseLocaleNumber } from '../lib/format/number';
+  import { selectMonotributoCategory } from '../lib/monotributo-category';
 
   const form = document.querySelector<HTMLFormElement>('#mono-quick-form');
   const income = document.querySelector<HTMLInputElement>('#mono-income');
@@ -700,48 +706,68 @@ const schema = {
   const energy = document.querySelector<HTMLInputElement>('#mono-energy');
   const rent = document.querySelector<HTMLInputElement>('#mono-rent');
   const unitPrice = document.querySelector<HTMLInputElement>('#mono-unit-price');
-  const ars = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+  const ars = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
 
-  const parseMoney = (value: string) => Number(value.replace(/[^0-9]/g, ''));
-  const formatMoneyInput = (field: HTMLInputElement | null) => field?.addEventListener('input', () => {
-    const value = parseMoney(field.value);
-    field.value = value ? value.toLocaleString('es-AR') : '';
-  });
-  [income, rent, unitPrice].forEach(formatMoneyInput);
+  function parseMoney(value: string): number {
+    const text = value.trim();
+    if (!text) return 0;
+    if (!/^\$?\s*\d[\d.,\s]*$/.test(text)) return NaN;
+    const amount = parseLocaleNumber(text, { locale: 'es-AR' });
+    const cents = Math.round(amount * 100);
+    return Number.isSafeInteger(cents) && amount === cents / 100 ? amount : NaN;
+  }
+
+  for (const field of [income, rent, unitPrice]) {
+    field?.addEventListener('input', () => {
+      field.setCustomValidity('');
+      if (result) result.hidden = true;
+    });
+    field?.addEventListener('blur', () => {
+      if (!field.value.trim()) return;
+      const amount = parseMoney(field.value);
+      if (Number.isFinite(amount)) {
+        field.value = amount.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+      }
+    });
+  }
   period?.addEventListener('change', () => {
     if (!income || !incomeLabel || !period) return;
     const annual = period.value === 'annual';
     incomeLabel.textContent = annual ? 'Total facturado en los últimos 12 meses' : 'Promedio mensual estimado';
-    income.placeholder = annual ? 'Ej.: 20.000.000' : 'Ej.: 2.000.000';
+    income.placeholder = annual ? 'Ej.: 20.000.000,50' : 'Ej.: 2.000.000,50';
+    if (result) result.hidden = true;
   });
 
   form?.addEventListener('submit', (event) => {
     event.preventDefault();
     if (!income || !period || !activity || !result || !resultCat || !resultFee || !resultMargin || !resultMonthlyMargin || !resultBurden || !resultAfterFee || !resultNote) return;
     const entered = parseMoney(income.value);
-    if (!entered) {
-      income.setCustomValidity('Ingresá una facturación mayor a cero.');
-      income.reportValidity();
-      return;
+    const rentAmount = parseMoney(rent?.value || '');
+    const unitPriceAmount = parseMoney(unitPrice?.value || '');
+    const amounts = [[income, entered], [rent, rentAmount], [unitPrice, unitPriceAmount]] as const;
+    for (const [field, amount] of amounts) {
+      if (!Number.isFinite(amount) || (field === income && amount <= 0)) {
+        result.hidden = true;
+        field?.setCustomValidity(field === income
+          ? 'Ingresá una facturación mayor a cero, por ejemplo 12.009.410,45.'
+          : 'Ingresá un importe válido o dejá el campo vacío.');
+        field?.closest('details')?.setAttribute('open', '');
+        field?.reportValidity();
+        return;
+      }
     }
-    income.setCustomValidity('');
-    const annual = period.value === 'monthly' ? entered * 12 : entered;
-    // El formulario trabaja en pesos enteros, mientras ARCA publica topes con centavos.
-    // Aceptamos el peso redondeado que ve el usuario para no excluir el límite oficial.
-    const incomeCat = CATEGORIAS.find((key) => annual <= Math.ceil(TOPES[key]));
-    const categoryFor = (value: number, parameter: 'superficie' | 'energia' | 'alquiler') => value > 0
+    const annual = Math.round(entered * 100) * (period.value === 'monthly' ? 12 : 1) / 100;
+    const incomeCat = selectMonotributoCategory(annual);
+    const physicalValues = [
+      [Number(area?.value || 0), 'superficie'],
+      [Number(energy?.value || 0), 'energia'],
+      [rentAmount, 'alquiler'],
+    ] as const;
+    const physicalCats = physicalValues.map(([value, parameter]) => value > 0
       ? CATEGORIAS.find((key) => value <= PARAMS_FISICOS[key][parameter])
-      : undefined;
-    const physicalCats = [
-      categoryFor(Number(area?.value || 0), 'superficie'),
-      categoryFor(Number(energy?.value || 0), 'energia'),
-      categoryFor(parseMoney(rent?.value || ''), 'alquiler'),
-    ];
-    const exceedsPhysical = physicalCats.some((key, index) => {
-      const values = [Number(area?.value || 0), Number(energy?.value || 0), parseMoney(rent?.value || '')];
-      return values[index] > 0 && !key;
-    });
-    const exceedsUnitPrice = activity.value === 'bienes' && parseMoney(unitPrice?.value || '') > PRECIO_UNITARIO_MAX_BIENES;
+      : undefined);
+    const exceedsPhysical = physicalCats.some((key, index) => physicalValues[index][0] > 0 && !key);
+    const exceedsUnitPrice = activity.value === 'bienes' && unitPriceAmount > PRECIO_UNITARIO_MAX_BIENES;
     const requiredCats = [incomeCat, ...physicalCats].filter(Boolean) as typeof CATEGORIAS;
     const cat = exceedsPhysical || exceedsUnitPrice || !incomeCat
       ? undefined
@@ -762,7 +788,7 @@ const schema = {
       return;
     }
     const fee = activity.value === 'bienes' ? CUOTA_BIENES[cat] : CUOTA_SERVICIOS[cat];
-    const displayedCap = Math.ceil(TOPES[cat]);
+    const displayedCap = TOPES[cat];
     const margin = Math.max(0, displayedCap - annual);
     const marginPct = (margin / displayedCap) * 100;
     resultCat.textContent = cat;
@@ -948,6 +974,7 @@ const schema = {
   .mo .mo-params > p { margin: 0.55rem 0 0.8rem; color: var(--text-muted); font-size: 0.75rem; line-height: 1.5; }
   .mo .mo-params__grid { display: grid; gap: 0.8rem; }
   .mo .mo-result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-top: 1rem; padding: 1rem; border-radius: var(--radius); background: var(--bg-card); border: 1px solid var(--border); }
+  .mo .mo-result[hidden] { display: none; }
   .mo .mo-result[data-state="warning"] { border-color: #f59e0b; background: color-mix(in srgb, #f59e0b 7%, var(--bg-card)); }
   .mo .mo-result[data-state="danger"] { border-color: #dc2626; background: color-mix(in srgb, #dc2626 6%, var(--bg-card)); }
   .mo .mo-result > div { display: grid; gap: 0.2rem; }
