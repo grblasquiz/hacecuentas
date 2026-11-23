@@ -9,7 +9,23 @@ import DatosHoyNav from '../components/DatosHoyNav.astro';
 export const prerender = true;
 
 const title = 'IPC Argentina 2026: inflación mes a mes y próximo dato';
-const description = 'IPC de Argentina 2026 mes a mes: último dato oficial disponible, inflación acumulada e interanual, con fuente INDEC.';
+const description = 'IPC de Argentina 2026 mes a mes: último dato del INDEC, inflación interanual y fecha oficial del próximo informe.';
+const indecIpc = 'https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31';
+const indecCalendar = 'https://www.indec.gob.ar/Calendario/FiltrosCalendario/mes/Diciembre-2026/1';
+const octoberBulletin = {
+  period: '2026-10',
+  url: 'https://www.indec.gob.ar/uploads/informesdeprensa/ipc_11_269335F5BA6B.pdf',
+  monthly: '2,2%',
+  ytd: '26,3%',
+  annual: '33,1%',
+};
+const nextRelease = { period: '2026-11', date: '2026-12-15', label: '15 de diciembre de 2026' };
+const todayInArgentina = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Argentina/Buenos_Aires',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}).format(new Date());
 
 interface DataPoint { fecha: string; valor: number; }
 interface PlazoFijoBanco { entidad: string; logo: string; tnaClientes: number; }
@@ -38,12 +54,16 @@ const lastMensual = inflacionMensual[inflacionMensual.length - 1];
 const lastInteranual = inflacionInteranual[inflacionInteranual.length - 1];
 const lastUva = uva[uva.length - 1];
 const last12 = inflacionMensual.slice(-12).reverse();
-const latestIpcLabel = lastMensual ? mesHumano(lastMensual.fecha) : 'último período disponible';
+const latestIpcPeriod = lastMensual?.fecha.slice(0, 7);
+const showOctoberBulletin = !latestIpcPeriod || latestIpcPeriod <= octoberBulletin.period;
+const upcomingRelease = todayInArgentina <= nextRelease.date &&
+  (!latestIpcPeriod || latestIpcPeriod < nextRelease.period) ? nextRelease : null;
+const calendarLink = upcomingRelease ? indecCalendar : indecIpc;
 
 // Acumulado 12 meses (compuesto)
 let acum12 = 1;
 for (const m of inflacionMensual.slice(-12)) acum12 *= (1 + m.valor / 100);
-const acum12Pct = ((acum12 - 1) * 100);
+const acum12Pct = last12.length === 12 ? (acum12 - 1) * 100 : null;
 
 // TNA promedio plazo fijo (solo los que tienen dato)
 const tnaValidas = plazoFijo.map(b => b.tnaClientes).filter((x): x is number => typeof x === 'number' && x > 0);
@@ -87,23 +107,25 @@ const faq = [
   },
   {
     q: '¿Qué es la inflación acumulada?',
-    a: 'La suma <em>compuesta</em> de las inflaciones mensuales en un período. Por ejemplo, si los últimos 12 meses fueron 3%, 2%, 4%, etc., se componen (no se suman): <em>(1+0.03) × (1+0.02) × (1+0.04) − 1</em>. Por eso acumulada anual ≠ interanual (diferencia por base móvil).',
+    a: 'La acumulada del año mide la variación desde diciembre del año anterior. La interanual compara con el mismo mes del año anterior. Si calculás una variación a partir de tasas mensuales, multiplicá los factores de cada mes. Con tasas ya redondeadas, el resultado es una aproximación al índice oficial.',
   },
   {
-    q: '¿Por qué la tasa de plazo fijo está por debajo de la inflación?',
-    a: 'En períodos de <strong>tasas reales negativas</strong>, el BCRA mantiene la TNA por debajo del ritmo inflacionario para reducir costos fiscales o fomentar el consumo. Resultado: tu plazo fijo en pesos <strong>pierde poder de compra</strong>. Alternativas: UVA, dólar MEP, FCI money market agresivos.',
+    q: '¿Cómo comparo el plazo fijo con la inflación?',
+    a: 'Compará el rendimiento y la variación de precios del mismo período. La diferencia entre una TNA de hoy y la inflación de los últimos 12 meses es una referencia, no el rendimiento real que tendrá un depósito nuevo.',
   },
   {
     q: '¿Cuándo sale el próximo dato de inflación?',
-    a: `El último período disponible en esta página es <strong>${latestIpcLabel}</strong>. La fecha del próximo informe debe consultarse en el calendario anticipado de difusión del INDEC; no hay un día fijo para todos los meses.`,
+    a: upcomingRelease
+      ? `El INDEC prevé publicar el IPC de noviembre el <strong>${upcomingRelease.label}</strong>. Consultá el <a href="${calendarLink}">calendario oficial</a> si se modifica la fecha.`
+      : `Consultá la <a href="${calendarLink}">página de IPC del INDEC</a> para ver el último dato y la próxima publicación.`,
   },
   {
-    q: '¿Cómo se compara con otros países?',
-    a: 'Argentina 2025-2026 tuvo inflación anual entre <strong>25% y 35%</strong>, muy por encima del promedio global (~3-5%). Chile, Perú y Uruguay típicamente cierran año con 3-6%. La hiperinflación técnica arranca en 50% mensual (que Argentina no alcanzó pero sí rozó picos altos).',
+    q: '¿Qué regiones cubre el IPC del INDEC?',
+    a: 'El INDEC publica el índice nacional y seis índices regionales: Gran Buenos Aires, Pampeana, Noreste, Noroeste, Cuyo y Patagonia. Cada región pondera los bienes y servicios según su estructura de gasto.',
   },
   {
-    q: '¿Por qué hay diferencia entre inflación BCRA y mi supermercado?',
-    a: 'El IPC del INDEC promedia una canasta de <strong>~300 productos</strong> y 39 regiones. Tu super pesa diferente: si comprás más carne/verdura (rubros con alta volatilidad) vas a percibir más inflación que el promedio. También depende del estilo de vida (alquilar, transporte público vs auto, etc.).',
+    q: '¿Por qué el IPC puede diferir de lo que gasto en el supermercado?',
+    a: 'El IPC mide cómo cambian los precios de una canasta representativa que incluye alimentos, vivienda, transporte y otros gastos. Tus compras pueden tener otras proporciones y precios, por eso el cambio de tu gasto puede diferir del índice nacional.',
   },
 ];
 
@@ -142,7 +164,20 @@ const schemaBreadcrumb = {
     <header class="inf-header">
       <h1>IPC Argentina 2026: inflación mes a mes 📊</h1>
       <p class="lead">
-        Datos en vivo del INDEC y el BCRA: <strong>inflación mensual e interanual</strong>, valor <strong>UVA</strong>, y <strong>tasas de plazo fijo</strong> para compararla con tus ahorros.
+        Consultá el <strong>IPC mensual e interanual del INDEC</strong>, la próxima publicación y los datos de UVA y plazo fijo.
+      </p>
+      {showOctoberBulletin && (
+        <p id="ipc-ultimo-informe">
+          En <strong>octubre de 2026</strong>, el IPC nacional fue <strong>{octoberBulletin.monthly} mensual</strong>,
+          <strong>{octoberBulletin.ytd} acumulado en el año</strong> y <strong>{octoberBulletin.annual} interanual</strong>.
+          <a href={octoberBulletin.url}>Informe oficial del INDEC</a>.
+        </p>
+      )}
+      <p id="ipc-proximo-informe">
+        {upcomingRelease ? (
+          <>IPC de noviembre: publicación prevista para el <time datetime={upcomingRelease.date}>{upcomingRelease.label}</time>.
+            <a href={calendarLink}>Calendario del INDEC</a>.</>
+        ) : <a href={calendarLink}>Consultar el próximo informe en el INDEC</a>}
       </p>
     </header>
 
@@ -159,8 +194,8 @@ const schemaBreadcrumb = {
       </div>
       <div class="stat-card acumulada">
         <div class="stat-label">Acumulada 12 meses</div>
-        <div class="stat-value">{acum12Pct.toFixed(1)}%</div>
-        <div class="stat-sub">compuesta mes a mes</div>
+        <div class="stat-value">{acum12Pct === null ? '—' : `${acum12Pct.toFixed(1)}%`}</div>
+        <div class="stat-sub">estimación a partir de tasas mensuales</div>
       </div>
       <div class="stat-card uva">
         <div class="stat-label">UVA</div>
@@ -174,8 +209,8 @@ const schemaBreadcrumb = {
       </div>
       <div class="stat-card gap">
         <div class="stat-label">Brecha tasa vs inflación</div>
-        <div class="stat-value">{lastInteranual ? ((tnaAvg - lastInteranual.valor)).toFixed(1) : '—'}pts</div>
-        <div class="stat-sub">{lastInteranual && tnaAvg < lastInteranual.valor ? '⚠️ tasa real negativa' : '✓ tasa real positiva'}</div>
+        <div class="stat-value">{lastInteranual && tnaValidas.length ? `${(tnaAvg - lastInteranual.valor).toFixed(1)} pts` : '—'}</div>
+        <div class="stat-sub">TNA actual frente al IPC interanual observado</div>
       </div>
     </section>
 
@@ -258,7 +293,7 @@ const schemaBreadcrumb = {
     <section class="method">
       <h2>Fuentes</h2>
       <ul>
-        <li><strong>INDEC</strong> (Instituto Nacional de Estadística y Censos): inflación mensual e interanual oficial.</li>
+        <li><a href={indecIpc}>INDEC: informes, series y metodología del IPC</a>.</li>
         <li><strong>BCRA</strong> (Banco Central de la República Argentina): valor UVA y tasas de referencia.</li>
         <li><strong>ArgentinaDatos</strong>: agregador open-source que consume los feeds oficiales.</li>
       </ul>
