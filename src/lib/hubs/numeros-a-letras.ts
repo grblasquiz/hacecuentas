@@ -188,19 +188,19 @@ export const hub: HubData = {
   faq: [
     {
       q: '¿Cómo paso un número a letras para escribir una cantidad en un monto?',
-      a: 'Escribí la cifra en el conversor y te devuelve la cantidad en letras siguiendo las reglas de la RAE: 1.250,50 se escribe "mil doscientos cincuenta con cincuenta centavos", y en formato de cheque, SON PESOS MIL DOSCIENTOS CINCUENTA CON 50/100. Sirve para cheques, pagarés, contratos y cualquier monto que haya que repetir en palabras: la práctica habitual es poner la cifra en números y la cantidad en letras al lado o entre paréntesis. El conversor usa escala larga (un billón = un millón de millones) y funciona en pesos, dólares, euros y las principales monedas de la región.',
+      a: 'Ingresá un importe de hasta 999.999.999,99 y elegí pesos, dólares o euros. Por ejemplo, 1.250,50 en pesos se puede escribir SON MIL DOSCIENTOS CINCUENTA PESOS CON 50/100. Podés copiar el resultado con o sin el prefijo SON.',
     },
     {
       q: '¿Cómo se escribe un importe en un cheque?',
-      a: 'En mayúsculas de imprenta, con la fórmula "SON PESOS <importe en letras> CON NN/100". Por ejemplo, $1.250,50 se escribe SON PESOS MIL DOSCIENTOS CINCUENTA CON 50/100. Los centavos van siempre como fracción sobre cien, nunca en letras, y aunque sean cero se escribe 00/100 para que nadie pueda agregar cifras después. El espacio sobrante se tacha con una raya.',
+      a: 'En Argentina, la Ley 24.452 exige indicar el importe en letras y números e identificar la moneda. Esta herramienta ofrece una presentación en mayúsculas con centavos como fracción: SON MIL DOSCIENTOS CINCUENTA PESOS CON 50/100. Confirmá con tu banco el formato del formulario.',
     },
     {
       q: '¿Qué pasa si el número y las letras del cheque no coinciden?',
-      a: 'Manda lo escrito en letras. El decreto ley 5965/63, aplicable al cheque por la ley 24.452, resuelve la discordancia a favor del importe expresado en palabras, y si hay varias cifras en letras que difieren, vale la menor. Por eso la línea en letras no es un adorno: es la que define cuánto se paga.',
+      a: 'Para un cheque común en Argentina, el artículo 2 del anexo I de la Ley 24.452 dispone que prevalece la cantidad expresada en letras si difiere de la escrita en números.',
     },
     {
       q: '¿Cómo se escriben los centavos en un cheque o un pagaré?',
-      a: 'Como fracción sobre cien y en números: 50/100, 05/100, 00/100. Se escriben con dos dígitos siempre. En un pagaré o en un contrato, en cambio, es habitual escribirlos también en letras ("con cincuenta centavos") y repetir la cifra entre paréntesis. Si el importe tiene más de dos decimales, se redondea a centavos antes de escribirlo.',
+      a: 'El conversor ofrece una fracción con dos dígitos sobre cien, como 50/100 o 05/100. Acepta hasta dos decimales. En un pagaré o contrato, revisá el formato que corresponda al documento.',
     },
     {
       q: '¿Se dice "veintiuno pesos" o "veintiún pesos"?',
@@ -272,7 +272,7 @@ export const hub: HubData = {
     '/conversor-letras-a-numero',
   ],
 
-  lastReviewed: '2026-11-17',
+  lastReviewed: '2026-11-24',
   audience: 'global',
 };
 
