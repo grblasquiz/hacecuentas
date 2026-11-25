@@ -1,10 +1,16 @@
 ---
 interface Props { data:any }
 const { data } = Astro.props;
-import { M2, SHARES } from '../lib/hubs/costo-por-m2';
+import { FX, M2, SHARES } from '../lib/hubs/costo-por-m2';
 import { CONSTRUCTION_DEFAULTS, calculateConstructionScenario, constructionScenarioView, constructionMoney } from '../lib/construction-cost-scenario';
 const initial = calculateConstructionScenario(CONSTRUCTION_DEFAULTS, M2[CONSTRUCTION_DEFAULTS.category][CONSTRUCTION_DEFAULTS.zone]);
 const initialView = constructionScenarioView(initial);
+const comparableHouse = { ...CONSTRUCTION_DEFAULTS, covered: 100, semi: 0 };
+const comparisonZones = [
+  ['caba', 'CABA'],
+  ['gba_norte', 'GBA norte'],
+  ['gba_sur', 'GBA sur y oeste'],
+];
 const cats = ['economica','estandar','media','alta','premium','ampliacion','reforma'];
 const zones = [
   ['caba','CABA'],['gba_norte','GBA norte'],['gba_sur','GBA sur / oeste'],['cordoba','Córdoba'],
@@ -21,6 +27,7 @@ const zones = [
           <h1>Calculadora de costo<br>por m² de construcción<br>2026.</h1>
           <p>Armá un rango orientativo según metros, terminaciones y zona. Podés reemplazar nuestra referencia por un precio local por m².</p>
           <div class="chips"><span>🏗️ Rango, no precio cerrado</span><span>💵 Conversión MEP</span><span>✓ Supuestos visibles</span></div>
+          <p><a href="#presupuesto-100-m2">Compará el presupuesto de 100 m² por zona</a></p>
           <div class="house-art"><div class="blueprint"><div class="gridlines"></div><div class="house"><div class="roof"></div><div class="door"></div><div class="window"></div></div><span class="measure">{initialView.measure}</span></div><span class="budget-tag">Casa estándar · GBA sur/oeste</span></div>
         </div>
         <form class="calc" id="presupuesto">
@@ -65,6 +72,25 @@ const zones = [
           </li>;
         })}
       </ul>
+    </section>
+    <section class="examples wrap" aria-labelledby="presupuesto-100-m2">
+      <h2 id="presupuesto-100-m2">Cuánto cuesta construir una casa de 100 m² en CABA y GBA</h2>
+      <p>La comparación usa 100 m² cubiertos, terminación estándar y 10% de contingencia. Los rangos están en pesos argentinos y contemplan una variación del 15% en la referencia por m². El terreno, la financiación y los adicionales quedan fuera del cálculo.</p>
+      <ul>
+        {comparisonZones.map(([zone, label]) => {
+          const result = calculateConstructionScenario(comparableHouse, M2.estandar[zone]);
+          return (
+            <li>
+              <strong>{label}</strong>
+              <span>{constructionMoney(result.low)} a {constructionMoney(result.high)}</span>
+              <small>ARS · {constructionMoney(result.unitArs)}/m² antes de contingencia</small>
+              <a href={`#obra=1&zone=${zone}&category=estandar&covered=100&semi=0&contingencyPercent=10&extras=0&customUnitPrice=0`}>Abrir presupuesto de {label}</a>
+            </li>
+          );
+        })}
+      </ul>
+      <p>Conversión a pesos: {FX.label} de {constructionMoney(FX.value)} por USD ({FX.date}). Los valores por zona son referencias editoriales. Los <a href="https://www.indec.gob.ar/Nivel4/Tema/3/5/33">indicadores de construcción del INDEC</a> miden variaciones de costos y tienen un alcance distinto al de este presupuesto.</p>
+      <p>Para una casa de dos plantas, sumá los metros cubiertos de ambos pisos. Si la estructura, la excavación o el acceso a la obra encarecen el proyecto, usá un precio por m² de una cotización local o cargá los adicionales presupuestados para evitar contarlos dos veces.</p>
     </section>
     <section class="detail wrap">
       <header class="center"><span>La obra, rubro por rubro</span><h2>Entendé en qué se va el presupuesto</h2><p>Una estimación llave en mano separada como la armaría un director de obra.</p></header>
