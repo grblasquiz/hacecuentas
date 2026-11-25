@@ -6,11 +6,13 @@
  * (las legacy ya traen embed + feedback propios). De esa forma cubre todos los
  * hubs actuales y también los que se agreguen en el futuro.
  */
+const sectionPaths = new Set(['/trabajo', '/sueldos-y-trabajo', '/impuestos', '/finanzas-personales']);
+const collection = sectionPaths.has(Astro.url.pathname.replace(/(?:\.html|\/)$/, ''));
 ---
 
-<template id="hc-hub-engagement-template">
+<template id="hc-hub-engagement-template" data-collection={collection ? 'true' : undefined}>
   <section class="hc-hub-engagement" data-hub-engagement data-nosnippet>
-    <details class="hc-hub-embed">
+    {!collection && <details class="hc-hub-embed">
       <summary>
         <span class="hc-hub-embed-icon" aria-hidden="true">&lt;/&gt;</span>
         <span>
@@ -27,7 +29,7 @@
         </div>
         <p data-embed-note>Pegalo en tu sitio y dejá el crédito para compartir la herramienta.</p>
       </div>
-    </details>
+    </details>}
 
     <div class="hc-hub-alert" data-hub-alert>
       <div>
@@ -225,16 +227,12 @@
       const tools = fragment.querySelector<HTMLElement>('[data-hub-engagement]');
       if (!tools) return;
 
-      const pageName = (document.querySelector('h1')?.textContent || document.title).trim();
-      const snippet = `<iframe src="${escapeAttribute(embedUrl)}" title="${escapeAttribute(pageName || copy.frameTitle)}" width="100%" height="720" style="border:0;border-radius:12px" loading="lazy"></iframe>\n<p><a href="${escapeAttribute(canonical)}">Calculadora de Hacé Cuentas</a></p>`;
-
       const setText = (selector: string, value: string) => {
         const element = tools.querySelector<HTMLElement>(selector);
         if (element) element.textContent = value;
       };
       setText('[data-embed-title]', copy.embedTitle);
       setText('[data-embed-subtitle]', copy.embedSubtitle);
-      setText('[data-embed-code]', snippet);
       setText('[data-embed-copy]', copy.copy);
       setText('[data-embed-preview]', copy.preview);
       setText('[data-embed-note]', copy.note);
@@ -245,7 +243,16 @@
       setText('[data-alert-submit]', copy.alertButton);
 
       const preview = tools.querySelector<HTMLAnchorElement>('[data-embed-preview]');
-      if (preview) preview.href = embedUrl;
+      const embed = tools.querySelector<HTMLDetailsElement>('.hc-hub-embed');
+      const code = embed?.querySelector('[data-embed-code]');
+      let snippet = '';
+      embed?.addEventListener('toggle', () => {
+        if (!embed.open || snippet) return;
+        const pageName = (document.querySelector('h1')?.textContent || document.title).trim();
+        snippet = `<iframe src="${escapeAttribute(embedUrl)}" title="${escapeAttribute(pageName || copy.frameTitle)}" width="100%" height="720" style="border:0;border-radius:12px" loading="lazy"></iframe>\n<p><a href="${escapeAttribute(canonical)}">Calculadora de Hacé Cuentas</a></p>`;
+        if (code) code.textContent = snippet;
+        if (preview) preview.href = embedUrl;
+      });
       const up = tools.querySelector<HTMLButtonElement>('[data-hub-vote-value="up"]');
       const down = tools.querySelector<HTMLButtonElement>('[data-hub-vote-value="down"]');
       if (up) up.setAttribute('aria-label', copy.upAria);
@@ -344,6 +351,14 @@
         }
       });
 
+      const methodology = document.querySelector('[data-calc-embed-after]');
+      if (!template.dataset.collection && index === 0 && methodology && embed) {
+        const placement = document.createElement('div');
+        placement.className = 'hc-hub-engagement';
+        placement.setAttribute('data-nosnippet', '');
+        placement.append(embed);
+        methodology.after(placement);
+      }
       calculator.appendChild(fragment);
     });
   }
