@@ -114,11 +114,11 @@ const faq = [
   },
   {
     q: '¿Qué diferencia hay entre blue, oficial, MEP, CCL y tarjeta?',
-    a: '<strong>Oficial</strong>: cotización regulada del BCRA. <strong>Blue</strong>: mercado informal (efectivo en cueva). <strong>MEP</strong> (bolsa): comprás bonos en pesos y los vendés en USD. <strong>CCL</strong> (contado con liqui): bonos en CABA y acreditación USD afuera. <strong>Tarjeta</strong>: en 2026 el consumo directo en moneda extranjera (compras y suscripciones en USD) se liquida al <strong>oficial, sin recargo</strong> — el Impuesto PAÍS se derogó a fines de 2024 y la percepción del 30% sobre consumos directos se eliminó en enero de 2026. El recargo del <strong>30%</strong> (percepción de Ganancias, recuperable ante ARCA) sólo sigue para <strong>servicios turísticos y de transporte al exterior pagados en pesos</strong> (vuelos, hoteles, paquetes); es lo que refleja la cotización "tarjeta/turista" de la tabla. <strong>Cripto</strong>: USDT/USDC en exchanges.',
+    a: '<strong>Oficial</strong>: cotización del mercado formal. <strong>Blue</strong>: mercado informal de efectivo. <strong>MEP</strong>: comprás títulos en pesos y los vendés en dólares en el país. <strong>CCL</strong>: operación con títulos y liquidación en el exterior. <strong>Tarjeta</strong>: referencia para operaciones alcanzadas, con la percepción del 30% cuando se cancelan en pesos. <strong>Cripto</strong>: cotización de USDT o USDC en exchanges.',
   },
   {
     q: '¿Qué cotización me conviene para viajar?',
-    a: 'Depende del destino y forma de pago. Para <strong>efectivo en destino</strong> (comprar USD/EUR en Argentina y llevarlos): generalmente <strong>blue o MEP</strong>. Pagando con <strong>tarjeta</strong> en el exterior, desde 2026 el consumo se liquida al <strong>dólar oficial sin recargo</strong> (ya no hay Impuesto PAÍS ni percepción del 30% sobre consumos directos). El recargo del 30% sólo aparece en <strong>vuelos, hoteles y paquetes al exterior pagados en pesos</strong> desde Argentina; ahí, si tenés dólares propios, pagarlos en USD evita ese 30%. En Brasil podés usar QR PIX, que toma el oficial.',
+    a: 'Compará el costo total de cada medio de pago. En compras con tarjeta, el resumen en moneda extranjera se puede cancelar en pesos o en dólares. Si pagás en pesos una operación alcanzada, considerá la percepción del 30%. Si cancelás el saldo en dólares propios, consultá con tu emisor cómo aplicar el pago y qué pasa con el débito automático. <a href="#dolar-tarjeta-en-pesos">Ver el ejemplo de USD 100</a>.',
   },
   {
     q: '¿Qué es la brecha cambiaria?',
@@ -177,7 +177,7 @@ const schemaBreadcrumb = {
       </p>
     </header>
 
-    <section class="converter">
+    <section class="converter" id="conversor">
       <h2>Conversor</h2>
       <div class="conv-grid">
         <div class="conv-side">
@@ -265,6 +265,13 @@ const schemaBreadcrumb = {
       <div class="brecha-box" id="brecha-box" style={arBrecha != null ? '' : 'display:none'}>
         {arBrecha != null && <div><strong>Brecha blue vs oficial:</strong> {arBrecha.toFixed(1)}% · {arBrechaClima}</div>}
       </div>
+    </section>
+
+    <section class="method" aria-labelledby="dolar-tarjeta-en-pesos">
+      <h2 id="dolar-tarjeta-en-pesos">Cuánto cuesta una compra de USD 100 si pagás la tarjeta en pesos</h2>
+      <p>Para una compra alcanzada, sumá el importe convertido por el emisor y la percepción del 30% de la RG 5617 de ARCA. El emisor aplica el tipo de cambio que corresponda al pago. Para calcular la percepción, ARCA indica usar el vendedor del Banco Nación del último día hábil anterior a la emisión del resumen.</p>
+      <p>Ejemplo con una cotización supuesta de $1.500 ARS por USD para ambas bases: <strong>USD 100 serían $195.000 ARS</strong>, con $150.000 por la compra y $45.000 de percepción. Si las cotizaciones difieren, calculá cada importe con su propia base. El ejemplo deja afuera otros cargos y las operaciones excluidas del régimen.</p>
+      <p><a href="#conversor">Abrí el conversor y elegí USD Tarjeta</a> para estimar otro importe con la referencia publicada. Consultá la <a href="https://biblioteca.arca.gob.ar/search/query/norma.aspx?p=t%3ARAG%7Cn%3A5617%7Co%3A9%7Ca%3A2024%7Cf%3A18%2F12%2F2024" rel="noopener">RG 5617 de ARCA, artículos 1, 2 y 6</a> y la <a href="https://www.bcra.gob.ar/que-cotizacion-se-aplica-a-consumos-en-dolares/" rel="noopener">guía del BCRA sobre el pago de consumos en dólares</a>.</p>
     </section>
 
     <section class="intl-rates">
@@ -654,6 +661,7 @@ const schemaBreadcrumb = {
   }
   .section-sub { color: var(--text-muted); font-size: .92rem; margin: 0 0 1.25rem; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
   .section-sub strong { color: var(--text); font-weight: 600; }
+  #conversor, #dolar-tarjeta-en-pesos { scroll-margin-top: 6rem; }
   .ar-asof { font-size: .95rem; line-height: 1.6; color: var(--text-muted); background: var(--accent-soft, #eff6ff); border: 1px solid var(--border); border-radius: var(--radius-sm, 8px); padding: .65rem .9rem; margin: 0 0 1.1rem; }
   .ar-asof strong { color: var(--text); font-weight: 700; }
   .ar-asof-ts { display: block; margin-top: .25rem; font-size: .82rem; color: var(--text-subtle, var(--text-muted)); }
@@ -1480,8 +1488,8 @@ const schemaBreadcrumb = {
   function renderConverter() {
     const fromAmtEl = document.getElementById('from-amount') as HTMLInputElement;
     const toAmtEl = document.getElementById('to-amount') as HTMLInputElement;
-    const fromEl = document.getElementById('from-currency') as HTMLSelectElement;
-    const toEl = document.getElementById('to-currency') as HTMLSelectElement;
+    const fromEl = document.getElementById('from-currency') as HTMLInputElement;
+    const toEl = document.getElementById('to-currency') as HTMLInputElement;
     const rateLine = document.getElementById('rate-line')!;
 
     const amount = parseAmount(fromAmtEl.value);
@@ -1494,8 +1502,8 @@ const schemaBreadcrumb = {
     toAmtEl.value = fmtNum(conv.value, 4);
     const unit = convert(1, fromEl.value, toEl.value);
     if (unit) {
-      const fromLabel = fromEl.options[fromEl.selectedIndex].text;
-      const toLabel = toEl.options[toEl.selectedIndex].text;
+      const fromLabel = findOption(fromEl.value)?.label ?? fromEl.value;
+      const toLabel = findOption(toEl.value)?.label ?? toEl.value;
       rateLine.textContent = `1 ${fromLabel} = ${fmtNum(unit.value, 6)} ${toLabel} (${conv.explain})`;
     }
   }
