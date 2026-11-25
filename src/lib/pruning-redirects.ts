@@ -4242,7 +4242,6 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/ec/calculadora-credito-vehicular-ecuador': '/ec/finanzas-personales/creditos-y-ahorro',
   '/ec/calculadora-cuanto-tarda-ver-serie-ecuador': '/ec',
   '/ec/calculadora-decimo-cuarto-sueldo-ecuador': '/ec/trabajo/decimos-y-fondos-de-reserva',
-  '/ec/calculadora-decimo-tercer-sueldo-ecuador': '/ec/trabajo/decimos-y-fondos-de-reserva',
   '/ec/calculadora-decimos-mensualizado-vs-acumulado-ecuador': '/ec/trabajo/iess-aportes-y-jubilacion',
   '/ec/calculadora-deposito-plazo-fijo-ecuador': '/ec/finanzas-personales/creditos-y-ahorro',
   '/ec/calculadora-devolucion-iva-tercera-edad-discapacidad-ecuador': '/ec/impuestos/iva-y-consumo',

@@ -17,6 +17,18 @@ describe('factor IMSS by seniority and contract benefits',()=>{
   expect(compute({modoVacaciones:'antiguedad',aniosServicio:6,salarioDiario:500}).sbc).toContain('528.1');
   expect(compute({modoVacaciones:'antiguedad',aniosServicio:6,aguinaldoDias:30,primaVacacionalPct:50}).factor).toBe('1.1123');
  });
+ it('compares consecutive years with the same salary and legal cap', () => {
+  const first = compute({ modoVacaciones: 'antiguedad', aniosServicio: 1, salarioDiario: 500 });
+  expect(first.proximoAniversario).toContain('1.0493 → 1.0507');
+  expect(first.proximoAniversario).toContain('524.65 → $525.35');
+
+  const sameBracket = compute({ modoVacaciones: 'antiguedad', aniosServicio: 6, salarioDiario: 500 });
+  expect(sameBracket.proximoAniversario).toContain('1.0562 → 1.0562');
+
+  const capped = compute({ modoVacaciones: 'antiguedad', aniosServicio: 10, salarioDiario: 5000 });
+  expect(capped.proximoAniversario).toContain('1.0562 → 1.0575');
+  expect(capped.proximoAniversario).toContain('2,932.75 → $2,932.75');
+ });
  it('preserves old calls without a mode and manual contractual vacations',()=>{
   expect(compute({}).factor).toBe('1.0493');
   expect(compute({vacacionesDias:30,aguinaldoDias:30,primaVacacionalPct:50}).factor).toBe('1.1233');

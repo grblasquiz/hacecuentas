@@ -274,7 +274,6 @@ export const hub: HubData = {
   ],
 
   replaces: [
-    '/ec/calculadora-decimo-tercer-sueldo-ecuador',
     '/ec/calculadora-decimo-cuarto-sueldo-ecuador',
     '/ec/calculadora-fondos-de-reserva-ecuador',
     '/ec/calculadora-vacaciones-ecuador',

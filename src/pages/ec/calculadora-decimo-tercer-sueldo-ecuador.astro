@@ -1,0 +1,164 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { ECUADOR_2026 } from '../../lib/data/ecuador-2026';
+
+const canonical = 'https://hacecuentas.com/ec/calculadora-decimo-tercer-sueldo-ecuador';
+const title = 'Calculadora de décimo tercer sueldo Ecuador 2026';
+const description = 'Calcula tu bono navideño de Ecuador con sueldo fijo o remuneración variable mes a mes. Compara el pago acumulado y el mensualizado.';
+const ministerio = 'https://www.trabajo.gob.ec/29-cual-es-el-plazo-y-como-se-debe-realizar-la-solicitud-para-la-acumulacion-del-pago-de-la-decima-tercera-y-decima-cuarta-remuneracion/';
+const codigo = 'https://www.trabajo.gob.ec/wp-content/uploads/downloads/2024/01/CODIGO_DEL_TRABAJO.pdf';
+const periodo = 'https://www.trabajo.gob.ec/wp-content/uploads/2024/01/MDT-2023-140-AM-Obligaciones-empleador-y-procedimientos-de-inspeccion-14-11-23-signed.pdf';
+const meses = ['Diciembre 2025', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre 2026'];
+const faq = [
+  ['¿Cómo calculo mi décimo tercer sueldo?', 'Suma tus remuneraciones computables del período y divide entre 12. Si tu sueldo fue fijo, multiplica la remuneración mensual por los meses completos trabajados y divide el total entre 12.'],
+  ['¿Qué período se usa para el décimo acumulado 2026?', 'Del 1 de diciembre de 2025 al 30 de noviembre de 2026 para el régimen privado general.'],
+  ['¿Hasta cuándo se paga el bono navideño acumulado?', 'El plazo general para el sector privado es el 24 de diciembre. El régimen del sector público tiene disposiciones propias.'],
+  ['¿Qué pasa si lo cobro mensualizado?', 'El monto que se suma al rol de cada mes corresponde a la remuneración computable de ese mes dividida entre 12. Si ya lo recibiste así, ese monto no se vuelve a pagar como acumulado.'],
+  ['¿Qué hago si entré a trabajar a mitad de mes?', 'Elige remuneración por mes e ingresa el monto computable efectivamente ganado en ese mes parcial. Deja vacíos los meses que no trabajaste.'],
+  ['¿Se incluyen comisiones y horas extras?', 'Sí, si integran tu remuneración según el artículo 95 del Código del Trabajo. Súmalas al salario del mes en que correspondan.'],
+  ['¿Se incluye el décimo cuarto en la base?', 'No. Esta calculadora estima la décima tercera remuneración. El décimo cuarto, las utilidades y el fondo de reserva se tratan por separado.'],
+];
+const schema = {
+  '@context':'https://schema.org',
+  '@graph':[
+    {'@type':'WebApplication', name:title, url:canonical, description, applicationCategory:'FinanceApplication', operatingSystem:'Web', offers:{'@type':'Offer', price:'0', priceCurrency:'USD'}},
+    {'@type':'FAQPage', mainEntity:faq.map(([name,text])=>({'@type':'Question',name,acceptedAnswer:{'@type':'Answer',text}}))},
+  ],
+};
+---
+<Layout title={title} description={description} canonical={canonical} audience="EC" lang="es-EC" schema={schema} domain="money">
+  <Header slot="header" />
+  <article class="decimo">
+    <nav aria-label="Ruta"><a href="/ec">Ecuador</a> / <a href="/ec/trabajo/decimos-y-fondos-de-reserva">Décimos y beneficios laborales</a></nav>
+    <h1>Calculadora de décimo tercer sueldo Ecuador 2026</h1>
+    <p>El bono navideño equivale a la <strong>doceava parte de tus remuneraciones computables</strong>. Para el pago acumulado de 2026, ingresa lo correspondiente al período del 1 de diciembre de 2025 al 30 de noviembre de 2026.</p>
+
+    <form id="decimo-form" aria-label="Calcular el décimo tercer sueldo">
+      <div class="fields">
+        <label>Cómo ingresas las remuneraciones
+          <select name="tipo"><option value="fijo">Sueldo fijo</option><option value="variable">Remuneración por mes</option></select>
+        </label>
+        <label>Cómo recibes el décimo
+          <select name="modalidad"><option value="acumulado">Acumulado</option><option value="mensualizado">Mensualizado</option></select>
+        </label>
+      </div>
+      <fieldset data-fijo>
+        <legend>Rubros de un mes completo</legend>
+        <div class="fields">
+          <label>Sueldo mensual (USD)<input name="sueldo" type="number" min="0" max="99999999" step="0.01" inputmode="decimal" value={ECUADOR_2026.sbu} required /></label>
+          <label>Otros ingresos remunerativos (USD)<input name="otros" type="number" min="0" max="99999999" step="0.01" inputmode="decimal" value="0" /></label>
+          <label>Meses completos trabajados<input name="meses" type="number" min="1" max="12" step="1" inputmode="numeric" value="12" required /></label>
+        </div>
+        <small>Si cobraste comisiones variables o trabajaste un mes parcial, elige remuneración por mes.</small>
+      </fieldset>
+      <fieldset data-variable hidden disabled>
+        <legend>Total computable por mes (USD)</legend>
+        <p>Incluye sueldo, comisiones y horas extras que integran la remuneración. Cuando trabajaste parte del mes, ingresa solo el monto correspondiente.</p>
+        <div class="fields">
+          {meses.map((mes) => <label>{mes}<input name="mes" type="number" min="0" max="99999999" step="0.01" inputmode="decimal" placeholder="0.00" /></label>)}
+        </div>
+      </fieldset>
+      <button type="submit">Calcular décimo tercero</button>
+      <div class="result" aria-live="polite" data-result hidden>
+        <p data-label></p>
+        <output data-amount></output>
+        <p data-base></p>
+        <ul data-breakdown></ul>
+      </div>
+      <p role="status" data-error hidden></p>
+    </form>
+
+    <section>
+      <h2>Fecha de pago y ejemplo proporcional</h2>
+      <p>Si solicitaste recibirlo acumulado, el plazo general de pago es el <strong>24 de diciembre</strong>. Por ejemplo, si ganaste USD 600 durante cuatro meses completos y USD 300 en un mes parcial, la base es USD 2.700 y el bono acumulado estimado es USD 225.</p>
+      <p>Si ya se pagó la parte mensual en tu rol, revisa el recibo para identificar los montos abonados. Esta página aplica al sector privado bajo el Código del Trabajo.</p>
+      <p><a href={codigo}>Código del Trabajo, arts. 95 y 111–112</a> · <a href={periodo}>Período de cálculo, Ministerio del Trabajo</a> · <a href={ministerio}>Modalidad de pago y plazo</a></p>
+    </section>
+    <section>
+      <h2>Preguntas frecuentes</h2>
+      {faq.map(([question, answer]) => <details><summary>{question}</summary><p>{answer}</p></details>)}
+    </section>
+    <p><a href="/datos-salario-basico-ecuador-2026">Salario básico de Ecuador</a> · <a href="/ec/trabajo/decimos-y-fondos-de-reserva">Décimo cuarto, fondos de reserva y vacaciones</a></p>
+  </article>
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#decimo-form');
+  if (form) {
+    const fijo = form.querySelector<HTMLFieldSetElement>('[data-fijo]')!;
+    const variable = form.querySelector<HTMLFieldSetElement>('[data-variable]')!;
+    const result = form.querySelector<HTMLElement>('[data-result]')!;
+    const error = form.querySelector<HTMLElement>('[data-error]')!;
+    const breakdown = form.querySelector<HTMLUListElement>('[data-breakdown]')!;
+    const money = new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' });
+    const cents = (value: FormDataEntryValue | null) => Math.round(Number(value) * 100);
+    const format = (amount: number) => money.format(amount / 100);
+
+    form.addEventListener('input', () => {
+      const isFixed = new FormData(form).get('tipo') === 'fijo';
+      fijo.hidden = fijo.disabled = !isFixed;
+      variable.hidden = variable.disabled = isFixed;
+      result.hidden = error.hidden = true;
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const values = new FormData(form);
+      const isFixed = values.get('tipo') === 'fijo';
+      const monthly = values.get('modalidad') === 'mensualizado';
+      const fixedBase = cents(values.get('sueldo')) + cents(values.get('otros'));
+      const monthInputs = Array.from(variable.querySelectorAll<HTMLInputElement>('input[name=mes]'));
+      const monthAmounts = values.getAll('mes').map(cents);
+      const monthlyPayments = monthAmounts.map((amount) => Math.round(amount / 12));
+      const total = isFixed ? fixedBase * Number(values.get('meses')) : monthAmounts.reduce((sum, amount) => sum + amount, 0);
+      if (!Number.isSafeInteger(total) || total <= 0) {
+        error.textContent = 'Ingresa al menos una remuneración mayor que cero.';
+        error.hidden = false;
+        result.hidden = true;
+        return;
+      }
+
+      form.querySelector('[data-label]')!.textContent = monthly
+        ? (isFixed ? 'Décimo tercero por mes trabajado' : 'Total estimado mensualizado del período')
+        : 'Décimo tercero acumulado estimado';
+      const payment = monthly && !isFixed
+        ? monthlyPayments.reduce((sum, amount) => sum + amount, 0)
+        : Math.round((monthly ? fixedBase : total) / 12);
+      form.querySelector('[data-amount]')!.textContent = format(payment);
+      form.querySelector('[data-base]')!.textContent = `Remuneraciones del período: ${format(total)}.`;
+      breakdown.replaceChildren();
+      if (monthly && !isFixed) {
+        monthAmounts.forEach((amount, index) => {
+          if (!amount) return;
+          const row = document.createElement('li');
+          row.textContent = `${monthInputs[index].labels?.[0]?.textContent?.trim()}: ${format(monthlyPayments[index])}`;
+          breakdown.append(row);
+        });
+      }
+      error.hidden = true;
+      result.hidden = false;
+    });
+  }
+</script>
+
+<style>
+  .decimo { max-width: 54rem; margin-inline: auto; padding: 1.5rem 1rem 3rem; }
+  nav { margin-bottom: 1rem; }
+  form, .result { background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius, .75rem); padding: 1rem; margin-block: 1.5rem; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .75rem; }
+  label { display: grid; gap: .25rem; font-weight: 600; }
+  input, select, button { font: inherit; min-height: 2.75rem; padding: .45rem .65rem; }
+  input, select { width: 100%; min-width: 0; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: .4rem; }
+  fieldset { margin-block: 1rem; min-width: 0; border: 1px solid var(--border); border-radius: .5rem; }
+  button { color: #fff; background: #186548; border: 0; border-radius: .4rem; font-weight: 650; cursor: pointer; }
+  output { font-size: 1.8rem; font-weight: 750; }
+  [data-breakdown]:empty { display: none; }
+  section { margin-block: 2rem; }
+  details { padding-block: .5rem; border-bottom: 1px solid var(--border); }
+  summary { cursor: pointer; }
+</style>

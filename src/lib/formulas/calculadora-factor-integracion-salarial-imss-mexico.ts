@@ -45,8 +45,9 @@ export function compute(i: Inputs): Outputs {
   const compPrimaVac = (vacacionesDias * prima) / 365;
 
   // Factor de integración = 1 + aguinaldo/365 + (vacaciones × prima)/365.
-  const factorRaw = 1 + compAguinaldo + compPrimaVac;
-  const factor = Math.round(factorRaw * 10000) / 10000;
+  const factorParaVacaciones = (dias: number) =>
+    Math.round((1 + compAguinaldo + dias * prima / 365) * 10000) / 10000;
+  const factor = factorParaVacaciones(vacacionesDias);
 
   // SBC integrado (opcional): salario diario × factor, con tope de 25 UMA (LSS Art. 28).
   const salarioDiario = Math.max(0, num(i.salarioDiario, 0));
@@ -55,7 +56,17 @@ export function compute(i: Inputs): Outputs {
   const sbcSinTope = salarioDiario * factor;
   const topado = tieneSalario && sbcSinTope > topeSbcDiario;
   const sbc = Math.min(sbcSinTope, topeSbcDiario);
-  const sbcMensual = sbc * MEXICO_2026.salarioMinimo.factorMensual; // ÷ 30.4 (IMSS/CONASAMI)
+  const sbcMensual = sbc * MEXICO_2026.salarioMinimo.factorMensual;
+  let proximoAniversario = 'Selecciona el modo por antigüedad para comparar.';
+  if (porAntiguedad) {
+    const siguientesVacaciones = diasVacacionesLFT(anios + 1);
+    const siguienteFactor = factorParaVacaciones(siguientesVacaciones);
+    proximoAniversario = `${anios} → ${anios + 1} años · ${vacacionesDias} → ${siguientesVacaciones} días de vacaciones · factor ${factor.toFixed(4)} → ${siguienteFactor.toFixed(4)}`;
+    if (tieneSalario) {
+      const siguienteSbc = Math.min(salarioDiario * siguienteFactor, topeSbcDiario);
+      proximoAniversario += ` · SBC diario: ${fmtMXN(sbc)} → ${fmtMXN(siguienteSbc)} (variación: ${fmtMXN(siguienteSbc - sbc)}; tope UMA 2026)`;
+    }
+  }
 
   const esMinimoLey = aguinaldoDias === lft.aguinaldoDiasMinimo
     && vacacionesDias === lft.vacacionesPorAnio[0]
@@ -105,6 +116,7 @@ export function compute(i: Inputs): Outputs {
     integracionPct: `+${pctIntegracion}%`,
     sbc: tieneSalario ? (topado ? `${fmtMXN(sbc)} por día (topado a 25 UMA)` : `${fmtMXN(sbc)} por día`) : '—',
     sbcMensual: tieneSalario ? fmtMXN(sbcMensual) : '—',
+    proximoAniversario,
     detalle: `${porAntiguedad ? `LFT: ${anios} ${anios === 1 ? 'año' : 'años'} de servicio → ${vacacionesDias} días de vacaciones. ` : ''}Factor = 1 + ${aguinaldoDias}/365 + (${vacacionesDias} × ${primaPct}%)/365 = 1 + ${compAguinaldo.toFixed(4)} + ${compPrimaVac.toFixed(4)} = **${factor.toFixed(4)}**.${tieneSalario ? ` SBC = ${fmtMXN(salarioDiario)} × ${factor.toFixed(4)} = ${fmtMXN(sbcSinTope)}/día${topado ? `, topado al máximo legal de ${fmtMXN(topeSbcDiario)}/día (25 UMA).` : '.'}` : ''}`,
     _insight,
     _chart,

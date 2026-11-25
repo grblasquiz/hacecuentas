@@ -8,8 +8,9 @@ import DatosHoyNav from '../components/DatosHoyNav.astro';
 
 export const prerender = true;
 
-const title = 'IPC Argentina 2026: inflación mes a mes y próximo dato';
-const description = 'IPC de Argentina 2026 mes a mes: último dato del INDEC, inflación interanual y fecha oficial del próximo informe.';
+const canonical = 'https://hacecuentas.com/inflacion-argentina';
+const title = 'Último IPC de Argentina: inflación del INDEC y próxima fecha';
+const description = 'Consultá el último IPC del INDEC en Argentina, cuánto subieron los precios en el mes y la fecha oficial del próximo informe.';
 const indecIpc = 'https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31';
 const indecCalendar = 'https://www.indec.gob.ar/Calendario/FiltrosCalendario/mes/Diciembre-2026/1';
 const octoberBulletin = {
@@ -85,7 +86,8 @@ function mesHumano(fecha: string): string {
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: 'Inflación Argentina — Datos en vivo',
+  name: title,
+  url: canonical,
   applicationCategory: 'FinanceApplication',
   operatingSystem: 'Web',
   description,
@@ -149,7 +151,7 @@ const schemaBreadcrumb = {
   ],
 };
 ---
-<Layout image="/og/data-inflacion-argentina.jpg" imageWidth={1200} imageHeight={675} title={title} description={description} schema={schema} domain="data">
+<Layout image="/og/data-inflacion-argentina.jpg" imageWidth={1200} imageHeight={675} title={title} description={description} canonical={canonical} schema={schema} domain="data">
   <Header slot="header" />
 
   <article class="inf-page">
@@ -162,15 +164,18 @@ const schemaBreadcrumb = {
     </nav>
 
     <header class="inf-header">
-      <h1>IPC Argentina 2026: inflación mes a mes 📊</h1>
-      <p class="lead">
-        Consultá el <strong>IPC mensual e interanual del INDEC</strong>, la próxima publicación y los datos de UVA y plazo fijo.
-      </p>
+      <h1>Último dato de inflación en Argentina</h1>
       {showOctoberBulletin && (
         <p id="ipc-ultimo-informe">
           En <strong>octubre de 2026</strong>, el IPC nacional fue <strong>{octoberBulletin.monthly} mensual</strong>,
           <strong>{octoberBulletin.ytd} acumulado en el año</strong> y <strong>{octoberBulletin.annual} interanual</strong>.
           <a href={octoberBulletin.url}>Informe oficial del INDEC</a>.
+        </p>
+      )}
+      {!showOctoberBulletin && lastMensual && (
+        <p id="ipc-ultimo-informe">
+          En <strong>{mesHumano(lastMensual.fecha)}</strong>, el IPC nacional subió <strong>{lastMensual.valor.toLocaleString('es-AR', { minimumFractionDigits: 1 })}% en el mes</strong>.
+          <a href={indecIpc}>Informes del INDEC</a>.
         </p>
       )}
       <p id="ipc-proximo-informe">
@@ -181,16 +186,24 @@ const schemaBreadcrumb = {
       </p>
     </header>
 
+    {showOctoberBulletin && (
+      <section class="related" aria-labelledby="ipc-divisiones">
+        <h2 id="ipc-divisiones">Qué subió más en el último informe</h2>
+        <p>En octubre, las divisiones con mayor aumento mensual fueron Vivienda, agua, electricidad, gas y otros combustibles (+4,2%), Recreación y cultura (+3,3%) y Bienes y servicios varios (+2,3%). Son variaciones nacionales por división. <a href={octoberBulletin.url}>Ver el detalle del INDEC</a>.</p>
+      </section>
+    )}
+    <p>Para ver años anteriores o descargar los datos, consultá la <a href="/estadisticas-inflacion-argentina">serie histórica de inflación mensual</a>.</p>
+
     <section class="stat-grid">
       <div class="stat-card mensual">
         <div class="stat-label">Inflación mensual</div>
-        <div class="stat-value">{lastMensual ? `${lastMensual.valor.toFixed(1)}%` : '—'}</div>
-        <div class="stat-sub">{lastMensual ? mesHumano(lastMensual.fecha) : 'sin datos'}</div>
+        <div class="stat-value">{showOctoberBulletin ? octoberBulletin.monthly : `${lastMensual!.valor.toLocaleString('es-AR', { minimumFractionDigits: 1 })}%`}</div>
+        <div class="stat-sub">{showOctoberBulletin ? 'octubre de 2026' : mesHumano(lastMensual!.fecha)}</div>
       </div>
       <div class="stat-card interanual">
         <div class="stat-label">Inflación interanual</div>
-        <div class="stat-value">{lastInteranual ? `${lastInteranual.valor.toFixed(1)}%` : '—'}</div>
-        <div class="stat-sub">últimos 12 meses · {lastInteranual ? mesHumano(lastInteranual.fecha) : '—'}</div>
+        <div class="stat-value">{showOctoberBulletin ? octoberBulletin.annual : lastInteranual ? `${lastInteranual.valor.toLocaleString('es-AR', { minimumFractionDigits: 1 })}%` : '—'}</div>
+        <div class="stat-sub">últimos 12 meses · {showOctoberBulletin ? 'octubre de 2026' : lastInteranual ? mesHumano(lastInteranual.fecha) : '—'}</div>
       </div>
       <div class="stat-card acumulada">
         <div class="stat-label">Acumulada 12 meses</div>
@@ -204,7 +217,7 @@ const schemaBreadcrumb = {
       </div>
       <div class="stat-card tasa">
         <div class="stat-label">TNA plazo fijo promedio</div>
-        <div class="stat-value">{tnaAvg.toFixed(1)}%</div>
+        <div class="stat-value">{tnaValidas.length ? `${tnaAvg.toFixed(1)}%` : '—'}</div>
         <div class="stat-sub">{tnaValidas.length} bancos · mejor: {tnaMejor.toFixed(1)}%</div>
       </div>
       <div class="stat-card gap">

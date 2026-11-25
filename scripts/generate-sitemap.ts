@@ -1045,6 +1045,7 @@ sitemaps.push({
     core('/pe/calculadoras',                     '0.85', 'weekly',  true),
     core('/pe/datos-sueldo-minimo-peru-2026',    '0.8',  'monthly', true),
     core('/pe/datos-soat-uit-peru-2026',         '0.8',  'monthly', true),
+    core('/ec/calculadora-decimo-tercer-sueldo-ecuador', '0.8', 'monthly'),
     core('/ec/datos-pension-alimenticia-ecuador-2026', '0.8', 'monthly', true),
     core('/pe/validar-ruc',                      '0.8',  'monthly'),
     core('/calculadora-consumo-electrodomesticos', '0.9', 'monthly'),
