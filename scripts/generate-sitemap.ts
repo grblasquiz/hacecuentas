@@ -20,6 +20,7 @@
  * Usage: npm run sitemap (también corre en prebuild)
  */
 
+import { escalasConvenios } from '../src/lib/data/escalas-convenios-verificadas.ts';
 import { readFileSync, writeFileSync, statSync, readdirSync, existsSync, unlinkSync } from 'node:fs';
 import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -952,6 +953,7 @@ sitemaps.push({
     core('/pe/datos-sueldo-minimo-peru-2027', '0.7', 'monthly'),
     core('/trabajo/salario-real-por-gremio', '0.7', 'monthly'),
     core('/trabajo/sueldo-neto-a-bruto', '0.8', 'monthly'),
+    ...escalasConvenios.map(escala => core(`/trabajo/escalas/${escala.slug}`, '0.8', 'monthly')),
     core('/',                                    '1.0',  'daily',   true),
     // Pilares (jul-2026): los 4 hubs que concentran la autoridad interna.
     core('/sueldos-y-trabajo',                   '0.95', 'weekly'),

@@ -1,0 +1,73 @@
+---
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import { escalasConvenios } from '../../../lib/data/escalas-convenios-verificadas';
+
+export function getStaticPaths() {
+  return escalasConvenios.map(escala => ({ params: { convenio: escala.slug }, props: { escala } }));
+}
+
+const { escala } = Astro.props;
+const path = `/trabajo/escalas/${escala.slug}`;
+const canonical = `https://hacecuentas.com${path}`;
+const crumbs = [
+  { label: 'Inicio', href: '/' },
+  { label: 'Trabajo', href: '/trabajo' },
+  { label: 'Sueldos por convenio', href: '/trabajo/sueldos-por-convenio' },
+  { label: escala.title },
+];
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebPage', '@id': `${canonical}#webpage`, url: canonical, name: escala.title, inLanguage: 'es-AR',
+      publisher: { '@id': 'https://hacecuentas.com/#organization' }, citation: [escala.source.url] },
+    { '@type': 'BreadcrumbList', itemListElement: crumbs.map((crumb, index) => ({
+      '@type': 'ListItem', position: index + 1, name: crumb.label,
+      item: index === crumbs.length - 1 ? canonical : `https://hacecuentas.com${crumb.href}`,
+    })) },
+  ],
+};
+---
+<Layout title={`${escala.title} · ${escala.month}`} description={escala.description} canonical={canonical} audience="AR" lang="es" schema={schema}>
+  <Header />
+  <article class="container scale">
+    <Breadcrumbs items={crumbs} />
+    <h1>{escala.title}</h1>
+    <p>{escala.description}</p>
+    <div class="scale-table">
+      <table>
+        <caption>{escala.month} · importes en pesos argentinos</caption>
+        <thead><tr>{escala.columns.map(column => <th scope="col">{column}</th>)}</tr></thead>
+        <tbody>{escala.rows.map(([label, ...values]) => <tr><th scope="row">{label}</th>{values.map(value => <td>{value}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+    <p>{escala.note}</p>
+    <p>Fuente <a href={escala.source.url}>{escala.source.name}</a>.</p>
+    <h2>Calculá con los datos de tu recibo</h2>
+    <ul>
+      {escala.calculator
+        ? <li><a href={escala.calculator.href}>{escala.calculator.label}</a></li>
+        : <>
+            <li><a href="/trabajo/sueldo-bruto-y-neto">Calculadora de sueldo bruto a neto</a></li>
+            <li><a href="/trabajo/indemnizacion-por-despido">Calculadora de indemnización por despido</a></li>
+          </>}
+      <li><a href="/trabajo/sueldos-por-convenio#escalas">Ver otras escalas salariales por convenio</a></li>
+    </ul>
+  </article>
+  <Footer />
+</Layout>
+
+<style>
+  .scale { max-width: 58rem; margin-block: 1.5rem 4rem; }
+  .scale h1 { margin-block: .75rem 1rem; }
+  .scale p, .scale h2 { margin-block: 1rem; }
+  .scale-table { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  caption { font-weight: 700; padding: .75rem 0; text-align: left; }
+  th, td { padding: .65rem .7rem; border-bottom: 1px solid var(--border, #cfd6dd); text-align: left; }
+  td { white-space: nowrap; }
+</style>

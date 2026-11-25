@@ -8,6 +8,8 @@
  */
 export const prerender = true;
 
+import { BIENES_PERSONALES_2025 } from '../../lib/data/bienes-personales-2025';
+import SeoReferenceTable from '../../components/SeoReferenceTable.astro';
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
@@ -26,6 +28,7 @@ import {
   DEPRECIACION_PISO,
 } from '../../lib/hubs/bienes-personales';
 
+const formatMoney = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
 
 const CONST = {
@@ -73,6 +76,13 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
+  <SeoReferenceTable title="Mínimos de Bienes Personales para el período fiscal 2025" columns={['Concepto', 'Importe en pesos']}
+    rows={[
+      { label: 'Mínimo no imponible general', details: [formatMoney.format(BIENES_PERSONALES_2025.minimoNoImponible)] },
+      { label: 'Casa habitación exenta hasta', details: [formatMoney.format(BIENES_PERSONALES_2025.casaHabitacionExentaHasta)] },
+    ]}>
+    <p>Estos importes corresponden a la declaración presentada en 2026. Consultá <a href={BIENES_PERSONALES_2025.fuenteUrl}>la escala publicada por ARCA</a> para el excedente.</p>
+  </SeoReferenceTable>
   <BienesPersonalesExperience data={hub} />
   <ThirdWaveBoost variant="assets" />
   <HubSeoAnswer data={hub} />

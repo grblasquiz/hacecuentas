@@ -17,6 +17,7 @@
  */
 export const prerender = true;
 
+import SeoReferenceTable from '../../components/SeoReferenceTable.astro';
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
@@ -64,6 +65,13 @@ import HubCitableStats from '../../components/hub/HubCitableStats.astro';
 >
   <Header />
   <IngresosBrutosExperience data={hub} />
+  <SeoReferenceTable title="Ingresos Brutos por provincia y CABA" columns={['Jurisdicción', 'Organismo recaudador', 'Rango de referencia']}
+    rows={JURISDICCIONES.map(jurisdiction => ({
+      label: jurisdiction.nombre, href: `/iibb/${jurisdiction.slug}`,
+      details: [jurisdiction.organismo, jurisdiction.rango || 'Ver ficha provincial'],
+    }))}>
+    <p>Usá la ficha de tu provincia para contrastar la alícuota con la actividad, el nivel de ingresos y las exenciones que te correspondan.</p>
+  </SeoReferenceTable>
   <NextTenBoost variant="iibb" />
   <HubCitableStats data={hub} />
   <HubSeoAnswer data={hub} />

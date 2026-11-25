@@ -1,0 +1,26 @@
+---
+interface Props {
+  title: string;
+  columns: string[];
+  rows: { label: string; details: string[]; href?: string }[];
+}
+const { title, columns, rows } = Astro.props;
+---
+<section class="container reference-table">
+  <h2>{title}</h2>
+  <div class="reference-table__scroll">
+    <table>
+      <thead><tr>{columns.map(column => <th scope="col">{column}</th>)}</tr></thead>
+      <tbody>{rows.map(({ label, details, href }) => (
+        <tr><th scope="row">{href ? <a href={href}>{label}</a> : label}</th>{details.map(detail => <td>{detail}</td>)}</tr>
+      ))}</tbody>
+    </table>
+  </div>
+  <slot />
+</section>
+<style>
+  .reference-table { max-width: 58rem; padding-block: 1.5rem; }
+  .reference-table__scroll { overflow-x: auto; }
+  .reference-table table { width: 100%; border-collapse: collapse; }
+  .reference-table th, .reference-table td { text-align: left; padding: .6rem; border-bottom: 1px solid var(--border, #cfd6dd); }
+</style>

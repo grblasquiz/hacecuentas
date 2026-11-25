@@ -1,0 +1,14 @@
+---
+import SeoReferenceTable from './SeoReferenceTable.astro';
+import series from '../../public/datasets/inflacion-argentina-historica-mensual.json';
+
+const formatMonth = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+const formatPercent = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+const rows = [...series.data].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 12).map(item => ({
+  label: formatMonth.format(new Date(item.fecha + 'T12:00:00Z')),
+  details: [`${formatPercent.format(item.inflacion_mensual_pct)}%`],
+}));
+---
+<SeoReferenceTable title="Inflación mensual de Argentina en los últimos 12 meses publicados" columns={['Mes', 'Variación mensual del IPC']} rows={rows}>
+  <p><a href="/estadisticas-inflacion-argentina">Ver la serie histórica mensual y sus fuentes</a>.</p>
+</SeoReferenceTable>
