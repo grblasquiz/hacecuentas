@@ -168,6 +168,13 @@ export interface HubData {
   relatedPosts?: Array<{ href: string; title: string; note: string }>;
 
   lastReviewed: string;
+
+  professionalReviewer?: {
+    name: string;
+    credential: string;
+    registrationNumber: string;
+    profileUrl: string;
+  };
   audience?: 'AR' | 'global';
 
   /**

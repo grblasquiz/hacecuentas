@@ -53,7 +53,7 @@ export const hub: HubData = {
   siloHref: '/jubilacion',
 
   eyebrow: 'Guía y estimación previsional',
-  h1: '¿Cuánto voy a cobrar de jubilación?',
+  h1: 'Calculadora de jubilación ANSES',
   lede:
     'Tu haber no es un número mágico: es la suma de tres partes que casi nadie sabe leer en el recibo. Poné tus años de aportes y el promedio de tus sueldos y te mostramos cómo se arma, con el mínimo y la movilidad vigentes.',
   stamps: [

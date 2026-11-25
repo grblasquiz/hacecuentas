@@ -9,7 +9,7 @@ export const hub: HubData = {
   siloHref: '/trabajo',
 
   eyebrow: 'Guía y estimación laboral',
-  h1: 'Calculadora de indemnización por despido 2026',
+  h1: 'Calculadora de indemnización por despido y liquidación final',
   lede:
     'Partimos del caso más habitual: despido sin causa. Ya podés ver una estimación y ajustarla con tus datos. Si tu situación es distinta, la cambiás abajo.',
   stamps: ['Revisado 04-08-2026', 'Ley 27.802 aplicada', 'Fórmula explicada'],

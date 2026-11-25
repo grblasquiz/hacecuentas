@@ -10,7 +10,7 @@ export const hub: HubData = {
   siloHref: '/trabajo',
 
   eyebrow: 'Sueldo y liquidación',
-  h1: '¿Cuánto me queda en mano del sueldo bruto?',
+  h1: 'Calculadora de sueldo bruto a neto en Argentina',
   lede:
     'Partimos del caso más habitual: tenés el bruto y querés saber cuánto cobrás. Si lo tuyo es al revés —cuánto te tienen que poner de bruto para cobrar X— o si sos monotributista, cambiá el caso abajo.',
   stamps: [

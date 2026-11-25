@@ -1,0 +1,98 @@
+---
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { sueldoAR, SIPA_VIGENTE } from '../../lib/formulas/sueldo-ar';
+import { hub as salaryHub } from '../../lib/hubs/sueldo-bruto-y-neto';
+import { hubSeoGraph } from '../../lib/hubs/seo';
+
+const title = 'Calculadora de sueldo neto a bruto en Argentina';
+const description = 'Ingresá cuánto querés cobrar en mano y estimá el sueldo bruto necesario con aportes, tope SIPA y Ganancias.';
+const canonical = 'https://hacecuentas.com/trabajo/sueldo-neto-a-bruto';
+const faqs = [
+  { q: '¿Qué sueldo bruto necesito para un sueldo neto dado?', a: 'Ingresá tu objetivo mensual y tus deducciones familiares. El cálculo busca el bruto que deja un neto lo más cercano posible.' },
+  { q: '¿Se divide el neto por 0,83?', a: 'Sirve como aproximación si sólo descontás el 17% de aportes, sin superar el tope de la base imponible y sin retención de Ganancias.' },
+  { q: '¿Cómo entra el impuesto a las Ganancias?', a: 'La estimación aplica la escala y las deducciones del motor de sueldos. La retención del recibo real se liquida de forma acumulativa.' },
+  { q: '¿Qué pasa si tengo hijos o cónyuge a cargo?', a: 'Marcá las deducciones que estés en condiciones de declarar. Influyen en Ganancias cuando corresponde pagar el impuesto.' },
+  { q: '¿El cálculo incluye cuota sindical y otros descuentos?', a: 'Este escenario incluye los aportes obligatorios y Ganancias. Para cuota sindical y otros descuentos, usá el desglose de sueldo bruto a neto.' },
+  { q: '¿Sirve para monotributistas?', a: 'Está pensado para remuneraciones en relación de dependencia. La cuota de monotributo y los gastos de facturación se calculan por separado.' },
+  { q: '¿Con qué datos se hace la estimación?', a: `Usa la referencia de aportes de ${SIPA_VIGENTE.label.toLowerCase()} y la escala de Ganancias del simulador de sueldo.` },
+];
+const data = {
+  ...salaryHub, slug: 'trabajo/sueldo-neto-a-bruto', title, h1: title, description,
+  faq: faqs,
+};
+const format = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+const examples = [1_500_000, 2_500_000, 3_500_000].map(target => ({
+  target, result: sueldoAR({ modo: 'neto-a-bruto', netoObjetivo: target }),
+}));
+const initial = examples[0].result;
+---
+<Layout title={title} description={description} canonical={canonical} schema={hubSeoGraph(data)} audience="AR" lang="es">
+  <Header />
+  <article class="container reverse-salary">
+    <Breadcrumbs items={[{ label: 'Inicio', href: '/' }, { label: 'Trabajo', href: '/trabajo' }, { label: title }]} />
+    <h1>{title}</h1>
+    <p>{description}</p>
+    <form id="reverse-salary" class="salary-form">
+      <label>Neto mensual deseado en ARS <input name="target" type="number" min="1" max="1000000000" step="1" value="1500000" required /></label>
+      <label>Hijos a cargo <input name="children" type="number" min="0" max="10" step="1" value="0" required /></label>
+      <label class="checkbox"><input name="spouse" type="checkbox" /> Cónyuge deducible</label>
+      <button class="btn btn-primary" type="submit">Estimar el sueldo bruto</button>
+      <div id="reverse-salary-result" aria-live="polite">
+        <h2>Bruto estimado <output id="reverse-gross">{format.format(initial.brutoNecesario ?? 0)}</output></h2>
+        <p>Aportes: <span id="reverse-contributions">{format.format(initial.aportes)}</span> · Ganancias: <span id="reverse-tax">{format.format(initial.ganancias)}</span> · Neto estimado: <span id="reverse-net">{format.format(initial.neto)}</span></p>
+      </div>
+    </form>
+    <p>La estimación usa la referencia SIPA de {SIPA_VIGENTE.label.toLowerCase()}. La retención real de Ganancias depende de tu liquidación acumulada y de las deducciones declaradas.</p>
+    <section aria-labelledby="reverse-examples">
+      <h2 id="reverse-examples">Ejemplos de neto a bruto</h2>
+      <p>Importes mensuales en pesos argentinos, sin cónyuge ni hijos deducibles.</p>
+      <table><thead><tr><th scope="col">Neto objetivo</th><th scope="col">Bruto estimado</th><th scope="col">Ganancias</th></tr></thead><tbody>
+        {examples.map(({ target, result }) => <tr><td>{format.format(target)}</td><td>{format.format(result.brutoNecesario ?? 0)}</td><td>{format.format(result.ganancias)}</td></tr>)}
+      </tbody></table>
+    </section>
+    <section><h2>Preguntas frecuentes</h2>{faqs.map(({ q, a }) => <details><summary>{q}</summary><p>{a}</p></details>)}</section>
+    <section>
+      <h2>Fuentes y herramientas relacionadas</h2>
+      <ul>
+        <li><a href="/trabajo/sueldo-bruto-y-neto">Calculadora de sueldo bruto a neto</a></li>
+        <li><a href="/trabajo/costo-de-un-empleado">Cargas sociales y costo de un empleado</a></li>
+        {data.sources.map(source => <li><a href={source.url}>{source.name}</a></li>)}
+      </ul>
+    </section>
+  </article>
+  <Footer />
+</Layout>
+<script>
+  import { sueldoAR } from '../../lib/formulas/sueldo-ar';
+  const form = document.querySelector<HTMLFormElement>('#reverse-salary');
+  const format = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+  form?.addEventListener('submit', event => {
+    event.preventDefault();
+    const fields = new FormData(form);
+    const result = sueldoAR({
+      modo: 'neto-a-bruto',
+      netoObjetivo: Number(fields.get('target')),
+      conyuge: fields.has('spouse'),
+      hijos: Number(fields.get('children')),
+    });
+    document.querySelector('#reverse-gross')!.textContent = format.format(result.brutoNecesario ?? 0);
+    document.querySelector('#reverse-contributions')!.textContent = format.format(result.aportes);
+    document.querySelector('#reverse-tax')!.textContent = format.format(result.ganancias);
+    document.querySelector('#reverse-net')!.textContent = format.format(result.neto);
+  });
+</script>
+<style>
+  .reverse-salary { max-width: 850px; padding-block: 2rem 4rem; }
+  .reverse-salary section { margin-top: 2rem; }
+  .salary-form { display: grid; gap: .85rem; padding: 1rem; background: var(--card, #f5f8fb); border: 1px solid #dce5ef; border-radius: .75rem; }
+  .salary-form label:not(.checkbox) { display: grid; gap: .3rem; }
+  .salary-form input[type=number] { width: min(100%, 24rem); font: inherit; padding: .55rem; border: 1px solid #aab8c9; border-radius: .35rem; }
+  .salary-form button { justify-self: start; }
+  .reverse-salary :is(td, th) { padding: .5rem; text-align: left; }
+  .reverse-salary details { padding: .6rem 0; border-bottom: 1px solid #dce5ef; }
+</style>

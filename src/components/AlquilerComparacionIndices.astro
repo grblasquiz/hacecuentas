@@ -1,0 +1,55 @@
+---
+import icl from '../../db/icl.json';
+import uva from '../../db/uva.json';
+import ipc from '../data/live/inflacion.json';
+
+const rent = 500_000;
+const monthAfter = (date: string, offset: number) => {
+  const [year, month] = date.slice(0, 7).split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1 + offset, 1)).toISOString().slice(0, 10);
+};
+const monthly = new Map(ipc.last_12_months.map(row => [row.fecha.slice(0, 7), row.valor]));
+const latestMonth = [...monthly.keys()].sort().at(-1);
+const end = latestMonth ? monthAfter(latestMonth, 1) : undefined;
+const iclValues = new Map(icl.serie.map(row => [row.fecha, row.valor]));
+const uvaValues = new Map(uva.serie.map(row => [row.fecha, row.valor]));
+const indexedRent = (series: ReadonlyMap<string, number>, start: string, end: string) => {
+  const before = series.get(start);
+  const after = series.get(end);
+  return before && after ? rent * after / before : undefined;
+};
+const rows = end ? [3, 4, 6].map(months => {
+  const start = monthAfter(end, -months);
+  const rates = Array.from({ length: months }, (_, index) => monthly.get(monthAfter(start, index).slice(0, 7)));
+  return {
+    months,
+    start,
+    icl: indexedRent(iclValues, start, end),
+    ipc: rates.every(rate => rate !== undefined)
+      ? rates.reduce<number>((value, rate) => value * (1 + (rate ?? 0) / 100), rent)
+      : undefined,
+    uva: indexedRent(uvaValues, start, end),
+  };
+}) : [];
+const money = (value?: number) => value === undefined ? 'Sin dato'
+  : value.toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+const date = (value: string) => value.split('-').reverse().join('/');
+---
+{end && rows.length > 0 && <section class="container rent-reference" aria-labelledby="comparacion-indices-alquiler">
+  <h2 id="comparacion-indices-alquiler">Ejemplo de aumento de alquiler por ICL, IPC y UVA</h2>
+  <p>Partimos de {money(rent)} y comparamos períodos completos hasta el <time datetime={end}>{date(end)}</time>, según el último mes de IPC publicado en la serie.</p>
+  <div class="rent-table">
+    <table>
+      <thead><tr><th scope="col">Plazo</th><th scope="col">Inicio</th><th scope="col">ICL</th><th scope="col">IPC</th><th scope="col">UVA</th></tr></thead>
+      <tbody>{rows.map(row => <tr><th scope="row">{row.months} meses</th><td>{date(row.start)}</td><td>{money(row.icl)}</td><td>{money(row.ipc)}</td><td>{money(row.uva)}</td></tr>)}</tbody>
+    </table>
+  </div>
+  <p>ICL y UVA usan el cociente entre dos valores diarios. Para IPC se multiplican las variaciones mensuales del período. Aplicá el índice y la fecha pactados en tu contrato. UVA se muestra como comparación.</p>
+  <p><a href="https://www.bcra.gob.ar/principales-variables-/">Series ICL y UVA del BCRA</a> · <a href="https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31">IPC nacional del INDEC</a> · <a href="/alquiler/aumento-de-alquiler">Calculadora de aumento por ICL e IPC</a></p>
+</section>}
+<style>
+  .rent-reference { max-width: 1060px; padding-block: 2rem; }
+  .rent-table { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: .6rem; border-bottom: 1px solid #dce5ef; text-align: left; white-space: nowrap; }
+</style>

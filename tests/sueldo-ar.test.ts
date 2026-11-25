@@ -38,12 +38,12 @@ describe('sueldoAR — bruto→neto (golden values 2026, soltero sin cargas)', (
     expect(r.neto).toBe(2_490_000);
   });
 
-  it('$5.000.000 → aportes topeados con la base máxima de septiembre y paga Ganancias', () => {
+  it('$5.000.000 → aportes topeados con la base máxima de noviembre y paga Ganancias', () => {
     const r = sueldoAR({ bruto: 5_000_000, ...SOLTERO });
-    expect(r.aportes).toBe(797_597); // $4.691.748,47 × 17% (Res. ANSES 257/2026)
+    expect(r.aportes).toBe(826_487); // $4.861.685,38 × 17% (Res. ANSES 304/2026)
     expect(r.ganancias).toBeGreaterThan(0);
     // Neto de la tabla de referencia del JSON.
-    expect(r.neto).toBe(3_983_765);
+    expect(r.neto).toBe(3_960_365);
   });
 
   it('bruto inválido/0 lanza error (no devuelve 0 silencioso)', () => {

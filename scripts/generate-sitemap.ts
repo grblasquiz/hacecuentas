@@ -951,6 +951,7 @@ sitemaps.push({
     core('/negocios/costo-fiscal-venta-online', '0.7', 'monthly'),
     core('/pe/datos-sueldo-minimo-peru-2027', '0.7', 'monthly'),
     core('/trabajo/salario-real-por-gremio', '0.7', 'monthly'),
+    core('/trabajo/sueldo-neto-a-bruto', '0.8', 'monthly'),
     core('/',                                    '1.0',  'daily',   true),
     // Pilares (jul-2026): los 4 hubs que concentran la autoridad interna.
     core('/sueldos-y-trabajo',                   '0.95', 'weekly'),

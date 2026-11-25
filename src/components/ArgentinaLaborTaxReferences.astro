@@ -1,0 +1,39 @@
+---
+import { SIPA_VIGENTE, sueldoAR } from '../lib/formulas/sueldo-ar';
+import { SMVM_FECHA, SMVM_FUENTE_URL, SMVM_MENSUAL } from '../lib/data/smvm-ar-2026';
+import { META, TOPES } from '../lib/data/monotributo-2026';
+
+interface Props { section: 'labor' | 'tax'; }
+const { section } = Astro.props;
+const fmt = (amount: number) => amount.toLocaleString('es-AR', {
+  style: 'currency', currency: 'ARS', maximumFractionDigits: 2,
+});
+const threshold = sueldoAR({ bruto: 3_000_000, conyuge: false, hijos: 0 });
+const labor = [
+  { label: 'Salario mínimo mensual', value: fmt(SMVM_MENSUAL), period: SMVM_FECHA, link: SMVM_FUENTE_URL },
+  { label: 'Base imponible máxima de aportes SIPA', value: fmt(SIPA_VIGENTE.cap), period: SIPA_VIGENTE.label, link: SIPA_VIGENTE.source },
+];
+const tax = [
+  { label: 'Tope anual de ingresos, Monotributo A', value: fmt(TOPES.A), period: META.vigencia, link: META.fuenteUrl },
+  { label: 'Tope anual de ingresos, Monotributo K', value: fmt(TOPES.K), period: META.vigencia, link: META.fuenteUrl },
+  { label: 'Ganancias estimada con $3.000.000 brutos, sin cargas de familia', value: fmt(threshold.ganancias), period: 'Ejemplo mensual, segundo semestre de 2026', link: '/datos-ganancias-2026' },
+];
+const rows = section === 'labor' ? labor : tax;
+---
+<section class="container reference" aria-labelledby="labor-tax-references">
+  <h2 id="labor-tax-references">{section === 'labor' ? 'Valores para calcular el sueldo' : 'Escalas y ejemplos de impuestos'}</h2>
+  <div class="reference-table">
+    <table>
+      <thead><tr><th scope="col">Dato</th><th scope="col">Importe</th><th scope="col">Período y fuente</th></tr></thead>
+      <tbody>{rows.map(row => <tr><th scope="row">{row.label}</th><td>{row.value}</td><td><a href={row.link}>{row.period}</a></td></tr>)}</tbody>
+    </table>
+  </div>
+  {section === 'tax' && <p>El sueldo bruto desde el cual corresponde Ganancias varía según aportes, deducciones y liquidación acumulada. Consultá la escala y simulá tu recibo.</p>}
+</section>
+<style>
+  .reference { max-width: 1060px; padding-block: 2rem; }
+  .reference-table { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: .6rem; border-bottom: 1px solid #dce5ef; text-align: left; }
+  td:nth-child(2) { white-space: nowrap; }
+</style>

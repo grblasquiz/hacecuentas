@@ -9,6 +9,21 @@ import Footer from '../components/Footer.astro';
 const site = 'https://hacecuentas.com';
 const PAGE_URL = `${site}/validar-cbu`;
 
+const bankCodes = {
+  '007': 'Banco Galicia',
+  '011': 'Banco Nación',
+  '014': 'Banco Provincia',
+  '015': 'ICBC',
+  '017': 'BBVA',
+  '020': 'Banco de Córdoba',
+  '029': 'Banco Ciudad',
+  '034': 'Banco Patagonia',
+  '044': 'Banco Hipotecario',
+  '072': 'Banco Santander',
+  '191': 'Banco Credicoop',
+  '285': 'Banco Macro',
+};
+
 const title = 'Validar CBU o CVU Online Gratis (dígitos verificadores) | Hacé Cuentas';
 const description =
   'Validá un CBU o CVU argentino al instante: verifica los dos dígitos verificadores de los 22 números e identifica el banco emisor. 100% en tu navegador, sin enviar el número a ningún lado.';
@@ -171,6 +186,15 @@ const schemaHowTo = {
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
 
+  <section class="container" aria-labelledby="codigos-cbu">
+    <h2 id="codigos-cbu">Códigos de banco en los primeros tres dígitos del CBU</h2>
+    <p>Usá los tres primeros dígitos para buscar la entidad. En un CVU, 000 indica una cuenta virtual. El nombre del titular se confirma en el banco o billetera antes de transferir.</p>
+    <table>
+      <thead><tr><th scope="col">Código</th><th scope="col">Entidad</th></tr></thead>
+      <tbody>{Object.entries(bankCodes).sort(([a], [b]) => a.localeCompare(b)).map(([code, bank]) => <tr><th scope="row">{code}</th><td>{bank}</td></tr>)}</tbody>
+    </table>
+    <p><a href="https://www.bcra.gob.ar/entidades-financieras/">Nómina de entidades y códigos del BCRA</a></p>
+  </section>
   <Footer slot="footer" />
 </Layout>
 
@@ -204,7 +228,7 @@ const schemaHowTo = {
   .idv-related-card:hover { border-color: var(--accent, #2563eb); }
 </style>
 
-<script is:inline>
+<script is:inline define:vars={{ bankCodes }}>
   (function () {
     function init() {
       var root = document.getElementById('idv');
@@ -223,6 +247,7 @@ const schemaHowTo = {
         '072': 'Banco Santander', '083': 'Banco del Chubut', '093': 'Banco de La Pampa',
         '143': 'Brubank', '191': 'Banco Credicoop', '285': 'Banco Macro', '299': 'Banco Comafi',
         '322': 'Banco Industrial', '330': 'Banco de Santa Fe', '386': 'Nuevo Banco de Entre Ríos',
+        ...bankCodes,
       };
 
       function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }

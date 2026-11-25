@@ -15,14 +15,14 @@ import type { HubData } from './types';
  */
 export const hub: HubData = {
   slug: 'impuestos/iva',
-  title: '¿Cómo discrimino el IVA? — Calculadora de IVA 21%, 10,5% y por país 2026',
+  title: 'Calculadora de IVA Argentina: agregar o discriminar 21%, 10,5% y 27%',
   description:
-    'Sacá el IVA de un precio final, agregalo a un precio neto, aplicá la alícuota reducida del 10,5% o compará el IVA de los países de la región. Con la ley 23.349 aplicada y la advertencia que casi nadie hace: para sacar el IVA se divide por 1,21, no se resta el 21%.',
+    'Calculá el IVA de Argentina al 21%, 10,5% o 27%. Sumalo a un precio neto o discriminá el impuesto incluido en un precio final.',
   silo: 'Impuestos',
   siloHref: '/impuestos',
 
   eyebrow: 'Guía impositiva',
-  h1: '¿Cómo discrimino el IVA?',
+  h1: 'Calculadora de IVA en Argentina',
   lede:
     'Partimos del caso que más se busca: tenés un precio final con IVA incluido y querés saber cuánto es neto y cuánto es impuesto. Ojo con el atajo: no se resta el 21%, se divide por 1,21.',
   stamps: ['Actualizado 27-07-2026', 'Ley 23.349 (t.o. 1997) · ARCA', '5 calculadoras adentro'],
@@ -92,32 +92,12 @@ export const hub: HubData = {
         plazo:
           'las alícuotas del art. 28 se modifican por ley o por decreto del PEN: revisá antes de facturar un rubro nuevo.',
       },
-      {
-        id: 'paises',
-        label: 'IVA en otros países de la región',
-        hint: 'Del 7% de Panamá al 22% de Uruguay',
-        answer: 'Cambia el nombre y el número, pero la cuenta es la misma: dividir por 1 + la alícuota.',
-        yes: [
-          'Argentina 21%, Uruguay 22%, Colombia y Chile 19%, Perú 18% (IGV), Brasil ~17% (ICMS promedio)',
-          'México 16% general y 8% en la franja fronteriza norte y sur (estímulo fiscal del SAT)',
-          'Ecuador 15%, Bolivia 13%, Costa Rica 13%, Guatemala 12%, Paraguay 10%, Panamá 7% (ITBMS)',
-          'República Dominicana 18% (ITBIS), Honduras 15% (ISV), Nicaragua y El Salvador 13-15%',
-          'En todos, el impuesto contenido en el precio final es alícuota ÷ (100 + alícuota)',
-        ],
-        warn: [
-          'El nombre cambia: IGV en Perú, ITBMS en Panamá, ITBIS en Dominicana, ISV en Honduras, ICMS en Brasil',
-          'El ICMS brasileño es estadual: el 17% es un promedio, cada estado fija el suyo',
-          'La tasa 8% de la frontera mexicana exige domicilio fiscal en los municipios listados por el SAT',
-          'Casi todos los países tienen alícuotas reducidas y exenciones propias que este cálculo no contempla',
-        ],
-        plazo: 'las alícuotas regionales se revisan con cada reforma tributaria: verificá con la autoridad fiscal local.',
-      },
     ],
   },
 
   inputsTitle: 'Completá el monto',
   inputsIntro:
-    'Poné el importe que tenés a mano. La alícuota se usa en las dos primeras ramas; el país, sólo en la última.',
+    'Ingresá el importe y la alícuota que corresponda a la operación en Argentina.',
   fields: [
     {
       id: 'monto',
@@ -137,32 +117,6 @@ export const hub: HubData = {
         { value: '10.5', label: '10,5% — reducida (art. 28)' },
         { value: '27', label: '27% — servicios públicos a RI' },
         { value: '2.5', label: '2,5% — diarios y revistas' },
-      ],
-    },
-    {
-      id: 'pais',
-      label: 'País (sólo para la rama regional)',
-      type: 'select',
-      value: 'argentina',
-      options: [
-        { value: 'argentina', label: 'Argentina — IVA 21%' },
-        { value: 'uruguay', label: 'Uruguay — IVA 22%' },
-        { value: 'colombia', label: 'Colombia — IVA 19%' },
-        { value: 'chile', label: 'Chile — IVA 19%' },
-        { value: 'peru', label: 'Perú — IGV 18%' },
-        { value: 'republica-dominicana', label: 'Rep. Dominicana — ITBIS 18%' },
-        { value: 'brasil', label: 'Brasil — ICMS 17% (promedio)' },
-        { value: 'mexico', label: 'México — IVA 16%' },
-        { value: 'mexico-frontera', label: 'México, franja fronteriza — IVA 8%' },
-        { value: 'ecuador', label: 'Ecuador — IVA 15%' },
-        { value: 'honduras', label: 'Honduras — ISV 15%' },
-        { value: 'nicaragua', label: 'Nicaragua — IVA 15%' },
-        { value: 'bolivia', label: 'Bolivia — IVA 13%' },
-        { value: 'costa-rica', label: 'Costa Rica — IVA 13%' },
-        { value: 'el-salvador', label: 'El Salvador — IVA 13%' },
-        { value: 'guatemala', label: 'Guatemala — IVA 12%' },
-        { value: 'paraguay', label: 'Paraguay — IVA 10%' },
-        { value: 'panama', label: 'Panamá — ITBMS 7%' },
       ],
     },
   ],
@@ -190,7 +144,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Qué porcentaje del precio final es IVA?',
-      a: 'Se calcula como alícuota ÷ (100 + alícuota). Con 21% el IVA es el 17,3554% del precio final; con 10,5%, el 9,5023%; con 27%, el 21,2598%; y con 19% (Colombia, Chile) el 15,9664%. Ese porcentaje es el que hay que aplicar sobre el total si querés el impuesto de una sola cuenta.',
+      a: 'Se calcula como alícuota ÷ (100 + alícuota). Con 21% el IVA es el 17,3554% del precio final; con 10,5%, el 9,5023%; con 27%, el 21,2598%. Ese porcentaje es el que hay que aplicar sobre el total si querés el impuesto de una sola cuenta.',
     },
     {
       q: '¿Cómo agrego IVA a un precio neto?',
@@ -215,10 +169,6 @@ export const hub: HubData = {
     {
       q: '¿Las percepciones de IVA son IVA?',
       a: 'No. Son pagos a cuenta que un agente de percepción te suma en la factura (RG 2408, RG 3337 y otras) y que después descontás en tu DDJJ. Van en un renglón separado, no integran la base del IVA ni se calculan dividiendo por 1,21. Si las mezclás con el IVA discriminado, la factura queda mal armada y el crédito fiscal declarado, inflado.',
-    },
-    {
-      q: '¿Cuál es el IVA en los países de la región?',
-      a: 'Uruguay 22%, Argentina 21%, Colombia y Chile 19%, Perú 18% (IGV), República Dominicana 18% (ITBIS), Brasil alrededor de 17% de ICMS promedio estadual, México 16% (8% en la franja fronteriza), Ecuador, Honduras y Nicaragua 15%, Bolivia, Costa Rica y El Salvador 13%, Guatemala 12%, Paraguay 10% y Panamá 7% (ITBMS). En todos, para sacar el impuesto de un precio final se divide por 1 más la alícuota.',
     },
     {
       q: '¿Cuándo vence la declaración jurada de IVA?',
@@ -247,11 +197,6 @@ export const hub: HubData = {
       name: 'Libro IVA Digital — RG 4597 y presentación del F.2051',
       url: 'https://www.afip.gob.ar/libro-iva-digital/',
       publisher: 'ARCA (ex AFIP)',
-    },
-    {
-      name: 'Estímulos fiscales región fronteriza norte y sur — IVA 8%',
-      url: 'https://www.sat.gob.mx/consultas/61729/conoce-los-estimulos-fiscales-de-la-region-fronteriza',
-      publisher: 'SAT (México)',
     },
   ],
 
