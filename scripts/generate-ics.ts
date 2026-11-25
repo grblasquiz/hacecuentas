@@ -8,6 +8,7 @@
  *   feriados-argentina-2026.ics       (+ copia legacy en public/feriados-argentina-2026.ics,
  *                                      ya linkeada desde el calc feriados-argentina-2026)
  *   feriados-{mexico,colombia,chile,peru,ecuador}-2026.ics
+ *   feriados-mexico-2027.ics
  *   vencimientos-arca-2026.ics        (monotributo, recategorización, aguinaldo)
  *   mundial-2026-argentina.ics        (partidos de la Selección + final)
  *   mundial-2026.ics                  (todos los partidos con equipos definidos)
@@ -22,6 +23,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FERIADOS_AR_2026 } from '../src/lib/data/feriados-ar-2026.ts';
 import { FERIADOS_LATAM_2026 } from '../src/lib/data/feriados-latam-2026.ts';
+import { FERIADOS_MX_2027 } from '../src/lib/data/feriados-latam-2027.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'public', 'calendarios');
@@ -73,8 +75,8 @@ function nextDay(date: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-function vevent(e: IcsEvent): string {
-  const lines = ['BEGIN:VEVENT', `UID:${e.uid}@hacecuentas.com`, `DTSTAMP:${DTSTAMP}`];
+function vevent(e: IcsEvent, dtstamp: string): string {
+  const lines = ['BEGIN:VEVENT', `UID:${e.uid}@hacecuentas.com`, `DTSTAMP:${dtstamp}`];
   if (e.date) {
     lines.push(`DTSTART;VALUE=DATE:${e.date.replace(/-/g, '')}`);
     lines.push(`DTEND;VALUE=DATE:${nextDay(e.date).replace(/-/g, '')}`);
@@ -89,17 +91,17 @@ function vevent(e: IcsEvent): string {
   return lines.map(fold).join('\r\n');
 }
 
-function vcalendar(name: string, events: IcsEvent[], tz = 'America/Argentina/Buenos_Aires'): string {
+function vcalendar(name: string, events: IcsEvent[], tz = 'America/Argentina/Buenos_Aires', dtstamp = DTSTAMP, year = 2026): string {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Hacé Cuentas//Calendarios 2026//ES',
+    `PRODID:-//Hacé Cuentas//Calendarios ${year}//ES`,
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     fold(`X-WR-CALNAME:${esc(name)}`),
     `X-WR-TIMEZONE:${tz}`,
     'X-PUBLISHED-TTL:P1D',
-    ...events.map(vevent),
+    ...events.map((event) => vevent(event, dtstamp)),
     'END:VCALENDAR',
     '',
   ].join('\r\n');
@@ -265,6 +267,15 @@ write('feriados-argentina-2026.ics', arIcs);
 writeFileSync(join(ROOT, 'public', 'feriados-argentina-2026.ics'), arIcs);
 
 for (const cal of latamCalendars) write(cal.file, vcalendar(`${cal.name} — Hacé Cuentas`, cal.events));
+const mx2027Url = `${SITE}/feriados-mexico-2027?${UTM}`;
+const mexico2027Events = FERIADOS_MX_2027.map(({ fecha, nombre, nota }) => ({
+  uid: `feriado-mx-${fecha}`,
+  date: fecha,
+  summary: nombre,
+  description: `Descanso obligatorio (art. 74 LFT).${nota ? ` ${nota.replace(/\.$/, '')}.` : ''}\nCalendario y puentes: ${mx2027Url}`,
+  url: mx2027Url,
+}));
+write('feriados-mexico-2027.ics', vcalendar('Días festivos México 2027 — Hacé Cuentas', mexico2027Events, 'America/Mexico_City', '20261125T000000Z', 2027));
 write('vencimientos-arca-2026.ics', vcalendar('Vencimientos ARCA/AFIP 2026 — Hacé Cuentas', vencEvents));
 write('mundial-2026-argentina.ics', vcalendar('Argentina en el Mundial 2026 — Hacé Cuentas', mundialAR));
 write('mundial-2026.ics', vcalendar('Mundial 2026: todos los partidos — Hacé Cuentas', mundialAll));

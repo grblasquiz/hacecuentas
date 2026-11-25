@@ -44,6 +44,7 @@ export const FERIADOS_MX_2027: Feriado[] = [
   { fecha: '2027-02-01', dia: 'Lunes', nombre: 'Día de la Constitución', tipo: 'Obligatorio', nota: 'Primer lunes de febrero (la conmemoración es el 5)' },
   { fecha: '2027-03-15', dia: 'Lunes', nombre: 'Natalicio de Benito Juárez', tipo: 'Obligatorio', nota: 'Tercer lunes de marzo (la conmemoración es el 21)' },
   { fecha: '2027-05-01', dia: 'Sábado', nombre: 'Día del Trabajo', tipo: 'Obligatorio' },
+  { fecha: '2027-06-06', dia: 'Domingo', nombre: 'Jornada electoral ordinaria', tipo: 'Obligatorio', nota: 'Fecha confirmada por el INE. El descanso electoral no se traslada al lunes' },
   { fecha: '2027-09-16', dia: 'Jueves', nombre: 'Día de la Independencia', tipo: 'Obligatorio' },
   { fecha: '2027-11-15', dia: 'Lunes', nombre: 'Día de la Revolución Mexicana', tipo: 'Obligatorio', nota: 'Tercer lunes de noviembre (la conmemoración es el 20)' },
   { fecha: '2027-12-25', dia: 'Sábado', nombre: 'Navidad', tipo: 'Obligatorio' },
@@ -156,12 +157,13 @@ export const FERIADOS_LATAM_2027: Record<string, FeriadosPais> = {
   },
   mexico: {
     pais: 'México', gentilicio: 'los mexicanos', audience: 'MX',
-    slug: 'feriados-mexico-2027', totalLabel: '7 días de descanso obligatorio',
-    dataAsOf: '2026-08-18',
+    slug: 'feriados-mexico-2027', totalLabel: '8 días de descanso obligatorio, incluida la jornada electoral',
+    dataAsOf: '2026-11-25',
     marco: 'Ley Federal del Trabajo, Art. 74',
     notaTipo: 'Si trabajás un día de descanso obligatorio corresponde salario doble adicional (Art. 75 LFT). En 2027 no aplica el descanso por transmisión del Poder Ejecutivo (próxima: 2030).',
     fuentes: [
       { nombre: 'Ley Federal del Trabajo (Cámara de Diputados)', url: 'https://www.diputados.gob.mx/LeyesBiblio/pdf/LFT.pdf' },
+      { nombre: 'INE — Jornada electoral ordinaria del 6 de junio de 2027', url: 'https://ine.mx/voto-y-elecciones/elecciones-2027/' },
       { nombre: 'PROFEDET — Días de descanso obligatorio', url: 'https://www.profedet.gob.mx/micrositio/index.php/dias-de-descanso' },
     ],
     feriados: FERIADOS_MX_2027,

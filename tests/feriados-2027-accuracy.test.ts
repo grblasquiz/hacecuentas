@@ -37,7 +37,13 @@ describe('feriados LATAM 2027', () => {
 
   it('totales por país según la ley vigente', () => {
     expect(FERIADOS_LATAM_2027.argentina.feriados).toHaveLength(16);
-    expect(FERIADOS_LATAM_2027.mexico.feriados).toHaveLength(7);
+    const mexico = FERIADOS_LATAM_2027.mexico.feriados;
+    expect(mexico).toHaveLength(8);
+    // Art. 74 IX LFT. El INE confirmó la jornada ordinaria del domingo 6 de junio.
+    expect(mexico).toContainEqual(expect.objectContaining({
+      fecha: '2027-06-06', dia: 'Domingo', tipo: 'Obligatorio',
+    }));
+    expect(mexico.some((f) => f.fecha === '2027-06-07')).toBe(false);
     expect(FERIADOS_LATAM_2027.colombia.feriados).toHaveLength(19);
     expect(FERIADOS_LATAM_2027.chile.feriados).toHaveLength(17);
     expect(FERIADOS_LATAM_2027.peru.feriados).toHaveLength(16);

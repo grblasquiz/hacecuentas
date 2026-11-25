@@ -1,7 +1,7 @@
 ---
 export const prerender = true;
 import FeriadosLanding from '../components/FeriadosLanding.astro';
-import { FERIADOS_LATAM_2027 } from '../lib/data/feriados-latam-2027';
+import { FERIADOS_LATAM_2027, FERIADOS_MX_2027 } from '../lib/data/feriados-latam-2027';
 
 const related = [
   { href: '/dias-entre-dos-fechas', label: 'Días entre dos fechas' },
@@ -15,7 +15,25 @@ const related = [
   { href: '/feriados-2027', label: 'Feriados 2027 en todos los países' },
 ];
 
-const title = 'Feriados México 2027: calendario oficial con puentes';
-const description = 'Feriados de México 2027: fechas oficiales confirmadas, día de la semana de cada una, fines de semana largos y puentes para planificar el año.';
+const title = 'Puentes y días festivos en México 2027: calendario oficial';
+const description = 'Consulta los puentes de México 2027: 1 de enero, 1 de febrero, 15 de marzo y 15 de noviembre. Incluye el descanso electoral y descarga del calendario.';
+const puentesOficiales = FERIADOS_MX_2027.filter(({ dia }) => dia === 'Lunes' || dia === 'Viernes');
+const fechaCorta = new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+const extraFaq = [
+  { q: '¿Cuáles son los puentes oficiales de México en 2027?', a: 'Los cuatro fines de semana largos por descansos obligatorios son el 1 de enero, el 1 de febrero, el 15 de marzo y el 15 de noviembre. El 16 de septiembre cae en jueves y se puede extender con un día de vacaciones el viernes 17.' },
+  { q: '¿El lunes posterior a las elecciones de 2027 es feriado?', a: 'El descanso electoral corresponde al domingo 6 de junio de 2027. La Ley Federal del Trabajo no traslada ese descanso al lunes 7.' },
+];
 ---
-<FeriadosLanding data={FERIADOS_LATAM_2027.mexico} related={related} title={title} description={description} anio={2027} />
+<FeriadosLanding data={FERIADOS_LATAM_2027.mexico} related={related} title={title} description={description} anio={2027} extraFaq={extraFaq}>
+  <section slot="before-calendar" aria-labelledby="puentes-oficiales">
+    <h2 id="puentes-oficiales">Puentes oficiales de México 2027</h2>
+    <p>Estos cuatro descansos obligatorios forman un fin de semana de tres días si tu jornada habitual es de lunes a viernes.</p>
+    <ul>
+      {puentesOficiales.map(({ fecha, dia, nombre }) => (
+        <li><strong>{dia} <time datetime={fecha}>{fechaCorta.format(new Date(fecha))}</time></strong> · {nombre}</li>
+      ))}
+    </ul>
+    <p>El jueves 16 de septiembre permite un puente de cuatro días si tomas el viernes 17 libre. La jornada electoral del domingo 6 de junio y los festivos que caen en sábado conservan su fecha.</p>
+    <p><a href="/calendarios/feriados-mexico-2027.ics" download>Descarga los días festivos de México 2027 (.ics)</a> e impórtalos en Google Calendar, Apple Calendar u Outlook.</p>
+  </section>
+</FeriadosLanding>
