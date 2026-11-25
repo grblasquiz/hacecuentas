@@ -5,6 +5,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ResourceShare from '../../components/ResourceShare.astro';
 import TopPagesBoost from '../../components/TopPagesBoost.astro';
+import { COLOMBIA_2026 } from '../../lib/data/colombia-2026';
 import '../../styles/calc-flagship.css';
 
 // Página-dato enlazable (autoridad) Colombia: salario mínimo, auxilio, UVT,
@@ -13,6 +14,9 @@ import '../../styles/calc-flagship.css';
 // (SMLMV $1.750.905, auxilio $249.095, UVT $52.374) + CST/leyes citadas.
 
 const ULTIMA_REVISION = '2026-09-13';
+const { smlmv: salarioMinimo, auxilioTransporte } = COLOMBIA_2026;
+const pesos = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 2, minimumFractionDigits: 0 });
+const primaCompleta = pesos.format((salarioMinimo + auxilioTransporte) / 2);
 const PAGE_URL = 'https://hacecuentas.com/co/datos-salario-minimo-colombia-2026';
 
 const valores = [
@@ -67,7 +71,7 @@ const datasetSchema = {
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
-    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-CO', dateModified: ULTIMA_REVISION, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
+    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-CO', dateModified: '2026-11-25', mainEntity: { '@id': `${PAGE_URL}#dataset` } },
     datasetSchema,
     { '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Colombia', item: 'https://hacecuentas.com/co' },
@@ -137,7 +141,7 @@ const schema = {
     </aside>
 
     <nav aria-label="Consultar salario mínimo Colombia" class="smc-otropais">
-      <a href="#smc-neto-title">Ver salario neto y descuentos</a> · <a href="#smmlv-a-pesos">Convertir SMLMV a pesos</a> · <a href="/co/trabajo/sueldo-neto">Calcular otro sueldo</a>
+      <a href="#smc-neto-title">Ver salario neto y descuentos</a> · <a href="#smmlv-a-pesos">Convertir SMLMV a pesos</a> · <a href="#prima-diciembre">Calcular prima de diciembre</a> · <a href="/co/trabajo/sueldo-neto">Calcular otro sueldo</a>
     </nav>
     <TopPagesBoost variant="salary-co" />
 
@@ -255,6 +259,20 @@ const schema = {
           <div class="smc-sum">$1.750.905 + $249.095 <strong>= $2.000.000</strong></div>
         </div>
       </div>
+    </section>
+
+    <section class="cf-section" id="prima-diciembre" aria-labelledby="prima-diciembre-titulo">
+      <h2 class="cf-section__title" id="prima-diciembre-titulo">Prima de diciembre 2026 con el salario mínimo en Colombia</h2>
+      <p class="cf-section__lead">Por el semestre completo, la prima es de <strong>{primaCompleta} COP con auxilio de transporte</strong> y <strong>{pesos.format(salarioMinimo / 2)} COP sin auxilio</strong>, si tu salario fue el mínimo durante todo el período.</p>
+      <p>Para trabajadores dependientes del sector privado, el plazo legal vence el <strong>20 de diciembre</strong>, según el <a href="https://www1.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=199983">artículo 306 del Código Sustantivo del Trabajo</a>. Si trabajaste parte del semestre, multiplicá la base mensual por los días liquidados y dividí por 360. Incluí el auxilio de transporte si te correspondió.</p>
+      <form id="smc-prima-form" class="smc-cite" data-salario={salarioMinimo} data-auxilio={auxilioTransporte} hidden>
+        <label for="smc-prima-dias">Días liquidados en el segundo semestre</label>
+        <input id="smc-prima-dias" type="number" inputmode="numeric" min="1" max="180" step="1" value="180" required />
+        <p class="smc-note">Usá 180 para el semestre completo.</p>
+        <label class="smc-prima-auxilio"><input id="smc-prima-auxilio" type="checkbox" checked /> Recibí el auxilio de transporte</label>
+        <p>Prima estimada: <output id="smc-prima-resultado" for="smc-prima-dias smc-prima-auxilio" aria-live="polite">{primaCompleta} COP</output></p>
+      </form>
+      <p class="smc-note">El ejemplo supone salario mínimo y la misma condición de auxilio en todo el período. Para una salida del trabajo, revisá los conceptos en la <a href="/co/trabajo/liquidacion-laboral">calculadora de liquidación laboral de Colombia</a>. <a href="https://www.minjusticia.gov.co/programas-co/LegalApp/Paginas/Como-liquidar-un-contrato-de-trabajo.aspx">Fórmula y base según el Ministerio de Justicia</a>.</p>
     </section>
 
     <!-- Recargos -->
@@ -396,6 +414,28 @@ const schema = {
   <Footer slot="footer" />
 </Layout>
 
+<script>
+  const form = document.querySelector<HTMLFormElement>('#smc-prima-form');
+  const dias = document.querySelector<HTMLInputElement>('#smc-prima-dias');
+  const auxilio = document.querySelector<HTMLInputElement>('#smc-prima-auxilio');
+  const resultado = document.querySelector<HTMLOutputElement>('#smc-prima-resultado');
+
+  if (form && dias && auxilio && resultado) {
+    const salario = Number(form.dataset.salario);
+    const transporte = Number(form.dataset.auxilio);
+    const formato = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 2, minimumFractionDigits: 0 });
+
+    form.addEventListener('submit', event => event.preventDefault());
+    form.addEventListener('input', () => {
+      const base = salario + (auxilio.checked ? transporte : 0);
+      resultado.value = dias.validity.valid
+        ? `${formato.format(base * dias.valueAsNumber / 360)} COP`
+        : 'Ingresá entre 1 y 180 días enteros.';
+    });
+    form.hidden = false;
+  }
+</script>
+
 <style>
   /* Bloques propios de esta página (el resto viene de calc-flagship.css) */
 
@@ -440,6 +480,11 @@ const schema = {
 
   .smc-dl { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-bottom: 1.25rem; }
   .smc-cite { padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); }
+  #prima-diciembre { scroll-margin-top: 6rem; }
+  #smc-prima-form { margin-top: 1rem; }
+  #smc-prima-dias { display: block; width: 8rem; min-height: 2.75rem; padding: 0.45rem; font: inherit; }
+  .smc-prima-auxilio { display: block; margin: 0.75rem 0; }
+  #smc-prima-resultado { font-weight: 750; }
   .smc-cite code { display: block; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.6; color: var(--text-muted); margin-top: 0.4rem; }
   .smc-src { display: block; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); text-decoration: none; border-radius: 4px; }
   .smc-src:hover strong { text-decoration: underline; }
