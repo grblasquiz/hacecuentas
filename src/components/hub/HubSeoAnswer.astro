@@ -14,6 +14,7 @@ export interface Props {
 }
 
 const { data } = Astro.props;
+const reviewer = data.professionalReviewer;
 const primaryCase = data.cases?.items[0];
 const answerTitle = primaryCase?.answer ?? data.answer?.title ?? data.h1;
 const answerCopy = data.answer?.copy ?? data.lede;
@@ -86,6 +87,9 @@ const T = COPY[data.locale ?? 'ar'] ?? COPY.es;
     )}
 
     {deadline && <p class="hub-seo-answer__note"><strong>{T.deadline}:</strong> {deadline}</p>}
+    {reviewer && (
+      <p class="hub-seo-answer__note">Revisión profesional por <a href={reviewer.profileUrl}>{reviewer.name}</a> · {reviewer.credential} · Matrícula {reviewer.registrationNumber}</p>
+    )}
     {sources.length > 0 && (
       <p class="hub-seo-answer__sources">
         <strong>{T.evidence}:</strong>{' '}

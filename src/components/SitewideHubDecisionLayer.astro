@@ -33,6 +33,7 @@ const clean = (value: string) => {
   } catch { return ''; }
 };
 const path = clean(Astro.url.pathname);
+const isSpain = path.startsWith('/es/');
 const tools = currentTools.map((tool) => ({ ...tool, path: clean(tool.url || `/${tool.slug}`) }));
 const current = tools.find((tool) => tool.path === path);
 const locale = current?.locale || 'es';
@@ -77,6 +78,9 @@ const fallbackIntent: Intent = {
   target: [/.*/, /compar|versus|vs/, /.*/],
 };
 const intent = INTENTS.find((item) => item.match.test(haystack)) || fallbackIntent;
+const promptInSpain = (prompt: string) => prompt
+  .replaceAll('Querés', 'Quieres').replaceAll('Necesitás', 'Necesitas').replaceAll('cobrás', 'cobras')
+  .replaceAll('pagás', 'pagas').replaceAll('Estás armando', 'Estás organizando').replaceAll('costo', 'coste');
 const cluster = current ? tools.filter((tool) => tool.locale === current.locale && tool.category === current.category && tool.path !== path) : [];
 // Algunas salas son la única URL de su categoría. En ese caso ampliamos al
 // mercado, pero conservamos los patrones de intención: ningún hub queda sin
@@ -116,11 +120,19 @@ const routes = contextualRoutes[path]
   : selected.slice(0, 3).map(({ tool }, index) => ({ tool, prompt: intent.prompts[index] || intent.prompts.at(-1)! }));
 const nextSteps = contextualRoutes[path] ? routes : routes.length > 1 ? [...routes.slice(1), routes[0]].slice(0, 3) : routes;
 
-const COPY = {
+const languageCopy = {
   es: { eyebrow: 'Elegí tu situación', focus: 'Consulta principal', routeTitle: '¿Qué querés resolver?', nextEyebrow: 'Tu próximo paso', nextTitle: 'Seguí con la decisión', nextIntro: 'Usá el resultado que acabás de obtener para avanzar con una cuenta directamente relacionada.', trust: 'Datos y metodología', checked: 'Cálculo ejecutado en tu navegador; revisá los supuestos y fuentes de esta página.', editor: 'Responsable: Martín Rodríguez, fundador y editor', reviewed: 'Revisión de experiencia', freshness: 'La fecha de vigencia de cada valor se informa junto a su fuente.', method: 'Ver fuentes y metodología', share: 'Guardar o compartir este resultado', shareHelp: 'El enlace conserva tus datos en el navegador y no crea una página indexable.', copy: 'Copiar enlace', copied: 'Enlace copiado', native: 'Compartir', print: 'Descargar / imprimir', privacy: 'No guardamos estos datos en el servidor.' },
   en: { eyebrow: 'Choose your situation', focus: 'Main query', routeTitle: 'What do you want to solve?', nextEyebrow: 'Your next step', nextTitle: 'Continue your decision', nextIntro: 'Use the result you just obtained to continue with a directly related calculation.', trust: 'Data and methodology', checked: 'The calculation runs in your browser; review this page’s assumptions and sources.', editor: 'Responsible editor: Martín Rodríguez', reviewed: 'Experience review', freshness: 'The effective date of each value is shown with its source.', method: 'View sources and methodology', share: 'Save or share this result', shareHelp: 'The link keeps your inputs in the browser and does not create an indexable page.', copy: 'Copy link', copied: 'Link copied', native: 'Share', print: 'Download / print', privacy: 'We do not store these inputs on the server.' },
   pt: { eyebrow: 'Escolha sua situação', focus: 'Consulta principal', routeTitle: 'O que você quer resolver?', nextEyebrow: 'Próximo passo', nextTitle: 'Continue sua decisão', nextIntro: 'Use o resultado que acabou de obter para avançar com um cálculo diretamente relacionado.', trust: 'Dados e metodologia', checked: 'O cálculo roda no seu navegador; revise as premissas e fontes desta página.', editor: 'Editor responsável: Martín Rodríguez', reviewed: 'Revisão da experiência', freshness: 'A data de vigência de cada valor aparece junto à fonte.', method: 'Ver fontes e metodologia', share: 'Salvar ou compartilhar este resultado', shareHelp: 'O link mantém seus dados no navegador e não cria uma página indexável.', copy: 'Copiar link', copied: 'Link copiado', native: 'Compartilhar', print: 'Baixar / imprimir', privacy: 'Não armazenamos esses dados no servidor.' },
 }[language];
+const COPY = isSpain ? {
+  ...languageCopy,
+  eyebrow: 'Elige tu situación',
+  routeTitle: '¿Qué quieres resolver?',
+  nextTitle: 'Continúa con la decisión',
+  nextIntro: 'Utiliza el resultado para continuar con un cálculo relacionado.',
+  checked: 'El cálculo se realiza en tu navegador. Revisa los supuestos y las fuentes de la página.',
+} : languageCopy;
 const experienceReviewed = modified || '2026-08-16';
 ---
 
@@ -132,7 +144,7 @@ const experienceReviewed = modified || '2026-08-16';
     <div class="hc-decision-routes__grid">
       {routes.map(({ tool, prompt }) => (
         <a href={tool.path} data-hc-route-link>
-          <span>{prompt}</span>
+          <span>{isSpain ? promptInSpain(prompt) : prompt}</span>
           <strong>{hubAnchor(tool.path, tool.h1 || tool.title)}</strong>
           <span aria-hidden="true">→</span>
         </a>

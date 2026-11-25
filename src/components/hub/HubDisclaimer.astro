@@ -8,13 +8,15 @@ const language = data.locale === 'en' ? 'en' : data.locale === 'pt' || data.loca
 const category = data.silo.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 const subject = { slug: data.slug, category, h1: data.h1, title: data.title };
 const show = needsProfessionalDisclaimer(subject);
-const disclaimer = getCalculatorDisclaimer(subject, language);
+const detail = data.fineprint?.trim();
+const disclaimer = data.locale === 'es' && detail
+  ? detail
+  : getCalculatorDisclaimer(subject, language);
 const labels = language === 'en'
   ? { title: 'Important before you decide', detail: 'About this estimate' }
   : language === 'pt'
     ? { title: 'Importante antes de decidir', detail: 'Sobre esta estimativa' }
     : { title: 'Importante antes de decidir', detail: 'Sobre esta estimación' };
-const detail = data.fineprint?.trim();
 const showDetail = detail && detail !== disclaimer;
 ---
 

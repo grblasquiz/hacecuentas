@@ -25,7 +25,7 @@ export const hub: HubData = {
   siloHref: '/es/vivienda',
 
   eyebrow: 'Guía fiscal inmobiliaria',
-  h1: 'Comprar o vender un piso: ¿cuánto se llevan los impuestos?',
+  h1: 'Impuestos al comprar o vender un piso en España',
   lede:
     'En una compraventa de vivienda hay tres administraciones cobrando a la vez: la comunidad autónoma con el ITP o el AJD, el ayuntamiento con la plusvalía municipal y Hacienda con la ganancia patrimonial del vendedor. Quién paga cada uno depende de si compras o vendes, y de si la vivienda es nueva o de segunda mano.',
   stamps: ['Tipos de ITP por comunidad', 'Plusvalía por los dos métodos', '4 calculadoras dentro'],

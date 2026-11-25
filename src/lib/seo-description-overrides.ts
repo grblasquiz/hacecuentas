@@ -38,7 +38,7 @@ export const SEO_DESCRIPTION_OVERRIDES: Record<string, string> = {
   "/en/cooking/how-much-food-per-guest": "Estimate food portions per guest for a party. Plan meat, pizza, empanadas and other dishes based on your guest count and menu.",
   "/es/automotor": "Calcula el coste de comprar y mantener un coche en España. Revisa impuestos, ITV, seguro, combustible y etiqueta ambiental antes de decidir.",
   "/es/educacion": "Calcula costes de estudios y notas de acceso en España. Compara grados, FP y másteres con herramientas para planificar tu formación.",
-  "/es/vivienda": "Calculá impuestos y costes para comprar, vender, alquilar, hipotecar o reformar una vivienda en España con guías y fuentes oficiales.",
+  "/es/vivienda": "Calcula impuestos y costes para comprar, vender, alquilar, hipotecar o reformar una vivienda en España con guías y fuentes oficiales.",
   "/estudio": "Calculá notas, promedios, asistencia, tiempos de lectura y planes de estudio con procedimientos claros y ejemplos resueltos.",
   "/eventos/logistica": "Calculá mesas, sillas, personal y vajilla para tu evento según invitados y servicio. Estimá cantidades antes de reservar o alquilar.",
   "/eventos/presupuesto": "Armá el presupuesto de un cumpleaños, fiesta de 15, graduación o despedida y calculá el costo total y por invitado por rubro.",

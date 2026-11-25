@@ -181,12 +181,19 @@ const footballByCountry: Partial<Record<Country,string>> = {
 const footballLabel = lang==='en'?'Football today':lang==='pt'?'Futebol hoje':'Fútbol hoy';
 const navItems = [...COUNTRY_NAVS[pageCountry], ...(footballByCountry[pageCountry] ? [{href:footballByCountry[pageCountry]!,label:footballLabel}] : [])];
 
+const AR_QUICK_TOOLS = [
+  { href: '/validar-cbu', label: 'Validar CBU o CVU' },
+  { href: '/calculadora-actualizacion-inflacion-ipc', label: 'Actualizar por IPC' },
+  { href: '/calculadora-interes-judicial-tasa', label: 'Interés judicial' },
+];
+
 // Dropdown "Más" (solo AR): el resto de dominios/superficies que salieron de la
 // nav principal. Preserva los links internos que tenía la nav vieja (Decidir,
 // Guías, conversores) para no perder esos enlaces del grafo SEO.
 const NAV_MORE: Array<{ href: string; label: string; icon?: string }> = pageCountry === 'AR' ? [
   { href: '/deportes', label: 'Deportes: Mundial, NBA y F1' },
   { href: '/valores-bcra', label: 'Dólar y economía', icon: 'chart' },
+  ...AR_QUICK_TOOLS,
   { href: '/finanzas-personales', label: 'Salas de decisión' },
   { href: '/planificador-de-objetivos', label: 'Planificá tus objetivos' },
   { href: '/mi/plata', label: 'Mi Plata' },
@@ -328,6 +335,7 @@ const MOBILE_CATEGORIES: Array<{ href: string; label: string }> = [
       {navItems.map(item => (
         <a href={item.href}>{item.label}</a>
       ))}
+      {pageCountry === 'AR' && AR_QUICK_TOOLS.map(item => <a href={item.href}>{item.label}</a>)}
       <span class="mobile-nav-group">Temas</span>
       {MOBILE_CATEGORIES.map(cat => (
         <a href={cat.href}>{cat.label}</a>
