@@ -191,9 +191,10 @@ const seoDescription = compactSeoDescription(descriptionForSearch);
 // Monetización opt-in: incluso con serving + CMP habilitados, una URL nueva no
 // recibe anuncios hasta entrar en la allowlist editorial de adsense.ts.
 const effectiveNoAds = noAds || effectiveNoindex || isAdsenseExcludedPath(cleanPath) || !isAdsenseApprovedPath(cleanPath);
-const fullCanonical = canonical
-  ? (canonical.startsWith('http') ? canonical : `${siteUrl}${canonical}`)
-  : `${siteUrl}${cleanPath}`;
+const canonicalUrl = new URL(canonical || cleanPath, siteUrl);
+const fullCanonical = ['hacecuentas.com', 'www.hacecuentas.com'].includes(canonicalUrl.hostname)
+  ? `${siteUrl}${canonicalUrl.pathname.replace(/\/+$/, '') || '/'}`
+  : canonicalUrl.href;
 const isSelfCanonical = isSelfCanonicalUrl(cleanPath, fullCanonical, siteUrl);
 const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
 
@@ -307,21 +308,7 @@ const globalSchema = {
         : lang === 'pt'
         ? 'Calculadoras online grátis de finanças, saúde, cozinha, matemática e mais — sem cadastro, privadas, rápidas.'
         : 'Calculadoras online gratuitas para todo el mundo hispanohablante, con cobertura específica para Argentina.',
-      sameAs: [
-        'https://x.com/Hacecuentas',
-        'https://www.instagram.com/hacecuentas',
-        'https://www.linkedin.com/company/122324467/',
-        'https://www.facebook.com/profile.php?id=61590473465354',
-        'https://www.youtube.com/@HaceCuentas',
-        'https://www.tiktok.com/@hace.cuentas',
-        'https://github.com/grblasquiz/hacecuentas',
-        'https://www.wikidata.org/wiki/Q139824747',
-      ],
-      identifier: {
-        '@type': 'PropertyValue',
-        propertyID: 'Wikidata',
-        value: 'Q139824747',
-      },
+      sameAs: ['https://github.com/grblasquiz/hacecuentas'],
       // knowsAbout: declara expertise temática para que LLMs (ChatGPT, Claude,
       // Perplexity, Copilot) construyan el grafo de conocimiento de la marca.
       // Cubre las áreas con tráfico real GSC/Bing/GA4 y las categorías core.
@@ -615,8 +602,6 @@ const globalSchema = {
     {prevPage && <link rel="prev" href={prevPage} />}
     {nextPage && <link rel="next" href={nextPage} />}
     <link rel="search" type="application/opensearchdescription+xml" title="Hacé Cuentas" href="/opensearch.xml" />
-    <!-- Wikidata entity — identifica al sitio como entidad reconocida en el knowledge graph -->
-    <link rel="me" href="https://www.wikidata.org/wiki/Q139824747" />
 
     <!-- Open Graph — og:type dinámico por tipo de página. Bing News usa
          og:type=article para indexar más rápido + mostrar en News tab. -->

@@ -339,6 +339,11 @@ export default {
       embedRes.headers.set('Cross-Origin-Opener-Policy', 'unsafe-none');
       embedRes.headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
       embedRes.headers.set('X-Robots-Tag', 'noindex, follow');
+      if (request.method !== 'HEAD' && url.searchParams.get('hc_embed') === '1' &&
+          embedRes.headers.get('Content-Type')?.includes('text/html')) {
+        const robots = { element: (element) => element.setAttribute('content', 'noindex, follow') };
+        return new HTMLRewriter().on('meta[name="robots"], meta[name="bingbot"]', robots).transform(embedRes);
+      }
       return embedRes;
     }
 
