@@ -1,0 +1,87 @@
+---
+export const prerender = true;
+import FocusedCalculator from '../../components/FocusedCalculator.astro';
+
+const title = 'Calculadora de presupuesto para ampliar una casa';
+const description = 'Cotizá una ampliación de 3 × 2, 3 × 4 u otra medida. Sumá materiales, mano de obra, instalaciones y extras para calcular el costo total y por m².';
+const path = '/construccion/presupuesto-ampliacion';
+const parent = { label: 'Costo de construcción', href: '/construccion/costo-por-m2' };
+const items = [
+  { name: 'materials', label: 'Materiales y terminaciones' },
+  { name: 'labor', label: 'Mano de obra' },
+  { name: 'utilities', label: 'Instalaciones de luz, agua o gas' },
+  { name: 'other', label: 'Fletes, retiro, permisos y otros' },
+];
+const faqs = [
+  { q: '¿Cuántos metros cuadrados tiene una ampliación de 3 por 2?', a: 'Tiene 6 m² de superficie de piso. Esa superficie puede servir para comparar presupuestos, pero los metros de muro, techo y terminaciones deben medirse por separado.' },
+  { q: '¿Cuánto sale hacer una pieza de 3 por 4?', a: 'Son 12 m². Para estimar el costo, necesitás cotizar la obra gruesa, las aberturas, las terminaciones, la mano de obra y las instalaciones que quieras agregar.' },
+  { q: '¿Qué rubros conviene pedir por separado?', a: 'Pedí materiales, mano de obra, instalaciones y retiro de escombros. Confirmá quién compra y recibe los materiales y qué incluye cada cotización para evitar duplicaciones.' },
+  { q: '¿Por qué una ampliación puede costar más por m² que una obra grande?', a: 'Varios costos se pagan aunque la superficie sea chica, como el traslado, la conexión a instalaciones existentes, las aberturas y el retiro de escombros.' },
+  { q: '¿Cómo calculo una reserva para imprevistos?', a: 'Elegí un porcentaje y aplicalo sobre la suma de los rubros. Por ejemplo, 10% sobre 4.000.000 pesos equivale a 400.000 pesos. Ajustalo a los riesgos de tu proyecto y al alcance de las cotizaciones.' },
+  { q: '¿Cómo comparo propuestas de distintos contratistas?', a: 'Compará precios para las mismas medidas, materiales e instalaciones. Anotá qué tareas quedan fuera, impuestos, vigencia de la oferta y forma de pago.' },
+  { q: '¿La calculadora determina si puedo construir arriba de una casa?', a: 'La herramienta ordena importes. La viabilidad, la estructura y los permisos corresponden a un profesional habilitado y al municipio.' },
+];
+const links = [
+  { label: 'Referencia de costo de construcción por m²', href: parent.href },
+  { label: 'INDEC · índice del costo de la construcción en el Gran Buenos Aires', href: 'https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-33' },
+];
+---
+<FocusedCalculator {title} {description} {path} audience="AR" {parent} {faqs} {links}>
+  <p>Usá cotizaciones de tu zona, con los impuestos que correspondan. Cargá el total de cada rubro para todo el ambiente. Si el precio que te pasaron incluye materiales y mano de obra, cargalo una sola vez.</p>
+  <form id="ampliacion" class="focused-form" method="post">
+    <fieldset>
+      <legend>Dimensiones del ambiente</legend>
+      <div class="fields">
+        <label>Largo en metros <input type="number" name="length" min="0.1" max="500" step="0.01" value="3" required /></label>
+        <label>Ancho en metros <input type="number" name="width" min="0.1" max="500" step="0.01" value="2" required /></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Importes de las cotizaciones en pesos argentinos</legend>
+      <div class="fields">
+        {items.map(({ name, label }) => <label>{label}<input type="number" {name} min="0" max="100000000000" step="0.01" placeholder="0,00" /></label>)}
+        <label>Reserva para imprevistos (%) <input type="number" name="reserve" value="10" min="0" max="100" step="0.1" required /></label>
+      </div>
+    </fieldset>
+    <button type="submit" class="btn btn-primary" disabled>Calcular presupuesto</button>
+    <noscript>Activa JavaScript para calcular con tus importes.</noscript>
+    <div class="calc-result" aria-live="polite">
+      <strong>Superficie <output id="addition-area">6 m²</output></strong>
+      <p id="addition-message">Cargá al menos un importe para calcular el presupuesto.</p>
+      <dl id="addition-totals" hidden>
+        <dt>Subtotal</dt><dd id="addition-subtotal"></dd>
+        <dt>Reserva para imprevistos</dt><dd id="addition-reserve"></dd>
+        <dt>Total estimado</dt><dd><output id="addition-total"></output></dd>
+        <dt>Presupuesto por m²</dt><dd id="addition-unit"></dd>
+      </dl>
+    </div>
+  </form>
+  <section>
+    <h2>Cómo presupuestar una habitación de 3 × 2</h2>
+    <p>La superficie de piso es 6 m². Si las cotizaciones que recibiste suman $4.000.000 y elegís reservar 10%, el total sería $4.400.000, aproximadamente $733.333 por m². Es un ejemplo de cálculo con importes ilustrativos.</p>
+    <p>Antes de comparar, verificá si cada oferta incluye conexiones con la vivienda, aberturas, pintura y retiro de escombros. Para un ambiente de 3 × 4, cambiá el ancho a 4 m y cargá las cotizaciones correspondientes a esos 12 m².</p>
+  </section>
+</FocusedCalculator>
+<script>
+  const form = document.querySelector<HTMLFormElement>('#ampliacion')!;
+  const number = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+  const money = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const area = Number(data.get('length')) * Number(data.get('width'));
+    const amounts = ['materials', 'labor', 'utilities', 'other'].map(name => data.get(name));
+    const subtotal = amounts.reduce((sum, value) => sum + Math.round(Number(value) * 100), 0);
+    const reserve = Math.round(subtotal * Number(data.get('reserve')) / 100);
+    const total = subtotal + reserve;
+    const missing = amounts.every(value => value === '');
+    document.querySelector('#addition-area')!.textContent = number.format(area) + ' m²';
+    document.querySelector<HTMLElement>('#addition-message')!.hidden = !missing;
+    document.querySelector<HTMLElement>('#addition-totals')!.hidden = missing;
+    document.querySelector('#addition-subtotal')!.textContent = money.format(subtotal / 100);
+    document.querySelector('#addition-reserve')!.textContent = money.format(reserve / 100);
+    document.querySelector('#addition-total')!.textContent = money.format(total / 100);
+    document.querySelector('#addition-unit')!.textContent = money.format(total / (100 * area));
+  });
+  form.querySelector('button')!.disabled = false;
+</script>

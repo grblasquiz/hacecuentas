@@ -1,0 +1,98 @@
+---
+export const prerender = true;
+import FocusedCalculator from '../../components/FocusedCalculator.astro';
+
+const title = 'Calculadora para revisar un recibo de sueldo';
+const description = 'Sumá haberes y descuentos de tu recibo argentino. Compará el sueldo neto calculado con el neto liquidado y el depósito que recibiste.';
+const path = '/trabajo/revisar-recibo-de-sueldo';
+const parent = { label: 'Sueldo bruto y neto', href: '/trabajo/sueldo-bruto-y-neto' };
+const deductions = [
+  { name: 'pension', label: 'Jubilación' }, { name: 'pami', label: 'PAMI / INSSJP' },
+  { name: 'health', label: 'Obra social' }, { name: 'tax', label: 'Retención de Ganancias' },
+  { name: 'other', label: 'Otros descuentos personales' },
+];
+const faqs = [
+  { q: '¿Cómo se comprueba el neto del recibo de sueldo?', a: 'Sumá los haberes remunerativos y no remunerativos, y restá los descuentos personales que figuran en el recibo. Compará el resultado con el importe neto del mismo período.' },
+  { q: '¿Los importes no remunerativos se suman al neto?', a: 'Si están liquidados como haberes del mes, se incluyen en la suma de importes a cobrar. Sus descuentos pueden depender de la naturaleza del concepto y del convenio.' },
+  { q: '¿Dónde cargo un adelanto de sueldo?', a: 'Si el adelanto figura como descuento en el recibo, ponelo en otros descuentos para conciliar los importes. Compará el depósito correspondiente a ese recibo y registrá los pagos separados que correspondan.' },
+  { q: '¿Las contribuciones patronales se restan del sueldo?', a: 'Son importes a cargo del empleador. Si aparecen informados en el recibo, podés anotarlos aparte. El cálculo de tu neto descuenta exclusivamente los importes a cargo del trabajador.' },
+  { q: '¿Qué reviso si el depósito es distinto del neto?', a: 'Confirmá el período, si se hicieron pagos separados y si hay anticipos o ajustes. Después contrastá cada importe con la liquidación o pedí un desglose adicional.' },
+  { q: '¿Sirve para saber si Ganancias, obra social o jubilación están bien liquidadas?', a: 'La conciliación comprueba la suma y la diferencia entre importes. Para validar cada descuento, la base imponible, el convenio y las retenciones acumuladas pueden ser decisivos.' },
+  { q: '¿Tengo que compartir el recibo, mi CUIL o datos bancarios?', a: 'Podés hacer la cuenta con los importes. El formulario funciona en el navegador y no pide nombre, CUIL, CBU ni copia del recibo.' },
+];
+const links = [
+  { label: 'Calculadora de sueldo bruto y neto en Argentina', href: parent.href },
+  { label: 'Bases y topes SIPA', href: '/datos-topes-sipa-2026' },
+  { label: 'Decreto 407/2026 · recibos y conceptos del art. 5 y anexo III', href: 'https://www.argentina.gob.ar/normativa/nacional/decreto-407-2026-426270/texto' },
+];
+---
+<FocusedCalculator {title} {description} {path} audience="AR" {parent} {faqs} {links}>
+  <p>Usá los importes del mismo mes. Cargá los descuentos como positivos. Las contribuciones del empleador se muestran por separado.</p>
+  <form id="recibo-sueldo" class="focused-form" method="post">
+    <fieldset>
+      <legend>Haberes en pesos argentinos</legend>
+      <div class="fields">
+        <label>Remunerativos <input name="gross" type="number" min="0" step="0.01" max="1000000000" required /></label>
+        <label>No remunerativos <input name="nonremunerative" type="number" min="0" step="0.01" max="1000000000" placeholder="0,00" /></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Descuentos personales</legend>
+      <div class="fields">
+        {deductions.map(({ name, label }) => <label>{label}<input {name} type="number" min="0" step="0.01" max="1000000000" placeholder="0,00" /></label>)}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Importes para comparar (opcionales)</legend>
+      <div class="fields">
+        <label>Neto que figura en el recibo <input name="declared" type="number" min="0" step="0.01" max="1000000000" /></label>
+        <label>Importe depositado <input name="deposited" type="number" min="0" step="0.01" max="1000000000" /></label>
+        <label>Contribuciones a cargo del empleador <input name="employer" type="number" min="0" step="0.01" max="1000000000" /></label>
+      </div>
+    </fieldset>
+    <button type="submit" class="btn btn-primary" disabled>Revisar mi recibo</button>
+    <noscript>Activa JavaScript para revisar tus importes.</noscript>
+    <div class="calc-result" aria-live="polite">
+      <p id="receipt-message">Completá los haberes y descuentos para calcular el neto del recibo.</p>
+      <dl id="receipt-result" hidden>
+        <dt>Haberes totales</dt><dd id="receipt-gross"></dd>
+        <dt>Descuentos personales</dt><dd id="receipt-deductions"></dd>
+        <dt>Neto calculado</dt><dd><output id="receipt-net"></output></dd>
+        <dt>Neto informado menos neto calculado</dt><dd id="receipt-slip"></dd>
+        <dt>Depósito menos el neto de referencia</dt><dd id="receipt-bank"></dd>
+        <dt>Contribuciones a cargo del empleador</dt><dd id="receipt-employer"></dd>
+      </dl>
+    </div>
+  </form>
+  <section>
+    <h2>Ejemplo para comprobar el sueldo en mano</h2>
+    <p>Con $1.500.000 de haberes remunerativos, $50.000 no remunerativos y $255.000 de descuentos, el neto calculado es <strong>$1.295.000</strong>. Si el recibo informa ese neto y se depositaron $1.290.000, hay $5.000 de diferencia a revisar. Una contribución patronal informada de $300.000 se muestra aparte.</p>
+  </section>
+</FocusedCalculator>
+<script>
+  const form = document.querySelector<HTMLFormElement>('#recibo-sueldo')!;
+  const format = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const fields = new FormData(form);
+    const cents = (field: string) => Math.round(Number(fields.get(field)) * 100);
+    const text = (amount: number) => format.format(amount / 100);
+    const signed = (amount: number) => amount > 0 ? '+' + text(amount) : text(amount);
+    const gross = cents('gross') + cents('nonremunerative');
+    const deductions = ['pension', 'pami', 'health', 'tax', 'other'].reduce((total, field) => total + cents(field), 0);
+    const net = gross - deductions;
+    const hasSlip = fields.get('declared') !== '';
+    const reference = hasSlip ? cents('declared') : net;
+    document.querySelector('#receipt-gross')!.textContent = text(gross);
+    document.querySelector('#receipt-deductions')!.textContent = text(deductions);
+    document.querySelector('#receipt-net')!.textContent = text(net);
+    document.querySelector('#receipt-slip')!.textContent = hasSlip ? signed(reference - net) : 'Sin importe declarado';
+    document.querySelector('#receipt-bank')!.textContent = fields.get('deposited') !== ''
+      ? signed(cents('deposited') - reference) + (hasSlip ? ' frente al recibo' : ' frente al neto calculado')
+      : 'Sin importe depositado';
+    document.querySelector('#receipt-employer')!.textContent = fields.get('employer') !== '' ? text(cents('employer')) : 'Sin importe informado';
+    document.querySelector('#receipt-message')!.textContent = net < 0 ? 'Los descuentos cargados superan los haberes. Revisá los importes.' : 'Revisá las diferencias y comprobá que correspondan al mismo período.';
+    document.querySelector<HTMLElement>('#receipt-result')!.hidden = false;
+  });
+  form.querySelector('button')!.disabled = false;
+</script>

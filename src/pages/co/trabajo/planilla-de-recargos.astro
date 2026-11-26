@@ -1,0 +1,190 @@
+---
+export const prerender = true;
+import FocusedCalculator from '../../../components/FocusedCalculator.astro';
+import { COLOMBIA_2026 } from '../../../lib/data/colombia-2026';
+import { planillaRecargos } from '../../../lib/formulas/planilla-recargos-co';
+
+const title = 'Planilla semanal de horas extras y recargos en Colombia';
+const description = 'Registra tus turnos, incluso si cruzan la medianoche. Separa el recargo nocturno, festivo y por horas extras, y descarga la planilla en CSV.';
+const path = '/co/trabajo/planilla-de-recargos';
+const parent = { label: 'Horas extras y recargos en Colombia', href: '/co/trabajo/horas-extras-y-recargos' };
+const salary = COLOMBIA_2026.smlmv;
+const week = '2026-11-23';
+const weekdays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+const money = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' });
+const example = planillaRecargos({ salary: 2_100_000, week, rest: 0, shifts: [{ date: week, start: '18:00', end: '22:00', extra: false }] });
+const faqs = [
+  { q: '¿Qué hora empieza el recargo nocturno?', a: 'Para las fechas de esta planilla, el horario nocturno de la jornada general va de 7 p. m. a 6 a. m. Un turno de 6 p. m. a 10 p. m. incluye tres horas nocturnas.' },
+  { q: '¿Qué pasa si mi turno cruza la medianoche?', a: 'El cálculo divide el turno por fecha y por horario. Si al cruzar medianoche empieza un festivo o el día de descanso obligatorio, el recargo se aplica al nuevo tramo.' },
+  { q: '¿Cómo indico cuáles horas son extras?', a: 'Divide el turno en tramos ordinarios y extras según tu jornada acordada. Por ejemplo, registra de 2 p. m. a 8 p. m. como ordinario y de 8 p. m. a 10 p. m. como extra si corresponde.' },
+  { q: '¿Puedo elegir otro día de descanso distinto del domingo?', a: 'Sí. Elige el día de descanso obligatorio que corresponda. Sin un acuerdo escrito que fije otro día, se presume el domingo.' },
+  { q: '¿Cuánto es el recargo por festivo o descanso obligatorio?', a: 'El mínimo general es 80% hasta junio de 2026, 90% desde julio de 2026 y 100% desde julio de 2027. Puedes marcar 100% anticipado si tu empleador ya lo aplica.' },
+  { q: '¿Cómo se combinan recargo nocturno y hora extra nocturna?', a: 'La hora extra nocturna lleva el 75%. Ya incorpora la nocturnidad, por lo que el 35% ordinario no se suma aparte. Si además es festivo o descanso obligatorio, se añade ese recargo.' },
+  { q: '¿Qué significan el valor de los tramos y el adicional?', a: 'El valor de los tramos contiene la base de todas las horas más recargos. El adicional asume que tu sueldo ya cubre los tramos ordinarios. Suma los recargos y la base de las horas extras.' },
+  { q: '¿Esta planilla determina si tengo derecho a descanso compensatorio?', a: 'La planilla calcula escenarios de liquidación monetaria. El descanso compensatorio y los regímenes especiales se revisan con el contrato, la frecuencia de trabajo y las normas aplicables.' },
+];
+const links = [
+  { label: 'Ley 2466 de 2025 · trabajo nocturno y descansos', href: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=260676' },
+  { label: 'Ley 2101 de 2021 · reducción gradual de la jornada', href: 'https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=166506' },
+  { label: 'Calculadora para una modalidad de hora extra o recargo', href: parent.href },
+  { label: 'Salario mínimo de Colombia 2026', href: '/co/datos-salario-minimo-colombia-2026' },
+  { label: 'Calendario de festivos Colombia 2026', href: '/feriados-colombia-2026' },
+  { label: 'Calendario de festivos Colombia 2027', href: '/feriados-colombia-2027' },
+];
+---
+<FocusedCalculator {title} {description} {path} audience="CO" {parent} {faqs} {links}>
+  <p>Para una semana dentro de 2026 o 2027 bajo jornada general. Divide los turnos en tramos si hay pausas sin pago o si cambia el tipo de hora. El cálculo es local y el CSV no requiere nombre ni documento.</p>
+  <form id="planilla-recargos" class="focused-form" method="post">
+    <div class="fields">
+      <label>Primer día de la semana <input name="week" type="date" min="2026-01-01" max="2027-12-25" value={week} required /></label>
+      <label>Salario básico mensual en COP <input name="salary" type="number" min="1" max="1000000000" step="1" value={salary} required /></label>
+      <label>Día de descanso obligatorio <select name="rest">{weekdays.map((day, index) => <option value={index}>{day}</option>)}</select></label>
+      <label>Horas semanales acordadas, si son menores
+        <input name="weekly" type="number" min="1" max="44" step="0.01" placeholder="Se aplica la jornada legal" />
+      </label>
+      <label>Recargo por descanso o festivo
+        <select name="restRate"><option value="legal">Tasa general según fecha</option><option value="full">Mi empleador aplica el 100%</option></select>
+      </label>
+    </div>
+    <div id="shift-list"></div>
+    <template id="shift-template">
+      <fieldset data-shift>
+        <legend>Tramo trabajado</legend>
+        <div class="fields">
+          <label>Fecha <input data-shift-date type="date" required /></label>
+          <label>Hora de inicio <input data-start type="time" value="18:00" required /></label>
+          <label>Hora de salida <input data-end type="time" value="22:00" required /></label>
+          <label>Tipo de hora <select data-kind><option value="ordinary">Ordinaria</option><option value="extra">Extra</option></select></label>
+        </div>
+        <button type="button" class="btn" data-remove>Quitar tramo</button>
+      </fieldset>
+    </template>
+    <button type="button" class="btn" id="add-shift" disabled>Agregar tramo</button>
+    <button type="submit" class="btn btn-primary" disabled>Calcular planilla semanal</button>
+    <noscript>Activa JavaScript para armar la planilla y descargar el CSV.</noscript>
+    <div class="calc-result">
+      <p id="shift-status" role="status">Calcula la planilla para ver el desglose de tus turnos.</p>
+      <div id="shift-output" hidden>
+        <dl>
+          <dt>Horas trabajadas</dt><dd id="shift-hours"></dd>
+          <dt>Base de todas las horas</dt><dd id="shift-base"></dd>
+          <dt>Recargos sobre la base</dt><dd id="shift-premiums"></dd>
+          <dt>Valor total de los tramos</dt><dd id="shift-total"></dd>
+          <dt>Adicional si el sueldo ya cubre las horas ordinarias</dt><dd><output id="shift-extra-pay"></output></dd>
+        </dl>
+        <div class="calc-table" tabindex="0">
+          <table>
+            <caption>Tramos por fecha y condición</caption>
+            <thead><tr><th scope="col">Fecha</th><th scope="col">Tipo</th><th scope="col">Horas</th><th scope="col">Recargo</th></tr></thead>
+            <tbody id="shift-rows"></tbody>
+          </table>
+        </div>
+        <button type="button" class="btn" id="shift-export">Descargar CSV</button>
+      </div>
+    </div>
+  </form>
+  <style>
+    #shift-list { display: grid; gap: .75rem; }
+    [data-remove] { margin-top: .6rem; }
+  </style>
+  <section>
+    <h2>Ejemplo con un turno de 6 p. m. a 10 p. m.</h2>
+    <p>Con un salario mensual de $2.100.000 COP y divisor 210, la hora ordinaria vale {money.format(10_000)}. En un lunes ordinario cuatro horas suman {money.format(example.totals.base)} de base. Tres horas tienen recargo del 35%, por un adicional de <strong>{money.format(example.totals.recargo)}</strong>.</p>
+    <p>Si solo parte de un turno es extra, registra esa parte en un tramo separado. Al cambiar el día de inicio, ajusta las fechas de los tramos a la nueva semana.</p>
+  </section>
+</FocusedCalculator>
+<script>
+  import { planillaRecargos } from '../../../lib/formulas/planilla-recargos-co';
+  const form = document.querySelector<HTMLFormElement>('#planilla-recargos')!;
+  const outlet = form.querySelector<HTMLElement>('#shift-output')!;
+  const status = form.querySelector<HTMLElement>('#shift-status')!;
+  const list = form.querySelector<HTMLElement>('#shift-list')!;
+  const template = form.querySelector<HTMLTemplateElement>('#shift-template')!;
+  const add = form.querySelector<HTMLButtonElement>('#add-shift')!;
+  const week = form.querySelector<HTMLInputElement>('[name=week]')!;
+  const money = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' });
+  const hours = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 2 });
+  let exportRows: string[][] = [];
+  function invalidate() {
+    if (outlet.hidden) return;
+    outlet.hidden = true;
+    status.textContent = 'Hay cambios en la planilla. Vuelve a calcular para actualizar el resultado.';
+  }
+  function addShift() {
+    const content = template.content.cloneNode(true) as DocumentFragment;
+    content.querySelector<HTMLInputElement>('[data-shift-date]')!.value = week.value;
+    content.querySelector('button')!.addEventListener('click', event => {
+      (event.currentTarget as Element).closest('[data-shift]')!.remove();
+      add.disabled = false;
+      invalidate();
+    });
+    list.append(content);
+    add.disabled = list.childElementCount >= 42;
+    invalidate();
+  }
+  const localDay = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date());
+  const current = new Date(localDay + 'T00:00:00Z');
+  if (Number.isFinite(current.getTime())) {
+    current.setUTCDate(current.getUTCDate() - (current.getUTCDay() + 6) % 7);
+    const monday = current.toISOString().slice(0, 10);
+    if (monday >= week.min && monday <= week.max) week.value = monday;
+  }
+  add.addEventListener('click', addShift);
+  form.addEventListener('input', invalidate);
+  addShift();
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const shifts = [...list.querySelectorAll('[data-shift]')].map(row => ({
+      date: row.querySelector<HTMLInputElement>('[data-shift-date]')!.value,
+      start: row.querySelector<HTMLInputElement>('[data-start]')!.value,
+      end: row.querySelector<HTMLInputElement>('[data-end]')!.value,
+      extra: row.querySelector<HTMLSelectElement>('[data-kind]')!.value === 'extra',
+    }));
+    try {
+      const result = planillaRecargos({
+        salary: Number(data.get('salary')), week: week.value, rest: Number(data.get('rest')),
+        weeklyHours: Number(data.get('weekly')) || undefined, fullRestRate: data.get('restRate') === 'full', shifts,
+      });
+      const { totals } = result;
+      const values = {
+        'shift-hours': hours.format(totals.hours),
+        'shift-base': money.format(totals.base),
+        'shift-premiums': money.format(totals.recargo),
+        'shift-total': money.format(totals.base + totals.recargo),
+        'shift-extra-pay': money.format(totals.recargo + totals.extraBase),
+      };
+      for (const [id, value] of Object.entries(values)) form.querySelector('#' + id)!.textContent = value;
+      exportRows = [['Fecha', 'Tipo', 'Horas', 'Divisor', 'Base COP', 'Recargo COP', 'Total COP']];
+      const rows = result.segments.map(piece => {
+        const type = (piece.extra ? 'Extra' : 'Ordinaria') + (piece.nocturnal ? ' nocturna' : ' diurna') + (piece.restOrHoliday ? ' en festivo o descanso' : '');
+        const row = document.createElement('tr');
+        for (const value of [piece.date, type, hours.format(piece.hours), money.format(piece.recargo)]) {
+          const cell = row.insertCell();
+          cell.textContent = value;
+        }
+        exportRows.push([piece.date, type, piece.hours.toFixed(4), String(piece.divisor),
+          piece.base.toFixed(2), piece.recargo.toFixed(2), (piece.base + piece.recargo).toFixed(2)]);
+        return row;
+      });
+      form.querySelector('#shift-rows')!.replaceChildren(...rows);
+      status.textContent = 'Planilla calculada.';
+      outlet.hidden = false;
+    } catch (error) {
+      outlet.hidden = true;
+      status.textContent = error instanceof Error ? error.message : 'Revisa las fechas y los horarios.';
+    }
+  });
+  form.querySelector('#shift-export')!.addEventListener('click', () => {
+    const blob = new Blob(['\uFEFF', exportRows.map(row => row.join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'planilla-recargos-' + week.value + '.csv';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+  form.querySelector<HTMLButtonElement>('button[type=submit]')!.disabled = false;
+</script>
