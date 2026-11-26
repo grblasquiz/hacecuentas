@@ -1,0 +1,115 @@
+---
+export const prerender = true;
+import FocusedCalculator from '../../components/FocusedCalculator.astro';
+import { CATEGORIAS, DATA_AS_OF, PRECIO_UNITARIO_MAX_BIENES } from '../../lib/data/monotributo-2026';
+import { recategorizacionMonotributo } from '../../lib/formulas/recategorizacion-monotributo';
+
+const title = 'Calculadora de recategorización del monotributo';
+const description = 'Cargá tu facturación de los últimos 12 meses, alquiler, superficie y electricidad. Calculá qué categoría te corresponde según la escala vigente de ARCA.';
+const path = '/impuestos/recategorizacion-monotributo';
+const parent = { label: 'Monotributo', href: '/impuestos/monotributo' };
+const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const ars = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+const scale = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(DATA_AS_OF));
+const example = recategorizacionMonotributo({ ingresos: 12_000_000, alquiler: 0, superficie: 55, energia: 0, precio: 0 });
+const faqs = [
+  { q: '¿Cuándo es la recategorización del monotributo?', a: 'La recategorización es semestral. El plazo ordinario vence el día 5 de febrero y de agosto. Revisá el calendario de ARCA por eventuales prórrogas.' },
+  { q: '¿Qué meses tengo que sumar?', a: 'Para febrero calculá los ingresos de enero a diciembre del año previo. Para agosto sumá de julio del año anterior a junio del año actual, si tu actividad lleva al menos doce meses.' },
+  { q: '¿Qué pasa si sigo en la misma categoría?', a: 'Si el conjunto de parámetros te deja en la categoría actual, ARCA indica que no corresponde hacer el trámite.' },
+  { q: '¿Cómo influye la antigüedad de mi actividad?', a: 'Con menos de seis meses de actividad, no corresponde recategorizarse. Para seis a once meses hay reglas de anualización. Consultá tu período exacto en el portal de ARCA antes de usar estos topes.' },
+  { q: '¿Cómo se combinan los parámetros?', a: 'Tu categoría estimada debe cubrir simultáneamente los ingresos y los parámetros que aplican a la actividad. Si tus ingresos entran en A y tu superficie exige C, el resultado es C.' },
+  { q: '¿Cómo se usa el precio unitario máximo?', a: 'Es un límite para la venta de cosas muebles y se compara con el precio del artículo más caro. Superarlo es una alerta para revisar tu permanencia en el régimen.' },
+  { q: '¿Esta escala ya sirve para la próxima recategorización?', a: 'El resultado se calcula con la escala indicada junto al simulador. Si ARCA publica otra tabla para el período que vas a declarar, compará de nuevo con los valores de ese período.' },
+  { q: '¿Cómo confirmo el cambio de categoría?', a: 'Entrá al portal Monotributo de ARCA con clave fiscal, contrastá la información precargada con tus registros y completá el trámite si corresponde.' },
+];
+const links = [
+  { label: 'ARCA · recategorización', href: 'https://www.arca.gob.ar/monotributo/ayuda/recategorizacion.asp' },
+  { label: 'ARCA · parámetros de categorización', href: 'https://www.arca.gob.ar/monotributo/ayuda/parametros.asp' },
+  { label: 'ARCA · escala de categorías', href: 'https://www.arca.gob.ar/monotributo/categorias.asp' },
+  { label: 'Tabla y cuotas del monotributo', href: '/datos-monotributo-2026' },
+  { label: 'Calculadora de monotributo y elección de régimen', href: parent.href },
+];
+---
+<FocusedCalculator {title} {description} {path} audience="AR" {parent} {faqs} {links}>
+  <p><strong>Escala aplicada desde {scale}.</strong> Para anticipar otra recategorización, tomá este resultado como referencia hasta que ARCA publique su escala. El simulador aplica a actividades con al menos 12 meses.</p>
+  <form id="recategorizacion" class="focused-form" method="post">
+    <label>Orden de los meses
+      <select name="period" id="mono-period"><option value="0">Febrero · enero a diciembre del año anterior</option><option value="6">Agosto · julio del año anterior a junio del actual</option></select>
+    </label>
+    <fieldset>
+      <legend>Ingresos brutos mensuales en pesos</legend>
+      <div class="fields">
+        {months.map(month => <label><span data-mono-month>{month}</span><input name="month" type="number" min="0" step="0.01" max="1000000000" placeholder="0,00" /></label>)}
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Otros parámetros. Completá los que aplican a tu actividad.</legend>
+      <div class="fields">
+        <label>Alquiler anual devengado en pesos <input name="rent" type="number" min="0" step="0.01" max="1000000000" placeholder="0,00" /></label>
+        <label>Superficie afectada en m² <input name="surface" type="number" min="0" step="0.01" max="100000" placeholder="0" /></label>
+        <label>Consumo eléctrico anual en kWh <input name="energy" type="number" min="0" step="0.01" max="10000000" placeholder="0" /></label>
+        <label>Mayor precio por unidad, solo venta de bienes <input name="price" type="number" min="0" step="0.01" max="1000000000" placeholder="0,00" /></label>
+        <label>Categoría actual <select name="current"><option value="">Elegí si querés compararla</option>{CATEGORIAS.map(cat => <option>{cat}</option>)}</select></label>
+      </div>
+    </fieldset>
+    <button type="submit" class="btn btn-primary" disabled>Comparar con la escala ARCA</button>
+    <noscript>Activa JavaScript para calcular con tus datos. Puedes leer el ejemplo en esta página.</noscript>
+    <div class="calc-result" aria-live="polite">
+      <output id="mono-result">Ingresá tus importes para ver la categoría y los parámetros que la determinan.</output>
+      <p id="mono-margins" hidden></p>
+      <ul id="mono-parameters" hidden></ul>
+    </div>
+  </form>
+  <section>
+    <h2>Ejemplo con facturación y superficie</h2>
+    <p>Si facturaste {ars.format(12_000_000)} en 12 meses, sin alquiler computable, y tu actividad ocupa 55 m², los ingresos entran en A y la superficie corresponde a C. Los dos parámetros juntos dan <strong>categoría {example.categoria}</strong>.</p>
+    <p>El límite de precio unitario para venta de bienes en esta escala es {ars.format(PRECIO_UNITARIO_MAX_BIENES)}. Contrastá los datos con el portal ARCA antes de confirmar el trámite.</p>
+  </section>
+</FocusedCalculator>
+<script>
+  import { recategorizacionMonotributo } from '../../lib/formulas/recategorizacion-monotributo';
+  const form = document.querySelector<HTMLFormElement>('#recategorizacion')!;
+  const period = form.querySelector<HTMLSelectElement>('#mono-period')!;
+  const money = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+  const labels = [...form.querySelectorAll<HTMLSpanElement>('[data-mono-month]')];
+  const months = labels.map(label => label.textContent);
+  period.addEventListener('change', () => {
+    labels.forEach((label, index) => label.textContent = months[(index + Number(period.value)) % 12]);
+    form.querySelectorAll<HTMLInputElement>('[name=month]').forEach(input => input.value = '');
+  });
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const fields = new FormData(form);
+    const values = fields.getAll('month');
+    const output = document.querySelector<HTMLOutputElement>('#mono-result')!;
+    const margins = document.querySelector<HTMLElement>('#mono-margins')!;
+    const list = document.querySelector<HTMLUListElement>('#mono-parameters')!;
+    if (values.every(value => value === '')) {
+      output.textContent = 'Cargá tus ingresos mensuales. Si no hubo facturación, escribí 0.';
+      margins.hidden = list.hidden = true;
+      return;
+    }
+    const ingresos = values.reduce((total, value) => total + Math.round(Number(value) * 100), 0) / 100;
+    const result = recategorizacionMonotributo({
+      ingresos, alquiler: Number(fields.get('rent')), superficie: Number(fields.get('surface')),
+      energia: Number(fields.get('energy')), precio: Number(fields.get('price')),
+    });
+    const comparison = fields.get('current') ? (fields.get('current') === result.categoria ? ' · coincide con tu categoría actual.' : ' · difiere de tu categoría actual.') : '';
+    output.textContent = result.categoria ? 'Categoría ' + result.categoria + comparison : 'Al menos un parámetro excede el límite del régimen.';
+    margins.textContent = 'Ingresos cargados: ' + money.format(ingresos) +
+      (result.margenIngresos !== null ? ' · Margen de facturación dentro de esta categoría: ' + money.format(result.margenIngresos) : '');
+    const items = result.parametros.map(({ label, categoria }) => {
+      const item = document.createElement('li');
+      item.textContent = label + ': ' + (categoria ? 'categoría ' + categoria : 'supera el máximo');
+      return item;
+    });
+    if (result.precioExcedido) {
+      const item = document.createElement('li');
+      item.textContent = 'El precio unitario supera el máximo permitido para venta de bienes.';
+      items.push(item);
+    }
+    list.replaceChildren(...items);
+    margins.hidden = list.hidden = false;
+  });
+  form.querySelector('button')!.disabled = false;
+</script>

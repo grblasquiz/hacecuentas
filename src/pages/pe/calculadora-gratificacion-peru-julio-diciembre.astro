@@ -1,0 +1,112 @@
+---
+export const prerender = true;
+import FocusedCalculator from '../../components/FocusedCalculator.astro';
+import { PERU_2026 } from '../../lib/data/peru-2026';
+import { gratificacionSemestral } from '../../lib/formulas/gratificacion-semestral-peru';
+
+const title = 'Calculadora de gratificación en Perú para julio y diciembre';
+const description = 'Calcula tu gratificación de Fiestas Patrias o Navidad en soles, con meses completos, asignación familiar, ingresos variables y bonificación de EsSalud o EPS.';
+const semesters = [
+  { payment: 'Diciembre', cutoff: '30 de noviembre', deadline: '15 de diciembre', months: ['Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] },
+  { payment: 'Julio', cutoff: '30 de junio', deadline: '15 de julio', months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio'] },
+];
+const base = { sueldo: 2000, asignacion: false, eps: false, meses: 6, faltas: 0, variables: [] };
+const initial = gratificacionSemestral(base);
+const partial = gratificacionSemestral({ ...base, sueldo: 1800, eps: true, meses: 4 });
+const soles = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
+const parent = { label: 'Liquidación y beneficios en Perú', href: '/pe/trabajo/liquidacion-y-beneficios' };
+const faqs = [
+  { q: '¿Cuándo pagan la gratificación de diciembre en Perú?', a: 'Se paga en la primera quincena de diciembre. El cálculo habitual toma la remuneración vigente al 30 de noviembre.' },
+  { q: '¿Cuándo se paga la gratificación de julio?', a: 'Se paga en la primera quincena de julio. La remuneración de referencia es la vigente al 30 de junio.' },
+  { q: '¿Cuánto recibo si trabajé menos de seis meses?', a: 'Te corresponde un sexto de la remuneración computable por cada mes calendario completo de servicios en el semestre. Si ingresaste a mitad de mes, empieza a contar desde el mes siguiente.' },
+  { q: '¿Cómo se computan las faltas?', a: 'Cada día que no se considera laborado se descuenta en un treintavo del monto de ese mes. Las vacaciones y otros descansos que la norma considera efectivamente laborados no entran como faltas.' },
+  { q: '¿Se suma la asignación familiar?', a: 'Sí, si tienes derecho a ella y el sueldo ingresado todavía no la incluye. Su importe equivale al 10% de la remuneración mínima vital.' },
+  { q: '¿Las comisiones y horas extras entran en la gratificación?', a: 'Los conceptos complementarios variables se consideran si fueron percibidos en al menos tres meses del semestre. En ese caso se usa la suma de los importes del semestre dividida por seis. Esta calculadora está pensada para sueldo fijo con variables complementarias.' },
+  { q: '¿Qué bonificación corresponde con EsSalud o EPS?', a: 'La bonificación extraordinaria es del 9% de la gratificación con EsSalud. Si estás afiliado a una EPS, corresponde el 6,75%.' },
+  { q: '¿La gratificación tiene descuento de AFP, ONP o renta?', a: 'No se aplican aportes a la AFP ni a la ONP sobre la gratificación. Si corresponde una retención de quinta categoría, puede reducir el depósito. El simulador muestra el importe previo a esa retención.' },
+];
+const links = [
+  { label: 'Sunafil · cómo calcular la gratificación de Navidad', href: 'https://www.gob.pe/institucion/sunafil/noticias/1069971-aprende-a-calcular-cuanto-te-corresponde-por-gratificacion-de-navidad' },
+  { label: 'Ministerio de Trabajo · guía sobre gratificaciones', href: 'https://cdn.www.gob.pe/uploads/document/file/3321103/guia_gratificaciones.pdf' },
+  { label: 'Sunafil · horas extras y remuneración computable', href: 'https://www.gob.pe/institucion/sunafil/noticias/986315-el-pago-por-horas-extras-ingresa-dentro-del-calculo-para-la-gratificacion-de-julio' },
+  { label: 'Calculadora de liquidación y gratificación trunca', href: parent.href },
+  { label: 'Sueldo mínimo en Perú', href: '/pe/datos-sueldo-minimo-peru-2026' },
+];
+---
+<FocusedCalculator {title} {description} path="/pe/calculadora-gratificacion-peru-julio-diciembre" audience="PE" {parent} {faqs} {links}>
+  <p>Para trabajadores activos del régimen laboral general privado. Si ya terminó tu vínculo laboral, revisa la <a href={parent.href}>gratificación trunca</a>. Las reglas pueden variar en microempresas, pequeñas empresas y regímenes especiales.</p>
+  <form class="focused-form" id="grati-peru" method="post">
+    <div class="fields">
+      <label>Gratificación de
+        <select name="semester">{semesters.map((item, index) => <option value={index}>{item.payment}</option>)}</select>
+      </label>
+      <label>Sueldo mensual fijo en soles <input name="salary" type="number" min="0.01" step="0.01" max="10000000" value={base.sueldo} required /></label>
+      <label>Meses calendario completos <input name="months" type="number" min="0" max="6" value={base.meses} required /></label>
+      <label>Días no computables dentro de esos meses <input name="absences" type="number" min="0" max="180" value={base.faltas} required /></label>
+      <label>Cobertura de salud <select name="health"><option value="essalud">EsSalud (9%)</option><option value="eps">EPS (6,75%)</option></select></label>
+      <label>Asignación familiar <select name="family"><option value="no">Sin sumar asignación familiar</option><option value="yes">Sumar {soles.format(PERU_2026.asignacionFamiliar)}</option></select></label>
+    </div>
+    <p id="grati-period">Julio a diciembre. Usa el sueldo vigente al 30 de noviembre. El pago vence el 15 de diciembre.</p>
+    <details>
+      <summary>Agregar comisiones y horas extras complementarias</summary>
+      <p>Ingresa el total de cada mes. Si un concepto se pagó en menos de tres meses del semestre, déjalo fuera.</p>
+      <div class="fields">
+        {semesters[0].months.map(month => <label><span data-grati-month>{month}</span><input type="number" name="variable" min="0" max="10000000" step="0.01" placeholder="0,00" /></label>)}
+      </div>
+    </details>
+    <button type="submit" class="btn btn-primary" disabled>Calcular gratificación</button>
+    <noscript>Activa JavaScript para calcular con tus datos. Puedes leer los ejemplos en esta página.</noscript>
+    <div class="calc-result" aria-live="polite">
+      <strong>Total antes de quinta categoría <output id="grati-total">{soles.format(initial.total)}</output></strong>
+      <dl>
+        <dt>Remuneración computable</dt><dd id="grati-base">{soles.format(initial.base)}</dd>
+        <dt>Gratificación</dt><dd id="grati-payment">{soles.format(initial.gratificacion)}</dd>
+        <dt id="grati-rate">Bonificación extraordinaria (9%)</dt><dd id="grati-bonus">{soles.format(initial.bonificacion)}</dd>
+      </dl>
+    </div>
+  </form>
+  <section>
+    <h2>Ejemplos de cálculo en soles</h2>
+    <p>Con {soles.format(base.sueldo)}, seis meses completos y EsSalud, la gratificación es {soles.format(initial.gratificacion)} y la bonificación es {soles.format(initial.bonificacion)}. El total llega a <strong>{soles.format(initial.total)}</strong>.</p>
+    <p>Con S/ 1.800 de sueldo, cuatro meses completos y EPS, corresponden {soles.format(partial.gratificacion)} de gratificación y {soles.format(partial.bonificacion)} de bonificación. El total es <strong>{soles.format(partial.total)}</strong>.</p>
+  </section>
+</FocusedCalculator>
+<script define:vars={{ semesters }}>
+  const form = document.querySelector('#grati-peru');
+  const fields = form.elements;
+  const updatePeriod = () => {
+    const term = semesters[Number(fields.semester.value)];
+    document.querySelector('#grati-period').textContent = term.months[0] + ' a ' + term.months[5].toLowerCase() + '. Usa el sueldo vigente al ' + term.cutoff + '. El pago vence el ' + term.deadline + '.';
+    document.querySelectorAll('[data-grati-month]').forEach((label, index) => label.textContent = term.months[index]);
+  };
+  fields.semester.addEventListener('change', () => {
+    form.querySelectorAll('[name=variable]').forEach(input => input.value = '');
+    updatePeriod();
+  });
+</script>
+<script>
+  import { gratificacionSemestral } from '../../lib/formulas/gratificacion-semestral-peru';
+  const form = document.querySelector<HTMLFormElement>('#grati-peru')!;
+  const format = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
+  const faltas = form.querySelector<HTMLInputElement>('[name=absences]')!;
+  const meses = form.querySelector<HTMLInputElement>('[name=months]')!;
+  meses.addEventListener('input', () => faltas.max = String(meses.valueAsNumber * 30));
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const fields = new FormData(form);
+    const result = gratificacionSemestral({
+      sueldo: Number(fields.get('salary')),
+      asignacion: fields.get('family') === 'yes',
+      eps: fields.get('health') === 'eps',
+      meses: meses.valueAsNumber,
+      faltas: faltas.valueAsNumber,
+      variables: fields.getAll('variable').map(Number),
+    });
+    document.querySelector('#grati-total')!.textContent = format.format(result.total);
+    document.querySelector('#grati-base')!.textContent = format.format(result.base);
+    document.querySelector('#grati-payment')!.textContent = format.format(result.gratificacion);
+    document.querySelector('#grati-rate')!.textContent = 'Bonificación extraordinaria (' + (result.tasa * 100).toLocaleString('es-PE') + '%)';
+    document.querySelector('#grati-bonus')!.textContent = format.format(result.bonificacion);
+  });
+  form.querySelector('button')!.disabled = false;
+</script>

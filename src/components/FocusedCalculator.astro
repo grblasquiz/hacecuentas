@@ -1,0 +1,68 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from './Header.astro';
+import Footer from './Footer.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  audience: 'AR' | 'CO' | 'PE';
+  parent: { label: string; href: string };
+  faqs: { q: string; a: string }[];
+  links: { label: string; href: string }[];
+}
+
+const { title, description, path, audience, parent, faqs, links } = Astro.props;
+const site = 'https://hacecuentas.com';
+const canonical = site + path;
+const breadcrumbs = [{ label: 'Inicio', href: '/' }, parent, { label: title }];
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebApplication', name: title, url: canonical, description, inLanguage: 'es', applicationCategory: 'UtilitiesApplication', operatingSystem: 'Web', offers: { '@type': 'Offer', price: 0 } },
+    { '@type': 'BreadcrumbList', itemListElement: breadcrumbs.map(({ label, href }, index) => ({
+      '@type': 'ListItem', position: index + 1, name: label, item: href ? site + href : canonical,
+    })) },
+    { '@type': 'FAQPage', mainEntity: faqs.map(({ q, a }) => ({
+      '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a },
+    })) },
+  ],
+};
+---
+<Layout {title} {description} {canonical} {schema} {audience} lang="es">
+  <Header />
+  <article class="container focused-calc">
+    <Breadcrumbs items={breadcrumbs} />
+    <h1>{title}</h1>
+    <p>{description}</p>
+    <slot />
+    <section>
+      <h2>Preguntas frecuentes</h2>
+      {faqs.map(({ q, a }) => <details><summary>{q}</summary><p>{a}</p></details>)}
+    </section>
+    <section>
+      <h2>Fuentes y herramientas relacionadas</h2>
+      <ul>{links.map(({ label, href }) => <li><a href={href}>{label}</a></li>)}</ul>
+    </section>
+  </article>
+  <Footer />
+</Layout>
+<style>
+  .focused-calc { max-width: 880px; padding-block: 1.5rem 4rem; }
+  .focused-calc section, .focused-calc :global(section) { margin-top: 2rem; }
+  .focused-calc details { padding: .65rem 0; border-bottom: 1px solid var(--border, #d3dce7); }
+  .focused-calc :global(.focused-form) { display: grid; gap: 1rem; padding: clamp(.8rem, 3vw, 1.35rem); background: var(--card, #f5f8fb); border: 1px solid var(--border, #d3dce7); border-radius: .75rem; margin-block: 1.25rem; }
+  .focused-calc :global(.fields) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .75rem; }
+  .focused-calc :global(.focused-form fieldset) { min-width: 0; padding: .8rem; border: 1px solid var(--border, #d3dce7); border-radius: .4rem; }
+  .focused-calc :global(.focused-form label) { display: grid; align-content: start; gap: .25rem; min-width: 0; }
+  .focused-calc :global(.focused-form :is(input:not([type=checkbox]), select)) { width: 100%; min-width: 0; font: inherit; padding: .5rem; color: inherit; background: var(--bg, #fff); border: 1px solid var(--border, #aab8c9); border-radius: .35rem; }
+  .focused-calc :global(.focused-form button) { justify-self: start; }
+  .focused-calc :global(.calc-result) { display: block; border-top: 1px solid var(--border, #d3dce7); padding-top: .85rem; }
+  .focused-calc :global(.calc-result output) { font-weight: 750; }
+  .focused-calc :global(.calc-result dd) { margin: 0 0 .5rem; }
+  .focused-calc :global(.calc-result dt) { font-weight: 600; }
+  .focused-calc :global(.calc-table) { overflow-x: auto; }
+  .focused-calc :global(.calc-table :is(th, td)) { text-align: left; padding: .5rem; }
+</style>
