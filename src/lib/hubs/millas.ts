@@ -13,6 +13,12 @@ import type { HubData } from './types';
 export type Cabina = 'economy' | 'business';
 export type TipoViaje = 'ida' | 'ida-vuelta';
 
+/** Compara dos cotizaciones para el mismo vuelo, en dólares. */
+export function evaluarCanjeMillas(precioUsd: number, tasasUsd: number, millas: number) {
+  const ahorroUsd = Math.round((precioUsd - tasasUsd) * 100) / 100;
+  return { ahorroUsd, centavosPorMilla: millas > 0 ? ahorroUsd * 100 / millas : 0 };
+}
+
 /** Millas por destino en las 4 combinaciones cabina × tipo de viaje. */
 export interface TarifaMillas {
   economyIda: number;
@@ -362,7 +368,7 @@ export const hub: HubData = {
     '/calculadora-millas-delta-skymiles',
   ],
 
-  lastReviewed: '2026-08-07',
+  lastReviewed: '2026-11-26',
   audience: 'global',
 };
 

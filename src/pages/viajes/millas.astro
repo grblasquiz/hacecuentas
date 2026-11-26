@@ -13,9 +13,11 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import HubSeoAnswer from '../../components/hub/HubSeoAnswer.astro';
 import MillasExperience from '../../components/generated/MillasExperience.astro';
-import { hub, PROGRAMAS_MAP, DESTINO_LABEL } from '../../lib/hubs/millas';
+import { evaluarCanjeMillas, hub } from '../../lib/hubs/millas';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const ejemploMiami = evaluarCanjeMillas(670.50, 120.25, 30_000);
+const decimal = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const schema = {
   '@context': 'https://schema.org',
@@ -56,34 +58,18 @@ const schema = {
     Las tablas son referencias orientativas y no definen un origen universal: ingresá las millas que te pide la web para tu ruta, fecha y cabina. La herramienta compara ese valor con el pasaje en efectivo; no garantiza disponibilidad ni precio.
   </aside>
   <MillasExperience data={hub} />
+  <section class="container miles-example" aria-labelledby="canje-miami">
+    <h2 id="canje-miami">Ejemplo de canje a Miami con millas y tasas</h2>
+    <p>Si para el mismo vuelo el pasaje en efectivo cuesta USD 670,50 y el canje pide 30.000 millas más USD 120,25 de tasas, ahorrás <strong>USD {decimal.format(ejemploMiami.ahorroUsd)}</strong> antes de valorar las millas. En este ejemplo, cada milla rinde <strong>{decimal.format(ejemploMiami.centavosPorMilla)} centavos de dólar</strong>.</p>
+    <p>Los importes son un ejemplo de la cuenta. Usá las dos cotizaciones vigentes para el mismo vuelo, cabina y equipaje. Si las tasas cuestan más que el pasaje en efectivo, la diferencia queda en contra del canje.</p>
+    <p><a href="#calcular-canje">Calculá con la cotización de tu vuelo</a> · <a href="/viajes/valen-millas">Compará cuánto rinden tus millas o puntos</a></p>
+  </section>
   <HubSeoAnswer data={hub} />
   <Footer />
 </Layout>
 
-<script>
-  const improveMilesResult = () => {
-    const root = document.querySelector('.mockup-millas');
-    if (!root) return;
-    const route = root.querySelector('#ticket-route');
-    if (route) route.textContent = route.textContent?.replace(/^EZE\s*→/, 'TU ORIGEN →') || '';
-    const verdict = root.querySelector('#verdict');
-    if (verdict) {
-      verdict.textContent = verdict.textContent === 'Buen canje'
-        ? 'Supera tu referencia'
-        : 'Queda bajo tu referencia';
-    }
-    const result = root.querySelector('.result');
-    result?.setAttribute('aria-live', 'polite');
-    root.querySelectorAll('.switch').forEach((button) => {
-      button.setAttribute('aria-pressed', button.classList.contains('active') ? 'true' : 'false');
-    });
-  };
-  improveMilesResult();
-  document.querySelector('.mockup-millas')?.addEventListener('click', () => queueMicrotask(improveMilesResult));
-  document.querySelector('.mockup-millas')?.addEventListener('input', () => queueMicrotask(improveMilesResult));
-</script>
-
 <style>
+  .miles-example{max-width:52rem;padding-block:1.5rem}
   .miles-caveat{max-width:1160px;margin:20px auto 0;padding:14px 18px;border:1px solid #b9d9e9;border-radius:12px;background:#f1f8fc;color:#29475d;line-height:1.55}
   .miles-caveat strong{display:block;color:#143650}
   @media(max-width:800px){.miles-caveat{margin:14px 14px 0}}
