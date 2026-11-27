@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calcularPuentes } from '../src/lib/feriados-puentes';
+import { calcularFindesLargos, calcularPuentes } from '../src/lib/feriados-puentes';
 import { FERIADOS_LATAM_2027 } from '../src/lib/data/feriados-latam-2027';
 import type { Feriado } from '../src/lib/data/feriados-latam-2026';
 
@@ -29,5 +29,29 @@ describe('puentes con licencia en días hábiles', () => {
       const fechas = new Set(pais.feriados.map((f) => f.fecha));
       for (const puente of calcularPuentes(pais.feriados)) expect(fechas.has(puente.fechaLicencia)).toBe(false);
     }
+  });
+});
+
+describe('fines de semana largos consecutivos', () => {
+  it('agrupa Carnaval y el cruce de junio en bloques completos', () => {
+    const findes = calcularFindesLargos(FERIADOS_LATAM_2027.argentina.feriados);
+    expect(findes).toContainEqual({
+      desde: '2027-02-06', hasta: '2027-02-09', dias: 4, nombres: ['Carnaval'],
+    });
+    expect(findes).toContainEqual({
+      desde: '2027-06-19', hasta: '2027-06-21', dias: 3,
+      nombres: ['Paso a la Inmortalidad del Gral. Manuel Belgrano', 'Paso a la Inmortalidad del Gral. Martín Miguel de Güemes'],
+    });
+    expect(findes.some(({ desde, hasta }) => desde <= '2027-05-25' && hasta >= '2027-05-25')).toBe(false);
+  });
+
+  it('une viernes y lunes contiguos sin duplicarlos y descarta feriados aislados', () => {
+    const viernes = feriado('2027-01-01', 'Viernes');
+    const lunes = feriado('2027-01-04', 'Lunes');
+    const martes = feriado('2027-05-25', 'Martes');
+    expect(calcularFindesLargos([lunes, martes, viernes])).toEqual([{
+      desde: '2027-01-01', hasta: '2027-01-04', dias: 4, nombres: [viernes.nombre],
+    }]);
+    expect(calcularFindesLargos([feriado('2027-12-25', 'Sábado')])).toEqual([]);
   });
 });
