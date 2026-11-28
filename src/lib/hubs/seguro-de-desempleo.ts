@@ -53,11 +53,11 @@ export const hub: HubData = {
           `La cuota nunca baja del piso ($${DESEMPLEO_PISO.toLocaleString('es-AR')}) ni supera el techo ($${DESEMPLEO_TECHO.toLocaleString('es-AR')})`,
           'Duración: 2 meses con 6 a 11 meses de aportes, 4 con 12 a 23, 8 con 24 a 35 y 12 con 36 o más',
           'Mientras cobrás seguís sumando antigüedad previsional y mantenés la obra social',
-          'Se pide con despido sin justa causa, fin de contrato a plazo o quiebra del empleador',
+          'Entre las causales legales están el despido sin justa causa, el despido indirecto fundado, el fin de contrato a plazo, la quiebra y el mutuo acuerdo en los términos del art. 241 LCT',
         ],
         warn: [
           'Con menos de 6 meses de aportes en los últimos 3 años no corresponde la prestación',
-          'Si renunciaste o te fuiste por mutuo acuerdo (art. 241 LCT) no te corresponde',
+          'La renuncia voluntaria no da derecho; si firmaste un mutuo acuerdo conforme al art. 241 LCT, consultá a ANSES por la documentación y el trámite dentro de los 90 días',
           'Hay que pedirla dentro de los 90 días del cese: después de ese plazo se descuenta un día de prestación por cada día de demora',
           'No se puede cobrar junto con una jubilación, una pensión no contributiva ni un trabajo registrado',
         ],
@@ -176,11 +176,15 @@ export const hub: HubData = {
     },
     {
       q: '¿Quién puede cobrar el seguro de desempleo de ANSES?',
-      a: 'Trabajadores registrados despedidos sin justa causa, con contrato a plazo vencido, con cese por quiebra o cierre del empleador, o despedidos por fuerza mayor. Quedan afuera quienes renunciaron, los del servicio doméstico, los del sector público y los monotributistas.',
+      a: 'Las personas con trabajo registrado pueden solicitarla si cumplen los requisitos de aportes y el cese encuadra en una causal legal. Entre ellas están el despido sin justa causa, el despido indirecto fundado en justa causa, el vencimiento del contrato y el mutuo acuerdo en los términos del art. 241 LCT. Las trabajadoras y los trabajadores de casas particulares también están incluidos si reúnen los requisitos de su régimen. La renuncia voluntaria no da derecho a esta prestación.',
     },
     {
       q: 'Renuncié a mi trabajo, ¿me corresponde algo?',
-      a: 'La prestación por desempleo no, porque la ley 24.013 la reserva para ceses ajenos a la voluntad del trabajador. Sí te corresponde siempre la liquidación final: días trabajados, vacaciones proporcionales y SAC proporcional. En la construcción, además, el fondo de cese se cobra aunque renuncies.',
+      a: 'Una renuncia voluntaria por sí sola no es una causal de la Ley 24.013. No es lo mismo que un despido indirecto fundado o un cese por mutuo acuerdo en los términos del art. 241 LCT. Sí te corresponde siempre la liquidación final: días trabajados, vacaciones proporcionales y SAC proporcional. En la construcción, además, el fondo de cese se cobra aunque renuncies.',
+    },
+    {
+      q: '¿Puedo solicitar el seguro si firmé un mutuo acuerdo?',
+      a: 'Desde el 6 de marzo de 2026, la Ley 24.013 (art. 114, inciso i) reconoce el mutuo acuerdo en los términos del art. 241 LCT. Si lo firmaste, conservá la escritura pública o el acta ante autoridad judicial o laboral. La cartilla de ANSES de abril de 2026 todavía indica lo contrario; consultá a ANSES qué documentación acepta y cómo iniciar el trámite dentro de los 90 días del cese. La causal no garantiza el otorgamiento: también se deben cumplir los demás requisitos.',
     },
     {
       q: '¿En cuánto tiempo tengo que pedir la prestación?',
@@ -215,9 +219,19 @@ export const hub: HubData = {
   sources: [
     {
       name: 'Ley 24.013 — Ley Nacional de Empleo, Título IV: prestación por desempleo (arts. 111 a 129)',
-      url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/0-4999/412/texact.htm',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/412/actualizacion',
       publisher: 'InfoLeg',
       date: 'texto actualizado',
+    },
+    {
+      name: 'Ley 27.802, art. 99 — mutuo acuerdo como causal legal de desempleo',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/ley-27802-423680/texto',
+      publisher: 'Argentina.gob.ar',
+    },
+    {
+      name: 'Casas particulares — cobertura de la seguridad social y prestación por desempleo',
+      url: 'https://www.argentina.gob.ar/trabajo/casasparticulares/cobertura-de-la-seguridad-social-para-las-trabajadoras-de-casas',
+      publisher: 'Argentina.gob.ar',
     },
     {
       name: 'Resolución 4/2026, artículo 2 — importe y límites de la prestación general',

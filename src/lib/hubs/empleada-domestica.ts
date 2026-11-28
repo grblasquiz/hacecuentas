@@ -167,7 +167,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Por qué el valor hora sin retiro es más alto que el de con retiro?',
-      a: 'Porque en el personal con retiro (el que vive en la casa) la escala contempla que el empleador provee alojamiento y comida. Esas prestaciones no se descuentan del sueldo: ya están reflejadas en un valor hora más bajo. La excepción son los caseros, que tienen un único valor sin distinción.',
+      a: 'Sin retiro significa que la persona reside en el domicilio donde trabaja; con retiro, que no vive allí (art. 1 de la Ley 26.844). La comisión fija mínimos distintos para cada modalidad cuando la categoría los distingue. Para caseros, la escala publica un único valor.',
     },
     {
       q: '¿Cuánto pago de aportes por una empleada de casas particulares?',
