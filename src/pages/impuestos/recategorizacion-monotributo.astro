@@ -38,15 +38,16 @@ const links = [
     </label>
     <fieldset>
       <legend>Ingresos brutos mensuales en pesos</legend>
+      <p id="mono-month-help">Completá los 12 meses. Si en un mes no facturaste, ingresá 0.</p>
       <div class="fields">
-        {months.map(month => <label><span data-mono-month>{month}</span><input name="month" type="number" min="0" step="0.01" max="1000000000" placeholder="0,00" /></label>)}
+        {months.map(month => <label><span data-mono-month>{month}</span><input name="month" required aria-describedby="mono-month-help" type="number" min="0" step="0.01" max="1000000000" placeholder="0,00" /></label>)}
       </div>
     </fieldset>
     <fieldset>
       <legend>Otros parámetros. Completá los que aplican a tu actividad.</legend>
       <div class="fields">
         <label>Alquiler anual devengado en pesos <input name="rent" type="number" min="0" step="0.01" max="1000000000" placeholder="0,00" /></label>
-        <label>Superficie afectada en m² <input name="surface" type="number" min="0" step="0.01" max="100000" placeholder="0" /></label>
+        <label>Superficie afectada en m² <small>No la cargues si no tenés local o si no aplica según ARCA.</small> <input name="surface" type="number" min="0" step="0.01" max="100000" placeholder="0" /></label>
         <label>Consumo eléctrico anual en kWh <input name="energy" type="number" min="0" step="0.01" max="10000000" placeholder="0" /></label>
         <label>Mayor precio por unidad, solo venta de bienes <input name="price" type="number" min="0" step="0.01" max="1000000000" placeholder="0,00" /></label>
         <label>Categoría actual <select name="current"><option value="">Elegí si querés compararla</option>{CATEGORIAS.map(cat => <option>{cat}</option>)}</select></label>
@@ -62,7 +63,7 @@ const links = [
   </form>
   <section>
     <h2>Ejemplo con facturación y superficie</h2>
-    <p>Si facturaste {ars.format(12_000_000)} en 12 meses, sin alquiler computable, y tu actividad ocupa 55 m², los ingresos entran en A y la superficie corresponde a C. Los dos parámetros juntos dan <strong>categoría {example.categoria}</strong>.</p>
+    <p>Si facturaste {ars.format(12_000_000)} en 12 meses, sin alquiler computable, y tu actividad ocupa 55 m², los ingresos entran en A y la superficie corresponde a C. Si corresponde computar la superficie y ningún otro parámetro exige una categoría mayor, los dos dan <strong>categoría {example.categoria}</strong>.</p>
     <p>El límite de precio unitario para venta de bienes en esta escala es {ars.format(PRECIO_UNITARIO_MAX_BIENES)}. Contrastá los datos con el portal ARCA antes de confirmar el trámite.</p>
   </section>
 </FocusedCalculator>
@@ -73,20 +74,31 @@ const links = [
   const money = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
   const labels = [...form.querySelectorAll<HTMLSpanElement>('[data-mono-month]')];
   const months = labels.map(label => label.textContent);
+  const output = document.querySelector<HTMLOutputElement>('#mono-result')!;
+  const margins = document.querySelector<HTMLElement>('#mono-margins')!;
+  const list = document.querySelector<HTMLUListElement>('#mono-parameters')!;
+  const inputs = [...form.querySelectorAll<HTMLInputElement>('[name=month]')];
+  const initialMessage = output.textContent;
+  const clearResult = () => {
+    output.textContent = initialMessage;
+    margins.textContent = '';
+    list.replaceChildren();
+    margins.hidden = list.hidden = true;
+  };
+  form.addEventListener('input', clearResult);
   period.addEventListener('change', () => {
     labels.forEach((label, index) => label.textContent = months[(index + Number(period.value)) % 12]);
-    form.querySelectorAll<HTMLInputElement>('[name=month]').forEach(input => input.value = '');
+    inputs.forEach(input => input.value = '');
+    clearResult();
   });
   form.addEventListener('submit', event => {
     event.preventDefault();
     const fields = new FormData(form);
     const values = fields.getAll('month');
-    const output = document.querySelector<HTMLOutputElement>('#mono-result')!;
-    const margins = document.querySelector<HTMLElement>('#mono-margins')!;
-    const list = document.querySelector<HTMLUListElement>('#mono-parameters')!;
-    if (values.every(value => value === '')) {
-      output.textContent = 'Cargá tus ingresos mensuales. Si no hubo facturación, escribí 0.';
-      margins.hidden = list.hidden = true;
+    if (values.length !== 12 || values.some(value => typeof value !== 'string' || value.trim() === '' || !Number.isFinite(Number(value)) || Number(value) < 0)) {
+      clearResult();
+      output.textContent = 'Completá los 12 meses. Si no hubo facturación, ingresá 0.';
+      inputs.find(input => input.value === '' || !input.validity.valid)?.focus();
       return;
     }
     const ingresos = values.reduce((total, value) => total + Math.round(Number(value) * 100), 0) / 100;
