@@ -195,11 +195,31 @@ export const hub: HubData = {
     },
     {
       q: '¿Y si en vez de emplear contrato un monotributista?',
-      a: 'El costo aparente baja, pero si la relación tiene dependencia real —horario, exclusividad, dirección— es empleo encubierto y el riesgo es una demanda por relación laboral no registrada, con indemnización, multas de la ley 24.013 e intereses. El ahorro se pierde varias veces en un solo juicio.',
+      a: 'Importa cómo se realiza el trabajo. Si hay relación de dependencia, emitir facturas no reemplaza la registración laboral. Si una sentencia determina que el vínculo no se registró o se registró mal, pueden corresponder créditos laborales según el caso. La Justicia remite los antecedentes a ARCA o al organismo competente para determinar la deuda de seguridad social y los recargos, multas y accesorios que correspondan (art. 278 de la Ley de Contrato de Trabajo).',
+    },
+    {
+      q: '¿Cómo impacta el Fondo de Asistencia Laboral (FAL) en el costo del empleado?',
+      a: 'Se declara desde el período devengado de diciembre de 2026, cuyo F.931 vence en enero de 2027. En las relaciones alcanzadas se calcula sobre la base de contribuciones al SIPA: 2,5% para MiPyMEs con certificado vigente en ese período y caracterización activa, o para entidades sin fines de lucro habilitadas y caracterizadas; 1% para los demás empleadores privados alcanzados. La RG 5928 quitó a las cooperativas y cooperativas efectoras del listado de formas jurídicas habilitadas por la vía sin fines de lucro; pueden tramitar el Certificado MiPyME. En el régimen general, el FAL se compensa hasta el límite de las contribuciones de seguridad social alcanzadas de cada trabajador. No se suma automáticamente al costo ni reduce obra social o ART. La compensación no aplica mientras rija el beneficio RIFL para ese trabajador.',
     },
   ],
 
   sources: [
+    {
+      name: 'Ley de Contrato de Trabajo — registración y remisión de antecedentes (arts. 23 y 278)',
+      url: 'https://www.argentina.gob.ar/normativa/nacional/ley-20744-25552/actualizacion',
+      publisher: 'Argentina.gob.ar',
+    },
+    {
+      name: 'ARCA — contribución al Fondo de Asistencia Laboral',
+      url: 'https://www.arca.gob.ar/fal/caracteristicas/contribucion.asp',
+      publisher: 'ARCA',
+    },
+    {
+      name: 'Resolución General ARCA 5928/2026 — encuadre para el FAL',
+      url: 'https://nuevaweb.boletinoficial.gob.ar/detalleAviso/primera/350768/20261125',
+      publisher: 'Boletín Oficial',
+      date: '25-11-2026',
+    },
     {
       name: 'Decreto 814/2001 — alícuotas de contribuciones patronales',
       url: 'https://servicios.infoleg.gob.ar/infolegInternet/anexos/65000-69999/67980/texact.htm',
