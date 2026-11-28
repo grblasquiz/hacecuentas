@@ -1,0 +1,48 @@
+// Calculadoras independientes publicadas fuera del catálogo de hubs y sus embeds.
+export const searchCalcLandings = [
+  {
+    s: 'pe/calculadora-gratificacion-peru-julio-diciembre',
+    h: 'Calculadora de gratificación en Perú',
+    d: 'Calcula la gratificación de julio o diciembre, con meses trabajados, asignación familiar y bonificación EsSalud o EPS.',
+    c: 'trabajo',
+    i: '🧮',
+    a: 'PE',
+    k: 'gratificación navidad fiestas patrias gratificación de diciembre gratificación de julio Perú',
+  },
+  {
+    s: 'impuestos/recategorizacion-monotributo',
+    h: 'Calculadora de recategorización del monotributo',
+    d: 'Compara doce meses de facturación y otros parámetros con la escala de categorías de ARCA.',
+    c: 'impuestos',
+    i: '🧮',
+    a: 'AR',
+    k: 'recategorización monotributo recategorizarme categoría monotributista ARCA alquiler superficie energía facturación',
+  },
+  {
+    s: 'construccion/presupuesto-ampliacion',
+    h: 'Presupuesto para ampliar una casa',
+    d: 'Calculá el costo total y por metro cuadrado de una ampliación con tus cotizaciones y una reserva.',
+    c: 'construccion',
+    i: '🧮',
+    a: 'AR',
+    k: 'presupuesto ampliación ampliar casa construir habitación levantar pieza obra costo metro cuadrado',
+  },
+  {
+    s: 'trabajo/revisar-recibo-de-sueldo',
+    h: 'Revisar un recibo de sueldo',
+    d: 'Calculá el neto del recibo y comparalo con el monto liquidado y el dinero depositado.',
+    c: 'trabajo',
+    i: '🧮',
+    a: 'AR',
+    k: 'revisar recibo sueldo validar recibo haberes conciliar depósito descuentos nómina',
+  },
+  {
+    s: 'co/trabajo/planilla-de-recargos',
+    h: 'Planilla semanal de horas extras y recargos en Colombia',
+    d: 'Liquida varios turnos, incluidos cruces de medianoche y festivos, y descarga el detalle semanal en CSV.',
+    c: 'trabajo',
+    i: '🧮',
+    a: 'CO',
+    k: 'planilla recargos semanales Colombia turnos nocturnos horas extras dominical festivo CSV',
+  },
+];

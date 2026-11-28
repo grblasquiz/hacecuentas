@@ -6,6 +6,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ScrollToTop from '../components/ScrollToTop.astro';
 import { HOME_HREFLANG } from '../lib/hreflang';
+import { searchCalcLandings } from '../lib/search-calc-landings';
 
 const popular = [
   { href: '/validar-cbu', group: 'Bancos', title: 'Validar CBU o CVU', desc: 'Revisá los dígitos y el código de entidad.', icon: '✓', color: 'mint' },
@@ -98,8 +99,12 @@ const silos = [
   ['/tecnologia','Tecnología'], ['/trabajo','Trabajo'], ['/viajes','Viajes'], ['/vivienda','Vivienda'],
 ];
 
-const searchItems = [...popular.map(({ href, title, group }) => ({ href, label: title, group })),
-  ...moments.flatMap((m) => m.links.map(([href, label]) => ({ href, label, group: m.title })))];
+const searchGroups: Record<string, string> = { trabajo: 'Trabajo', impuestos: 'Impuestos', construccion: 'Construcción' };
+const searchItems = [
+  ...popular.map(({ href, title, group }) => ({ href, label: title, group })),
+  ...moments.flatMap((m) => m.links.map(([href, label]) => ({ href, label, group: m.title }))),
+  ...searchCalcLandings.map(({ s, h, k, c }) => ({ href: '/' + s, label: h, keywords: k, group: searchGroups[c] || 'Calculadoras' })),
+];
 const uniqueSearchItems = [...new Map(searchItems.map((item) => [item.href, item])).values()];
 
 const schema = {

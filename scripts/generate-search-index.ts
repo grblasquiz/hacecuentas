@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
 import { DECISION_MANIFEST_LOCALES } from '../src/lib/decisions/manifest-locales.ts';
 import { canDistributeCalc } from '../src/lib/content-policy.ts';
+import { searchCalcLandings } from '../src/lib/search-calc-landings.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -102,6 +103,8 @@ for (const r of DECISION_MANIFEST_LOCALES) {
     c: 'decidir', i: r.icon, a: r.country.toUpperCase(),
   });
 }
+
+entries.unshift(...searchCalcLandings);
 
 const uniqueEntries = [...new Map(entries.map((entry) => [entry.s, entry])).values()];
 uniqueEntries.sort((a, b) => a.h.localeCompare(b.h, 'es'));
